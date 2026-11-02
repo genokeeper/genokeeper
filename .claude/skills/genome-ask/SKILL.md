@@ -1226,8 +1226,8 @@ unassessed "not calibrated", never normal; a tool that failed leaves it unassess
   stored wording and caveat as they are: FUT2 `the common European and African null allele
   only; the rule does not hold in East Asian ancestry`; ABCC11
   `one SNP decides earwax type; odour is only a tendency`; MC1R `hair colour depends on
-  other genes too: in UK Biobank about 15% of people with two MC1R variants are
-  red-haired; melanoma risk is in its polygenic score`; HERC2 `one SNP, for European
+  other genes too; many people with two variants are blond or light brown; melanoma risk
+  is in its polygenic score`; HERC2 `one SNP, for European
   ancestry; it cannot tell green from hazel`; AMPD1 `a common, mostly harmless variant; it
   predicts neither sports ability nor muscle disease`; CCR5 `not protection against HIV in
   general and no substitute for prevention`. The phenotype is the literature's, not
