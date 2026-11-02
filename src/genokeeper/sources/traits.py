@@ -1,6 +1,6 @@
-"""Five traits as a source (`TraitSource`; slice 3f, "Traits"). Tool `traits`, one statement
-per trait, not per rsid (`trait:lactase`, `trait:ADH1B`, `trait:ACTN3`, `trait:TAS2R38`,
-`trait:CYP1A2`), under traits at validity moderate, never actionable, never flagged
+"""Eleven traits as a source (`TraitSource`): slice 3f's five ("Traits") and slice 3g's six
+single-gene traits. Tool `traits`, one statement per trait, not per rsid (`trait:<name>` for
+each of `load_traits()`), under traits at validity moderate, never actionable, never flagged
 `exclusion`, on our genotypes at `resources/traits/traits.tsv`'s alleles (`TRAIT_ALLELES`,
 graded as every genotype is). Each site's effect-allele copies come from
 `genotype.sites.risk_copies`, so an effect allele that is the REF (ADH1B's T) counts the
@@ -12,6 +12,8 @@ reference copies.
   all three 2, 1 or 0 give PAV/PAV, PAV/AVI or AVI/AVI; any other combination is a rare
   haplotype (`RARE_TAS2R38`), unassessed.
 - `single`: the effect allele's copies at one site.
+- `mc1r`: R, the effect copies over the `strong` sites, and r over the `weak` ones; R of two
+  or more, else (every strong site known) R of one, r alone (`MC1R_WEAK_ONLY`) or none.
 
 A known result is a finding of information: its wording, the trait's note, and
 `INFORMATION_NOTE` (the phenotype is the literature's, not checked here); an unknown or
@@ -42,24 +44,28 @@ TRAITS_FILE = (
 )
 TRAITS_VERSION = "2026-10-30"
 RARE_TAS2R38 = "rare TAS2R38 haplotype"
+MC1R_WEAK_ONLY = "weak variants only: little effect expected"
+STRONG, WEAK = "strong", "weak"
 LIKELY = "likely"
 UNLIKELY = "unlikely"
 _DIPLOTYPES = {0: "AVI/AVI", 1: "PAV/AVI", 2: "PAV/PAV"}
 _RANK = (Level.LOW, Level.MEDIUM, Level.HIGH)
 
-type Rule = Literal["any", "single", "tas2r38"]
+type Rule = Literal["any", "single", "tas2r38", "mc1r"]
 
 
 @dataclass(frozen=True)
 class Trait:
     """One trait: its name, gene, sites (alleles, their rsids and effect alleles), rule,
-    wordings by effect-allele copies (or PAV haplotypes) 0, 1 and 2, note and sources."""
+    wordings by effect-allele copies (or PAV haplotypes) 0, 1 and 2, note and sources;
+    `classes` is each site's MC1R class (`strong` or `weak`), empty for every other rule."""
 
     name: str
     gene: str
     alleles: tuple[Allele, ...]
     rsids: tuple[str, ...]
     effects: tuple[str, ...]
+    classes: tuple[str, ...]
     rule: Rule
     wordings: tuple[str, str, str]
     note: str | None
@@ -69,7 +75,8 @@ class Trait:
 @cache
 def load_traits(path: Path = TRAITS_FILE) -> tuple[Trait, ...]:
     """The packaged traits, in the file's order; a trait whose rows disagree on a
-    trait-level column is refused."""
+    trait-level column, or an `mc1r` site without a class (any other site with one), is
+    refused."""
     with path.open(newline="", encoding="utf-8") as f:
         lines = [line for line in f if not line.startswith("#")]
     rows: dict[str, list[dict[str, str]]] = {}
@@ -81,8 +88,12 @@ def load_traits(path: Path = TRAITS_FILE) -> tuple[Trait, ...]:
         first = sites[0]
         if any(site[c] != first[c] for site in sites for c in shared):
             raise ValueError(f"{path}: {name}'s rows disagree")
-        if first["rule"] not in ("any", "single", "tas2r38"):
+        if first["rule"] not in ("any", "single", "tas2r38", "mc1r"):
             raise ValueError(f"{path}: {name}'s rule {first['rule']!r}")
+        classes = tuple(s["class"] for s in sites)
+        allowed = (STRONG, WEAK) if first["rule"] == "mc1r" else ("",)
+        if any(c not in allowed for c in classes):
+            raise ValueError(f"{path}: {name}'s class {classes!r}")
         traits.append(
             Trait(
                 name=name,
@@ -92,6 +103,7 @@ def load_traits(path: Path = TRAITS_FILE) -> tuple[Trait, ...]:
                 ),
                 rsids=tuple(s["rsid"] for s in sites),
                 effects=tuple(s["effect"] for s in sites),
+                classes=classes,
                 rule=cast(Rule, first["rule"]),
                 wordings=(first["none"], first["one"], first["two"]),
                 note=first["note"] or None,
@@ -115,14 +127,11 @@ def _copies(
     return risk_copies(make_vid(*allele), effect, called.gt, called.dosage)
 
 
-def _result(
-    trait: Trait, copies: Sequence[int | str | None]
-) -> tuple[int | str | None, int | None, str | None]:
-    """The trait's result for the claim, the wording's index, and why it is unknown."""
-    unknown = [r for r, c in zip(trait.rsids, copies, strict=True) if c is None]
-    other = [r for r, c in zip(trait.rsids, copies, strict=True) if c == NOT_COUNTABLE]
-    counted = [c for c in copies if isinstance(c, int)]
-    why = "; ".join(
+def _why(rsids: Sequence[str], copies: Sequence[int | str | None]) -> str:
+    """Why these sites leave a result unknown ("" when every one is counted)."""
+    unknown = [r for r, c in zip(rsids, copies, strict=True) if c is None]
+    other = [r for r, c in zip(rsids, copies, strict=True) if c == NOT_COUNTABLE]
+    return "; ".join(
         part
         for part in (
             f"genotype unknown at {', '.join(unknown)}" if unknown else "",
@@ -130,17 +139,73 @@ def _result(
         )
         if part
     )
+
+
+def _mc1r(
+    trait: Trait, copies: Sequence[int | str | None]
+) -> tuple[str | None, str | None, str | None]:
+    """MC1R's result from R, the effect copies at its strong sites, and r at its weak ones:
+    R of two or more whatever else is unknown; then, every strong site known, R of one, r
+    alone, or (every weak site known too) none. Two strong copies at different sites count
+    as two: strong alleles are not seen on one haplotype."""
+    sites = {
+        k: (
+            [r for r, c in zip(trait.rsids, trait.classes, strict=True) if c == k],
+            [n for n, c in zip(copies, trait.classes, strict=True) if c == k],
+        )
+        for k in (STRONG, WEAK)
+    }
+    strong, weak = (
+        sum(n for n in sites[k][1] if isinstance(n, int)) for k in (STRONG, WEAK)
+    )
+    none, one, two = trait.wordings
+    if strong >= 2:
+        return "two strong", two, None
+    if why := _why(*sites[STRONG]):
+        return None, None, why
+    if strong == 1:
+        return "one strong", one, None
+    if weak > 0:
+        return "weak only", MC1R_WEAK_ONLY, None
+    if why := _why(*sites[WEAK]):
+        return None, None, why
+    return "none", none, None
+
+
+def _result(
+    trait: Trait, copies: Sequence[int | str | None]
+) -> tuple[int | str | None, str | None, str | None]:
+    """The trait's result for the claim, its wording, and why it is unknown."""
+    if trait.rule == "mc1r":
+        return _mc1r(trait, copies)
+    counted = [c for c in copies if isinstance(c, int)]
+    why = _why(trait.rsids, copies)
     if trait.rule == "any":
         if any(c > 0 for c in counted):
-            return LIKELY, 1, None
-        return (None, None, why) if why else (UNLIKELY, 0, None)
+            return LIKELY, trait.wordings[1], None
+        return (None, None, why) if why else (UNLIKELY, trait.wordings[0], None)
     if why:
         return None, None, why
     if trait.rule == "single":
-        return counted[0], counted[0], None
+        return counted[0], trait.wordings[counted[0]], None
     if len(set(counted)) != 1:
         return None, None, RARE_TAS2R38
-    return _DIPLOTYPES[counted[0]], counted[0], None
+    return _DIPLOTYPES[counted[0]], trait.wordings[counted[0]], None
+
+
+def _reads(
+    trait: Trait, result: object, copies: Sequence[int | str | None]
+) -> list[bool]:
+    """The sites a result reads: "likely" the carried ones, "two strong" the carried strong
+    ones, "one strong" every strong one, every other result them all."""
+    carried = [isinstance(c, int) and c > 0 for c in copies]
+    if result == LIKELY:
+        return carried
+    if result == "two strong":
+        return [k and c == STRONG for k, c in zip(carried, trait.classes, strict=True)]
+    if result == "one strong":
+        return [c == STRONG for c in trait.classes]
+    return [True] * len(copies)
 
 
 @dataclass(frozen=True)
@@ -159,18 +224,16 @@ class TraitSource:
                 _copies(a, e, self.graded)
                 for a, e in zip(trait.alleles, trait.effects, strict=True)
             ]
-            result, index, why = _result(trait, copies)
-            kind = Kind.UNASSESSED if index is None else Kind.FINDING
+            result, wording, why = _result(trait, copies)
+            kind = Kind.UNASSESSED if wording is None else Kind.FINDING
             reason, reliability = why, None
-            if index is not None:
+            if wording is not None:
                 note = [trait.note] if trait.note else []
-                reason = "; ".join([trait.wordings[index], *note, INFORMATION_NOTE])
-                # "likely" reads the carried sites; every other result reads them all.
+                reason = "; ".join([wording, *note, INFORMATION_NOTE])
                 read = [
                     g[1].level
-                    for g, c in zip(got, copies, strict=True)
-                    if g is not None
-                    and (result != LIKELY or (isinstance(c, int) and c > 0))
+                    for g, r in zip(got, _reads(trait, result, copies), strict=True)
+                    if g is not None and r
                 ]
                 reliability = str(min(read, key=_RANK.index))
             claim = {

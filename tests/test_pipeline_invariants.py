@@ -205,6 +205,7 @@ from genokeeper.sources.repeats import (
     X_NOT_CALIBRATED,
 )
 from genokeeper.sources.smn import TWO_COPIES_REASON
+from genokeeper.sources.traits import TRAIT_ALLELES
 from genokeeper.store.db import TABLES, Level, Validity, connect
 from genokeeper.yhaplogroup import YLEAF_VERSION
 
@@ -580,6 +581,12 @@ def genome(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Genome:
     3's and the deletion screen's), its ClinVar release, slice 1b's inputs, the `sv` step's
     files, and the containers faked."""
     monkeypatch.setattr(tools, "GATE", tmp_path / "no-gate")
+    # The mini contigs are short: a trait site past one's end is left out (read unknown).
+    monkeypatch.setattr(
+        pipeline,
+        "TRAIT_ALLELES",
+        tuple(a for a in TRAIT_ALLELES if a[1] <= GRCH38_CONTIGS.get(a[0], 0)),
+    )
     lab = write_lab(tmp_path, cgd=[("GENEX", "AR")])
     table = write_calibration(lab, tmp_path / "calibration-scratch")
     write_stage3(lab)
@@ -2758,11 +2765,11 @@ def test_run_exports_its_snapshot_and_query_carries_the_contract(
     # on too few spanning reads; PPP2R2B, JPH3, ZFHX3 and THAP11 with two alleles of one
     # length); the 22 not-covered loci: 6 + 1 + 1 + 7 + 22; each condition no polygenic
     # score covers; slice 3d's genes not covered (`sources.paralogs.NOT_COVERED`); and
-    # slice 3f's 72 without a slice 3f table: 15 HLA (its three disease associations are
+    # slice 3f's 78 without a slice 3f table: 15 HLA (its three disease associations are
     # a research layer), HHV-6, ROH, 48 blood groups, the two gated ancestry statements
-    # and the five traits (no contig of theirs here).
+    # and the eleven traits (no contig of theirs here).
     uncovered = len(load_not_covered()) + len(PARALOG_NOT_COVERED)
-    assert result["unassessed"]["total"] == 37 + 72 + uncovered
+    assert result["unassessed"]["total"] == 37 + 78 + uncovered
     # No source gives an absolute effect.
     effect_keys = {p for p in CONTRACT if p.startswith("effect.absolute.")}
     finding_only = {"finding"}  # `show`'s wrapper key, not part of `query`
@@ -3886,12 +3893,21 @@ def test_uncalibrated_slice3f_unassessed(genome: Genome) -> None:
         inputs["steps"]
     )
 
-    # Ungated: the traits on our genotypes (the mini lab has none of their contigs).
+    # Ungated: the traits on our genotypes (every trait site is off the mini contigs or
+    # past their ends).
     traits = {sid: r for sid, r in rows.items() if r["source"] == "traits"}
     assert set(traits) == {
-        f"trait:{n}" for n in ("lactase", "ADH1B", "ACTN3", "TAS2R38", "CYP1A2")
+        f"trait:{n}"
+        for n in ("lactase", "ADH1B", "ACTN3", "TAS2R38", "CYP1A2")
+        + ("FUT2", "ABCC11", "MC1R", "HERC2", "AMPD1", "CCR5")
     }
     assert all(r["reason"] != NOT_CALIBRATED for r in traits.values())
+    # AMPD1's chr1 site, left out of the step, is read unknown (a missing allele).
+    ampd1 = traits["trait:AMPD1"]
+    assert (ampd1["kind"], ampd1["reason"]) == (
+        "unassessed",
+        "genotype unknown at rs17602729",
+    )
     # MITOMAP and chrM at the config's floor, 0.10.
     below, above = rows["mitomap:591C>T"], rows["mitomap:616T>C"]
     assert (below["kind"], above["kind"]) == ("unassessed", "finding")

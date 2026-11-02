@@ -1314,6 +1314,18 @@ SLICE3F_ROWS = [
         level=None,
         claim={"type": "trait", "trait": "TAS2R38", "result": "PAV/AVI"},
     ),
+    Row(
+        "trait:MC1R",
+        gene="MC1R",
+        level=None,
+        claim={"type": "trait", "trait": "MC1R", "result": "one strong"},
+    ),
+    Row(
+        "trait:HERC2",
+        gene="HERC2",
+        level=None,
+        claim={"type": "trait", "trait": "HERC2", "result": 2},
+    ),
 ]
 
 
@@ -1340,6 +1352,8 @@ def test_headline_for_every_3f_claim_type(
         "LCT: сохранение лактазы у взрослых: вероятно",
         "ACTN3: R577X, белок быстрых мышечных волокон: копий аллеля эффекта 2",
         "TAS2R38: восприятие горького вкуса: PAV/AVI",
+        "MC1R: варианты рыжих волос: один сильный вариант",
+        "HERC2: цвет глаз: копий аллеля эффекта 2",
     ):
         assert shown in feed, shown
     for row in SLICE3F_ROWS:

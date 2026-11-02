@@ -72,10 +72,10 @@ gene's callability goes into the store's `coverage` table, and the sex-chromosom
 is one statement (`DosageSource`), both from `foundation_steps`.
 
 Slice 3f types what the reads say beyond the variants: haplocheck's contamination check
-and GenCC's validity in every run, MITOMAP's confirmed chrM variants and five traits on the
-run's calls, and, with a current slice 3f calibration table (`genokeeper calibrate`), HLA,
-HHV-6, runs of homozygosity, blood groups and ancestry (`typing_steps`), each gated
-statement unassessed with the reason without one.
+and GenCC's validity in every run, MITOMAP's confirmed chrM variants and eleven traits (3f's
+five, 3g's six) on the run's calls, and, with a current slice 3f calibration table
+(`genokeeper calibrate`), HLA, HHV-6, runs of homozygosity, blood groups and ancestry
+(`typing_steps`), each gated statement unassessed with the reason without one.
 
 `genokeeper run` runs it on this machine's files under umask 077, and exits 2, with a
 one-line message, on a missing tool or input (naming the bootstrap), a platform the T7
