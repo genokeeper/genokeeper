@@ -329,7 +329,7 @@ def named_deletions(
     found: list[tuple[NamedCnv, Shown]] = []
     for d in deletions:
         row = _named(d, named)
-        if row is not None and not is_common(d, s.population, s.thresholds):
+        if row is not None and not is_common(d, s):
             found.append((row, Shown(d, classify(d, s), {}, population_match(d, s))))
     return found
 
@@ -387,7 +387,7 @@ def screen_cnv(
         if _within(d, owned_at):
             dropped[OWNED] += 1
             continue
-        if is_common(d, s.population, d_t):
+        if is_common(d, s):
             dropped[COMMON] += 1
             continue
         if d.svtype == "DEL":

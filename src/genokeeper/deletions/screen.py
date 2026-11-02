@@ -159,6 +159,10 @@ class Screen:
         )
 
     @cached_property
+    def _population(self) -> _Index[PopulationSv]:
+        return _Index((p.chrom, p.pos, p.end, p) for p in self.population)
+
+    @cached_property
     def _mask(self) -> _Index[None]:
         return _Index((c, s, e, None) for v in self.mask.values() for c, s, e in v)
 
@@ -278,17 +282,17 @@ def common_match(
     return max(matches, key=lambda p: p.af, default=None)
 
 
-def is_common(
-    d: Deletion, population: Sequence[PopulationSv], t: DeletionThresholds
-) -> bool:
-    """The `COMMON` test alone: a match above `max_gnomad_af`."""
-    match = common_match(
-        d,
-        population,
-        min_overlap=t.min_reciprocal_overlap,
-        distance=max_distance(d, t),
-    )
-    return match is not None and match.af > t.max_gnomad_af
+def is_common(d: Deletion, s: Screen) -> bool:
+    """The `COMMON` test alone: a match (`population_match`) above `max_gnomad_af`."""
+    match = population_match(d, s)
+    return match is not None and match.af > s.thresholds.max_gnomad_af
+
+
+def is_short(d: Deletion, t: DeletionThresholds) -> bool:
+    """The `SHORT` test: under `min_length`, unless its length is unknown (no `svlen`, only
+    a bound: a Scramble mobile element)."""
+    unknown = d.svlen is None and d.lower_bound
+    return d.length < t.min_length and not unknown
 
 
 def population_spans(calls: Sequence[Deletion], *, pad: int) -> list[Interval]:
@@ -297,23 +301,10 @@ def population_spans(calls: Sequence[Deletion], *, pad: int) -> list[Interval]:
     return [(d.chrom, max(d.pos - pad, 0), d.end + pad) for d in calls]
 
 
-def rare(
-    deletions: Sequence[Deletion],
-    population: Sequence[PopulationSv],
-    t: DeletionThresholds,
-) -> list[Deletion]:
-    """The deletions `is_common` finds not common, each given only the records that overlap
-    it (`_Index`; an insertion, those within `max_distance`, as `population_spans` pads it):
-    the same answers as over the whole list, as `min_reciprocal_overlap` is above 0
-    (`config.load_grading` refuses another), in O(calls x overlapping records), for the
+def rare(deletions: Sequence[Deletion], s: Screen) -> list[Deletion]:
+    """The deletions `is_common` finds not common: the run's `COMMON` test, for the
     calibration's genome-wide call sets."""
-    index = _Index((p.chrom, p.pos, p.end, p) for p in population)
-    kept: list[Deletion] = []
-    for d in deletions:
-        ((chrom, start, end),) = population_spans([d], pad=max_distance(d, t))
-        if not is_common(d, index.hits(chrom, start, end), t):
-            kept.append(d)
-    return kept
+    return [d for d in deletions if not is_common(d, s)]
 
 
 def reciprocal(a: Interval, b: Interval) -> float:
@@ -347,26 +338,30 @@ def flank_only(d: Deletion, s: Screen) -> frozenset[str]:
 
 
 def population_match(d: Deletion, s: Screen) -> PopulationSv | None:
-    """`common_match` with the screen's own overlap and distance."""
+    """`common_match` with the screen's own overlap and distance, over only the records
+    that overlap the call (an insertion's, those within `max_distance`, as
+    `population_spans` pads it): the same answer as over the whole list, as
+    `min_reciprocal_overlap` is above 0 (`config.load_grading` refuses another), in
+    O(overlapping records) per call, for the calibration's genome-wide call sets."""
+    distance = max_distance(d, s.thresholds)
+    ((chrom, start, end),) = population_spans([d], pad=distance)
     return common_match(
         d,
-        s.population,
+        s._population.hits(chrom, start, end),
         min_overlap=s.thresholds.min_reciprocal_overlap,
-        distance=max_distance(d, s.thresholds),
+        distance=distance,
     )
 
 
 def screen(d: Deletion, s: Screen) -> tuple[dict[str, tuple[int, ...]], str | None]:
     """The genes the deletion shows under, with the exon numbers it hits; or `{}` and the
-    first drop reason. A call whose length is unknown (no `svlen`, only a bound: a Scramble
-    mobile element) is not short."""
-    unknown = d.svlen is None and d.lower_bound
-    if d.length < s.thresholds.min_length and not unknown:
+    first drop reason (`is_short`, `is_common`)."""
+    if is_short(d, s.thresholds):
         return {}, SHORT
     hit = exon_hits(d, s)
     if not hit:
         return {}, NO_EXON
-    if is_common(d, s.population, s.thresholds):
+    if is_common(d, s):
         return {}, COMMON
     return hit, None
 

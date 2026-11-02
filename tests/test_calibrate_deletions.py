@@ -513,11 +513,11 @@ def test_insertion_common_by_window(tmp_path: Path) -> None:
     assert [p.svlen for p in population] == [100, 280]
     assert all(p.end == p.pos + 1 for p in population)
     assert screen(call, s) == ({}, COMMON)
-    assert rare([call], population, t) == []
+    assert rare([call], s) == []
     population, s = screened(False)
     assert [p.id for p in population] == ["C"]
     assert screen(call, s) == ({"GENEA": (1,)}, None)
-    assert rare([call], population, t) == [call]
+    assert rare([call], s) == [call]
 
 
 def test_expected_true_insertions(tmp_path: Path) -> None:

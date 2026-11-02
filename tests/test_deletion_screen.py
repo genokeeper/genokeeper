@@ -21,6 +21,7 @@ from genokeeper.deletions.screen import (
     classify,
     is_common,
     key,
+    population_match,
     population_spans,
     rare,
     screen,
@@ -192,31 +193,35 @@ def test_common_dropped_and_rare_shown() -> None:
     # Reciprocal overlap 600/1000 = 0.6.
     sixty = PopulationSv("gnomAD-SV_v3_DEL_chr17_1", "chr17", 1400, 2000, 0.02)
     assert screen(d, _screen(population=[sixty])) == ({}, COMMON)
-    assert is_common(d, [sixty], T)
+    assert is_common(d, _screen(population=[sixty]))
     at_cut = PopulationSv("x", "chr17", 1400, 2000, T.max_gnomad_af)
     assert screen(d, _screen(population=[at_cut])) == ({"GENEA": (1, 2)}, None)
     forty = PopulationSv("y", "chr17", 1600, 2000, 0.5)
     assert screen(d, _screen(population=[forty])) == ({"GENEA": (1, 2)}, None)
-    assert not is_common(d, [forty, at_cut], T)
+    assert not is_common(d, _screen(population=[forty, at_cut]))
 
 
-def test_rare_agrees_with_is_common_over_the_whole_list() -> None:
+def test_population_index_finds_every_overlapping_record() -> None:
+    """The screen's index reaches a record starting long before the call, and none of
+    another chromosome or far away: one common test for the run and the calibration."""
     population = [
         PopulationSv("a", "chr17", 1400, 2000, 0.02),
         PopulationSv("b", "chr17", 1600, 2000, 0.5),
         PopulationSv("c", "chr2", 1000, 2000, 0.5),
         PopulationSv("d", "chr17", 9000, 30000, 0.5),
     ]
+    s = _screen(population=population)
+    kept = _deletion(5000, 6000)
     deletions = [
         _deletion(1000, 2000),
         _deletion(1700, 2000),
         _deletion(1000, 2000, chrom="chr2"),
-        _deletion(5000, 6000),
+        kept,
         _deletion(10000, 29000),
     ]
-    expected = [d for d in deletions if not is_common(d, population, T)]
-    assert rare(deletions, population, T) == expected
-    assert len(expected) == 1
+    assert rare(deletions, s) == [kept]
+    match = population_match(_deletion(10000, 29000), s)
+    assert match is not None and match.id == "d"
 
 
 def test_two_genes() -> None:
@@ -297,7 +302,7 @@ def test_insertion_lower_bound_by_position() -> None:
     # A record of another type never matches.
     deletion = PopulationSv("del", "chr17", 900, 1100, 0.05)
     assert screen(bound, _ins_screen([deletion])) == ({"GENEA": (1,)}, None)
-    assert rare([bound, exact], [big], INS_T) == [exact]
+    assert rare([bound, exact], _ins_screen([big])) == [exact]
 
 
 def test_insertion_spans_padded() -> None:

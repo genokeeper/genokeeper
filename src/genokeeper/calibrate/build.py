@@ -235,6 +235,7 @@ from genokeeper.deletions.screen import (
     Screen,
     _Index,  # pyright: ignore[reportPrivateUsage]
     classify,
+    is_short,
     rare,
 )
 from genokeeper.deletions.screen import key as class_key
@@ -757,11 +758,10 @@ def judge_library(
     the truth confirms it, and each truth event's length and whether a call found it (the
     caller bands them). The same test against the same records on both sides, so a call is
     never counted a miss of a common truth event it was never meant to report."""
-    t = s.thresholds
     shutil.rmtree(work, ignore_errors=True)
     work.mkdir(parents=True)
-    ours = [(d, class_key(classify(d))) for d in rare(calls, s.population, t)]
-    theirs = [(d, "truth") for d in rare(truth, s.population, t)]
+    ours = [(d, class_key(classify(d))) for d in rare(calls, s)]
+    theirs = [(d, "truth") for d in rare(truth, s)]
     folder = against_truth(
         write_calls(ours, fasta, work / "calls.vcf.gz"),
         write_calls(theirs, fasta, work / "truth.vcf.gz"),
@@ -817,9 +817,9 @@ def build_deletions(
             if results.called is None:
                 raise _refused(library, results.failed, "deletion")
             s = load_screen(lab, grading, [*results.called, *truth_all], work)
-            # The screen cuts a deletion under `min_length` first (`SHORT`): DELLY's from
-            # half of it only confirm Dysgu's, and are never counted as calls.
-            shown = [d for d in results.called if d.length >= t.min_length]
+            # The screen's `SHORT` cut first: DELLY's calls from half of `min_length` only
+            # confirm Dysgu's, and are never counted as calls.
+            shown = [d for d in results.called if not is_short(d, t)]
             calls[library], found[library] = judge_library(
                 work / "deletions-truth",
                 shown,
@@ -1131,7 +1131,7 @@ def build_cnv(lab: Path, threads: int) -> None:
         data[key] = _Depth(
             events=events,
             junctions=dups,
-            deletions=[d for d in called if d.length >= d_t.min_length],
+            deletions=[d for d in called if not is_short(d, d_t)],
             spikes=[*losses, *gains] if TRIO[key] == "HG002" else [],
             spiked=spiked,
         )
@@ -1173,7 +1173,7 @@ def build_cnv(lab: Path, threads: int) -> None:
     def screened(lib: _Depth, events: Sequence[Deletion]) -> CnvScreen:
         return screen_cnv(
             events,
-            rare(lib.deletions, s.population, d_t),
+            rare(lib.deletions, s),
             lib.junctions,
             whole,
             t,
@@ -1403,8 +1403,8 @@ def build_insertions(lab: Path, threads: int) -> None:
                 svtype="INS",
             )
         mei_calls, mei_truth = _by_position(
-            rare(meis, s.population, t),
-            rare([d for d in truth_all if d.length >= t.min_length], s.population, t),
+            rare(meis, s),
+            rare([d for d in truth_all if d.length >= t.min_length], s),
             scanned,
             distance=t.max_distance,
             classify=of,
