@@ -98,6 +98,13 @@ def folder(lab: Path, name: str) -> Path:
     return calibration_dir(lab) / name
 
 
+def versions_files(lab: Path) -> dict[str, Path]:
+    """Each table's `versions.json` that exists, by name. A run records their sha256s
+    (`run.inputs["tables"]`) and a refresh runs again when one differs on disk: `calibrate`
+    writes a table only when it is stale, so a new one always has other versions."""
+    return {n: p for n in TABLES if (p := folder(lab, n) / VERSIONS).is_file()}
+
+
 def write_table(
     lab: Path, name: str, write: Callable[[Path], None], versions: Mapping[str, str]
 ) -> Path:

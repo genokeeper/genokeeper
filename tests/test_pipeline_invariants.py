@@ -994,6 +994,11 @@ def test_run_genome_end_to_end(genome: Genome) -> None:
         "benchmark": {"path": str(bench), "sha256": sha256_file(bench)},
         "hg002_cells": {"reason": NOT_MEASURED},
     }
+    # What a refresh compares with the lab: the run recorded each lab table as found.
+    lab = genome.lab.paths.lab
+    assert "small_variants" in inputs["tables"]
+    for name in refresh.LAB_TABLES:
+        assert refresh._recorded(inputs, name) == refresh._on_disk(lab, name)  # pyright: ignore[reportPrivateUsage]
 
     # A rerun reuses every step: nothing is aligned, measured or called again.
     again = _run_genome(genome)

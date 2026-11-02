@@ -201,7 +201,12 @@ from genokeeper.calibrate.stage3 import (
     two_x_key,
 )
 from genokeeper.calibrate.table import MANIFEST, CalibrationTable
-from genokeeper.calibrate.tables import NOT_CALIBRATED, Stale, open_table
+from genokeeper.calibrate.tables import (
+    NOT_CALIBRATED,
+    Stale,
+    open_table,
+    versions_files,
+)
 from genokeeper.call.deepvariant import (
     CALLING_FLAGS,
     CHECKPOINT_FILES,
@@ -3957,6 +3962,8 @@ def run_genome(
         "gwas": sha256_file(catalog),
         "panel_pvar": sha256_cached(variants, identities),
     }
+    # Read before any table is opened, so a table written during the run differs from it.
+    tables_input = {n: _file(p, sha256_file(p)) for n, p in versions_files(lab).items()}
     calibrated = calibration_versions(lab, tools=versions, identities=identities)
     calibration = open_calibration(lab, calibrated)
     # Without the Parascopy data stage 3 is unassessed, naming the bootstrap; the run goes on.
@@ -5029,6 +5036,7 @@ def run_genome(
             "date": dosage.date,
         },
         "calibration": calibration.record,
+        "tables": tables_input,
         "stage3": {
             "table": None if stage3_table is None else stage3_table.versions,
             "reason": stage3_reason,

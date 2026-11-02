@@ -39,11 +39,14 @@ from typing import TYPE_CHECKING, Any
 import duckdb
 
 from genokeeper import history, refresh_log
+from genokeeper.calibrate.tables import versions_files
 from genokeeper.checksum import sha256_file
 from genokeeper.config import Paths, load_paths
 from genokeeper.dashboard import write_dashboard
 from genokeeper.evidence.cgd import newest_cgd
 from genokeeper.evidence.clingen import DOSAGE_FILE
+from genokeeper.evidence.frequency import MANIFEST as FAF_MANIFEST
+from genokeeper.evidence.frequency import faf_folder
 from genokeeper.evidence.gencc import newest_gencc
 from genokeeper.evidence.gwas import DOWNLOAD as GWAS_DOWNLOAD
 from genokeeper.evidence.pgx import CPIC_FILES
@@ -118,6 +121,10 @@ GRADING_INPUTS: tuple[str, ...] = (
     "clingen_dosage",
     "gencc",
 )
+# The `run.inputs` keys of what the lab builds itself, compared the same way: the gnomAD FAF
+# table's manifest (`genokeeper build-faf`) and each calibration table's `versions.json`
+# (`genokeeper calibrate`), so a refresh after either grades on it.
+LAB_TABLES: tuple[str, ...] = ("faf", "tables")
 LOCK_NAME = ".refresh.lock"  # under reports/work, beside the run's own lock
 MANIFEST = "bootstrap-manifest.tsv"  # the bootstrap's step, path and sha256 per file
 EXIT_CODES = {"complete": 0, "partial": 3, "failed": 1}
@@ -262,7 +269,8 @@ def _member(folder: Path, name: str) -> dict[str, Path] | None:
     return _one(None if newest is None else newest / name)
 
 
-# Each grading input's newest file(s) on disk, found as `run_genome` finds them.
+# Each grading input's and lab table's newest file(s) on disk, found as `run_genome` finds
+# them.
 _NEWEST: dict[str, Callable[[Path], dict[str, Path] | None]] = {
     "clinvar38": lambda lab: _one(_refused_is_none(newest_clinvar38, lab)),
     "gene_validity": lambda lab: _one(_refused_is_none(newest_gene_validity, lab)),
@@ -274,6 +282,8 @@ _NEWEST: dict[str, Callable[[Path], dict[str, Path] | None]] = {
     "gwas": lambda lab: _member(lab / "gwas", GWAS_DOWNLOAD),
     "clingen_dosage": lambda lab: _member(lab / "clingen-dosage", DOSAGE_FILE),
     "gencc": lambda lab: _one(newest_gencc(lab)),
+    "faf": lambda lab: _one(faf_folder(lab) / FAF_MANIFEST),
+    "tables": versions_files,
 }
 
 
@@ -306,12 +316,13 @@ def _recorded(inputs: Mapping[str, Any], name: str) -> dict[str, str] | None:
 
 def run_needed(lab: Path, latest: Snapshot | None, identity: str) -> bool:
     """Whether a run on the newest releases is due: no snapshot yet, an analyser other than
-    the latest snapshot's, or a grading input whose newest file on disk has another sha256
-    than the one that snapshot recorded (a missing one included)."""
+    the latest snapshot's, or a grading input or lab table whose newest file on disk has
+    another sha256 than the one that snapshot recorded (a missing one included)."""
     if latest is None or latest.tools.get("analyser") != identity:
         return True
     return any(
-        _on_disk(lab, name) != _recorded(latest.inputs, name) for name in GRADING_INPUTS
+        _on_disk(lab, name) != _recorded(latest.inputs, name)
+        for name in GRADING_INPUTS + LAB_TABLES
     )
 
 

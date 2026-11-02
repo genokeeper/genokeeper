@@ -27,10 +27,13 @@ from fixtures import snapshots_mini as sm
 from fixtures.snapshots_mini import call, run_id, started, statement
 
 from genokeeper import changes, cli, refresh
+from genokeeper.calibrate import tables
 from genokeeper.config import Paths
 from genokeeper.evidence.cgd import FILE_NAME as CGD_FILE
 from genokeeper.evidence.clingen import DOSAGE_FILE
 from genokeeper.evidence.clingen import FILE_NAME as VALIDITY_FILE
+from genokeeper.evidence.frequency import MANIFEST as FAF_MANIFEST
+from genokeeper.evidence.frequency import faf_folder
 from genokeeper.evidence.gencc import GENCC_FILE
 from genokeeper.evidence.gwas import DOWNLOAD as GWAS_FILE
 from genokeeper.evidence.medlineplus import MEDLINEPLUS_FILE
@@ -126,6 +129,16 @@ def inputs_of(lab: Path) -> dict[str, Any]:
         "gwas": {**recorded(one("gwas")), "release": FIRST},
         "clingen_dosage": {**recorded(one("clingen_dosage")), "date": FIRST},
         "gencc": {**recorded(one("gencc")), "date": FIRST},
+        **(
+            {"faf": recorded(faf)}
+            if (faf := faf_folder(lab) / FAF_MANIFEST).is_file()
+            else {}
+        ),
+        "tables": {
+            name: recorded(tables.folder(lab, name) / tables.VERSIONS)
+            for name in tables.TABLES
+            if (tables.folder(lab, name) / tables.VERSIONS).is_file()
+        },
         "steps": {},
     }
 
@@ -375,6 +388,30 @@ def test_each_grading_input_on_disk_decides_a_run(lab: Lab, name: str) -> None:
         (lab.lab / "cgd" / "20260101" / CGD_FILE).write_text("cgd 2\n")
     else:
         put(lab.lab, source, "20261101", "v2")
+    assert refresh.run_needed(lab.lab, latest, IDENTITY)
+
+
+@pytest.mark.parametrize("table", ["small_variants", "stage3", "slice3f"])
+def test_a_new_calibration_table_decides_a_run(lab: Lab, table: str) -> None:
+    """`genokeeper calibrate` writes a table with other versions: the next refresh runs,
+    so the store stops reading "not calibrated"; a table the snapshot already graded with,
+    and a stale one left as it was, run nothing."""
+    tables.write_table(lab.lab, table, lambda _: None, {"bwa": "0.7.18"})
+    lab.snapshot()
+    latest = snapshots(lab.root)[-1]
+    assert not refresh.run_needed(lab.lab, latest, IDENTITY)
+    tables.write_table(lab.lab, table, lambda _: None, {"bwa": "0.7.19"})
+    assert refresh.run_needed(lab.lab, latest, IDENTITY)
+
+
+def test_a_rebuilt_faf_table_decides_a_run(lab: Lab) -> None:
+    folder = faf_folder(lab.lab)
+    folder.mkdir(parents=True)
+    (folder / FAF_MANIFEST).write_text('{"floor": 0.001}')
+    lab.snapshot()
+    latest = snapshots(lab.root)[-1]
+    assert not refresh.run_needed(lab.lab, latest, IDENTITY)
+    (folder / FAF_MANIFEST).write_text('{"floor": 0.0005}')
     assert refresh.run_needed(lab.lab, latest, IDENTITY)
 
 

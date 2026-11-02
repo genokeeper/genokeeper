@@ -792,7 +792,8 @@ refreshed source (ClinVar, ClinGen validity and dosage, CPIC, ClinPGx, the GWAS 
 MedlinePlus, LitVar2 and ClinVar's citations) and records each one new, unchanged or failed.
 It runs `genokeeper run` again only when a grading input's newest file has a sha256 other than
 the latest snapshot recorded (ClinVar, ClinGen validity and dosage, CGD, CPIC, ClinPGx, the
-GWAS Catalog), or the analyser still differs. A run re-grades from the cached calls: it never
+GWAS Catalog), when the lab built a table since (the gnomAD FAF table, or a calibration table
+`genokeeper calibrate` wrote), or the analyser still differs. A run re-grades from the cached calls: it never
 re-aligns, re-calls or re-runs VEP and SpliceAI for a new ClinVar release, and it never takes
 a pinned component.
 
