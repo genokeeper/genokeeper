@@ -2,12 +2,13 @@
 # wheel, cython>3.0.0, numpy>2.0.0) for docker/fastmixture.Dockerfile, one wheel per line, each
 # pinned by its sha256. Versions resolved by `printf 'numpy>2.0.0\ncython>3.0.0\nsetuptools>=61
 # \nwheel\n' | uv pip compile --python-version 3.12 --python-platform aarch64-manylinux_2_28
-# --only-binary :all: --exclude-newer 2026-10-16 -`; the files fetched by `pip download
+# --only-binary :all: --exclude-newer 2026-10-19 -`; the files fetched by `pip download
 # --no-deps --only-binary :all: --platform manylinux_2_28_aarch64 --platform
 # manylinux2014_aarch64 --python-version 3.12 --implementation cp --abi cp312 -r <those pins>`
-# and hashed (2026-10-30). Only numpy is needed at run time.
+# and hashed (2026-10-30; setuptools 2026-11-02, past 84.1.0's fix for a Dependabot alert).
+# Only numpy is needed at run time.
 cython==3.3.0 --hash=sha256:7e321ae700995a16dc3055ada06ffb8d61e1a7434e5d0e811547a45ac1015ebd
 numpy==2.5.4 --hash=sha256:fe4d21ab149f15e4e6043dfb0de87e6e5f34ac176cde83060e9802981fca2ac2
 packaging==26.3 --hash=sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c
-setuptools==84.0.0 --hash=sha256:51a52592b3b99e102b609654876bd65f19f999935166d1352678931132b0c670
+setuptools==84.2.0 --hash=sha256:8cc107ac7a403105dc8d6477664171f36135fab26adf8b5e0edaebc313f39b21
 wheel==0.48.0 --hash=sha256:3217dcc807155e45db462d7ef2431f5ddda0d7273b700d05a67b271ceb1287ab

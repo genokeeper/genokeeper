@@ -193,12 +193,12 @@ IMAGES: dict[str, str] = {
     # BioContainers, so built here from docker/ (`BUILT`) for linux/arm64 (`PLATFORMS`), from
     # a hashed wheel list; the image carries its ISBT allele table (LABEL rbceq2.db).
     "rbceq2": "genomelab/rbceq2:2.4.4-"
-    "bf8881334d8d10f954ec27f072943d432066a623460c5047161a523f3df81298",
+    "8ad13236d966098761175bc770d55ae69509000b3223d2af7cf80c95d63361f6",
     # fastmixture 1.3.0 (github.com/Rosemeis/fastmixture tag v1.3.0; GPL-3.0: run, never
     # redistributed): no image upstream or at BioContainers, so built here from docker/
     # (`BUILT`) for linux/arm64 (`PLATFORMS`), from its PyPI sdist by sha256.
     "fastmixture": "genomelab/fastmixture:1.3.0-"
-    "466472c3556c74e091feebcf7d0bc00301a4e5f264e0fe09316f3f283007c42b",
+    "8f099f89bca8e32212b08be5ab228e4057f29f51ae57873e64ca2da1711aa119",
     # hmmix 0.9.2 (github.com/LauritsSkov/Introgression-detection; no tags): no image
     # upstream or at BioContainers, so built here from docker/ (`BUILT`) for linux/arm64
     # (`PLATFORMS`), from an explicit conda lockfile (Python 3.10, bcftools, vcftools) and a

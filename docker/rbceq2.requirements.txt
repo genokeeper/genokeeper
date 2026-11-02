@@ -1,10 +1,13 @@
 # RBCeq2 2.4.4 and its dependencies (its wheel's Requires-Dist) for docker/rbceq2.Dockerfile,
-# one wheel per line, each pinned by its sha256. Versions resolved by `printf 'rbceq2==2.4.4\n'
-# | uv pip compile --python-version 3.12 --python-platform aarch64-manylinux2014 --only-binary
-# :all: --exclude-newer 2026-10-16 -`; the files fetched by `pip download --no-deps
-# --only-binary :all: --platform manylinux2014_aarch64 --python-version 3.12 --implementation
-# cp --abi cp312 -r <those pins>` and hashed (2026-10-30). The manylinux2014 tag holds numpy
-# at 2.2.6, pandas at 2.3.2 and pyarrow at 20.0.0, the newest with such aarch64 wheels.
+# one wheel per line, each pinned by its sha256. Versions resolved by `printf
+# 'rbceq2==2.4.4\npandas==2.3.2\nnumpy==2.2.6\npyarrow==23.0.1\n' | uv pip compile
+# --python-version 3.12 --python-platform aarch64-manylinux_2_28 --only-binary :all:
+# --exclude-newer 2026-10-17 -`; the files fetched by `pip download --no-deps --only-binary
+# :all: --platform manylinux_2_28_aarch64 --platform manylinux2014_aarch64 --python-version
+# 3.12 --implementation cp --abi cp312 -r <those pins>` and hashed (2026-10-30; pillow and
+# pyarrow 2026-11-02). numpy and pandas stay where the first list (manylinux2014 only) put them,
+# pandas before 3; pillow 13.0.0 (via reportlab) and pyarrow 23.0.1, the first releases with
+# the fixes for GitHub's Dependabot alerts, have manylinux_2_28 wheels only.
 asttokens==3.0.2 --hash=sha256:9da13157f5b28becde0bd374fc677dcd3c290614264eff096f167c469cd9f933
 charset-normalizer==3.5.2 --hash=sha256:b91363207bd9dc966a691e959bb47f64b30f7ac4b072be9968b366982f7db77c
 colorama==0.4.6 --hash=sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6
@@ -14,10 +17,10 @@ icecream==2.2.0 --hash=sha256:f8df7343b3e787023eec22f42fbe4722df2f93099d394fd820
 loguru==0.7.3 --hash=sha256:31a33c10c8e1e10422bfd431aeb5d351c7cf7fa671e3c4df004162264b28220c
 numpy==2.2.6 --hash=sha256:f2618db89be1b4e05f7a1a847a9c1c0abd63e63a1607d892dd54668dd92faf87
 pandas==2.3.2 --hash=sha256:0bd281310d4f412733f319a5bc552f86d62cddc5f51d2e392c8787335c994175
-pillow==12.2.0 --hash=sha256:03e7e372d5240cc23e9f07deca4d775c0817bffc641b01e9c3af208dbd300987
+pillow==13.0.0 --hash=sha256:8bf295fe459343bc6093c8e5e0df60bfa189e0fcb775a22e2c2488fdeccc6c0d
 polars==2.0.0 --hash=sha256:35d62f3541b7a6d4c360a2e2f07fccc0c2bcbd33b0ea51c83a25417a47a3f3ad
 polars-runtime-32==2.0.0 --hash=sha256:8b85bb42e6009acc9629afcc70a83473fd468694d6a30ffb0ab376c8dd1a0a17
-pyarrow==20.0.0 --hash=sha256:4ba3cf4182828be7a896cbd232aa8dd6a31bd1f9e32776cc3796c012855e1199
+pyarrow==23.0.1 --hash=sha256:86ff03fb9f1a320266e0de855dee4b17da6794c595d207f89bba40d16b5c78b9
 pygments==2.21.0 --hash=sha256:2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9
 python-dateutil==2.9.0.post0 --hash=sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427
 pytz==2026.5 --hash=sha256:e658af3757f9e26a9d25dd2aff38335acd92bc9104f890a894b2c1ba28311b03
