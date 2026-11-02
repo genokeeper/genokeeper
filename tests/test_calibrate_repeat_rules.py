@@ -128,6 +128,10 @@ def test_merge_withheld_precedence() -> None:
         {"CNBP": RULE_DID_NOT_HOLD, "HTT": PARENT_FINDING},
         {"CNBP": NO_CALL, "HTT": FALSE_CALL, "TBP": LIBRARIES_DISAGREE},
     ) == {"CNBP": NO_CALL, "HTT": FALSE_CALL, "TBP": LIBRARIES_DISAGREE}
+    # A false call names itself over low depth, as `stage3.measure` names it.
+    assert merge_withheld({"HTT": LOW_DEPTH}, {"HTT": FALSE_CALL}) == {
+        "HTT": FALSE_CALL
+    }
     # A key's only reason passes through: RFC1's, and 3a's SMN and Y haplogroup.
     assert merge_withheld({RFC1_LOCUS: RFC1_WITHHELD}, {SMN_KEY: SMN_WITHHELD}) == {
         RFC1_LOCUS: RFC1_WITHHELD,
@@ -228,6 +232,12 @@ def test_low_depth_rfc1_and_cftr_validate_nothing() -> None:
     withheld, _, measured = _measure(samples)
     assert withheld == {RFC1_LOCUS: RFC1_WITHHELD}
     assert measured[FATHER]["rfc1"]["kind"] == "unassessed"
+    # HG002's benign expanded allele read at low depth is not seen.
+    seen = replace(_rfc1(), low_depth=True)
+    samples = {
+        key: replace(s, rfc1=seen) if key in HG002 else s for key, s in _trio().items()
+    }
+    assert _measure(samples)[0] == {RFC1_LOCUS: RFC1_WITHHELD}
     tg = replace(_call(CFTR_TG, 11, 12), low_depth=True)
     withheld, _, measured = _measure(_with(_trio(), HG002, tg))
     assert withheld == {CFTR_GENE: LOW_DEPTH}
