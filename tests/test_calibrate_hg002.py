@@ -370,6 +370,13 @@ def test_download_md5_mismatch_keeps_the_file(
     assert [p.name for p in out.parent.iterdir()] == [".raw"]
 
 
+def test_a_test_never_reads_the_hosts_free_disk(tmp_path: Path) -> None:
+    """The download and re-alignment tests reach `need_space`; each sees conftest's stub
+    (`ample_free_disk`), never the free space of the machine running it, which on a small
+    CI runner is under the 20 GB margin."""
+    assert shutil.disk_usage(tmp_path).free == 10**12
+
+
 def test_download_refuses_without_free_space(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -26,7 +26,7 @@ files, not this one. How to file, close and reference an entry:
 | [BR-007](bugs/BR-007.md) | low | calibrate | A stage-3 table stays valid after a [repeat_loci] threshold edit: its versions omit the thresholds measure withholds by | 2026-10-28 |
 | [BR-011](bugs/BR-011.md) | medium | sources | A ClinVar-classified and a predicted carrier variant in one recessive gene are never offered for phasing | 2026-11-02 |
 
-## Fixed (14)
+## Fixed (15)
 
 | ID | Title | Fixed in |
 |---|---|---|
@@ -43,6 +43,7 @@ files, not this one. How to file, close and reference an entry:
 | [BR-018](bugs/BR-018.md) | Step keys: the repeats key hashes each repeat locus whole, so a note or threshold edit re-runs ExpansionHunter; native samtools and repeated parts were suspected too | `genokeeper/genokeeper#6` |
 | [BR-019](bugs/BR-019.md) | A comment-only edit to a built image's lock file moves its tag and re-runs every step keyed on it | `genokeeper/genokeeper#6` |
 | [BR-023](bugs/BR-023.md) | SpliceAI's scores miss the listed genes renamed since its 2016 annotation | `genokeeper/genokeeper#8` |
+| [BR-024](bugs/BR-024.md) | Tests that download or re-align read the host's real free disk, so the suite fails on a machine with less than 20 GB free | `claude/tests-free-disk` |
 | [BR-026](bugs/BR-026.md) | Secretor status is stated twice, by the FUT2 trait and the FUT2 blood group, and neither says which one to trust | `genokeeper/genokeeper#10` |
 
 ## Void identifiers (0)
