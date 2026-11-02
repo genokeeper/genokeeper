@@ -170,7 +170,9 @@ class Shown:
     """A deletion the screen shows: its class, gene -> exon numbers hit (sorted genes), the
     highest-AF gnomAD-SV record it matches, rare or not, for a depth event gene -> its
     kind there (`loss`, `tandem`, `intragenic`, `whole`, `partial`; empty for 3b's), and
-    the genes whose targets it touches only in the margin beside an exon (`flank_only`)."""
+    the genes whose targets it touches only in the margin beside an exon (`flank_only`),
+    and gene -> the numbers of exons only the MANE Plus Clinical transcript has that it
+    hits, numbered by that transcript (`exons` holds Select's numbers alone)."""
 
     deletion: Deletion
     call_class: CallClass
@@ -178,6 +180,9 @@ class Shown:
     population: PopulationSv | None
     kinds: Mapping[str, str] = field(default_factory=dict[str, str])
     flank: frozenset[str] = frozenset()
+    plus_clinical: Mapping[str, tuple[int, ...]] = field(
+        default_factory=dict[str, tuple[int, ...]]
+    )
 
 
 def key(c: CallClass) -> str:
@@ -310,19 +315,27 @@ def reciprocal(a: Interval, b: Interval) -> float:
     return max(overlap, 0) / max(a[2] - a[1], b[2] - b[1], 1)
 
 
-def exon_hits(d: Deletion, s: Screen) -> dict[str, tuple[int, ...]]:
-    """The genes whose targets the call touches, with the exon numbers it hits (sorted)."""
+def exon_hits(
+    d: Deletion, s: Screen, *, plus_clinical: bool = False
+) -> dict[str, tuple[int, ...]]:
+    """The genes whose targets the call touches, with the MANE Select exon numbers it hits
+    (sorted; a gene it touches only in Plus-Clinical-only exons has none); with
+    `plus_clinical`, only the genes where it hits those, with their numbers."""
     hit: dict[str, set[int]] = {}
     for gene, t in s._targets.hits(d.chrom, d.pos, d.end):
-        hit.setdefault(gene, set()).update(t.exons)
+        if plus_clinical and not t.plus_clinical:
+            continue
+        hit.setdefault(gene, set()).update(
+            t.exons if t.plus_clinical == plus_clinical else ()
+        )
     return {gene: tuple(sorted(hit[gene])) for gene in sorted(hit)}
 
 
 def flank_only(d: Deletion, s: Screen) -> frozenset[str]:
     """The genes whose targets the call touches only within `exon_margin` of their ends:
     a target is its exons widened by the margin and merged where they touch, so its bases
-    past the margin at either end are exon or an intron of at most twice the margin (40 bp
-    by default), shorter than any deletion the screen keeps (50 bp)."""
+    past the margin at either end are exon or an intron of at most twice the margin, shorter
+    than any deletion the screen keeps (`config.load_grading` refuses another margin)."""
     m = s.thresholds.exon_margin
     hit: dict[str, bool] = {}
     for gene, t in s._targets.hits(d.chrom, d.pos, d.end):
@@ -397,6 +410,7 @@ def screen_all(
                 exons,
                 population_match(d, s),
                 flank=flank_only(d, s),
+                plus_clinical=exon_hits(d, s, plus_clinical=True),
             )
         )
     shown, same = one_per_position(candidates)

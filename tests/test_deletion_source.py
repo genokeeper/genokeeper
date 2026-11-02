@@ -291,6 +291,20 @@ def test_flank_only_gene_reason_says_so(tmp_path: Path) -> None:
     assert FLANK_ONLY not in rows["BRCA1"]
 
 
+def test_claim_names_plus_clinical_exons_apart(tmp_path: Path) -> None:
+    """An exon only the Plus Clinical transcript has goes in `plus_clinical_exons`, never
+    in `exons`, which are Select's numbers."""
+    shown = replace(
+        _shown("DYNC2H1", exons={"DYNC2H1": (64,)}),
+        plus_clinical={"DYNC2H1": (64,)},
+    )
+    (row,) = _gene_rows(_collect(tmp_path, [shown]))
+    claim = json.loads(str(row["claim"]))
+    assert (claim["exons"], claim["plus_clinical_exons"]) == ([64], [64])
+    (plain,) = _gene_rows(_collect(tmp_path, [_shown()]))
+    assert json.loads(str(plain["claim"]))["plus_clinical_exons"] == []
+
+
 def test_zygosity_and_consequence_warnings(tmp_path: Path) -> None:
     """A deletion called on both copies warns that zygosity is not calibrated; every one
     warns that its consequence is not assessed, last."""
@@ -394,7 +408,8 @@ def test_deletion_wording_unchanged(tmp_path: Path) -> None:
         " reads; predicted, not classified; discuss with a geneticist",
         "claim": '{"schema": "genomelab.claim/1", "type": "deletion", "gene": "BRCA1",'
         ' "chrom": "chr17", "start": 43044001, "end": 43046000, "length": 2000, "exons":'
-        ' [2, 3], "callers": {"dysgu": "1234 QUAL 45.0", "delly": "DEL00012 QUAL 300"},'
+        ' [2, 3], "plus_clinical_exons": [], "callers": {"dysgu": "1234 QUAL 45.0",'
+        ' "delly": "DEL00012 QUAL 300"},'
         ' "depth_ratio": 0.4, "class": {"band": "long", "evidence": "both+depth",'
         ' "repeat": false, "masked": false}, "gnomad_sv": null, "false_call_rate":'
         " [0.05, 0.025, 0.1]}",

@@ -6,6 +6,7 @@ import json
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import replace
 from pathlib import Path
+from typing import cast
 
 from fixtures.run_context import run_context
 
@@ -66,6 +67,7 @@ def _source(
     triplosensitive: frozenset[str] = frozenset(),
     overrides: Mapping[str, tuple[str, str]] | None = None,
     large_withheld: Mapping[str, str] | None = None,
+    cautions: Callable[[Shown], list[str]] = lambda _: [],
 ) -> CnvSource:
     dropped = dict(dropped or {})
     return CnvSource(
@@ -81,6 +83,7 @@ def _source(
         placement_overrides=overrides or {},
         segdup_exons={"GENEA": (4,)},
         large_withheld=large_withheld or {},
+        deletion_cautions=cautions,
     )
 
 
@@ -303,6 +306,36 @@ def test_named_gjb6_deletion(tmp_path: Path) -> None:
     row = _statements(_collect(unmeasured, tmp_path))["cnv:named:GJB6-D13S1830"]
     assert (row["kind"], row["vid"]) == (str(Kind.UNASSESSED), None)
     assert row["reason"] == "not calibrated: no loss_5kb+ calls measured"
+
+
+def test_named_3b_deletion_carries_the_deletion_tables_cautions(tmp_path: Path) -> None:
+    """A named locus over a 3b deletion shows the deletion table's chance of being false,
+    so its call carries that table's cautions (a class it never saw, a target outside its
+    benchmark); a named depth loss, rated by the cnv table, carries none."""
+    (gjb6,) = load_named()
+    deletion = Deletion(
+        "chr13", 20_210_000, 20_520_000, "A", "0/1", {"delly": "D"}, 0.4
+    )
+    long_delly = CallClass("long", "delly+depth", False, False)
+
+    def caution(shown: Shown) -> list[str]:
+        return [f"caution {shown.call_class.band}"]
+
+    named = _collect(
+        _source(
+            named=[(gjb6, Shown(deletion, long_delly, {}, None))], cautions=caution
+        ),
+        tmp_path,
+    )
+    (call,) = [r.call for r in named.rows if r.call is not None]
+    assert "caution long" in cast(list[str], call["warnings"])
+    depth = Deletion("chr13", 20_210_000, 20_520_000, "N", "0/1", BOTH, None)
+    loss = _collect(
+        _source(named=[(gjb6, Shown(depth, LOSS, {}, None))], cautions=caution),
+        tmp_path,
+    )
+    (call,) = [r.call for r in loss.rows if r.call is not None]
+    assert not any(w.startswith("caution") for w in cast(list[str], call["warnings"]))
 
 
 def test_cnv_accounting_balanced(tmp_path: Path) -> None:

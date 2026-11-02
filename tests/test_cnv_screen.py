@@ -4,6 +4,7 @@ and why the others are dropped. Every event is built by hand; no genome is read.
 
 import gzip
 from collections.abc import Sequence
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -118,6 +119,15 @@ def _only(result: CnvScreen) -> str:
     (reason,) = [r for r, n in result.dropped.items() if n]
     assert result.dropped[reason] == 1
     return reason
+
+
+def test_depth_loss_names_plus_clinical_exons_apart() -> None:
+    """A depth loss over a Plus-Clinical-only target names its number apart from Select's,
+    as a 3b deletion does."""
+    plus = Target("chr1", 20_000, 20_200, (3,), plus_clinical=True)
+    screen = replace(_screen(), targets={"GENEA": [*TARGETS["GENEA"], plus]})
+    (shown,) = _run([_event(19_000, 22_000)], screen=screen).shown
+    assert (shown.exons, shown.plus_clinical) == ({"GENEA": ()}, {"GENEA": (3,)})
 
 
 def test_depth_loss_over_deletion_joins_it() -> None:

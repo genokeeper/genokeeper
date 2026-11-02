@@ -642,6 +642,7 @@ def test_skill_covers_deletions() -> None:
         "`no calibration call of this class: its chance of being false is extrapolated`",
         "`over a target outside the benchmark the chance of being false was measured in`",
         "`touches only the bases beside an exon, not the exon itself`",
+        "`claim.plus_clinical_exons`",
         "`an end in a tandem repeat: may be a repeat-length change`",
         "`an end in a segmental duplication or low-mappability region`",
         "the screen found none; a miss is possible",

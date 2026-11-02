@@ -3032,13 +3032,14 @@ def open_slice3d_tables(lab: Path, fasta_sha: str, grading: Grading) -> Slice3dT
 @dataclass(frozen=True)
 class ScreenedDeletions:
     """3b's screen as slice 3d reads it: the callers' union, the shown deletions, the screen
-    they were shown under (None: 3b did not run) and each 3b class's chance of being
-    false."""
+    they were shown under (None: 3b did not run), each 3b class's chance of being false and
+    the deletion table's cautions on a call (`DeletionTable.cautions`)."""
 
     called: Sequence[Deletion]
     shown: Sequence[Shown]
     screen: Screen | None
     p_wrong: Callable[[CallClass], Rate | None]
+    cautions: Callable[[Shown], list[str]]
 
 
 @dataclass(frozen=True)
@@ -3244,6 +3245,7 @@ def slice3d_steps(
         p_wrong=depth_p_wrong,
         haploinsufficient=dosage.haploinsufficient,
         triplosensitive=dosage.triplosensitive,
+        deletion_cautions=deletions.cautions,
         placement_overrides=screen_overrides(),
         segdup_exons=segdups,
         large_withheld=withheld,
@@ -4778,6 +4780,11 @@ def run_genome(
         deletion_table.p_wrong if deletion_table is not None else lambda _: None
     )
 
+    def deletion_cautions(shown: Shown) -> list[str]:
+        if deletion_table is None:
+            return []
+        return deletion_table.cautions(shown.deletion, shown.call_class)
+
     # Slice 3d: copy number from read depth, insertions, the paralog loci and Lp(a), each
     # run only with its table current; 3b's deletions are read, never waited on.
     slice3d, found3d = slice3d_steps(
@@ -4793,7 +4800,9 @@ def run_genome(
         male=male,
         mean_depth=metrics["mean_depth"],
         dysgu=steps.get("dysgu"),
-        deletions=ScreenedDeletions(called, shown, deletion_screen, deletion_p_wrong),
+        deletions=ScreenedDeletions(
+            called, shown, deletion_screen, deletion_p_wrong, deletion_cautions
+        ),
         dosage=dosage,
     )
     # A step stage 3 already built this run (the shared Parascopy depth) keeps its record.
@@ -4808,11 +4817,7 @@ def run_genome(
         recall={} if deletion_table is None else deletion_table.recall(),
         placement_overrides=screen_overrides(),
         depth_support=slice3d.joined,
-        cautions=(
-            (lambda _: [])
-            if deletion_table is None
-            else (lambda s: deletion_table.cautions(s.deletion, s.call_class))
-        ),
+        cautions=deletion_cautions,
     )
 
     # Slice 3f: HLA, HHV-6, ROH, blood groups and ancestry, typed only with a current

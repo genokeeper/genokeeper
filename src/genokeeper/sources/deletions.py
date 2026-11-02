@@ -324,6 +324,7 @@ class DeletionSource:
                 "end": d.end,
                 "length": None if d.svlen is None and d.lower_bound else d.length,
                 "exons": list(exons),
+                "plus_clinical_exons": list(shown.plus_clinical.get(gene, ())),
                 "callers": dict(d.callers),
                 "depth_ratio": d.depth_ratio,
                 "class": {

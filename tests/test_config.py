@@ -293,6 +293,17 @@ def test_deletion_unknown_key_refused(tmp_path: Path) -> None:
         load_grading(config)
 
 
+def test_exon_margin_must_leave_no_intron_a_deletion_fits_in(tmp_path: Path) -> None:
+    """Exons at most twice the margin apart merge into one target, so a margin of half
+    `min_length` or more lets a kept deletion lie wholly in an intron inside a target, where
+    the screen's flank test (`screen.flank_only`) reads it as an exon hit."""
+    assert load_grading(_variant(tmp_path, "exon_margin = 20", "exon_margin = 24"))
+    with pytest.raises(
+        ValueError, match=r"\[deletions\] need 2 x exon_margin < min_length"
+    ):
+        load_grading(_variant(tmp_path, "exon_margin = 20", "exon_margin = 25"))
+
+
 def test_insertion_thresholds_loaded(tmp_path: Path) -> None:
     """[insertions] holds only its distance: every other value is [deletions]'s."""
     g = load_grading()

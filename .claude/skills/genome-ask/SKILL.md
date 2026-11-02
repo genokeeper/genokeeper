@@ -963,9 +963,11 @@ track's; a deletion common in gnomAD-SV is not shown.
   called; zygosity is not calibrated` on a two-copy call. Repeat every one in the answer.
   A gene's `validity.reason` adds `touches only the bases beside an exon, not the exon
   itself` where the deletion reaches that gene's exons only within the 20 bp margin.
-  `claim.exons` names the exons whose targets it touches (MANE Select's numbering; an exon
-  only the MANE Plus Clinical transcript has, by that transcript's): where the reason says
-  it touches only the bases beside an exon, that exon is not removed. `claim.length` its size,
+  `claim.exons` names the exons whose targets it touches, in MANE Select's numbering;
+  `claim.plus_clinical_exons` names those only the gene's MANE Plus Clinical transcript has,
+  in that transcript's numbering, where the same number in `claim.exons` is another exon:
+  say which transcript each number belongs to. Where the reason says it touches only the
+  bases beside an exon, that exon is not removed. `claim.length` its size,
   `claim.callers` which callers found it.
 - The default view hides them (validity `limited`, reliability `low`): for a question
   about a gene, a deletion or "everything", lower the filters yourself with

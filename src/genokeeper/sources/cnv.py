@@ -85,7 +85,9 @@ class CnvSource:
     per locus stated), how many events the depth callers made (`called`), the drop counts,
     why the screen did not run (`not_run`), each class's chance of being false (rate, lo,
     hi; None where the table has none; a named 3b deletion's class is 3b's), ClinGen's
-    haploinsufficient and triplosensitive genes, the per-gene placement overrides
+    haploinsufficient and triplosensitive genes, the deletion table's cautions
+    (`DeletionTable.cautions`) a named 3b deletion's call carries, as its chance of being
+    false is that table's, the per-gene placement overrides
     (`genelists.screen_overrides`, A4), the target exons in 3b's mask
     (`segdup_exons`), the large-event bands the calibration withholds, band -> its
     reason, and what the screen's claim also says of how it ran (`notes`: CNVpytor dropped
@@ -100,6 +102,7 @@ class CnvSource:
     p_wrong: Callable[[CallClass], Rate | None]
     haploinsufficient: frozenset[str]
     triplosensitive: frozenset[str]
+    deletion_cautions: Callable[[Shown], list[str]]
     placement_overrides: Mapping[str, tuple[str, str]] = field(
         default_factory=dict[str, tuple[str, str]]
     )
@@ -113,8 +116,13 @@ class CnvSource:
     def tool(self) -> str:
         return CNV_TOOL
 
-    def _rows_by(self, wording: Wording) -> DeletionSource:
-        """3b's source in `wording`, writing no screen row of its own, placed by kind."""
+    def _rows_by(
+        self,
+        wording: Wording,
+        cautions: Callable[[Shown], list[str]] = lambda _: [],
+    ) -> DeletionSource:
+        """3b's source in `wording`, writing no screen row of its own, placed by kind,
+        each call carrying `cautions`."""
         return DeletionSource(
             shown=self.shown,
             called=self.called,
@@ -127,6 +135,7 @@ class CnvSource:
             place=self._place,
             placement_overrides=self.placement_overrides,
             screen_row=False,
+            cautions=cautions,
         )
 
     def _place(self, ctx: RunContext, gene: str, shown: Shown) -> Placed:
@@ -157,11 +166,13 @@ class CnvSource:
         event, with its `variant` and `call` rows where it is the first at its vid."""
         d = shown.deletion
         if not set(d.callers) <= set(DEPTH_CALLERS):
-            # A named 3b deletion: 3b's callers, source and warnings, under this tool.
+            # A named 3b deletion: 3b's callers, source, warnings and cautions, under
+            # this tool.
             wording = replace(DELETION_WORDING, tool=CNV_TOOL)
+            rows = self._rows_by(wording, self.deletion_cautions)
         else:
             wording = LOSS_WORDING if d.svtype == "DEL" else GAIN_WORDING
-        rows = self._rows_by(wording)
+            rows = self._rows_by(wording)
         vid = wording.vid(d)
         withheld = fields["kind"] == str(Kind.UNASSESSED)
         locus = f"{d.chrom}:{d.pos}-{d.end}"

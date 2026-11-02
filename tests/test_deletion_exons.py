@@ -144,7 +144,23 @@ def test_targets_number_by_mane_select() -> None:
     plus = Exon("AAA", "ENST2", 31, "chr1", 1000, 1100, select=False)
     alone = Exon("AAA", "ENST2", 5, "chr1", 3000, 3100, select=False)
     assert targets({"AAA": [select, plus, alone]}, 20) == {
-        "AAA": [Target("chr1", 980, 1120, (30,)), Target("chr1", 2980, 3120, (5,))]
+        "AAA": [
+            Target("chr1", 980, 1120, (30,)),
+            Target("chr1", 2980, 3120, (5,), plus_clinical=True),
+        ]
+    }
+
+
+def test_plus_clinical_only_target_marked() -> None:
+    """A target holding no Select exon is numbered by the Plus Clinical transcript and
+    says so (`plus_clinical`): its number may be another exon's in Select's numbering."""
+    select = Exon("AAA", "ENST1", 64, "chr1", 5000, 5100)
+    plus = Exon("AAA", "ENST2", 64, "chr1", 3000, 3020, select=False)
+    assert targets({"AAA": [select, plus]}, 20) == {
+        "AAA": [
+            Target("chr1", 2980, 3040, (64,), plus_clinical=True),
+            Target("chr1", 4980, 5120, (64,)),
+        ]
     }
 
 

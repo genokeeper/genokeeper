@@ -434,7 +434,16 @@ def screen_cnv(
             gene: "loss" if d.svtype == "DEL" else gain_kind(d, spans[gene], junction)
             for gene in exons
         }
-        candidates.append(Shown(d, c, exons, population_match(d, s), kinds=kinds))
+        candidates.append(
+            Shown(
+                d,
+                c,
+                exons,
+                population_match(d, s),
+                kinds=kinds,
+                plus_clinical=exon_hits(d, s, plus_clinical=True),
+            )
+        )
     shown, same = one_per_position(candidates)
     dropped[SAME_POSITION] += same
     return CnvScreen(

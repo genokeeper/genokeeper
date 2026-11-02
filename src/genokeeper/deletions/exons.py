@@ -10,7 +10,8 @@ transcript on `chr11_KN196481v1_fix`, so SLC37A4 is not covered);
 after checking the GTF is the pinned release. `load_exons` reads that resource back. Exon numbers
 are each transcript's own, so a gene with a Select and a Plus Clinical transcript has two
 numberings. `targets` widens each gene's exons by a margin and merges those that touch, and
-numbers each target by its MANE Select exons (by the Plus Clinical ones where it has none).
+numbers each target by its MANE Select exons, or by the Plus Clinical ones where it has none
+(`Target.plus_clinical`).
 
 `cut_spans` takes each gene's MANE Select transcript span on the primary assembly (MANE
 v1.5 also places a C4A transcript on `chr6_GL000254v2_alt`, which must not replace chr6's);
@@ -84,12 +85,14 @@ class Exon:
 @dataclass(frozen=True)
 class Target:
     """A region of a gene the screen reads: its exons widened by a margin and merged;
-    `exons` are the numbers merged into it."""
+    `exons` are the numbers merged into it, the Plus Clinical transcript's where
+    `plus_clinical` (it holds no Select exon), which may name another exon in Select's."""
 
     chrom: str
     start: int
     end: int
     exons: tuple[int, ...]
+    plus_clinical: bool = False
 
 
 def _mane_rows(
@@ -249,16 +252,15 @@ def targets(
                 merged[-1] = (chrom, first, max(last, end), [*held, e])
             else:
                 merged.append((e.chrom, start, end, [e]))
-        result[gene] = [
-            Target(c, s, e, tuple(sorted({x.number for x in _numbered(held)})))
-            for c, s, e, held in merged
-        ]
+        result[gene] = [_target(c, s, e, held) for c, s, e, held in merged]
     return result
 
 
-def _numbered(held: Sequence[Exon]) -> list[Exon]:
-    """The exons whose numbers name a target: its MANE Select ones, else all of them."""
-    return [e for e in held if e.select] or list(held)
+def _target(chrom: str, start: int, end: int, held: Sequence[Exon]) -> Target:
+    """The target numbered by its MANE Select exons, else by all of them (Plus Clinical's)."""
+    select = [e for e in held if e.select]
+    numbers = tuple(sorted({e.number for e in select or held}))
+    return Target(chrom, start, end, numbers, plus_clinical=not select)
 
 
 def _pinned(gtf: Path) -> str:

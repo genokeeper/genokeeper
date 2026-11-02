@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from genokeeper.config import DeletionThresholds, InsertionThresholds
-from genokeeper.deletions.exons import Exon, Target, targets
+from genokeeper.deletions.exons import Exon, Target, load_exons, targets
 from genokeeper.deletions.screen import (
     COMMON,
     NO_DEPTH,
@@ -185,6 +185,27 @@ def test_flank_only_overlap_named_per_gene() -> None:
     (both,), _ = screen_all([_deletion(3050, 4985)], s)
     assert both.exons == {"GENEA": (3,), "GENEB": (1,)}
     assert both.flank == frozenset({"GENEB"})
+
+
+def test_plus_clinical_only_exon_named_apart() -> None:
+    """DYNC2H1's Plus-Clinical-only exon 64 lies 2 kb before Select's exon 64: a deletion
+    over it names it apart from Select's, and one over both names each once."""
+    s = Screen(
+        targets({"DYNC2H1": load_exons()["DYNC2H1"]}, T.exon_margin), {}, {}, (), T
+    )
+    only, both = (
+        _deletion(103_241_500, end, chrom="chr11") for end in (103_241_600, 103_243_700)
+    )
+    (shown,), _ = screen_all([only], s)
+    assert (dict(shown.exons), dict(shown.plus_clinical)) == (
+        {"DYNC2H1": ()},
+        {"DYNC2H1": (64,)},
+    )
+    (shown,), _ = screen_all([both], s)
+    assert (dict(shown.exons), dict(shown.plus_clinical)) == (
+        {"DYNC2H1": (64,)},
+        {"DYNC2H1": (64,)},
+    )
 
 
 def test_whole_gene_deletion_shown() -> None:

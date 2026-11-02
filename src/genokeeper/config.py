@@ -626,6 +626,13 @@ def load_grading(path: Path | None = None) -> Grading:
             f"{path}: [deletions] need 0 < min_length < long_from, exon_margin >= 0"
             " and min_gnomad_an >= 0"
         )
+    # Exons at most twice the margin apart merge into one target: a kept deletion must not
+    # fit wholly in the intron between them, or `screen.flank_only` reads it as an exon hit.
+    if 2 * d.exon_margin >= d.min_length:
+        raise ValueError(
+            f"{path}: [deletions] need 2 x exon_margin < min_length, so no deletion the"
+            " screen keeps fits in an intron inside a target"
+        )
     if not all(0 < v <= 1 for v in fractions):
         raise ValueError(
             f"{path}: [deletions] rates and ratios: need a fraction in (0, 1]"
