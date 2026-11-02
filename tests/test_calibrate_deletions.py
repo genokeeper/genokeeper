@@ -15,8 +15,8 @@ from fixtures.genome_mini import FakeDeletions, lab_paths
 from fixtures.grch38_mini import write_reference
 
 from genokeeper import pipeline
-from genokeeper.calibrate import hg002, tables
-from genokeeper.calibrate.build import build_deletions
+from genokeeper.calibrate import build, hg002, tables
+from genokeeper.calibrate.build import build_deletions, judge_library
 from genokeeper.calibrate.classes import (
     BandTerms,
     Geometry,
@@ -640,6 +640,43 @@ def test_deletion_steps_failure_leaves_the_screen_unassessed(
     monkeypatch.setattr(pipeline, step, fail)
     results, _ = _steps(tmp_path, monkeypatch, FakeDeletions())
     assert results.called is None and results.failed
+
+
+def test_calibration_judges_what_the_run_does_not_drop_as_common(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`judge_library` hands Truvari exactly the calls and truth deletions the run's
+    `screen` keeps past `COMMON`, over one `Screen`: a second common test on either side
+    would fail here. Records far before a call, of another type or chromosome included."""
+    population = [
+        PopulationSv("a", "chr1", 1400, 2000, 0.02),
+        PopulationSv("b", "chr1", 9000, 30000, 0.5),
+        PopulationSv("c", "chr2", 1000, 2000, 0.5),
+        PopulationSv("dup", "chr1", 5000, 6000, 0.5, svtype="DUP"),
+        PopulationSv("low", "chr1", 40000, 41000, T.max_gnomad_af),
+    ]
+    whole = {"G": [Target("chr1", 0, 100_000, (1,))]}
+    s = Screen(whole, {}, {}, population, T)
+    calls = [
+        Deletion("chr1", pos, end, "N", "0/1", {"dysgu": "1", "delly": "2"}, 0.4)
+        for pos, end in ((1000, 2000), (5000, 6000), (10000, 29000), (40000, 41000))
+    ]
+    truth = [replace(d, callers={"truth": "t"}) for d in calls]
+    handed: list[list[Deletion]] = []
+
+    def capture(rows: Sequence[tuple[Deletion, str]], *_: object) -> Path:
+        handed.append([d for d, _ in rows])
+        return tmp_path
+
+    monkeypatch.setattr(build, "write_calls", capture)
+    monkeypatch.setattr(build, "against_truth", lambda *_: tmp_path)
+    monkeypatch.setattr(build, "judged", lambda *_, **__: ([], []))
+    judge_library(
+        tmp_path / "work", calls, truth, s, tmp_path, tmp_path, classify=lambda _: LONG
+    )
+    kept = [d for d in calls if screen(d, s)[1] != COMMON]
+    assert [d.pos for d in kept] == [5000, 40000]
+    assert handed == [kept, [d for d in truth if screen(d, s)[1] != COMMON]]
 
 
 def test_deletion_steps_union(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
