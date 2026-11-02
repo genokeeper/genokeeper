@@ -187,8 +187,8 @@ def test_a_mount_source_docker_would_misread_is_refused(docker: Path) -> None:
 def test_built_images_named_by_their_inputs() -> None:
     """An image built here (no BioContainers image for its pinned version) is named by the
     sha256 of its Dockerfile and the lists it copies (a list's comment lines aside): an
-    edited Dockerfile or pin names another image, which the bootstrap builds. Every file under docker/ is such an input, and every base
-    image is pinned by digest."""
+    edited Dockerfile or pin names another image, which the bootstrap builds. Every file
+    under docker/ is such an input, and every base image is pinned by digest."""
     inputs: set[str] = set()
     for name, files in BUILT.items():
         assert files[0] == f"{name}.Dockerfile"
