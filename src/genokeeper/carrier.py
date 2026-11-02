@@ -17,7 +17,8 @@ A marker the store holds no site for is "not assessed" (`assessed` false).
 
 A gene gets no answer of its own, but for one a stage-3 tool (`STAGE3_SOURCES`: the repeat
 loci, SMN1, slice 3d's paralog loci and Lp(a)) states at the gene level: that statement leads its sites, answering from its kind
-(`GENE_LEVEL_ANSWER`) with its claim (SMN1's copy numbers, a locus's alleles). Its summary
+(`GENE_LEVEL_ANSWER`: a finding is only a possible carrier) with its claim (SMN1's copy
+numbers, a locus's alleles). Its summary
 counts the gene's possible carriers, its deletion, depth and insertion sites and its known
 pathogenic sites (the
 ClinVar pathogenic class: Pathogenic, Likely pathogenic) by answer and, where the genotype
@@ -124,10 +125,13 @@ CFTR_REPEAT_LINE = (
 )
 
 # The sources whose gene-level statement answers for its gene, and the answer each kind
-# gives: a watch (borderline, intermediate, a possible silent carrier) is not known either way.
+# gives: a finding is a screening result that needs confirmation, never `carrier` (BR-009:
+# validity strong is the gene's link to the disease, not the call, which no calibration
+# sample has measured on a positive); a watch (borderline, intermediate, a possible silent
+# carrier) is not known either way.
 STAGE3_SOURCES = (REPEATS_TOOL, SMN_TOOL, PARALOGS_TOOL, LPA_TOOL)
 GENE_LEVEL_ANSWER = {
-    Kind.FINDING: Answer.CARRIER,
+    Kind.FINDING: Answer.POSSIBLE_CARRIER,
     Kind.NON_FINDING: Answer.NOT_A_CARRIER,
     Kind.WATCH: Answer.UNKNOWN,
     Kind.UNASSESSED: Answer.UNKNOWN,

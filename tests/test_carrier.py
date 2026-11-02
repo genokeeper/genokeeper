@@ -118,7 +118,7 @@ def test_cftr_5t_is_not_cf_carrier(
         ("finding", "possible carrier; needs confirmation", None, "unknown"),
         ("non_finding", "an expansion is not seen", "PCR", "unknown"),
         ("non_finding", None, None, "not_a_carrier"),
-        ("finding", "screening result, needs confirmation", None, "carrier"),
+        ("finding", "screening result, needs confirmation", None, "possible_carrier"),
     ],
 )
 def test_screening_repeat_statements_answer_unknown(
@@ -129,7 +129,8 @@ def test_screening_repeat_statements_answer_unknown(
     expected: str,
 ) -> None:
     """A slice-3e "possible" finding never answers `carrier`, nor an exclusion-flagged normal
-    (its claim names a confirming test) `not_a_carrier`; 3a's statements answer as ever."""
+    (its claim names a confirming test) `not_a_carrier`; 3a's finding is a possible carrier
+    (BR-009), its normal not a carrier."""
     repeat = Row(
         "expansionhunter:RFC1",
         kind=kind,
@@ -286,22 +287,31 @@ def test_possible_carrier_3e_rfc1_shape(con: duckdb.DuckDBPyConnection) -> None:
     assert _gene_level_site(finding)["answer"] == Answer.UNKNOWN
 
 
-def test_repeat_carrier_at_strong_still_carrier(con: duckdb.DuckDBPyConnection) -> None:
-    """3a's FXN carrier finding is at validity strong: it still answers carrier."""
+def test_repeat_carrier_at_strong_possible_carrier(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    """3a's FXN carrier finding is at validity strong, the gene's link to the disease, but a
+    screening result: it answers possible carrier, never carrier (BR-009)."""
     seed(con, [Row("expansionhunter:FXN", gene="FXN", level=None, topic="carrier",
                    claim={"schema": "genomelab.claim/1", "type": "repeat"})])  # fmt: skip
     con.execute(f"UPDATE statement SET source = '{REPEATS_TOOL}'")
     (fxn,) = genotype(con, None, gene="FXN").to_json()["sites"]
-    assert (fxn["validity"]["level"], fxn["answer"]) == ("strong", Answer.CARRIER)
+    assert (fxn["validity"]["level"], fxn["answer"]) == (
+        "strong",
+        Answer.POSSIBLE_CARRIER,
+    )
 
 
-def test_smn1_finding_still_carrier(con: duckdb.DuckDBPyConnection) -> None:
-    """3a's SMN1 finding is at validity strong: it still answers carrier."""
+def test_smn1_finding_possible_carrier(con: duckdb.DuckDBPyConnection) -> None:
+    """3a's SMN1 finding (one copy) needs MLPA or qPCR: possible carrier (BR-009)."""
     seed(con, [Row("smn:SMN1", gene="SMN1", level=None, topic="carrier",
                    claim={"schema": "genomelab.claim/1", "type": "smn"})])  # fmt: skip
     con.execute(f"UPDATE statement SET source = '{SMN_TOOL}'")
     (smn1,) = genotype(con, None, gene="SMN1").to_json()["sites"]
-    assert (smn1["validity"]["level"], smn1["answer"]) == ("strong", Answer.CARRIER)
+    assert (smn1["validity"]["level"], smn1["answer"]) == (
+        "strong",
+        Answer.POSSIBLE_CARRIER,
+    )
 
 
 def test_clinvar_limited_carrier_unchanged(con: duckdb.DuckDBPyConnection) -> None:

@@ -584,6 +584,16 @@ def test_skill_reads_a_repeat_class_from_its_interval() -> None:
     assert "`class`: the longest allele's class" not in text
 
 
+def test_skill_reads_a_stage3_finding_as_a_possible_carrier() -> None:
+    """A stage-3 gene-level finding answers `possible_carrier` at any validity (BR-009)."""
+    text = " ".join(SKILL.read_text().split())
+    assert "for a stage-3 gene-level finding at any validity" in text
+    assert (
+        "`possible_carrier` for a finding, SMN1's one copy or an expanded repeat"
+        in text
+    )
+
+
 def test_skill_covers_polygenic_breadth() -> None:
     """Every score is found through `--text pgsc_calc` (slice 3g), a weak one's weakness is
     said before its percentile, and a condition no score covers is answered by its stored

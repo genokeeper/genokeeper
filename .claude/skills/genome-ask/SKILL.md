@@ -629,8 +629,9 @@ Each finding has these keys:
   (`dosage` `0` at `low`) or `unknown` (the genotype could not be determined); for a
   research association, from `claim.risk_allele_copies` in place of `dosage`; for a carrier
   finding at validity `limited` from a screen (`deletions`, `cnv`, `insertions`,
-  `paralogs`, `expansionhunter`), `possible_carrier` (possibly a carrier: a screening result
-  that needs confirmation; see its reason); for any other deletion, depth event or insertion,
+  `paralogs`, `expansionhunter`), and for a stage-3 gene-level finding at any validity
+  (SMN1's one copy, an expanded repeat), `possible_carrier` (possibly a carrier: a screening
+  result that needs confirmation; see its reason); for any other deletion, depth event or insertion,
   `needs_confirmation`; for a gene-level finding under traits, drugs or wellness (a 3d copy
   number, Lp(a)), `information`; none is ever `carrier`. It is about this allele only, never the
   gene.
@@ -915,7 +916,9 @@ sample only). Ask for them with `--gene SMN1`, `--gene <gene>` or `--topic ances
   non-finding. When the library looks PCR-amplified (a warning), a miss is possible.
 - To answer "how many SMN1 copies do I have" or "is my HTT normal", run `genotype --gene
   SMN1` (or `HTT`, …): the gene's stage-3 statement leads `sites`, whatever its kind. Read
-  its `kind` and `answer` (`not_a_carrier` for a repeat in its normal range;
+  its `kind` and `answer` (`possible_carrier` for a finding, SMN1's one copy or an expanded
+  repeat, even at validity `strong`, which is the gene's link to the disease and not the
+  call; `not_a_carrier` for a repeat in its normal range;
   `probably_not_a_carrier` for SMN1 at two or more copies, where a 2+0 carrier is not
   excluded, and for a non-finding at low reliability; `unknown` for a watch item or an
   unassessed one), the copies
