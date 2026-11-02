@@ -23,7 +23,7 @@ files, not this one. How to file, close and reference an entry:
 | [BR-006](bugs/BR-006.md) | low | pipeline | A missing tool, a step that wrote no file or a full disk in the deletion steps aborts the whole run instead of leaving the screen unassessed | 2026-11-02 |
 | [BR-011](bugs/BR-011.md) | medium | sources | A ClinVar-classified and a predicted carrier variant in one recessive gene are never offered for phasing | 2026-11-02 |
 
-## Fixed (6)
+## Fixed (9)
 
 | ID | Title | Fixed in |
 |---|---|---|
@@ -33,6 +33,9 @@ files, not this one. How to file, close and reference an entry:
 | [BR-005](bugs/BR-005.md) | Deletion wording: the depth line reads as evidence against short deletions, and a flank-only overlap reads like an exon hit | `claude/bugs-deletions-b004e0` |
 | [BR-013](bugs/BR-013.md) | One VEP row per variant: a MANE Select missense outranks a LoF on MANE Plus Clinical or in an overlapping listed gene | `genokeeper/genokeeper#4` |
 | [BR-014](bugs/BR-014.md) | The gate-3 rescue counts ClinVar truncations by genomic span, not in the stop transcript's coding bases | `genokeeper/genokeeper#4` |
+| [BR-015](bugs/BR-015.md) | genokeeper refresh never runs again after a new calibration or FAF table: run_needed reads only the downloaded grading inputs | `claude/bugs-pipeline-refresh-6b9ee6` |
+| [BR-016](bugs/BR-016.md) | DockerUnavailable quotes the first stderr line, which behind a gate wrapper is the gate's notice rather than Docker's error | `claude/bugs-pipeline-refresh-6b9ee6` |
+| [BR-017](bugs/BR-017.md) | bootstrap --with-hg002 or --with-hg004 before the first run stops before step_gnomad_faf and tells the owner to rerun, which fails the same way | `claude/bugs-pipeline-refresh-6b9ee6` |
 
 ## Void identifiers (0)
 
