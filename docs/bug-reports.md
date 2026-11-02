@@ -33,11 +33,11 @@ files, not this one. How to file, close and reference an entry:
 | [BR-005](bugs/BR-005.md) | Deletion wording: the depth line reads as evidence against short deletions, and a flank-only overlap reads like an exon hit | `claude/bugs-deletions-b004e0` |
 | [BR-013](bugs/BR-013.md) | One VEP row per variant: a MANE Select missense outranks a LoF on MANE Plus Clinical or in an overlapping listed gene | `genokeeper/genokeeper#4` |
 | [BR-014](bugs/BR-014.md) | The gate-3 rescue counts ClinVar truncations by genomic span, not in the stop transcript's coding bases | `genokeeper/genokeeper#4` |
-| [BR-015](bugs/BR-015.md) | genokeeper refresh never runs again after a new calibration or FAF table: run_needed reads only the downloaded grading inputs | `claude/bugs-pipeline-refresh-6b9ee6` |
-| [BR-016](bugs/BR-016.md) | DockerUnavailable quotes the first stderr line, which behind a gate wrapper is the gate's notice rather than Docker's error | `claude/bugs-pipeline-refresh-6b9ee6` |
-| [BR-017](bugs/BR-017.md) | bootstrap --with-hg002 or --with-hg004 before the first run stops before step_gnomad_faf and tells the owner to rerun, which fails the same way | `claude/bugs-pipeline-refresh-6b9ee6` |
-| [BR-018](bugs/BR-018.md) | Step keys: the repeats key hashes each repeat locus whole, so a note or threshold edit re-runs ExpansionHunter; native samtools and repeated parts were suspected too | `claude/bugs-pipeline-refresh-6b9ee6` |
-| [BR-019](bugs/BR-019.md) | A comment-only edit to a built image's lock file moves its tag and re-runs every step keyed on it | `claude/bugs-pipeline-refresh-6b9ee6` |
+| [BR-015](bugs/BR-015.md) | genokeeper refresh never runs again after a new calibration or FAF table: run_needed reads only the downloaded grading inputs | `genokeeper/genokeeper#6` |
+| [BR-016](bugs/BR-016.md) | DockerUnavailable quotes the first stderr line, which behind a gate wrapper is the gate's notice rather than Docker's error | `genokeeper/genokeeper#6` |
+| [BR-017](bugs/BR-017.md) | bootstrap --with-hg002 or --with-hg004 before the first run stops before step_gnomad_faf and tells the owner to rerun, which fails the same way | `genokeeper/genokeeper#6` |
+| [BR-018](bugs/BR-018.md) | Step keys: the repeats key hashes each repeat locus whole, so a note or threshold edit re-runs ExpansionHunter; native samtools and repeated parts were suspected too | `genokeeper/genokeeper#6` |
+| [BR-019](bugs/BR-019.md) | A comment-only edit to a built image's lock file moves its tag and re-runs every step keyed on it | `genokeeper/genokeeper#6` |
 
 ## Void identifiers (0)
 
