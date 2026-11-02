@@ -8,9 +8,9 @@ one statement `bloodgroup:<system>` per system of the packaged positions
   agreement with the truth is measured, not RBCeq2's typing).
 - `not_run` (no table, a failed step), `withheld[system]` (the calibration's reason) and `uncovered[system]` (R10: a no-call among its written positions, which RBCeq2
   would read as the reference) make a system unassessed, as does no call from RBCeq2.
-- A typed FUT2 adds `SECRETOR_TRAIT` (BR-026): the secretor-status trait (`trait:FUT2`)
-  reads one of its alleles, and where the two differ this typing is the fuller reading; an
-  unassessed FUT2 does not say it.
+- A FUT2 typed with a phenotype adds `SECRETOR_TRAIT` (BR-026): the secretor-status trait
+  (`trait:FUT2`) reads one of its alleles, and where the two differ this typing is the
+  fuller reading; an unassessed FUT2, or one with no phenotype, does not say it.
 - `unchecked[system]` (R14: alleles left out of RBCeq2's input because their GRCh38 REF
   disagrees with the reference, `bloodgroups.allele_name`s) are named in the system's
   reasons (`UNCHECKED`); the system stays shown.
@@ -91,7 +91,8 @@ class BloodGroupSource:
         call = self.calls.get(system)
         if call is None or call.genotype is None:
             return Kind.UNASSESSED, NO_CALL, None
-        secretor = [SECRETOR_TRAIT] if system == "FUT2" else []
+        typed = system == "FUT2" and call.phenotype is not None
+        secretor = [SECRETOR_TRAIT] if typed else []
         return (
             Kind.FINDING,
             "; ".join([NOT_CLINICAL, INFORMATION_NOTE, *secretor]),

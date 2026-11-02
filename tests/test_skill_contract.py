@@ -484,17 +484,22 @@ def test_skill_covers_the_traits() -> None:
 
 
 def test_skill_answers_secretor_status_from_one_statement() -> None:
-    """BR-026: secretor status is answered from `bloodgroup:FUT2` when it is a finding,
-    otherwise from `trait:FUT2`; the Blood groups bullet quotes FUT2's stored note."""
-    section = _section_named(
-        SKILL.read_text(), "## Slice 3f: typing, mitochondria and what remains"
-    )
+    """BR-026: the routing table reads both FUT2 statements by id (the blood group has no
+    gene, so `--gene FUT2` never returns it), secretor status is answered from
+    `bloodgroup:FUT2` when it is a finding with a phenotype, otherwise from `trait:FUT2`,
+    and the Blood groups bullet quotes FUT2's stored note."""
+    text = SKILL.read_text()
+    row = next(line for line in text.splitlines() if "secretor" in line.lower())
+    assert row.startswith("| ")
+    assert "`show bloodgroup:FUT2 --json`" in row and "`show trait:FUT2 --json`" in row
+    section = _section_named(text, "## Slice 3f: typing, mitochondria and what remains")
     blood = section.split("- **Blood groups**")[1].split("- **")[0]
     assert f"`{SECRETOR_TRAIT}`" in blood
     traits = section.split("- **Traits**")[1].split("- **")[0]
     assert (
-        "answer secretor status from `bloodgroup:FUT2` when it is a finding, otherwise"
-        " from `trait:FUT2`"
+        "answer secretor status from `bloodgroup:FUT2` when it is a finding with a"
+        " phenotype, otherwise from `trait:FUT2`, and say which one answered; when both"
+        " answer and differ, give the blood group's and name the trait's"
     ) in traits
 
 

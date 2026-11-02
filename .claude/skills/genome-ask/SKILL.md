@@ -95,6 +95,7 @@ Fit the filters to the question:
 | "How many AMY1 copies do I have?" | `--gene AMY1 --min-validity limited --min-reliability low` (see Stage 3d screening) |
 | "What is my RhD?" | `--gene RHD --min-validity limited --min-reliability low` (see Stage 3d screening) |
 | "My HLA? Coeliac? Blood group? Neanderthal? Lactose?" | `--gene HLA-B`, `show hla:coeliac --json`, `--topic traits --min-validity limited`, `--topic ancestry --min-validity limited` (see Slice 3f) |
+| "Am I a secretor? (FUT2)" | `show bloodgroup:FUT2 --json` and `show trait:FUT2 --json`: the blood group has no gene, so `--gene FUT2` never returns it (see Slice 3f, Traits) |
 | "Show everything, even uncertain" | `--min-reliability low --min-validity conflicting` with `--gene`, `--marker`, `--text` or `--topic` (see below) |
 
 - `--topic`: `risks`, `carrier`, `drugs`, `traits`, `wellness`, `ancestry`, `research`.
@@ -1226,9 +1227,9 @@ unassessed "not calibrated", never normal; a tool that failed leaves it unassess
   Not covered, each its own unassessed statement: RhD and RHCE (`bloodgroup:RH`, copy
   number), MNS (`bloodgroup:MNS`, GYPA/GYPB hybrid genes) and the platelet antigens
   (`bloodgroup:HPA`, `not covered: RBCeq2 2.4.4's platelet-antigen positions are GRCh37
-  coordinates in its GRCh38 table`). Never give a phenotype for a system not covered. A
-  typed FUT2 (secretor status) adds `the secretor-status trait reads rs601338 alone; where
-  they differ, this blood group is the fuller reading`.
+  coordinates in its GRCh38 table`). Never give a phenotype for a system not covered. A FUT2
+  typed with a phenotype (secretor status) adds `the secretor-status trait reads rs601338
+  alone; where they differ, this blood group is the fuller reading`.
 - **Ancestry** (ancestry, validity limited, information). `ancestry:similarity` is
   `similarity to the HGDP+1kGP populations, not ancestry proportions`;
   `ancestry:admixture` is proportions against the panel's superpopulations (country-level
@@ -1253,9 +1254,10 @@ unassessed "not calibrated", never normal; a tool that failed leaves it unassess
   ancestry; it cannot tell green from hazel`; AMPD1 `a common, mostly harmless variant; it
   predicts neither sports ability nor muscle disease`; CCR5 `not protection against HIV in
   general and no substitute for prevention`. The phenotype is the literature's, not
-  checked here. BR-026: answer secretor status from
-  `bloodgroup:FUT2` when it is a finding, otherwise from `trait:FUT2`, and say which one
-  answered; when both are findings and differ, give the blood group's and name the trait's.
+  checked here. Read both FUT2 statements by id (routing table), then answer secretor status
+  from `bloodgroup:FUT2` when it is a finding with a phenotype, otherwise from `trait:FUT2`,
+  and say which one answered; when both answer and differ, give the blood group's and name
+  the trait's.
 - **Pharmacogenomics.** `pharmcat:G6PD-gap` is always unassessed: `not covered: PharmCAT
   does not call the G6PD Mediterranean haplotype or Villeurbanne`, so a normal G6PD result
   does not exclude them. UGT1A1\*28 is read only when the calibration trusts it; otherwise

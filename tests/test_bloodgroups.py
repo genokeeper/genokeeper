@@ -447,9 +447,10 @@ def test_reference_only_positions_through_the_call_layer(tmp_path: Path) -> None
 
 
 def test_fut2_finding_names_the_secretor_trait(tmp_path: Path) -> None:
-    """BR-026: a typed FUT2 says, in words, that the secretor-status trait reads rs601338
-    alone and that this typing is the fuller reading; no other system says it, and an
-    unassessed FUT2 keeps its reason alone, so it never reads as overriding."""
+    """BR-026: a FUT2 typed with a phenotype says, in words, that the secretor-status trait
+    reads rs601338 alone and that this typing is the fuller reading; no other system says
+    it, and an unassessed FUT2, or one RBCeq2 gave no phenotype, never reads as
+    overriding."""
     calls = read_rbceq2(_hg002_out(tmp_path))
     typed = _statements(
         tmp_path, BloodGroupSource(calls=calls, not_run=None, withheld={}, uncovered={})
@@ -463,6 +464,10 @@ def test_fut2_finding_names_the_secretor_trait(tmp_path: Path) -> None:
         for sid, s in typed.items()
         if sid != "bloodgroup:FUT2"
     )
+    no_phenotype = {
+        **calls,
+        "FUT2": SystemCall(genotype=calls["FUT2"].genotype, phenotype=None),
+    }
     for source in (
         BloodGroupSource(
             calls=None, not_run="not calibrated", withheld={}, uncovered={}
@@ -474,6 +479,12 @@ def test_fut2_finding_names_the_secretor_trait(tmp_path: Path) -> None:
         unassessed = _statements(tmp_path, source)["bloodgroup:FUT2"]
         assert unassessed["kind"] == "unassessed"
         assert "secretor" not in str(unassessed["reason"])
+    untyped = _statements(
+        tmp_path,
+        BloodGroupSource(calls=no_phenotype, not_run=None, withheld={}, uncovered={}),
+    )["bloodgroup:FUT2"]
+    assert untyped["kind"] == "finding"
+    assert "secretor" not in str(untyped["reason"])
 
 
 def test_default_view_shows_the_secretor_trait_alone(tmp_path: Path) -> None:
