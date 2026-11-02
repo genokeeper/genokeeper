@@ -27,7 +27,9 @@ mechanism is not assessed (the packaged mechanisms file), in the page's language
 the run's own stage-3 statement assessed.
 
 Under the feed, the "Excluded by screening" block lists the run's flagged non-findings
-(`_excluded`), each with the test that would confirm it.
+(`_excluded`), each with the test that would confirm it, and the stage-3 block the run's
+other stage-3 watch items and non-findings (`_screened`), which the feed and its counts never
+hold, a watch item apart from a non-finding.
 """
 
 import argparse
@@ -55,6 +57,7 @@ from genokeeper.history import Change, ChangeKind, Dates, Snapshot
 from genokeeper.lang import LANGUAGES, Language, language
 from genokeeper.query import (
     HAPLOID_DOSAGE_NOTE,
+    OWNS_GENE_CALL,
     Filters,
     RunNotFound,
     _hidden_by,
@@ -299,6 +302,30 @@ def _excluded(con: duckdb.DuckDBPyConnection, run_id: str) -> list[dict[str, str
     ]
 
 
+def _screened(
+    con: duckdb.DuckDBPyConnection, run_id: str
+) -> dict[str, list[dict[str, str | None]]]:
+    """The run's stage-3 gene-level watch items (`watch`) and non-findings (`normal`) not
+    flagged `exclusion`, each by gene then id: its gene with its gene call's diplotype
+    (`label`), and its stored reason or, without one, its gene call's phenotype."""
+    marks = ", ".join("?" * len(STAGE3_SOURCES))
+    rows = con.execute(
+        "SELECT s.statement_id, s.kind, s.gene, g.diplotype,"
+        " coalesce(s.reason, g.phenotype) FROM statement AS s LEFT JOIN gene_call AS g"
+        " ON g.run_id = s.run_id AND g.gene = s.gene"
+        f" AND {OWNS_GENE_CALL.format(s='s')}"
+        " WHERE s.run_id = ? AND s.vid IS NULL AND s.kind IN (?, ?) AND NOT s.exclusion"
+        f" AND s.source IN ({marks}) ORDER BY s.gene, s.statement_id",
+        [run_id, str(Kind.WATCH), str(Kind.NON_FINDING), *STAGE3_SOURCES],
+    ).fetchall()
+    found: dict[str, list[dict[str, str | None]]] = {"watch": [], "normal": []}
+    for sid, kind, gene, diplotype, wording in rows:
+        label = gene if diplotype is None else f"{gene} {diplotype}"
+        listed = {"id": sid, "label": label, "wording": wording}
+        found["watch" if kind == Kind.WATCH else "normal"].append(listed)
+    return found
+
+
 def payload(
     con: duckdb.DuckDBPyConnection,
     run_id: str | None,
@@ -314,7 +341,8 @@ def payload(
     explanation from `cache_dir` or null, its search string and its dates, and one view per
     reliability, validity and topic (or none) combination;
     and `changes`, the Changes tab's, from `reports/snapshots` and the refresh log in
-    `lab` (without `reports`, no comparison); `excluded`, the run's exclusions."""
+    `lab` (without `reports`, no comparison); `excluded`, the run's exclusions; `screened`,
+    its other stage-3 watch items and non-findings."""
     dates = history.dates(reports / "snapshots", run_id) if reports is not None else {}
     loosest = query(con, run_id, LOOSEST, dates=dates if reports is not None else None)
 
@@ -356,6 +384,7 @@ def payload(
         "changes": _changes(reports, lab, loosest.run_id, dates),
         "not_covered": _not_covered(con, loosest.run_id, listed, mechanisms),
         "excluded": _excluded(con, loosest.run_id),
+        "screened": _screened(con, loosest.run_id),
     }
 
 

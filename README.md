@@ -415,7 +415,9 @@ disk at a time), md5-checked, downsampled to the bases of your own run (which a 
 downsampled FASTQ stay under `calibration/`. `uv run genokeeper calibrate` (or `--only
 stage3`) runs both libraries through the run's own align, QC gate and the three tools and
 writes the stage-3 calibration table under `calibration/`; a run refuses a table made with
-other image digests, catalog or reference.
+other image digests, catalog or reference. A stage-3 watch item (a borderline or intermediate
+repeat, an SMN1 silent-carrier marker) and a stage-3 non-finding are neither in the feed nor in
+its counts: the dashboard lists them under the feed, each kind apart, with its stored reason.
 
 Slice 3b's callers run from images built the same way: `delly` (DELLY 2.7.0, one container
 per primary chromosome, as it parallelises over samples only), `dysgu` (Dysgu 1.9.0) and

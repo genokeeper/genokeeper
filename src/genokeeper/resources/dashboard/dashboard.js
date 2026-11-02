@@ -314,6 +314,20 @@ function renderExcluded() {
   box.replaceChildren(el("b", "", t("excluded")), list);
 }
 
+// The run's other stage-3 watch items and non-findings (`genokeeper.dashboard._screened`),
+// which the feed never holds: a watch item is neither normal nor a finding, so each kind is
+// its own list.
+function renderScreened() {
+  const box = document.getElementById("screened");
+  box.replaceChildren();
+  for (const [kind, heading] of [["watch", "screened_watch"], ["normal", "screened_normal"]]) {
+    const list = el("ul");
+    for (const x of data.screened[kind]) list.append(el("li", "", x.wording === null ? x.label : t("screened_item", x)));
+    if (!data.screened[kind].length) list.append(el("li", "", t("none_in_run")));
+    box.append(el("b", "", t(heading)), list);
+  }
+}
+
 function renderFeed() {
   const view = data.views[`${state.reliability}|${state.validity}|${state.topic}`];
   chips();
@@ -324,6 +338,7 @@ function renderFeed() {
   document.getElementById("count").textContent = t("count", { shown: shown.length, n: Object.keys(data.items).length });
   document.getElementById("feed").replaceChildren(...shown.map((id) => row(data.items[id])));
   renderExcluded();
+  renderScreened();
 
   const hidden = Object.entries(view.hidden).map(([reason, n]) => [n, reasonText(reason)]);
   const unmatched = view.findings.length - shown.length;

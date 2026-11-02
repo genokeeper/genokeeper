@@ -156,6 +156,13 @@
   },
   "no_exclusions": {"en": "no exclusions in this run", "ru": "нет исключений в этом запуске"},
   "excluded": {"en": "Excluded by screening", "ru": "Исключено скринингом"},
+  "screened_watch": {
+    "en": "To watch: neither normal nor a finding",
+    "ru": "Под наблюдением: ни норма, ни находка"
+  },
+  "screened_normal": {"en": "Screened, not a finding", "ru": "Скрининг: не находка"},
+  "screened_item": {"en": "{label}: {wording}", "ru": "{label}: {wording}"},
+  "none_in_run": {"en": "none in this run", "ru": "нет в этом запуске"},
   "count": {
     "en": {"one": "Showing {shown} of {n} finding · actionable first", "other": "Showing {shown} of {n} findings · actionable first"},
     "ru": {"one": "Показано {shown} из {n} находки · сначала то, что требует действий", "other": "Показано {shown} из {n} находок · сначала то, что требует действий"}

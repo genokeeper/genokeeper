@@ -1197,6 +1197,99 @@ def test_excluded_block_rendered(
     assert "HLA-B" not in shown and "HLA-C" not in shown
 
 
+REPEAT = {"type": "repeat_expansion"}
+SCREENED_ROWS = [
+    Row(
+        "expansionhunter:HTT",
+        kind="watch",
+        gene="HTT",
+        level=None,
+        claim=REPEAT,
+        reason="screening result, needs confirmation: borderline, indeterminate",
+        gene_call={"diplotype": "CAG 17/25", "phenotype": "borderline"},
+    ),
+    Row(
+        "expansionhunter:DMPK",
+        kind="non_finding",
+        gene="DMPK",
+        level=None,
+        claim=REPEAT,
+        gene_call={"diplotype": "CAG 5/12", "phenotype": "normal"},
+    ),
+    Row(
+        "smn:SMN1",
+        kind="non_finding",
+        gene="SMN1",
+        level=None,
+        claim={"type": "smn_copy_number"},
+    ),
+    # Not listed: a flagged normal (the "Excluded by screening" block's), a stage-3
+    # finding and unassessed claim (the feed's and its counts'), and a non-finding of
+    # another source.
+    Row(
+        "expansionhunter:CNBP",
+        kind="non_finding",
+        gene="CNBP",
+        level=None,
+        claim={"type": "repeat_expansion", "confirm": "PCR sizing"},
+        reason="normal: 15 and 18 CAGG, each allele read across in full",
+    ),
+    Row("expansionhunter:ATXN1", gene="ATXN1", level=None, claim=REPEAT),
+    Row(
+        "expansionhunter:ATXN2",
+        kind="unassessed",
+        gene="ATXN2",
+        level=None,
+        claim=REPEAT,
+    ),
+    Row("clinvar:977", kind="non_finding", gene="TP53"),
+]
+
+
+def test_screened_lists_stage3_watch_items_and_non_findings_apart(
+    con: duckdb.DuckDBPyConnection, tmp_path: Path
+) -> None:
+    """A stage-3 watch item and a stage-3 non-finding reach neither the feed nor its
+    counts: the page lists them in a block of their own, a watch apart from a normal."""
+    seed(con, SCREENED_ROWS)
+    _flag(con, "expansionhunter:CNBP")
+    for prefix in ("expansionhunter", "smn"):
+        con.execute(
+            "UPDATE statement SET source = ? WHERE statement_id LIKE ?",
+            [prefix, f"{prefix}:%"],
+        )
+    data = payload(con, None, NO_CACHE, lang="ru")
+    assert data["screened"] == {
+        "watch": [
+            {
+                "id": "expansionhunter:HTT",
+                "label": "HTT CAG 17/25",
+                "wording": SCREENED_ROWS[0].reason,
+            }
+        ],
+        "normal": [
+            {
+                "id": "expansionhunter:DMPK",
+                "label": "DMPK CAG 5/12",
+                "wording": "normal",
+            },
+            {"id": "smn:SMN1", "label": "SMN1", "wording": None},
+        ],
+    }
+    shown = _rendered(data, tmp_path)["screened"]["text"]
+    assert "Под наблюдением: ни норма, ни находка" in shown
+    assert f"HTT CAG 17/25: {SCREENED_ROWS[0].reason}" in shown
+    assert "Скрининг: не находка" in shown and "DMPK CAG 5/12: normal" in shown
+    assert shown.index("HTT") < shown.index("Скрининг") < shown.index("DMPK")
+    for name in ("CNBP", "ATXN1", "ATXN2", "TP53"):
+        assert name not in shown
+    other = connect(tmp_path / "other.duckdb")
+    seed(other, ROWS)
+    empty = payload(other, None, NO_CACHE)
+    assert empty["screened"] == {"watch": [], "normal": []}
+    assert _rendered(empty, tmp_path)["screened"]["text"].count("none in this run") == 2
+
+
 def test_excluded_empty_run(con: duckdb.DuckDBPyConnection, tmp_path: Path) -> None:
     data = payload(con, None, NO_CACHE, lang="ru")
     assert data["excluded"] == []
