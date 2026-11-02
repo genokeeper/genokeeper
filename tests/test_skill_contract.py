@@ -574,6 +574,24 @@ def test_skill_labels_predicted() -> None:
         assert needed in section, needed
 
 
+def test_skill_names_the_annotation_limits() -> None:
+    """BR-027, BR-028: the predicted findings name the two genes the annotation cannot grade
+    in full: SLC37A4, whose only MANE transcript is on a GRC fix patch (its LoF always fails
+    gate 2, which says nothing of the variant), and PCDH15, whose last coding exon SpliceAI's
+    annotation lacks; Coverage no longer calls SLC37A4 uncovered as a whole."""
+    text = SKILL.read_text()
+    section = _section_named(text, "## Predicted findings")
+    for needed in (
+        "SLC37A4",
+        "GRC fix patch",
+        "always fails LoF gate 2",
+        "PCDH15's last coding exon",
+        "no SpliceAI score",
+    ):
+        assert needed in section, needed
+    assert "nor is SLC37A4" not in _section_named(text, "## Coverage")
+
+
 def test_skill_covers_stage3a() -> None:
     """SMN1, the eleven repeat loci and the Y haplogroup are covered, every non-normal
     result is a screening result that needs confirmation, FMR1 and AFF2 follow slice 3e's
@@ -708,7 +726,7 @@ def test_skill_covers_deletions() -> None:
     assert row in flat
     coverage = _section_named(text, "## Coverage")
     assert "deletions of 50 bp or more" in coverage
-    assert "nor is SLC37A4" in coverage
+    assert "nor are SLC37A4's coverage" in coverage
 
 
 def test_skill_covers_slice3d() -> None:

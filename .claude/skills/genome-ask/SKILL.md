@@ -889,6 +889,12 @@ splice change at SpliceAI 0.2 or above. Each one is `limited`, so add
   doubtful for that reason. A prediction outside the listed genes is research too.
 - A predicted finding never outranks a ClinVar-classified one: answer from the ClinVar
   findings first.
+- SLC37A4's only MANE transcript lies on a GRC fix patch, off the primary assembly the
+  callers run on, so VEP gives it no MANE transcript: a predicted loss of function there
+  always fails LoF gate 2. That failure says nothing of the variant; say so, and that a
+  clinical lab can assess it.
+- SpliceAI's 2016 annotation lacks PCDH15's last coding exon (MANE exon 38) and its splice
+  acceptor: a splice change there gets no SpliceAI score, so no predicted splice finding.
 - One variant can give two predicted findings, on two transcripts of a gene or in two
   overlapping genes: they share a `vid`. Present them as one variant, never as two variants
   or a compound heterozygote.
@@ -1367,9 +1373,10 @@ assessed from reads spanning every X allele (stage 3e), otherwise they need a ta
 test. Slice 3f adds HLA typing and the coeliac screen, MITOMAP's chrM variants, integrated
 HHV-6, runs of homozygosity, blood groups, ancestry, five traits and PharmGKB level 3, and
 slice 3g six single-gene traits (see Slice 3f); KIR, the RhD and RHCE antigens (RhD's copies are a stage 3d paralog locus),
-MNS, the platelet antigens and chrM indels are not covered, nor is SLC37A4 (its only MANE
-transcript lies off the primary assembly the callers run on), nor are inversions and
-translocations, and each screen can miss one.
+MNS, the platelet antigens and chrM indels are not covered, nor are SLC37A4's coverage,
+deletions and copy number (its only MANE transcript lies on a GRC fix patch, off the primary
+assembly the callers run on; its variants and ClinVar claims are called and graded, see
+Predicted findings), nor are inversions and translocations, and each screen can miss one.
 **Population frequency is assessed only for a run whose `versions` has a `gnomad_faf` key**:
 there, a pathogenic-class claim whose gnomAD v4.1 filtering allele frequency (grpmax FAF95)
 is above ACMG BA1, or above its gene's BS1, is `conflicting`, and `validity.reason` names
