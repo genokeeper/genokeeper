@@ -1532,8 +1532,9 @@ def test_run_passes_min_spanning(
 
 def test_repeats_step_keyed_on_what_its_build_reads(genome: Genome) -> None:
     """A [repeat_loci] edit that changes no call (a note, the evidence, a disease
-    threshold) reuses the repeats step; one its build reads (`normal_max` picks the loci
-    REViewer draws) runs it again."""
+    threshold) reuses the repeats step; one to a field its build reads (`locus_id` and
+    `variant_id` name the catalog entry, `normal_max` picks the loci REViewer draws) runs it
+    again."""
     _run_genome(genome)
     loci = _grading().repeats.loci
     htt = loci["HTT"]
@@ -1541,24 +1542,29 @@ def test_repeats_step_keyed_on_what_its_build_reads(genome: Genome) -> None:
     graded = replace(
         _grading(), repeats=replace(_grading().repeats, loci={**loci, "HTT": worded})
     )
-    write_stage3(
-        genome.lab, grading=graded
-    )  # the stage-3 table measures the thresholds
+    # The stage-3 table measures the thresholds: one measured under each grading.
+    write_stage3(genome.lab, grading=graded)
     run_id = _run_genome(genome, grading=graded)
     with connect(genome.store) as con:
         reused = _inputs_json(con, run_id)
     assert reused["steps"]["repeats"]["reused"]
-    drawn = replace(htt, normal_max=htt.normal_max + 1)
-    redrawn = replace(
-        _grading(), repeats=replace(_grading().repeats, loci={**loci, "HTT": drawn})
-    )
-    write_stage3(
-        genome.lab, grading=redrawn
-    )  # the stage-3 table measures the thresholds
-    run_id = _run_genome(genome, grading=redrawn)
-    with connect(genome.store) as con:
-        again = _inputs_json(con, run_id)
-    assert not again["steps"]["repeats"]["reused"]
+    # Each field the build reads, edited alone from the first run's: a key without it would
+    # find that run's step and reuse it.
+    for read in (
+        {"normal_max": htt.normal_max + 1},
+        {"variant_id": f"{htt.variant_id}_other"},
+        {"locus_id": f"{htt.locus_id}_other"},
+    ):
+        edited = replace(htt, **read)
+        redrawn = replace(
+            _grading(),
+            repeats=replace(_grading().repeats, loci={**loci, "HTT": edited}),
+        )
+        write_stage3(genome.lab, grading=redrawn)
+        run_id = _run_genome(genome, grading=redrawn)
+        with connect(genome.store) as con:
+            again = _inputs_json(con, run_id)
+        assert not again["steps"]["repeats"]["reused"], read
 
 
 def test_expanded_allele_drawn_by_reviewer(genome: Genome, tmp_path: Path) -> None:
