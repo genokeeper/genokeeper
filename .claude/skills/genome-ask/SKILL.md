@@ -1135,9 +1135,9 @@ actionable and none of the new ones is a watch item (TCF4's intermediate and PAB
 ## Slice 3f: typing, mitochondria and what remains
 
 Slice 3f adds HLA typing (`hla`), MITOMAP's chrM variants (`mitomap`), integrated HHV-6
-(`hhv6`), runs of homozygosity (`roh`), blood groups (`rbceq2`), ancestry (`ancestry`), eleven
-traits (`traits`) and PharmGKB level 3 (`pharmgkb_research`); their claim keys are in The
-JSON contract. None is actionable and none is a watch item. Ask with `--gene HLA-B`,
+(`hhv6`), runs of homozygosity (`roh`), blood groups (`rbceq2`), ancestry (`ancestry`), five
+traits (`traits`; slice 3g adds six) and PharmGKB level 3 (`pharmgkb_research`); their claim
+keys are in The JSON contract. None is actionable and none is a watch item. Ask with `--gene HLA-B`,
 `--topic traits`, `--topic ancestry` or `show <id> --json`; most are at validity `limited`,
 so add `--min-validity limited`. A statement whose calibration table is missing or stale is
 unassessed "not calibrated", never normal; a tool that failed leaves it unassessed too.
