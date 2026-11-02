@@ -1,0 +1,2 @@
+Sample_name	Hg	Hg_marker	Total_reads	Valid_markers	QC-score	QC-1	QC-2	QC-3
+sample	J-C134621	C134621	846977401	170393	1.0	1.0	1.0	1.0

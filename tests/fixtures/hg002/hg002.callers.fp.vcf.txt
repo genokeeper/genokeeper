@@ -1,0 +1,295 @@
+##fileformat=VCFv4.2
+##FILTER=<ID=PASS,Description="All filters passed">
+##fileDate=20261028
+##ALT=<ID=DEL,Description="Deletion">
+##ALT=<ID=DUP,Description="Duplication">
+##ALT=<ID=INV,Description="Inversion">
+##ALT=<ID=BND,Description="Translocation">
+##ALT=<ID=INS,Description="Insertion">
+##FILTER=<ID=LowQual,Description="Poor quality and insufficient number of PEs and SRs.">
+##INFO=<ID=CIEND,Number=2,Type=Integer,Description="PE confidence interval around END">
+##INFO=<ID=CIPOS,Number=2,Type=Integer,Description="PE confidence interval around POS">
+##INFO=<ID=CHR2,Number=1,Type=String,Description="Chromosome for POS2 coordinate in case of an inter-chromosomal translocation">
+##INFO=<ID=POS2,Number=1,Type=Integer,Description="Genomic position for CHR2 in case of an inter-chromosomal translocation">
+##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the structural variant">
+##INFO=<ID=PE,Number=1,Type=Integer,Description="Paired-end support of the structural variant">
+##INFO=<ID=MAPQ,Number=1,Type=Integer,Description="Median mapping quality of paired-ends">
+##INFO=<ID=SRMAPQ,Number=1,Type=Integer,Description="Median mapping quality of split-reads">
+##INFO=<ID=SR,Number=1,Type=Integer,Description="Split-read support">
+##INFO=<ID=SRQ,Number=1,Type=Float,Description="Split-read consensus alignment quality">
+##INFO=<ID=CONSENSUS,Number=1,Type=String,Description="Split-read consensus sequence">
+##INFO=<ID=CONSBP,Number=1,Type=Integer,Description="Consensus SV breakpoint position">
+##INFO=<ID=CE,Number=1,Type=Float,Description="Consensus sequence entropy">
+##INFO=<ID=CT,Number=1,Type=String,Description="Paired-end signature induced connection type">
+##INFO=<ID=SVLEN,Number=1,Type=Integer,Description="SV length; negative for DEL, positive for DUP/INV/INS.">
+##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">
+##INFO=<ID=PRECISE,Number=0,Type=Flag,Description="Precise structural variation">
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
+##INFO=<ID=SVMETHOD,Number=1,Type=String,Description="Type of approach used to detect SV">
+##INFO=<ID=INSLEN,Number=1,Type=Integer,Description="Predicted length of the insertion">
+##INFO=<ID=HOMLEN,Number=1,Type=Integer,Description="Breakpoint homology length">
+##INFO=<ID=SUBTYPE,Number=1,Type=String,Description="SV subtype: INS:ME:ALU, INS:ME:LINE1, INS:ME:SVA, INS:NUMT, INS:LTR, INS:HERVK, INS:TR, or DEL:TR">
+##INFO=<ID=ALLELEID,Number=1,Type=Integer,Description="Identifier of the merged locus">
+##INFO=<ID=NALLELE,Number=1,Type=Integer,Description="Number of distinct alleles at this locus">
+##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count">
+##INFO=<ID=AN,Number=1,Type=Integer,Description="Total number of alleles">
+##INFO=<ID=INSSTRAND,Number=1,Type=String,Description="Insertion strand for MEIs">
+##INFO=<ID=TRPERIOD,Number=1,Type=Integer,Description="Tandem repeat period in bp">
+##INFO=<ID=TRSTART,Number=1,Type=Integer,Description="Start of the reference tandem repeat">
+##INFO=<ID=TREND,Number=1,Type=Integer,Description="End of the reference tandem repeat">
+##INFO=<ID=TRCOPIES,Number=1,Type=Float,Description="Tandem repeat copy number">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=PL,Number=G,Type=Integer,Description="Phred-scaled genotype likelihoods">
+##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">
+##FORMAT=<ID=FT,Number=1,Type=String,Description="Per-sample genotype filter">
+##FORMAT=<ID=RC,Number=1,Type=Integer,Description="Raw high-quality read counts or base counts for the SV">
+##FORMAT=<ID=RCL,Number=1,Type=Integer,Description="Raw high-quality read counts or base counts for the left control region">
+##FORMAT=<ID=RCR,Number=1,Type=Integer,Description="Raw high-quality read counts or base counts for the right control region">
+##FORMAT=<ID=RDCN,Number=1,Type=Integer,Description="Read-depth based copy-number estimate for autosomal sites">
+##FORMAT=<ID=DR,Number=1,Type=Integer,Description="# high-quality reference pairs">
+##FORMAT=<ID=DV,Number=1,Type=Integer,Description="# high-quality variant pairs">
+##FORMAT=<ID=RR,Number=1,Type=Integer,Description="# high-quality reference junction reads">
+##FORMAT=<ID=RV,Number=1,Type=Integer,Description="# high-quality variant junction reads">
+##FORMAT=<ID=HP,Number=4,Type=Integer,Description="Haplotype-specific junction read counts (HP1_ref,HP1_alt,HP2_ref,HP2_alt)">
+##FORMAT=<ID=PS,Number=1,Type=Integer,Description="Phase set identifier from HP-tagged alignments">
+##FORMAT=<ID=MR,Number=4,Type=Integer,Description="Methylation % for REF allele [SV start left/right, SV end left/right]">
+##FORMAT=<ID=MA,Number=4,Type=Integer,Description="Methylation % for ALT allele [SV start left/right, SV end left/right]">
+##FORMAT=<ID=MNC,Number=4,Type=Integer,Description="Unique CpG sites observed per window [SV start left/right, SV end left/right]">
+##FORMAT=<ID=MDV,Number=4,Type=Integer,Description="Avg. read depth per CpG site per window [SV start left/right, SV end left/right]">
+##reference=/in/ref/GRCh38_no_alt.fa
+##contig=<ID=chr1,length=248956422>
+##contig=<ID=chr2,length=242193529>
+##contig=<ID=chr3,length=198295559>
+##contig=<ID=chr4,length=190214555>
+##contig=<ID=chr5,length=181538259>
+##contig=<ID=chr6,length=170805979>
+##contig=<ID=chr7,length=159345973>
+##contig=<ID=chr8,length=145138636>
+##contig=<ID=chr9,length=138394717>
+##contig=<ID=chr10,length=133797422>
+##contig=<ID=chr11,length=135086622>
+##contig=<ID=chr12,length=133275309>
+##contig=<ID=chr13,length=114364328>
+##contig=<ID=chr14,length=107043718>
+##contig=<ID=chr15,length=101991189>
+##contig=<ID=chr16,length=90338345>
+##contig=<ID=chr17,length=83257441>
+##contig=<ID=chr18,length=80373285>
+##contig=<ID=chr19,length=58617616>
+##contig=<ID=chr20,length=64444167>
+##contig=<ID=chr21,length=46709983>
+##contig=<ID=chr22,length=50818468>
+##contig=<ID=chrX,length=156040895>
+##contig=<ID=chrY,length=57227415>
+##contig=<ID=chrM,length=16569>
+##contig=<ID=chr1_KI270706v1_random,length=175055>
+##contig=<ID=chr1_KI270707v1_random,length=32032>
+##contig=<ID=chr1_KI270708v1_random,length=127682>
+##contig=<ID=chr1_KI270709v1_random,length=66860>
+##contig=<ID=chr1_KI270710v1_random,length=40176>
+##contig=<ID=chr1_KI270711v1_random,length=42210>
+##contig=<ID=chr1_KI270712v1_random,length=176043>
+##contig=<ID=chr1_KI270713v1_random,length=40745>
+##contig=<ID=chr1_KI270714v1_random,length=41717>
+##contig=<ID=chr2_KI270715v1_random,length=161471>
+##contig=<ID=chr2_KI270716v1_random,length=153799>
+##contig=<ID=chr3_GL000221v1_random,length=155397>
+##contig=<ID=chr4_GL000008v2_random,length=209709>
+##contig=<ID=chr5_GL000208v1_random,length=92689>
+##contig=<ID=chr9_KI270717v1_random,length=40062>
+##contig=<ID=chr9_KI270718v1_random,length=38054>
+##contig=<ID=chr9_KI270719v1_random,length=176845>
+##contig=<ID=chr9_KI270720v1_random,length=39050>
+##contig=<ID=chr11_KI270721v1_random,length=100316>
+##contig=<ID=chr14_GL000009v2_random,length=201709>
+##contig=<ID=chr14_GL000225v1_random,length=211173>
+##contig=<ID=chr14_KI270722v1_random,length=194050>
+##contig=<ID=chr14_GL000194v1_random,length=191469>
+##contig=<ID=chr14_KI270723v1_random,length=38115>
+##contig=<ID=chr14_KI270724v1_random,length=39555>
+##contig=<ID=chr14_KI270725v1_random,length=172810>
+##contig=<ID=chr14_KI270726v1_random,length=43739>
+##contig=<ID=chr15_KI270727v1_random,length=448248>
+##contig=<ID=chr16_KI270728v1_random,length=1872759>
+##contig=<ID=chr17_GL000205v2_random,length=185591>
+##contig=<ID=chr17_KI270729v1_random,length=280839>
+##contig=<ID=chr17_KI270730v1_random,length=112551>
+##contig=<ID=chr22_KI270731v1_random,length=150754>
+##contig=<ID=chr22_KI270732v1_random,length=41543>
+##contig=<ID=chr22_KI270733v1_random,length=179772>
+##contig=<ID=chr22_KI270734v1_random,length=165050>
+##contig=<ID=chr22_KI270735v1_random,length=42811>
+##contig=<ID=chr22_KI270736v1_random,length=181920>
+##contig=<ID=chr22_KI270737v1_random,length=103838>
+##contig=<ID=chr22_KI270738v1_random,length=99375>
+##contig=<ID=chr22_KI270739v1_random,length=73985>
+##contig=<ID=chrY_KI270740v1_random,length=37240>
+##contig=<ID=chrUn_KI270302v1,length=2274>
+##contig=<ID=chrUn_KI270304v1,length=2165>
+##contig=<ID=chrUn_KI270303v1,length=1942>
+##contig=<ID=chrUn_KI270305v1,length=1472>
+##contig=<ID=chrUn_KI270322v1,length=21476>
+##contig=<ID=chrUn_KI270320v1,length=4416>
+##contig=<ID=chrUn_KI270310v1,length=1201>
+##contig=<ID=chrUn_KI270316v1,length=1444>
+##contig=<ID=chrUn_KI270315v1,length=2276>
+##contig=<ID=chrUn_KI270312v1,length=998>
+##contig=<ID=chrUn_KI270311v1,length=12399>
+##contig=<ID=chrUn_KI270317v1,length=37690>
+##contig=<ID=chrUn_KI270412v1,length=1179>
+##contig=<ID=chrUn_KI270411v1,length=2646>
+##contig=<ID=chrUn_KI270414v1,length=2489>
+##contig=<ID=chrUn_KI270419v1,length=1029>
+##contig=<ID=chrUn_KI270418v1,length=2145>
+##contig=<ID=chrUn_KI270420v1,length=2321>
+##contig=<ID=chrUn_KI270424v1,length=2140>
+##contig=<ID=chrUn_KI270417v1,length=2043>
+##contig=<ID=chrUn_KI270422v1,length=1445>
+##contig=<ID=chrUn_KI270423v1,length=981>
+##contig=<ID=chrUn_KI270425v1,length=1884>
+##contig=<ID=chrUn_KI270429v1,length=1361>
+##contig=<ID=chrUn_KI270442v1,length=392061>
+##contig=<ID=chrUn_KI270466v1,length=1233>
+##contig=<ID=chrUn_KI270465v1,length=1774>
+##contig=<ID=chrUn_KI270467v1,length=3920>
+##contig=<ID=chrUn_KI270435v1,length=92983>
+##contig=<ID=chrUn_KI270438v1,length=112505>
+##contig=<ID=chrUn_KI270468v1,length=4055>
+##contig=<ID=chrUn_KI270510v1,length=2415>
+##contig=<ID=chrUn_KI270509v1,length=2318>
+##contig=<ID=chrUn_KI270518v1,length=2186>
+##contig=<ID=chrUn_KI270508v1,length=1951>
+##contig=<ID=chrUn_KI270516v1,length=1300>
+##contig=<ID=chrUn_KI270512v1,length=22689>
+##contig=<ID=chrUn_KI270519v1,length=138126>
+##contig=<ID=chrUn_KI270522v1,length=5674>
+##contig=<ID=chrUn_KI270511v1,length=8127>
+##contig=<ID=chrUn_KI270515v1,length=6361>
+##contig=<ID=chrUn_KI270507v1,length=5353>
+##contig=<ID=chrUn_KI270517v1,length=3253>
+##contig=<ID=chrUn_KI270529v1,length=1899>
+##contig=<ID=chrUn_KI270528v1,length=2983>
+##contig=<ID=chrUn_KI270530v1,length=2168>
+##contig=<ID=chrUn_KI270539v1,length=993>
+##contig=<ID=chrUn_KI270538v1,length=91309>
+##contig=<ID=chrUn_KI270544v1,length=1202>
+##contig=<ID=chrUn_KI270548v1,length=1599>
+##contig=<ID=chrUn_KI270583v1,length=1400>
+##contig=<ID=chrUn_KI270587v1,length=2969>
+##contig=<ID=chrUn_KI270580v1,length=1553>
+##contig=<ID=chrUn_KI270581v1,length=7046>
+##contig=<ID=chrUn_KI270579v1,length=31033>
+##contig=<ID=chrUn_KI270589v1,length=44474>
+##contig=<ID=chrUn_KI270590v1,length=4685>
+##contig=<ID=chrUn_KI270584v1,length=4513>
+##contig=<ID=chrUn_KI270582v1,length=6504>
+##contig=<ID=chrUn_KI270588v1,length=6158>
+##contig=<ID=chrUn_KI270593v1,length=3041>
+##contig=<ID=chrUn_KI270591v1,length=5796>
+##contig=<ID=chrUn_KI270330v1,length=1652>
+##contig=<ID=chrUn_KI270329v1,length=1040>
+##contig=<ID=chrUn_KI270334v1,length=1368>
+##contig=<ID=chrUn_KI270333v1,length=2699>
+##contig=<ID=chrUn_KI270335v1,length=1048>
+##contig=<ID=chrUn_KI270338v1,length=1428>
+##contig=<ID=chrUn_KI270340v1,length=1428>
+##contig=<ID=chrUn_KI270336v1,length=1026>
+##contig=<ID=chrUn_KI270337v1,length=1121>
+##contig=<ID=chrUn_KI270363v1,length=1803>
+##contig=<ID=chrUn_KI270364v1,length=2855>
+##contig=<ID=chrUn_KI270362v1,length=3530>
+##contig=<ID=chrUn_KI270366v1,length=8320>
+##contig=<ID=chrUn_KI270378v1,length=1048>
+##contig=<ID=chrUn_KI270379v1,length=1045>
+##contig=<ID=chrUn_KI270389v1,length=1298>
+##contig=<ID=chrUn_KI270390v1,length=2387>
+##contig=<ID=chrUn_KI270387v1,length=1537>
+##contig=<ID=chrUn_KI270395v1,length=1143>
+##contig=<ID=chrUn_KI270396v1,length=1880>
+##contig=<ID=chrUn_KI270388v1,length=1216>
+##contig=<ID=chrUn_KI270394v1,length=970>
+##contig=<ID=chrUn_KI270386v1,length=1788>
+##contig=<ID=chrUn_KI270391v1,length=1484>
+##contig=<ID=chrUn_KI270383v1,length=1750>
+##contig=<ID=chrUn_KI270393v1,length=1308>
+##contig=<ID=chrUn_KI270384v1,length=1658>
+##contig=<ID=chrUn_KI270392v1,length=971>
+##contig=<ID=chrUn_KI270381v1,length=1930>
+##contig=<ID=chrUn_KI270385v1,length=990>
+##contig=<ID=chrUn_KI270382v1,length=4215>
+##contig=<ID=chrUn_KI270376v1,length=1136>
+##contig=<ID=chrUn_KI270374v1,length=2656>
+##contig=<ID=chrUn_KI270372v1,length=1650>
+##contig=<ID=chrUn_KI270373v1,length=1451>
+##contig=<ID=chrUn_KI270375v1,length=2378>
+##contig=<ID=chrUn_KI270371v1,length=2805>
+##contig=<ID=chrUn_KI270448v1,length=7992>
+##contig=<ID=chrUn_KI270521v1,length=7642>
+##contig=<ID=chrUn_GL000195v1,length=182896>
+##contig=<ID=chrUn_GL000219v1,length=179198>
+##contig=<ID=chrUn_GL000220v1,length=161802>
+##contig=<ID=chrUn_GL000224v1,length=179693>
+##contig=<ID=chrUn_KI270741v1,length=157432>
+##contig=<ID=chrUn_GL000226v1,length=15008>
+##contig=<ID=chrUn_GL000213v1,length=164239>
+##contig=<ID=chrUn_KI270743v1,length=210658>
+##contig=<ID=chrUn_KI270744v1,length=168472>
+##contig=<ID=chrUn_KI270745v1,length=41891>
+##contig=<ID=chrUn_KI270746v1,length=66486>
+##contig=<ID=chrUn_KI270747v1,length=198735>
+##contig=<ID=chrUn_KI270748v1,length=93321>
+##contig=<ID=chrUn_KI270749v1,length=158759>
+##contig=<ID=chrUn_KI270750v1,length=148850>
+##contig=<ID=chrUn_KI270751v1,length=150742>
+##contig=<ID=chrUn_KI270752v1,length=27745>
+##contig=<ID=chrUn_KI270753v1,length=62944>
+##contig=<ID=chrUn_KI270754v1,length=40191>
+##contig=<ID=chrUn_KI270755v1,length=36723>
+##contig=<ID=chrUn_KI270756v1,length=79590>
+##contig=<ID=chrUn_KI270757v1,length=71251>
+##contig=<ID=chrUn_GL000214v1,length=137718>
+##contig=<ID=chrUn_KI270742v1,length=186739>
+##contig=<ID=chrUn_GL000216v2,length=176608>
+##contig=<ID=chrUn_GL000218v1,length=161147>
+##contig=<ID=chrEBV,length=171823>
+##INFO=<ID=TruScore,Number=1,Type=Integer,Description="Truvari score for similarity of match">
+##INFO=<ID=PctSeqSimilarity,Number=1,Type=Float,Description="Pct sequence similarity between this variant and its closest match">
+##INFO=<ID=PctSizeSimilarity,Number=1,Type=Float,Description="Pct size similarity between this variant and its closest match">
+##INFO=<ID=PctRecOverlap,Number=1,Type=Float,Description="Percent reciprocal overlap percent of the two calls' coordinates">
+##INFO=<ID=StartDistance,Number=1,Type=Integer,Description="Distance of the base call's end from comparison call's start">
+##INFO=<ID=EndDistance,Number=1,Type=Integer,Description="Distance of the base call's end from comparison call's end">
+##INFO=<ID=SizeDiff,Number=1,Type=Float,Description="Difference in size of base and comp calls">
+##INFO=<ID=GTMatch,Number=1,Type=Integer,Description="Base/Comparison genotypes AC difference">
+##INFO=<ID=MatchId,Number=.,Type=String,Description="Tuple of base and comparison call ids which were matched">
+##INFO=<ID=Multi,Number=0,Type=Flag,Description="Call is false due to non-multimatching">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	HG002
+chr20	1580446	DEL00000004	G	<DEL>	381	PASS	IMPRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=1613492;SVLEN=-33046;PE=8;MAPQ=47;CT=3to5;CIPOS=-90,90;CIEND=-90,90;HOMLEN=2;AC=1;AN=2;MatchId=,4.0	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:10000:320,0,852:PASS:1643:424:2561:0:22:9:0:0:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	2883370	DEL00000009	A	<DEL>	240	PASS	IMPRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=2883840;SVLEN=-470;PE=4;MAPQ=60;CT=3to5;CIPOS=-131,131;CIEND=-131,131;HOMLEN=1;AC=1;AN=2;PctSeqSimilarity=0;PctSizeSimilarity=0.6851;PctRecOverlap=0.6858;SizeDiff=-148;StartDistance=1;EndDistance=-147;GTMatch=0;TruScore=45;MatchId=8.0,8.1;Multi	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:10000:189,0,729:PASS:8312:6894:13453:1:13:4:0:0:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	3040902	DEL00000010	G	<DEL>	180	PASS	IMPRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=3041406;SVLEN=-504;PE=3;MAPQ=60;CT=3to5;CIPOS=-163,163;CIEND=-163,163;HOMLEN=2;AC=1;AN=2;PctSeqSimilarity=0;PctSizeSimilarity=0.5913;PctRecOverlap=0.5901;SizeDiff=-206;StartDistance=207;EndDistance=1;GTMatch=1;TruScore=39;MatchId=9.0,9.0;Multi	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:10000:186,0,786:PASS:11357:8520:8561:1:14:4:0:0:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	7293593	DEL00000025	A	<DEL>	180	PASS	IMPRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=7294002;SVLEN=-409;PE=3;MAPQ=60;CT=3to5;CIPOS=-50,50;CIEND=-50,50;AC=1;AN=2;PctSeqSimilarity=0;PctSizeSimilarity=0.7653;PctRecOverlap=0.7293;SizeDiff=-96;StartDistance=111;EndDistance=15;GTMatch=1;TruScore=49;MatchId=25.0,25.0;Multi	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:157:159,0,219:PASS:9476:4675:8460:1:4:3:0:0:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	21869251	DEL00000079	A	<DEL>	240	PASS	IMPRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=21869642;SVLEN=-391;PE=4;MAPQ=60;CT=3to5;CIPOS=-50,50;CIEND=-50,50;HOMLEN=3;AC=1;AN=2;PctSeqSimilarity=0;PctSizeSimilarity=0.7366;PctRecOverlap=0.7372;SizeDiff=-103;StartDistance=13;EndDistance=-90;GTMatch=1;TruScore=49;MatchId=71.0,71.0;Multi	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:102:222,0,102:PASS:7021:2201:7599:0:2:4:0:0:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	23702952	DEL00000087	T	<DEL>	366	PASS	IMPRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=23765578;SVLEN=-62626;PE=17;MAPQ=22;CT=3to5;CIPOS=-115,115;CIEND=-115,115;HOMLEN=1;AC=1;AN=2;PctSeqSimilarity=0;PctSizeSimilarity=0.0011;PctRecOverlap=0;SizeDiff=-62560;StartDistance=71669;EndDistance=9109;GTMatch=0;TruScore=0;MatchId=78.0,78.0	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:10000:239,0,1377:PASS:4201:8469:4214:2:25:16:0:0:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	23718853	DEL00000088	G	<DEL>	155	PASS	IMPRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=23794276;SVLEN=-75423;PE=6;MAPQ=34;CT=3to5;CIPOS=-81,81;CIEND=-81,81;AC=1;AN=2;PctSeqSimilarity=0;PctSizeSimilarity=0.0009;PctRecOverlap=0.0009;SizeDiff=-75357;StartDistance=55768;EndDistance=-19589;GTMatch=0;TruScore=0;MatchId=78.0,78.1	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:102:102,0,1108:PASS:4773:10247:4957:2:20:7:0:0:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	23776551	DEL00000089	A	<DEL>	172	PASS	IMPRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=23858124;SVLEN=-81573;PE=4;MAPQ=43;CT=3to5;CIPOS=-50,50;CIEND=-50,50;HOMLEN=1;AC=1;AN=2;PctSeqSimilarity=0;PctSizeSimilarity=0.0008;PctRecOverlap=0;SizeDiff=-81507;StartDistance=-1930;EndDistance=-83437;GTMatch=0;TruScore=0;MatchId=78.0,78.2	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:109:109,0,907:PASS:5377:10951:5429:2:17:4:0:0:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	25923943	DEL00000097	T	<DEL>	186	PASS	IMPRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=30219192;SVLEN=-4295249;PE=7;MAPQ=30;CT=3to5;CIPOS=-199,199;CIEND=-199,199;HOMLEN=3;AC=1;AN=2;PctSeqSimilarity=0;PctSizeSimilarity=0.0012;PctRecOverlap=0.0012;SizeDiff=-4.29022e+06;StartDistance=393073;EndDistance=-3897147;GTMatch=0;TruScore=0;MatchId=85.1,85.0	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:18:18,0,2323:PASS:275381:391805:318219:1:50:7:0:0:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	26364241	DEL00000102	N	<DEL>	410	PASS	IMPRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=26366182;SVLEN=-1941;PE=18;MAPQ=26;CT=3to5;CIPOS=-56,56;CIEND=-56,56;AC=1;AN=2;PctSeqSimilarity=0;PctSizeSimilarity=0.5935;PctRecOverlap=0;SizeDiff=-789;StartDistance=-84250;EndDistance=-85039;GTMatch=0;TruScore=19;MatchId=85.0,85.4	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:10000:320,0,1491:PASS:133:122:173:1:31:17:0:0:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	30160614	DEL00000106	T	<DEL>	555	PASS	IMPRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=30162397;SVLEN=-1783;PE=10;MAPQ=60;CT=3to5;CIPOS=-50,50;CIEND=-50,50;AC=1;AN=2;PctSeqSimilarity=0;PctSizeSimilarity=0.1425;PctRecOverlap=0;SizeDiff=-1529;StartDistance=-1069;EndDistance=-2598;GTMatch=1;TruScore=4;MatchId=85.3,85.5	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:10000:537,0,822:PASS:94:117:99:1:15:11:0:0:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	31052458	DEL00000122	G	<DEL>	99	PASS	PRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=31053613;SVLEN=-1155;PE=0;MAPQ=0;CT=3to5;CIPOS=-5,5;CIEND=-5,5;SRMAPQ=47;INSLEN=0;HOMLEN=28;SR=3;SRQ=0.960265;CONSENSUS=GGACTGGAATGGAATCAACTAGAATGGAAAGGAATGGAATGTAATGGAATGCAATGGAATGGACTGGAATGGAATGGAATCAACAAAAGTGTAATGGAAGGGAATGGAATAGAATGGAATGGAAAGCAATGCAGTCAACACGAATGGAAT;CE=1.7857;CONSBP=46;AC=1;AN=2;MatchId=,89.0	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:26:26,0,3539:PASS:558:1155:812:2:0:0:200:50:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	31053947	DEL00000135	T	<DEL>	211	PASS	IMPRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=31072333;SVLEN=-18386;PE=9;MAPQ=20;CT=3to5;CIPOS=-50,50;CIEND=-50,50;HOMLEN=20;AC=1;AN=2;MatchId=,89.3	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:10000:796,0,7805:PASS:2167:33131:5811:8:174:62:0:0:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	31058221	DEL00000167	G	<DEL>	1488	PASS	PRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=31068497;SVLEN=-10276;PE=31;MAPQ=35;CT=3to5;CIPOS=-18,18;CIEND=-18,18;SRMAPQ=29;INSLEN=0;HOMLEN=21;SR=10;SRQ=0.977901;CONSENSUS=GTGTAATGGAAGGGAATGCAATAGAATGGAATGGAATGGAATGGAAAGCAATGGAGTCAACCCGAATGGAATCGACTGGAATGGAATGCAATGGAATGGAATGGAATGGAATCAACGTGATTGTAAAGAAATGAAATGAAATGGAATGGAATGGAATGCAATTGAATCAACTCGATTGTAA;CE=1.8187;CONSBP=94;AC=2;AN=2;MatchId=,89.4	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	1/1:28:2680,28,0:PASS:5651:20463:9416:3:648:33:32:218:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	31059415	DEL00000181	G	<DEL>	766	PASS	PRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=31074225;SVLEN=-14810;PE=0;MAPQ=0;CT=3to5;CIPOS=-12,12;CIEND=-12,12;SRMAPQ=37;INSLEN=0;HOMLEN=1;SR=20;SRQ=0.9625;CONSENSUS=GGAATGGAATGGAACGGAATTTAAAGGAATCAACCAGAATGGAATTGACTGTAACGGACGGGAATGGAATGGAATGGAATGGAATGGAATGGAATGGAATGGAATGGAATAGAGTGGATTGGAATCAATCTGAGTGGAATGGAAAGGAATGGAAAGGAAT;CE=1.75117;CONSBP=101;AC=1;AN=2;MatchId=,89.7	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:10000:1810,0,2082:PASS:8779:28994:3291:5:0:0:131:119:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	31061697	DEL00000198	C	<DEL>	238	PASS	PRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=31064023;SVLEN=-2326;PE=0;MAPQ=0;CT=3to5;CIPOS=-23,23;CIEND=-23,23;SRMAPQ=60;INSLEN=0;HOMLEN=1;SR=5;SRQ=0.96732;CONSENSUS=AATGGAATGGAATGGAATGGAATGGAATGGAATGGAATCCAATCCAATGTAAAGGAATGGAACGGAACGGAATAGAATGTAATGGAATGGAATGGAATGGACTGGAATGGAATGGAATGGAATGGAATGGAATGGAATCAACCAGAGTGGAAT;CE=1.76743;CONSBP=102;AC=1;AN=2;MatchId=,89.9	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:10000:186,0,1687:PASS:3939:3518:2999:1:0:0:81:21:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	31063398	DEL00000212	T	<DEL>	372	PASS	IMPRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=31184864;SVLEN=-121466;PE=16;MAPQ=23;CT=3to5;CIPOS=-78,78;CIEND=-78,78;AC=1;AN=2;MatchId=,89.10	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:10000:190,0,2000:PASS:17262:27736:9478:2:44:13:0:0:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	31075924	DEL00000272	A	<DEL>	222	PASS	IMPRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=31186879;SVLEN=-110955;PE=11;MAPQ=23;CT=3to5;CIPOS=-78,78;CIEND=-78,78;HOMLEN=34;AC=1;AN=2;MatchId=,89.16	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:41:41,0,2005:PASS:40823:5890:7313:0:50:10:0:0:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	31106939	DEL00000273	A	<DEL>	415	PASS	IMPRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=31225010;SVLEN=-118071;PE=8;MAPQ=60;CT=3to5;CIPOS=-110,110;CIEND=-110,110;HOMLEN=3;AC=1;AN=2;MatchId=,89.17	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:125:448,0,125:PASS:42415:6182:11299:0:6:10:0:0:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	31170827	DEL00000277	T	<DEL>	1200	PASS	PRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=31177630;SVLEN=-6803;PE=14;MAPQ=60;CT=3to5;CIPOS=-35,35;CIEND=-35,35;SRMAPQ=60;INSLEN=0;HOMLEN=1;SR=6;SRQ=1;CONSENSUS=TTATTGGATTTGATTCAAACGGTATATAATGGTATGGAATGAACTTGAATGGAATGGAAGGAAATGGACTCAAATTGAATGGAATGGAATGGAATGGACTCGAATGGAATAAAATGGAATTTAATGGAATGGACCATAAAGTAATGGAATGGAATGGATTTGAATGGACTAGAATGG;CE=1.78976;CONSBP=76;AC=1;AN=2;MatchId=,89.18	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:86:161,0,86:PASS:303:312:324:1:10:14:5:8:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	34133681	DEL00000295	A	<DEL>	99	PASS	PRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=52091834;SVLEN=-17958153;PE=0;MAPQ=0;CT=3to5;CIPOS=-8,8;CIEND=-8,8;SRMAPQ=28;INSLEN=0;HOMLEN=5;SR=3;SRQ=0.966887;CONSENSUS=CAAGAATGATCAATAAAAATTAAAAAAAAAAAAAAAAAAAAAAATTAGCTAGACGTGGTGGCACATGCCTGTAATCCCAGCTACTTGGGAAGCTGGGGCAGGAGAATCGCTTGAACCCAGGAGGGGGAGGGTGCGGGGAGCCAAGATTGC;CE=1.89226;CONSBP=37;AC=1;AN=2;PctSeqSimilarity=0;PctSizeSimilarity=0.0002;PctRecOverlap=0.0002;SizeDiff=-1.79549e+07;StartDistance=94452;EndDistance=-17860414;GTMatch=0;TruScore=0;MatchId=103.0,103.0	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:137:239,0,137:PASS:1018699:2380669:1228060:2:0:0:8:13:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	35128254	DEL00000303	G	<DEL>	561	PASS	PRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=35129002;SVLEN=-748;PE=6;MAPQ=60;CT=3to5;CIPOS=-16,16;CIEND=-16,16;SRMAPQ=55;INSLEN=0;HOMLEN=15;SR=4;SRQ=1;CONSENSUS=CAGTGTTAGACCATCCTGCCTAACACGGTGAAACCCCATCTCTACTAAAAATACAAAAAAATTAGCTGGGTGTGGTGGCGGGCGCCTCTAATCCCAGCACTTTGGGAGGCCAAGGTGGGTGGAGATCACCTGAGATCAGGAGTTTGAGACCAGCCTGGCCAACAT;CE=1.99098;CONSBP=82;AC=1;AN=2;PctSeqSimilarity=0;PctSizeSimilarity=0.4078;PctRecOverlap=0;SizeDiff=-443;StartDistance=15028037;EndDistance=15027594;GTMatch=0;TruScore=13;MatchId=103.18,103.7	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:143:218,0,143:PASS:9013:15942:11203:2:13:6:8:11:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	41277755	DEL00000312	C	<DEL>	309	PASS	IMPRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=41278844;SVLEN=-1089;PE=7;MAPQ=60;CT=3to5;CIPOS=-122,122;CIEND=-122,122;HOMLEN=3;AC=1;AN=2;PctSeqSimilarity=0;PctSizeSimilarity=0.2654;PctRecOverlap=0;SizeDiff=-800;StartDistance=-20076;EndDistance=-20876;GTMatch=0;TruScore=8;MatchId=103.8,103.13	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:10000:252,0,663:PASS:53:91:50:2:12:7:0:0:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	61273503	DEL00000373	G	<DEL>	199	PASS	IMPRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=61274431;SVLEN=-928;PE=5;MAPQ=50;CT=3to5;CIPOS=-50,50;CIEND=-50,50;HOMLEN=1;AC=1;AN=2;MatchId=,136.0	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:10000:160,0,403:PASS:6374:28026:13644:3:8:5:0:0:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	61920102	DEL00000381	TGTGATTGGAAGCGTGTCACGGTGATTGCGTGGAAGCGTGGTTTTGTGATTGCATGGAAGCATGGCGTCACAGTGACTGCGTGGAAGCGTGGTGTCATGGTGACTGCGTGGAAGCATGGTGTCACGGTGATTGCATGGAAGCGTGGTGTCACAGTGATTGCATGGAAGCGTGTCATGATTGTGTGGAAGCATGGTATC	T	74	PASS	PRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;SVLEN=-198;PE=0;MAPQ=0;CT=3to5;CIPOS=-9,9;CIEND=-9,9;SRMAPQ=20;INSLEN=0;HOMLEN=9;SR=3;SRQ=0.954839;CONSENSUS=TGCGTGGAAGCGTGTCGTGATTGTGTGGAAGCATGGTATCGTGATTGTGTGGAAGCGTGGTGTCACGGTGATTGCGTGGAAGCATGTTGTGATTGTGTGGAAGCGTGGTGTGATTGTGTGGAAGCATGGTATCGTGATTGTGGAAGCGTG;CE=1.80783;CONSBP=88;AC=1;AN=2;MatchId=,142.0	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:10000:523,0,175:PASS:10191:7082:3411:1:0:0:12:30:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	61945291	DEL00000383	G	<DEL>	71	PASS	IMPRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=61948058;SVLEN=-2767;PE=4;MAPQ=22;CT=3to5;CIPOS=-293,293;CIEND=-293,293;HOMLEN=2;AC=1;AN=2;MatchId=,143.0	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:50:50,0,332:PASS:5:117:147:2:8:6:0:0:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	63015892	DEL00000388	GCTCCCTGCCTTTCCCTGTCTCCACCTCCCCCACCCCTGCCCAGTCAGCCGCATCACAGGTCCCATCTGCACAGGGCTCCCTGCCTCTCCCTGCCT	G	165	PASS	PRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;SVLEN=-96;PE=0;MAPQ=0;CT=3to5;CIPOS=-17,17;CIEND=-17,17;SRMAPQ=60;INSLEN=0;HOMLEN=16;SR=3;SRQ=1;CONSENSUS=CCTTCGCTCACGCTCATCCAGTGCATTTGAAATCCCCGTGCTCCACCTTCCCGACACCCAGAGTCAGCCCCATCACAGGTCTCATCTGCACAGGGCTCCCTGCCTCTCCCTGCCTCTCCCTGCCTCTCCCTGCCTCTCCCTGCCTCCACC;CE=1.7893;CONSBP=95;AC=1;AN=2;PctSeqSimilarity=0;PctSizeSimilarity=0.7917;PctRecOverlap=0.4479;SizeDiff=-20;StartDistance=-34;EndDistance=-53;GTMatch=0;TruScore=41;MatchId=152.0,152.0	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:26:256,0,26:PASS:672:2136:1060:2:0:0:3:32:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	63134532	DEL00000391	A	<DEL>	119	PASS	IMPRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=63135167;SVLEN=-635;PE=3;MAPQ=36;CT=3to5;CIPOS=-236,236;CIEND=-236,236;AC=1;AN=2;MatchId=,155.0	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:86:86,0,367:PASS:9366:2997:3477:0:8:3:0:0:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	63964896	DEL00000398	A	<DEL>	298	PASS	IMPRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=63966049;SVLEN=-1153;PE=6;MAPQ=60;CT=3to5;CIPOS=-58,58;CIEND=-58,58;AC=1;AN=2;MatchId=,164.0	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:10000:217,0,1120:PASS:54:61:66:1:21:6:0:0:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.
+chr20	64127298	DEL00000400	C	<DEL>	254	PASS	IMPRECISE;SVTYPE=DEL;SVMETHOD=EMBL.DELLYv2.7.0;END=64127851;SVLEN=-553;PE=7;MAPQ=39;CT=3to5;CIPOS=-140,140;CIEND=-140,140;SUBTYPE=DEL:TR;TRPERIOD=38;TRCOPIES=14.5526;AC=1;AN=2;MatchId=,166.0	GT:GQ:PL:FT:RCL:RC:RCR:RDCN:DR:DV:RR:RV:HP:PS:MR:MA:MNC:MDV	0/1:10000:193,0,374:PASS:6689:5265:11072:1:14:7:0:0:0,0,0,0:-1:.,.,.,.:.,.,.,.:.,.,.,.:.,.,.,.

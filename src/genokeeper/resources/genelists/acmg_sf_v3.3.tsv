@@ -1,0 +1,99 @@
+# source: https://pmc.ncbi.nlm.nih.gov/articles/PMC12318660/
+# version: 3.3
+# title: ACMG SF v3.3 list for reporting of secondary findings in clinical exome and genome sequencing (Genet Med 2025;27(8):101454, doi:10.1016/j.gim.2025.101454), Table 1
+# transcribed: 2026-10-18; gene set cross-checked against NCBI ClinVar's ACMG SF v3.2 page (81 genes) plus the three v3.3 additions ABCD1, CYP27A1, PLN
+# inheritance: as printed in Table 1, except LDLR, printed "SD" (semidominant), recorded as AD because heterozygotes are affected
+# report: Table 1's "variants to report" column and its footnotes, transcribed 2026-10-30, one rule per gene:
+#   all: "All P and LP"; for GLA and OTC "All hemi, het, homozygous P and LP" (footnote a: heterozygous females too).
+#     LMNA's footnote e (missense never associated with cardiac disease is not reported) is the classifier's call, not a rule here.
+#   biallelic: "P and LP (2 variants)" (MUTYH, CASQ2, TRDN, BTD, CYP27A1, GAA, RPE65, ATP7B; footnote a: two P/LP
+#     variants "even when phase is undetermined"); for ABCD1 "All hemi, homozygous or two het. P and/or LP" (footnote k:
+#     a single heterozygous variant is not reported).
+#   truncating: TTN, footnote f: "Only truncating variants in the Titin gene (TTN tv) should be reported".
+#     Truncating is ClinVar's molecular consequence nonsense, frameshift, splice donor or splice acceptor (TTN tv as usually defined).
+#   homozygous:<vid>: HFE, "HFE p.C282Y homozygotes only" (footnote j: NM_000410.3, c.845G>A, ClinVar variation 9), its GRCh38 vid.
+gene	inheritance	report
+APC	AD	all
+RET	AD	all
+BRCA1	AD	all
+BRCA2	AD	all
+PALB2	AD	all
+SDHD	AD	all
+SDHAF2	AD	all
+SDHC	AD	all
+SDHB	AD	all
+MAX	AD	all
+TMEM127	AD	all
+BMPR1A	AD	all
+SMAD4	AD	all
+TP53	AD	all
+MLH1	AD	all
+MSH2	AD	all
+MSH6	AD	all
+PMS2	AD	all
+MEN1	AD	all
+MUTYH	AR	biallelic
+NF2	AD	all
+STK11	AD	all
+PTEN	AD	all
+RB1	AD	all
+TSC1	AD	all
+TSC2	AD	all
+VHL	AD	all
+WT1	AD	all
+FBN1	AD	all
+TGFBR1	AD	all
+TGFBR2	AD	all
+SMAD3	AD	all
+ACTA2	AD	all
+MYH11	AD	all
+PKP2	AD	all
+DSP	AD	all
+DSC2	AD	all
+TMEM43	AD	all
+DSG2	AD	all
+RYR2	AD	all
+CASQ2	AR	biallelic
+TRDN	AR	biallelic
+TNNT2	AD	all
+LMNA	AD	all
+FLNC	AD	all
+TTN	AD	truncating
+BAG3	AD	all
+DES	AD	all
+RBM20	AD	all
+TNNC1	AD	all
+PLN	AD	all
+COL3A1	AD	all
+LDLR	AD	all
+APOB	AD	all
+PCSK9	AD	all
+MYH7	AD	all
+MYBPC3	AD	all
+TNNI3	AD	all
+TPM1	AD	all
+MYL3	AD	all
+ACTC1	AD	all
+PRKAG2	AD	all
+MYL2	AD	all
+KCNQ1	AD	all
+KCNH2	AD	all
+SCN5A	AD	all
+CALM1	AD	all
+CALM2	AD	all
+CALM3	AD	all
+BTD	AR	biallelic
+CYP27A1	AR	biallelic
+GLA	XL	all
+HFE	AR	homozygous:GRCh38:chr6:26092913:G:A
+OTC	XL	all
+GAA	AR	biallelic
+ABCD1	XL	biallelic
+ACVRL1	AD	all
+ENG	AD	all
+TTR	AD	all
+RYR1	AD	all
+CACNA1S	AD	all
+HNF1A	AD	all
+RPE65	AR	biallelic
+ATP7B	AR	biallelic

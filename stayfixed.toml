@@ -1,0 +1,21 @@
+# Written by `stayfixed init`. Every key you leave out takes the preset's default;
+# `[stayfixed] version`, `state` and `enforced`, and `[ci] ref`, are stayfixed's to
+# rewrite in place; every other key is yours.
+
+[stayfixed]
+enforced = []
+version = "0.6.1"
+state = "installed"
+agents = ["claude", "codex"]
+profile = "python"
+
+[project]
+name = "dna"
+base_branch = "main"
+release_branch = "main"
+
+[memory]
+mode = "overlay"
+
+[ci]
+ref = "54b5d5c80aaeb33c359a269e167558e9101db066"

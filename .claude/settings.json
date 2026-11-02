@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(data/raw/**)",
+      "Read(reports/**)",
+      "Read(//**/data/raw/**)",
+      "Read(//**/reports/**)",
+      "Read(~/genome-lab/calibration/**)"
+    ]
+  }
+}

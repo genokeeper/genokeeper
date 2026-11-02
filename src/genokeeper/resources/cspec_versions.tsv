@@ -1,0 +1,40 @@
+# source: ClinGen's Criteria Specification Registry (CSpec, https://cspec.genome.network), the
+# specification (SVI id and version) each [bs1_by_gene] threshold in config/grading.toml was
+# taken from. ClinGen releases its curations under CC0 1.0 (NOTICE, "ClinGen").
+gene	svi	version
+ABCD1	GN105	1.0
+ACTC1	GN101	1.0
+ACVRL1	GN135	1.1
+APC	GN089	2.1
+APOB	GN237	1.0
+BRCA1	GN092	1.2
+BRCA2	GN097	1.2
+CYP27A1	GN227	1.0
+ENG	GN136	1.1
+FBN1	GN022	1.0
+GAA	GN010	2.0
+HNF1A	GN017	3.1
+KCNQ1	GN112	1.0
+LDLR	GN013	1.2
+MLH1	GN115	2.0
+MSH2	GN137	2.0
+MSH6	GN138	2.0
+MUTYH	GN168	1.0
+MYBPC3	GN095	1.0
+MYH7	GN002	2.0
+MYL2	GN102	1.0
+MYL3	GN103	1.0
+OTC	GN156	1.0
+PALB2	GN077	1.3
+PMS2	GN139	2.0
+PTEN	GN003	3.2
+RPE65	GN120	1.0
+RYR1	GN012	2.0
+RYR1	GN150	2.0
+RYR1	GN179	2.0
+SMAD4	GN245	1.0.0
+TNNI3	GN098	1.0
+TNNT2	GN099	1.0
+TP53	GN009	2.4
+TPM1	GN100	1.0
+VHL	GN078	1.1

@@ -1,0 +1,50 @@
+# source: stage 1 design ("Topics and ordering"): disease scores under risks, traits and wellness by the trait's EFO; a measurement (LDL cholesterol, body mass index) under wellness (builder's call)
+# source: the trait IDs are the PGS Catalog's trait_efo of each score in scores.toml (REST API, 2026-10-21)
+# source: slice 3g's additions are the PGS Catalog's trait_efo of each added score (REST API, release 2026-10-23); height under traits, a measurement under wellness, a disease under risks (closing design, "Slice 3g")
+# version: 2026-10-30
+efo_id	topic	label
+MONDO_0005010	risks	coronary artery disorder
+MONDO_0004981	risks	atrial fibrillation
+MONDO_0005044	risks	hypertensive disorder
+MONDO_0005148	risks	type 2 diabetes mellitus
+EFO_0004611	wellness	low density lipoprotein cholesterol measurement
+EFO_0004340	wellness	body mass index
+MONDO_0005159	risks	prostate carcinoma
+MONDO_0005575	risks	colorectal cancer
+MONDO_0005105	risks	melanoma
+MONDO_0004975	risks	Alzheimer disease
+MONDO_0005180	risks	Parkinson disease
+HP_0002140	risks	Ischemic stroke
+MONDO_0005252	risks	heart failure
+MONDO_0005350	risks	abdominal aortic aneurysm
+MONDO_0005386	risks	peripheral arterial disease
+MONDO_0005399	risks	venous thromboembolism
+MONDO_0005041	risks	glaucoma
+MONDO_0005300	risks	chronic kidney disease
+MONDO_0005393	risks	gout
+EFO_0009270	wellness	heel bone mineral density
+EFO_0004530	wellness	triglyceride measurement
+EFO_0004612	wellness	high density lipoprotein cholesterol measurement
+MONDO_0005150	risks	age-related macular degeneration
+MONDO_0005138	risks	lung carcinoma
+MONDO_0005192	risks	exocrine pancreatic carcinoma
+MONDO_0015075	risks	thyroid gland carcinoma
+MONDO_0005147	risks	type 1 diabetes mellitus
+MONDO_0008383	risks	rheumatoid arthritis
+MONDO_0007915	risks	systemic lupus erythematosus
+MONDO_0005301	risks	multiple sclerosis
+MONDO_0005011	risks	Crohn disease
+MONDO_0005101	risks	ulcerative colitis
+MONDO_0005420	risks	hypothyroidism
+MONDO_0004979	risks	asthma
+MONDO_0004980	risks	atopic eczema
+MONDO_0005002	risks	chronic obstructive pulmonary disease
+MONDO_0005346	risks	gallstones
+EFO_0009959	risks	diverticular disease
+MONDO_0003864	risks	chronic lymphocytic leukemia/small lymphocytic lymphoma
+MONDO_0009693	risks	plasma cell myeloma
+MONDO_0005447	risks	testicular cancer
+MONDO_0002009	risks	major depressive disorder
+MONDO_0005090	risks	schizophrenia
+OBA_VT0001253	traits	body height
+OBA_1000968	wellness	amount of vitamin D

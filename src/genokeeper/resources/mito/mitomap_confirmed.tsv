@@ -1,0 +1,128 @@
+# MITOMAP's Confirmed pathogenic mutations
+# (https://www.mitomap.org/foswiki/bin/view/MITOMAP/ConfirmedMutations), report date
+# 2026-10-30, read in a browser on 2026-10-30 (the site serves the table to no script).
+# Licence: CC BY 3.0 (MITOWIKI/HelpTerms: all content on Mitomap.org is licensed under a
+# Creative Commons Attribution 3.0 License); cite MITOMAP as
+# https://www.mitomap.org/MITOMAP/CitingMitomap asks.
+# Kept: the 116 single-base substitutions (m.<pos><ref>><alt>) of its 130 rows,
+# the only ones mutserve calls; dropped 14 it cannot call: 8 deletions, 4 insertions, 1
+# inversion and 1 two-base substitution (m.8993TG>CA).
+# Columns as MITOMAP shows them: allele, locus, diseases, status (Cfrm, with the
+# classification MITOMAP shows in brackets), last update.
+allele	locus	diseases	status	last_update
+m.583G>A	MT-TF	MELAS / MM & EXIT	Cfrm [VUS*]	2022.10.10
+m.591C>T	MT-TF	Gitelman-like syndrome	Cfrm [LP]	2024.07.22
+m.616T>C	MT-TF	Maternally inherited epilepsy / mito tubulointerstitial kidney disease (MITKD) / Gitelman-like syndrome	Cfrm [LP]	2022.06.13
+m.1494C>T	MT-RNR1	DEAF	Cfrm [LP]	2022.06.27
+m.1555A>G	MT-RNR1	DEAF; autism spectrum intellectual disability; possibly antiatherosclerotic	Cfrm [P]	2022.12.15
+m.1606G>A	MT-TV	AMDF / retinal degeneration	Cfrm [VUS*]	2022.08.11
+m.1624C>T	MT-TV	Leigh Syndrome	Cfrm [LP]	2024.09.24
+m.1630A>G	MT-TV	MNGIE-like disease / MELAS / epilepsy	Cfrm [VUS*]	2022.11.14
+m.1644G>A	MT-TV	Leigh Syndrome / HCM / MELAS	Cfrm [LP]	2020.08.20
+m.3242G>A	MT-TL1	MM / HCM+renal tubular dysfunction	Cfrm [LP]	2024.11.11
+m.3243A>G	MT-TL1	MELAS / Leigh Syndrome / DMDF / MIDD / SNHL / CPEO / MM / FSGS / ASD / Cardiac+multi-organ dysfunction	Cfrm [P]	2020.07.29
+m.3243A>T	MT-TL1	MM / MELAS / SNHL / CPEO	Cfrm [LP]	2022.10.10
+m.3251A>G	MT-TL1	MM / MELAS	Cfrm [LP]	2024.04.22
+m.3252A>G	MT-TL1	MELAS	Cfrm [LP]	2024.09.09
+m.3255G>A	MT-TL1	MERRF / KSS overlap	Cfrm [LP]	2024.04.22
+m.3256C>T	MT-TL1	MELAS; possible atherosclerosis risk	Cfrm [LP]	2023.05.18
+m.3258T>C	MT-TL1	MELAS / Myopathy	Cfrm [LP]	2022.08.08
+m.3260A>G	MT-TL1	MMC / MELAS	Cfrm [LP]	2023.05.22
+m.3271T>C	MT-TL1	MELAS / DM / MERRF-like	Cfrm [P]	2023.04.25
+m.3280A>G	MT-TL1	Myopathy	Cfrm [VUS*]	2022.08.23
+m.3291T>C	MT-TL1	MELAS / Myopathy / Deafness+Cognitive Impairment	Cfrm [LP]	2022.10.03
+m.3302A>G	MT-TL1	MM	Cfrm [LP]	2023.05.18
+m.3303C>T	MT-TL1	MMC	Cfrm [LP]	2023.01.09
+m.3376G>A	MT-ND1	LHON MELAS overlap	Cfrm [VUS*]	2022.08.11
+m.3460G>A	MT-ND1	LHON	Cfrm [P]	2023.04.25
+m.3481G>A	MT-ND1	MELAS / Progressive Encephalomyopathy	Cfrm [VUS*]	2023.09.26
+m.3635G>A	MT-ND1	LHON	Cfrm [LP]	2022.08.23
+m.3688G>A	MT-ND1	Leigh Syndrome	Cfrm [LP]	2023.12.21
+m.3697G>A	MT-ND1	MELAS / Leigh Syndrome / LDYT / BSN	Cfrm [LP]	2022.08.11
+m.3700G>A	MT-ND1	LHON	Cfrm [VUS*]	2022.04.13
+m.3733G>A	MT-ND1	LHON	Cfrm [VUS*]	2022.08.11
+m.3890G>A	MT-ND1	Progressive Encephalomyopathy / Leigh Syndrome / Optic Atrophy	Cfrm [LP]	2022.08.11
+m.3946G>A	MT-ND1	MELAS	Cfrm [LP]	2024.03.18
+m.4171C>A	MT-ND1	LHON / Leigh-like phenotype	Cfrm [VUS*]	2022.08.11
+m.4298G>A	MT-TI	CPEO / MS	Cfrm [VUS*]	2022.12.12
+m.4300A>G	MT-TI	MICM	Cfrm [LP]	2023.05.18
+m.4308G>A	MT-TI	CPEO	Cfrm [VUS*]	2022.10.10
+m.4332G>A	MT-TQ	Encephalopathy / MELAS	Cfrm [VUS*]	2023.01.23
+m.4450G>A	MT-TM	Myopathy / MELAS / Leigh Syndrome / EXIT	Cfrm [LP]	2023.02.27
+m.4810G>A	MT-ND2	EXIT with myalgia & ophthalmoplegia	Cfrm [LP]	2023.10.09
+m.5521G>A	MT-TW	Mitochondrial myopathy	Cfrm [LP]	2022.10.03
+m.5556G>A	MT-TW	Combined OXPHOS defects	Cfrm [LP]	2024.05.28
+m.5650G>A	MT-TA	Myopathy	Cfrm [LP]	2022.10.24
+m.5690A>G	MT-TN	CPEO+ptosis+proximal myopathy	Cfrm [LP]	2023.01.09
+m.5703G>A	MT-TN	CPEO / MM	Cfrm [P]	2023.02.13
+m.5728T>C	MT-TN	Multiorgan failure / myopathy / myasthenia gravis-like	Cfrm [LP]	2023.02.13
+m.5920G>A	MT-CO1	Myoglobinuria / EXIT	Cfrm [LP]	2024.01.22
+m.6930G>A	MT-CO1	Multisystem Disorder	Cfrm [LP]	2024.01.22
+m.7445A>G	MT-TS1 precursor, MT-CO1	SNHL	Cfrm [P]	2022.08.08
+m.7453G>A	MT-TS1	Fatal neonatal lactic acidosis / Neonatal lactic acidosis, exercise intolerance, mild ID	Cfrm [LP]	2024.10.28
+m.7497G>A	MT-TS1	MM / EXIT	Cfrm [LP]	2023.04.17
+m.7510T>C	MT-TS1	SNHL	Cfrm [LP]	2023.03.13
+m.7511T>C	MT-TS1	SNHL/Deafness	Cfrm [LP]	2022.11.30
+m.7512T>C	MT-TS1	PEM / MERME / MELAS	Cfrm [LP]	2024.07.08
+m.7587T>C	MT-CO2	Mitochondrial Encephalomyopathy	Cfrm [LP]	2024.03.11
+m.7896G>A	MT-CO2	Multisystem Disorder	Cfrm [P]	2024.02.12
+m.8306T>C	MT-TK	Severe adult-onset multisymptom myopathy / Myoclonic epilepsy	Cfrm [VUS*]	2022.10.24
+m.8313G>A	MT-TK	MNGIE-like / Progressive mito cytopathy	Cfrm [LP]	2023.03.13
+m.8340G>A	MT-TK	Myopathy, Exercise Intolerance, CPEO-like /childhood epilepsy with SNHL & eye disease	Cfrm [LP]	2023.05.22
+m.8344A>G	MT-TK	MERRF; Other - LD / depressive mood disorder / leukoencephalopathy / HiCM / lipomas	Cfrm [P]	2021.11.03
+m.8356T>C	MT-TK	MERRF	Cfrm [LP]	2023.03.13
+m.8363G>A	MT-TK	MICM+DEAF / MERRF / Autism / Leigh Syndrome / Ataxia / Lipomatosis	Cfrm [LP]	2023.03.13
+m.8528T>C	MT-ATP8/6	Infantile cardiomyopathy / hyperammonemia / ATP6/8 deficiency	Cfrm [LP]	2022.06.30
+m.8851T>C	MT-ATP6	BSN / Leigh syndrome	Cfrm [VUS*]	2022.04.13
+m.8969G>A	MT-ATP6	Mitochondrial myopathy, lactic acidosis and sideroblastic anemia (MLASA) / IgG nephropathy / ATP6/8 deficiency	Cfrm [LP]	2022.08.11
+m.8993T>C	MT-ATP6	NARP / Leigh Disease / MILS / ATP6/8 deficiency / other	Cfrm [P]	2022.04.13
+m.8993T>G	MT-ATP6	NARP / Leigh Disease / MILS / ATP6/8 deficiency / other	Cfrm [P]	2022.04.13
+m.9035T>C	MT-ATP6	Ataxia syndromes / ATP6/8 deficiency	Cfrm [LP]	2022.06.30
+m.9155A>G	MT-ATP6	MIDD, renal insufficiency	Cfrm [LP]	2022.06.30
+m.9176T>C	MT-ATP6	FBSN / Leigh Disease / Spinocerebellar Ataxia / ATP6/8 deficiency	Cfrm [P]	2022.04.13
+m.9176T>G	MT-ATP6	Leigh Disease / Spastic Paraplegia / Spinocerebellar Ataxia / ATP6/8 deficiency	Cfrm [LP]	2022.08.11
+m.9185T>C	MT-ATP6	Leigh Disease / Ataxia syndromes / NARP-like disease / Episodic weakness and Charcot-Marie-Tooth / ATP6/8 deficiency	Cfrm [P]	2022.08.11
+m.9191T>C	MT-ATP6	Leigh Disease	Cfrm [LP]	2022.03.24
+m.9952G>A	MT-CO3	Mitochondrial Encephalopathy	Cfrm [LP]	2024.02.26
+m.10010T>C	MT-TG	PEM	Cfrm [VUS*]	2022.11.14
+m.10158T>C	MT-ND3	Leigh Disease / MELAS / mito encephalomyopathy	Cfrm [P]	2022.04.13
+m.10191T>C	MT-ND3	Leigh Disease / ESOC	Cfrm [P]	2022.08.23
+m.10197G>A	MT-ND3	Leigh Disease / Dystonia / Stroke / LDYT	Cfrm [P]	2022.08.11
+m.10254G>A	MT-ND3	Leigh Disease	Cfrm [LP]	2023.10.23
+m.10663T>C	MT-ND4L	LHON	Cfrm [LP]	2022.06.30
+m.11777C>A	MT-ND4	Leigh Disease	Cfrm [LP]	2022.08.11
+m.11778G>A	MT-ND4	LHON / Progressive Dystonia	Cfrm [P]	2022.08.11
+m.12147G>A	MT-TH	MERRF-MELAS / Encephalopathy	Cfrm [LP]	2023.01.09
+m.12201T>C	MT-TH	Maternally inherited non-syndromic deafness	Cfrm [LP]	2023.04.17
+m.12258C>A	MT-TS2	DMDF / RP+SNHL	Cfrm [LP]	2023.03.28
+m.12276G>A	MT-TL2	CPEO	Cfrm [LP]	2022.11.30
+m.12294G>A	MT-TL2	CPEO / EXIT+Ophthalmoplegia	Cfrm [VUS*]	2022.10.24
+m.12315G>A	MT-TL2	CPEO / KSS / possible carotid atherosclerosis risk, trend toward myocardial infarction risk	Cfrm [LP]	2022.11.30
+m.12316G>A	MT-TL2	CPEO / mitochondrial myopathy	Cfrm [VUS*]	2023.02.27
+m.12706T>C	MT-ND5	Leigh Disease	Cfrm [LP]	2022.08.11
+m.13042G>A	MT-ND5	Optic neuropathy/ retinopathy/ LD	Cfrm [LP]	2022.06.30
+m.13046T>C	MT-ND5	LHON/MELAS overlap syndrome	Cfrm [LP]	2024.12.03
+m.13051G>A	MT-ND5	LHON	Cfrm [VUS*]	2023.05.23
+m.13094T>C	MT-ND5	Ataxia+PEO / MELAS, LD, LHON, myoclonus, fatigue	Cfrm [P]	2022.08.11
+m.13379A>G	MT-ND5	LHON	Cfrm [VUS*]	2022.08.11
+m.13513G>A	MT-ND5	Leigh Disease / MELAS / LHON-MELAS Overlap Syndrome / negative association w Carotid Atherosclerosis	Cfrm [P]	2022.04.13
+m.13514A>G	MT-ND5	Leigh Disease / MELAS / Ca2+ downregulation	Cfrm [LP]	2022.08.11
+m.14453G>A	MT-ND6	MELAS / Leigh Disease	Cfrm [LP]	2022.08.11
+m.14459G>A	MT-ND6	LDYT / Leigh Disease / dystonia / carotid atherosclerosis risk	Cfrm [P]	2022.04.13
+m.14465G>A	MT-ND6	LHON / various supected mitochondrial disease	Cfrm [LP]	2025.01.13
+m.14482C>A	MT-ND6	LHON	Cfrm [LP]	2022.08.11
+m.14482C>G	MT-ND6	LHON	Cfrm [LP]	2022.07.11
+m.14484T>C	MT-ND6	LHON	Cfrm [P]	2022.09.12
+m.14487T>C	MT-ND6	Dystonia / Leigh Disease / ataxia / ptosis / epilepsy	Cfrm [P]	2022.08.08
+m.14495A>G	MT-ND6	LHON	Cfrm [LP]	2022.08.11
+m.14568C>T	MT-ND6	LHON	Cfrm [LP]	2022.08.11
+m.14597A>G	MT-ND6	LHON / LS	Cfrm [LP]	2023.08.14
+m.14674T>C	MT-TE	Reversible COX deficiency myopathy	Cfrm [LP]	2023.01.23
+m.14709T>C	MT-TE	MM+DMDF / Encephalomyopathy / Dementia+diabetes+ophthalmoplegia	Cfrm [LP]	2023.01.23
+m.14710G>A	MT-TE	Encephalomyopathy + Retinopathy	Cfrm [VUS*]	2022.12.15
+m.14849T>C	MT-CYB	EXIT / Septo-Optic Dysplasia	Cfrm [VUS*]	2022.08.11
+m.15150G>A	MT-CYB	EXIT	Cfrm [LP]	2024.01.08
+m.15242G>A	MT-CYB	Mitochondrial Encephalomyopathy	Cfrm [LP]	2024.01.08
+m.15579A>G	MT-CYB	Multisystem Disorder, EXIT	Cfrm [VUS*]	2022.07.11
+m.15923A>G	MT-TT	LIMM / MERRF / mito disease	Cfrm [LP]	2023.06.26
+m.15990C>T	MT-TP	MM / PEO	Cfrm [LP]	2022.02.13

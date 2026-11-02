@@ -1,0 +1,19 @@
+HTTP/2 200 
+server: nginx/1.24.0 (Ubuntu)
+date: Fri, 30 Oct 2026 05:56:23 GMT
+content-type: text/tab-separated-values; charset=UTF-8
+content-length: 25164448
+x-powered-by: PHP/7.4.33
+cache-control: no-cache, public
+etag: "468125bc137a1c303d463b8b67a13632"
+last-modified: Sun, 25 Oct 2026 06:01:24 GMT
+content-disposition: attachment; filename=gencc-submissions.tsv
+pragma: no-cache
+expires: -1
+accept-ranges: bytes
+x-ratelimit-limit: 60
+x-ratelimit-remaining: 57
+strict-transport-security: max-age=31536000
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+referrer-policy: strict-origin-when-cross-origin

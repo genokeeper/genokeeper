@@ -1,0 +1,39 @@
+[project]
+name = "genokeeper"
+version = "0.1.0"
+description = "Local analyser for your own whole-genome data: findings with two confidences."
+requires-python = ">=3.14"
+license = "AGPL-3.0-or-later"
+license-files = ["LICENSE", "NOTICE"]
+classifiers = [
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "duckdb==1.5.*",
+    "pysam",
+]
+
+[project.scripts]
+genokeeper = "genokeeper.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.12.19,<0.14"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-xdist",
+    "ruff",
+    "basedpyright==1.40.2",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+strict_markers = true
+markers = ["tools: needs bcftools, samtools, bwa, mosdepth and seqtk on PATH, the lab's rtg-tools, and Docker with the bootstrap's pinned whatshap image"]
+
+[tool.basedpyright]
+include = ["src", "tests"]
+typeCheckingMode = "standard"
+pythonVersion = "3.14"

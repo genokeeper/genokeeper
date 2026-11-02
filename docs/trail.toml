@@ -1,0 +1,11 @@
+# The forward track in machine-readable form, maintained by hand beside the roadmap. One theme
+# to start with, matching everything; split it as the corpus grows. A document entering the
+# listing declares its state here — `delivered` included, because a design is written before
+# the thing is built.
+[[theme]]
+label = "Everything"
+pattern = ".*"
+
+[states]
+# The specs, plans and research notes are kept in the maintainer's private notes; new ones are
+# written there, so nothing is listed here.

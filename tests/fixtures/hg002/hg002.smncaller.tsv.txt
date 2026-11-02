@@ -1,0 +1,2 @@
+Sample	isSMA	isCarrier	SMN1_CN	SMN2_CN	SMN2delta7-8_CN	Total_CN_raw	Full_length_CN_raw	g.27134T>G_CN	SMN1_CN_raw
+sample	False	False	2	2	0	3.801	3.798	0	2.09,1.78,1.86,1.77,1.46,1.66,1.62,2.18,1.73,1.91,2.03,2.28,2.02,1.7,1.82,1.82

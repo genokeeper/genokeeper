@@ -1,0 +1,51 @@
+# The genome-data guard (no genomic path, no file over 5 MB, no data file outside the data
+# folders, among the tracked files nor in any commit pushed), apart from the heavy checks in
+# ci.yml so that it runs on every push and pull request with no path filter: text files are the
+# likeliest route for someone's genome data, and for a fork's pull request it is the only check.
+# It installs nothing.
+#
+# The guard is the one check that must hold before the push: it runs as the pre-commit hook and,
+# over the outgoing commits, as the pre-push hook (`.githooks/`). Here it detects only after the
+# push.
+name: guard
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+# No cancel-in-progress: the next push's range starts at this push's head, so a cancelled run
+# would leave its commits unchecked.
+
+jobs:
+  genome-data:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The whole history, for the --range below.
+          fetch-depth: 0
+          # No later step pushes: leave no token in .git/config for one to find.
+          persist-credentials: false
+      - name: No personal genome data in the repository
+        run: bash scripts/check_no_genome_data.sh --tracked
+      # Every commit the push or pull request brings, not only the tip: a commit that adds a
+      # file and a later one that deletes it leave both in history. Its anchor comes from the
+      # base branch (origin/<base> of a pull request, the push's `before`), which the pushed
+      # commits cannot move because GitHub sets both from the repository's refs before the job.
+      - name: No personal genome data in any pushed commit
+        if: github.event_name != 'workflow_dispatch'
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
+        run: |
+          # A new branch's or a force-pushed `before` is no commit here: check the whole history.
+          if git cat-file -e "$BASE^{commit}" 2>/dev/null; then range=$BASE..HEAD; else range=HEAD; fi
+          bash scripts/check_no_genome_data.sh --range "$range"

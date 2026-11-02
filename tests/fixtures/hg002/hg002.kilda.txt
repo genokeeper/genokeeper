@@ -1,0 +1,2 @@
+ID	KIV2_CN	quantile
+HG002	34.47	NA

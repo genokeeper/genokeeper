@@ -1,0 +1,333 @@
+##fileformat=VCFv4.2
+##FILTER=<ID=PASS,Description="All filters passed">
+##source=DYSGU
+##FILTER=<ID=lowProb,Description="Probability below threshold set with --thresholds">
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
+##INFO=<ID=SVLEN,Number=1,Type=Integer,Description="Difference in length between REF and ALT alleles">
+##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the variant described in this record">
+##INFO=<ID=CHR2,Number=1,Type=String,Description="Chromosome for END coordinate in case of a translocation">
+##INFO=<ID=CHR2_POS,Number=1,Type=Integer,Description="Chromosome position for END coordinate in case of a translocation">
+##INFO=<ID=GRP,Number=1,Type=Integer,Description="Group id for complex SVs">
+##INFO=<ID=NGRP,Number=1,Type=Integer,Description="Number of SVs in group">
+##INFO=<ID=RT,Number=1,Type=String,Description="Type of input reads, 1=paired-end, 2=pacbio, 3=nanopore">
+##INFO=<ID=CT,Number=1,Type=String,Description="Paired-end signature induced connection type">
+##INFO=<ID=CIPOS95,Number=1,Type=Integer,Description="Confidence interval size (95%) around POS for imprecise variants">
+##INFO=<ID=CIEND95,Number=1,Type=Integer,Description="Confidence interval size (95%) around END for imprecise variants">
+##INFO=<ID=SVMETHOD,Number=1,Type=String,Description="Type of approach used to detect SV">
+##INFO=<ID=KIND,Number=1,Type=String,Description="Kind of join with respect to input regions">
+##INFO=<ID=SU,Number=1,Type=Integer,Description="Number of pieces of evidence supporting the variant across all samples">
+##INFO=<ID=WR,Number=1,Type=Integer,Description="Number of reads that have SV within-read">
+##INFO=<ID=PE,Number=1,Type=Integer,Description="Number of paired-end reads supporting the variant across all samples">
+##INFO=<ID=SR,Number=1,Type=Integer,Description="Number of supplementary reads supporting the variant across all samples">
+##INFO=<ID=SC,Number=1,Type=Integer,Description="Number of soft-clip reads supporting the variant across all samples">
+##INFO=<ID=BND,Number=1,Type=Integer,Description="Number of break-end alignments supporting the variant">
+##INFO=<ID=CONTIGA,Number=1,Type=String,Description="Contig from CHROM POS">
+##INFO=<ID=CONTIGB,Number=1,Type=String,Description="Contig from CHR2 END">
+##INFO=<ID=GC,Number=1,Type=Float,Description="GC% of assembled contigs">
+##INFO=<ID=REP,Number=1,Type=Float,Description="Repeat score for contigs aligned bases">
+##INFO=<ID=REPSC,Number=1,Type=Float,Description="Repeat score for contigs soft-clipped bases">
+##INFO=<ID=LPREC,Number=1,Type=Integer,Description="SV length precise=1, inferred=0">
+##INFO=<ID=NEXP,Number=1,Type=Integer,Description="Number of expanded repeat bases at break">
+##INFO=<ID=STRIDE,Number=1,Type=Integer,Description="Repeat expansion stride or period">
+##INFO=<ID=EXPSEQ,Number=1,Type=String,Description="Expansion sequence">
+##INFO=<ID=RPOLY,Number=1,Type=Integer,Description="Number of reference polymer bases">
+##INFO=<ID=OL,Number=1,Type=Integer,Description="Query overlap in bp">
+##INFO=<ID=SVINSSEQ,Number=.,Type=String,Description="Sequence of insertion">
+##INFO=<ID=LEFT_SVINSSEQ,Number=.,Type=String,Description="Known left side of insertion for an insertion of unknown length">
+##INFO=<ID=RIGHT_SVINSSEQ,Number=.,Type=String,Description="Known right side of insertion for an insertion of unknown length">
+##INFO=<ID=MeanPROB,Number=1,Type=Float,Description="Mean probability of event being true across samples">
+##INFO=<ID=MaxPROB,Number=1,Type=Float,Description="Max probability of event being true across samples">
+##ALT=<ID=DEL,Description="Deletion">
+##ALT=<ID=DUP,Description="Duplication">
+##ALT=<ID=INV,Description="Inversion">
+##ALT=<ID=TRA,Description="Translocation">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=GQ,Number=1,Type=Float,Description="Genotype quality phred scaled">
+##FORMAT=<ID=PSET,Number=1,Type=Integer,Description="Phase-set ID for phased SVs">
+##FORMAT=<ID=HP,Number=1,Type=String,Description="Phased read support HP1[|HP2|...HPn]_unphased. Leading underscore (e.g. _4) indicates all reads unphased. No underscore implies no unphased reads">
+##FORMAT=<ID=AF,Number=1,Type=Float,Description="Allele frequency">
+##FORMAT=<ID=NMP,Number=1,Type=Float,Description="Mean edit distance for primary alignments supporting the variant">
+##FORMAT=<ID=NMS,Number=1,Type=Float,Description="Mean edit distance for supplementary alignments supporting the variant">
+##FORMAT=<ID=NMB,Number=1,Type=Float,Description="Mean basic, edit distance. Gaps >= 30 bp are ignored">
+##FORMAT=<ID=MAPQP,Number=1,Type=Float,Description="Mean MAPQ for primary reads supporting the variant">
+##FORMAT=<ID=MAPQS,Number=1,Type=Float,Description="Mean MAPQ for supplementary reads supporting the variant">
+##FORMAT=<ID=NP,Number=1,Type=Integer,Description="Number of alignments in normal-pair orientation supporting the variant">
+##FORMAT=<ID=MAS,Number=1,Type=Integer,Description="Maximum alignment score of supplementary reads supporting the variant">
+##FORMAT=<ID=SU,Number=1,Type=Integer,Description="Number of pieces of evidence supporting the variant">
+##FORMAT=<ID=WR,Number=1,Type=Integer,Description="Number of reads that have SV within-read">
+##FORMAT=<ID=PE,Number=1,Type=Integer,Description="Number of paired reads supporting the variant">
+##FORMAT=<ID=SR,Number=1,Type=Integer,Description="Number of supplementary alignments supporting the variant">
+##FORMAT=<ID=SC,Number=1,Type=Integer,Description="Number of soft-clipped alignments supporting the variant">
+##FORMAT=<ID=BND,Number=1,Type=Integer,Description="Number of break-end alignments supporting the variant">
+##FORMAT=<ID=SQC,Number=1,Type=Float,Description="Soft-clip quality value correlation between reads">
+##FORMAT=<ID=SCW,Number=1,Type=Float,Description="Soft-clip quality weight value">
+##FORMAT=<ID=SQR,Number=1,Type=Float,Description="Soft-clip base-quality ratio wrt to aligned bases">
+##FORMAT=<ID=BE,Number=1,Type=Integer,Description="Block edge metric">
+##FORMAT=<ID=COV,Number=1,Type=Float,Description="Mean read coverage +/- 10kb around break site at A or B">
+##FORMAT=<ID=MCOV,Number=1,Type=Float,Description="Maximum read coverage +/- 10kb around break site at A or B">
+##FORMAT=<ID=LNK,Number=1,Type=Integer,Description="Contig A and contig B overlap">
+##FORMAT=<ID=NEIGH,Number=1,Type=Integer,Description="Number of other break points within 1 bp of break site">
+##FORMAT=<ID=NEIGH10,Number=1,Type=Integer,Description="Number of other break points within 10 kp of break site">
+##FORMAT=<ID=RB,Number=1,Type=Integer,Description="Number of reference bases in contigs">
+##FORMAT=<ID=PS,Number=1,Type=Integer,Description="Number of reads on plus strand">
+##FORMAT=<ID=MS,Number=1,Type=Integer,Description="Number of reads on minus strand">
+##FORMAT=<ID=SBT,Number=1,Type=Float,Description="Strand-bias, one-sided binomial test p-value">
+##FORMAT=<ID=NG,Number=1,Type=Float,Description="Mean number of small gaps < 30 bp">
+##FORMAT=<ID=NSA,Number=1,Type=Float,Description="Mean number of SA tags per read">
+##FORMAT=<ID=NXA,Number=1,Type=Float,Description="Mean number of XA tags per read">
+##FORMAT=<ID=NMU,Number=1,Type=Float,Description="Mean number of mates unmapped per read">
+##FORMAT=<ID=NDC,Number=1,Type=Integer,Description="Number of double-clips, alignments with left and right clips">
+##FORMAT=<ID=RMS,Number=1,Type=Integer,Description="Remapping score">
+##FORMAT=<ID=RED,Number=1,Type=Integer,Description="Remapping edit distance">
+##FORMAT=<ID=BCC,Number=1,Type=Integer,Description="Bad soft-clip count within +/- 500 bp">
+##FORMAT=<ID=FCC,Number=1,Type=Float,Description="Fold-coverage change for SVs">
+##FORMAT=<ID=STL,Number=1,Type=Integer,Description="N reads with small TLEN below 0.05% of distribution">
+##FORMAT=<ID=RAS,Number=1,Type=Integer,Description="Reverse soft-clip to alignment score">
+##FORMAT=<ID=FAS,Number=1,Type=Integer,Description="Forward soft-clip to alignment score">
+##FORMAT=<ID=ICN,Number=1,Type=Float,Description="Inner copy number">
+##FORMAT=<ID=OCN,Number=1,Type=Float,Description="Outer copy number">
+##FORMAT=<ID=CMP,Number=1,Type=Float,Description="Compression ratio of contigs">
+##FORMAT=<ID=RR,Number=1,Type=Float,Description="Repeat score for reference">
+##FORMAT=<ID=JIT,Number=1,Type=Float,Description="SV length jitter">
+##FORMAT=<ID=PROB,Number=1,Type=Float,Description="Probability of event being true">
+##contig=<ID=chr1,length=248956422>
+##contig=<ID=chr2,length=242193529>
+##contig=<ID=chr3,length=198295559>
+##contig=<ID=chr4,length=190214555>
+##contig=<ID=chr5,length=181538259>
+##contig=<ID=chr6,length=170805979>
+##contig=<ID=chr7,length=159345973>
+##contig=<ID=chr8,length=145138636>
+##contig=<ID=chr9,length=138394717>
+##contig=<ID=chr10,length=133797422>
+##contig=<ID=chr11,length=135086622>
+##contig=<ID=chr12,length=133275309>
+##contig=<ID=chr13,length=114364328>
+##contig=<ID=chr14,length=107043718>
+##contig=<ID=chr15,length=101991189>
+##contig=<ID=chr16,length=90338345>
+##contig=<ID=chr17,length=83257441>
+##contig=<ID=chr18,length=80373285>
+##contig=<ID=chr19,length=58617616>
+##contig=<ID=chr20,length=64444167>
+##contig=<ID=chr21,length=46709983>
+##contig=<ID=chr22,length=50818468>
+##contig=<ID=chrX,length=156040895>
+##contig=<ID=chrY,length=57227415>
+##contig=<ID=chrM,length=16569>
+##contig=<ID=chr1_KI270706v1_random,length=175055>
+##contig=<ID=chr1_KI270707v1_random,length=32032>
+##contig=<ID=chr1_KI270708v1_random,length=127682>
+##contig=<ID=chr1_KI270709v1_random,length=66860>
+##contig=<ID=chr1_KI270710v1_random,length=40176>
+##contig=<ID=chr1_KI270711v1_random,length=42210>
+##contig=<ID=chr1_KI270712v1_random,length=176043>
+##contig=<ID=chr1_KI270713v1_random,length=40745>
+##contig=<ID=chr1_KI270714v1_random,length=41717>
+##contig=<ID=chr2_KI270715v1_random,length=161471>
+##contig=<ID=chr2_KI270716v1_random,length=153799>
+##contig=<ID=chr3_GL000221v1_random,length=155397>
+##contig=<ID=chr4_GL000008v2_random,length=209709>
+##contig=<ID=chr5_GL000208v1_random,length=92689>
+##contig=<ID=chr9_KI270717v1_random,length=40062>
+##contig=<ID=chr9_KI270718v1_random,length=38054>
+##contig=<ID=chr9_KI270719v1_random,length=176845>
+##contig=<ID=chr9_KI270720v1_random,length=39050>
+##contig=<ID=chr11_KI270721v1_random,length=100316>
+##contig=<ID=chr14_GL000009v2_random,length=201709>
+##contig=<ID=chr14_GL000225v1_random,length=211173>
+##contig=<ID=chr14_KI270722v1_random,length=194050>
+##contig=<ID=chr14_GL000194v1_random,length=191469>
+##contig=<ID=chr14_KI270723v1_random,length=38115>
+##contig=<ID=chr14_KI270724v1_random,length=39555>
+##contig=<ID=chr14_KI270725v1_random,length=172810>
+##contig=<ID=chr14_KI270726v1_random,length=43739>
+##contig=<ID=chr15_KI270727v1_random,length=448248>
+##contig=<ID=chr16_KI270728v1_random,length=1872759>
+##contig=<ID=chr17_GL000205v2_random,length=185591>
+##contig=<ID=chr17_KI270729v1_random,length=280839>
+##contig=<ID=chr17_KI270730v1_random,length=112551>
+##contig=<ID=chr22_KI270731v1_random,length=150754>
+##contig=<ID=chr22_KI270732v1_random,length=41543>
+##contig=<ID=chr22_KI270733v1_random,length=179772>
+##contig=<ID=chr22_KI270734v1_random,length=165050>
+##contig=<ID=chr22_KI270735v1_random,length=42811>
+##contig=<ID=chr22_KI270736v1_random,length=181920>
+##contig=<ID=chr22_KI270737v1_random,length=103838>
+##contig=<ID=chr22_KI270738v1_random,length=99375>
+##contig=<ID=chr22_KI270739v1_random,length=73985>
+##contig=<ID=chrY_KI270740v1_random,length=37240>
+##contig=<ID=chrUn_KI270302v1,length=2274>
+##contig=<ID=chrUn_KI270304v1,length=2165>
+##contig=<ID=chrUn_KI270303v1,length=1942>
+##contig=<ID=chrUn_KI270305v1,length=1472>
+##contig=<ID=chrUn_KI270322v1,length=21476>
+##contig=<ID=chrUn_KI270320v1,length=4416>
+##contig=<ID=chrUn_KI270310v1,length=1201>
+##contig=<ID=chrUn_KI270316v1,length=1444>
+##contig=<ID=chrUn_KI270315v1,length=2276>
+##contig=<ID=chrUn_KI270312v1,length=998>
+##contig=<ID=chrUn_KI270311v1,length=12399>
+##contig=<ID=chrUn_KI270317v1,length=37690>
+##contig=<ID=chrUn_KI270412v1,length=1179>
+##contig=<ID=chrUn_KI270411v1,length=2646>
+##contig=<ID=chrUn_KI270414v1,length=2489>
+##contig=<ID=chrUn_KI270419v1,length=1029>
+##contig=<ID=chrUn_KI270418v1,length=2145>
+##contig=<ID=chrUn_KI270420v1,length=2321>
+##contig=<ID=chrUn_KI270424v1,length=2140>
+##contig=<ID=chrUn_KI270417v1,length=2043>
+##contig=<ID=chrUn_KI270422v1,length=1445>
+##contig=<ID=chrUn_KI270423v1,length=981>
+##contig=<ID=chrUn_KI270425v1,length=1884>
+##contig=<ID=chrUn_KI270429v1,length=1361>
+##contig=<ID=chrUn_KI270442v1,length=392061>
+##contig=<ID=chrUn_KI270466v1,length=1233>
+##contig=<ID=chrUn_KI270465v1,length=1774>
+##contig=<ID=chrUn_KI270467v1,length=3920>
+##contig=<ID=chrUn_KI270435v1,length=92983>
+##contig=<ID=chrUn_KI270438v1,length=112505>
+##contig=<ID=chrUn_KI270468v1,length=4055>
+##contig=<ID=chrUn_KI270510v1,length=2415>
+##contig=<ID=chrUn_KI270509v1,length=2318>
+##contig=<ID=chrUn_KI270518v1,length=2186>
+##contig=<ID=chrUn_KI270508v1,length=1951>
+##contig=<ID=chrUn_KI270516v1,length=1300>
+##contig=<ID=chrUn_KI270512v1,length=22689>
+##contig=<ID=chrUn_KI270519v1,length=138126>
+##contig=<ID=chrUn_KI270522v1,length=5674>
+##contig=<ID=chrUn_KI270511v1,length=8127>
+##contig=<ID=chrUn_KI270515v1,length=6361>
+##contig=<ID=chrUn_KI270507v1,length=5353>
+##contig=<ID=chrUn_KI270517v1,length=3253>
+##contig=<ID=chrUn_KI270529v1,length=1899>
+##contig=<ID=chrUn_KI270528v1,length=2983>
+##contig=<ID=chrUn_KI270530v1,length=2168>
+##contig=<ID=chrUn_KI270539v1,length=993>
+##contig=<ID=chrUn_KI270538v1,length=91309>
+##contig=<ID=chrUn_KI270544v1,length=1202>
+##contig=<ID=chrUn_KI270548v1,length=1599>
+##contig=<ID=chrUn_KI270583v1,length=1400>
+##contig=<ID=chrUn_KI270587v1,length=2969>
+##contig=<ID=chrUn_KI270580v1,length=1553>
+##contig=<ID=chrUn_KI270581v1,length=7046>
+##contig=<ID=chrUn_KI270579v1,length=31033>
+##contig=<ID=chrUn_KI270589v1,length=44474>
+##contig=<ID=chrUn_KI270590v1,length=4685>
+##contig=<ID=chrUn_KI270584v1,length=4513>
+##contig=<ID=chrUn_KI270582v1,length=6504>
+##contig=<ID=chrUn_KI270588v1,length=6158>
+##contig=<ID=chrUn_KI270593v1,length=3041>
+##contig=<ID=chrUn_KI270591v1,length=5796>
+##contig=<ID=chrUn_KI270330v1,length=1652>
+##contig=<ID=chrUn_KI270329v1,length=1040>
+##contig=<ID=chrUn_KI270334v1,length=1368>
+##contig=<ID=chrUn_KI270333v1,length=2699>
+##contig=<ID=chrUn_KI270335v1,length=1048>
+##contig=<ID=chrUn_KI270338v1,length=1428>
+##contig=<ID=chrUn_KI270340v1,length=1428>
+##contig=<ID=chrUn_KI270336v1,length=1026>
+##contig=<ID=chrUn_KI270337v1,length=1121>
+##contig=<ID=chrUn_KI270363v1,length=1803>
+##contig=<ID=chrUn_KI270364v1,length=2855>
+##contig=<ID=chrUn_KI270362v1,length=3530>
+##contig=<ID=chrUn_KI270366v1,length=8320>
+##contig=<ID=chrUn_KI270378v1,length=1048>
+##contig=<ID=chrUn_KI270379v1,length=1045>
+##contig=<ID=chrUn_KI270389v1,length=1298>
+##contig=<ID=chrUn_KI270390v1,length=2387>
+##contig=<ID=chrUn_KI270387v1,length=1537>
+##contig=<ID=chrUn_KI270395v1,length=1143>
+##contig=<ID=chrUn_KI270396v1,length=1880>
+##contig=<ID=chrUn_KI270388v1,length=1216>
+##contig=<ID=chrUn_KI270394v1,length=970>
+##contig=<ID=chrUn_KI270386v1,length=1788>
+##contig=<ID=chrUn_KI270391v1,length=1484>
+##contig=<ID=chrUn_KI270383v1,length=1750>
+##contig=<ID=chrUn_KI270393v1,length=1308>
+##contig=<ID=chrUn_KI270384v1,length=1658>
+##contig=<ID=chrUn_KI270392v1,length=971>
+##contig=<ID=chrUn_KI270381v1,length=1930>
+##contig=<ID=chrUn_KI270385v1,length=990>
+##contig=<ID=chrUn_KI270382v1,length=4215>
+##contig=<ID=chrUn_KI270376v1,length=1136>
+##contig=<ID=chrUn_KI270374v1,length=2656>
+##contig=<ID=chrUn_KI270372v1,length=1650>
+##contig=<ID=chrUn_KI270373v1,length=1451>
+##contig=<ID=chrUn_KI270375v1,length=2378>
+##contig=<ID=chrUn_KI270371v1,length=2805>
+##contig=<ID=chrUn_KI270448v1,length=7992>
+##contig=<ID=chrUn_KI270521v1,length=7642>
+##contig=<ID=chrUn_GL000195v1,length=182896>
+##contig=<ID=chrUn_GL000219v1,length=179198>
+##contig=<ID=chrUn_GL000220v1,length=161802>
+##contig=<ID=chrUn_GL000224v1,length=179693>
+##contig=<ID=chrUn_KI270741v1,length=157432>
+##contig=<ID=chrUn_GL000226v1,length=15008>
+##contig=<ID=chrUn_GL000213v1,length=164239>
+##contig=<ID=chrUn_KI270743v1,length=210658>
+##contig=<ID=chrUn_KI270744v1,length=168472>
+##contig=<ID=chrUn_KI270745v1,length=41891>
+##contig=<ID=chrUn_KI270746v1,length=66486>
+##contig=<ID=chrUn_KI270747v1,length=198735>
+##contig=<ID=chrUn_KI270748v1,length=93321>
+##contig=<ID=chrUn_KI270749v1,length=158759>
+##contig=<ID=chrUn_KI270750v1,length=148850>
+##contig=<ID=chrUn_KI270751v1,length=150742>
+##contig=<ID=chrUn_KI270752v1,length=27745>
+##contig=<ID=chrUn_KI270753v1,length=62944>
+##contig=<ID=chrUn_KI270754v1,length=40191>
+##contig=<ID=chrUn_KI270755v1,length=36723>
+##contig=<ID=chrUn_KI270756v1,length=79590>
+##contig=<ID=chrUn_KI270757v1,length=71251>
+##contig=<ID=chrUn_GL000214v1,length=137718>
+##contig=<ID=chrUn_KI270742v1,length=186739>
+##contig=<ID=chrUn_GL000216v2,length=176608>
+##contig=<ID=chrUn_GL000218v1,length=161147>
+##contig=<ID=chrEBV,length=171823>
+##command="/opt/conda/envs/dysgu/bin/dysgu run -p 8 -x --search /out/search.bed -o /out/dysgu.vcf /ref/GRCh38_no_alt.fa /out/dysgu-work /cram/sample.cram"
+##INFO=<ID=TruScore,Number=1,Type=Integer,Description="Truvari score for similarity of match">
+##INFO=<ID=PctSeqSimilarity,Number=1,Type=Float,Description="Pct sequence similarity between this variant and its closest match">
+##INFO=<ID=PctSizeSimilarity,Number=1,Type=Float,Description="Pct size similarity between this variant and its closest match">
+##INFO=<ID=PctRecOverlap,Number=1,Type=Float,Description="Percent reciprocal overlap percent of the two calls' coordinates">
+##INFO=<ID=StartDistance,Number=1,Type=Integer,Description="Distance of the base call's end from comparison call's start">
+##INFO=<ID=EndDistance,Number=1,Type=Integer,Description="Distance of the base call's end from comparison call's end">
+##INFO=<ID=SizeDiff,Number=1,Type=Float,Description="Difference in size of base and comp calls">
+##INFO=<ID=GTMatch,Number=1,Type=Integer,Description="Base/Comparison genotypes AC difference">
+##INFO=<ID=MatchId,Number=.,Type=String,Description="Tuple of base and comparison call ids which were matched">
+##INFO=<ID=Multi,Number=0,Type=Flag,Description="Call is false due to non-multimatching">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	HG002
+chr20	3053197	75357	A	<INS>	7	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=3053197;CHR2=chr20;GRP=75357;NGRP=1;CT=3to5;CIPOS95=0;CIEND95=0;SVLEN=228;CONTIGA=TTTAAGGGTGTGTTTGTTTTTGGATGATCTTTGCAAATATATTAACTACTGTTAAGGGGAAAAGCTGCTTCGGCGACTTGAGCTGATTGAGTCACACTTCTGGGCTCTCTGGGCCCTTTTGTGgtttatttatttttttttttttttgagacggagtctcgctctgtcgcccaggctggagtgcagtggcgc;CONTIGB=nan;KIND=extra-regional;GC=44.27;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=0;OL=0;SU=9;WR=0;PE=0;SR=0;SC=9;BND=9;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.7261;PctRecOverlap=0.7247;SizeDiff=-86;StartDistance=1;EndDistance=0;GTMatch=0;TruScore=48;MatchId=9.0,9.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	0/1:106:-1:-1:0.252:60:0:9:0:0:0:9:9:0.09:35.78:5:3:6:0:0:26:0.788:1.037:0.817:0.587
+chr20	4798804	14226	C	<INS>	7	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=4798804;CHR2=chr20;GRP=14226;NGRP=1;CT=3to5;CIPOS95=0;CIEND95=0;SVLEN=282;CONTIGA=CAAAAAATTAGCCAGGCGTGGTGGTGCACACCTGTATTCCCAGCTACTCAGGAGGCTGAGGCAGGAGAATCACCCAAACCTCAGAGGCAGAGGTTGCAGTGAGCTGAGATCATTCCACTGCACTCCAGCCTGGGtgacagagtgaaactctgtctcagaaaaaaaataaaagactcgaagcttccaggctgttcagaag;CONTIGB=nan;KIND=extra-regional;GC=50.25;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=9;OL=0;SU=10;WR=0;PE=0;SR=0;SC=10;BND=10;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.698;PctRecOverlap=0.6988;SizeDiff=-122;StartDistance=39;EndDistance=39;GTMatch=0;TruScore=46;MatchId=12.0,12.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	0/1:107:-1:-1:0.257:32.5:0:10:0:0:0:10:10:2.95:38.93:3:2:8:0:0:18:0.841:1.073:0.902:0.581
+chr20	4811225	68657	C	AATAAAAAAATAAAAAATTAGCCAGGCACAGTTAATGCCTGTAGTCTTAGCTACTCAGGAG	12	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=4811250;CHR2=chr20;GRP=68657;NGRP=1;CT=5to3;CIPOS95=0;CIEND95=0;SVLEN=62;KIND=extra-regional;GC=47;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=0;OL=0;SU=12;WR=0;PE=0;SR=10;SC=22;BND=0;LPREC=1;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=0.7159;SizeDiff=0;StartDistance=-24;EndDistance=1;GTMatch=0;TruScore=57;MatchId=13.0,13.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	0/1:11:-1:-1:0.229:60:58.5:12:0:0:10:22:0:0.35:39.28:3:3:19:0:0:2:0.745:1.244:0.927:0.762
+chr20	5644365	48477	G	ACCCTCTCCATTACCACCCCACCTCCTTACCCTCTCCATTACCACCCCATCTCCTT	22	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;CHR2=chr20;GRP=48477;NGRP=1;CT=5to3;CIPOS95=0;CIEND95=0;SVLEN=56;KIND=extra-regional;GC=50.58;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=20;OL=3;SU=42;WR=0;PE=0;SR=25;SC=67;BND=0;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.6667;PctRecOverlap=0.6706;SizeDiff=-28;StartDistance=1;EndDistance=1;GTMatch=1;TruScore=44;MatchId=17.0,17.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	1/1:116:-1:-1:0.647:58.12:56.28:42:0:0:25:67:0:1.43:38.62:1:46:21:210:1:3:0.767:1.463:1.122:0.924
+chr20	6665193	75741	T	TTTTACTTTTTTAATGTGGCTACTAGAAAACTTGAAATTCCGTATGTGGCTTGCATTGCATTTCTA	14	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=6665195;CHR2=chr20;GRP=75741;NGRP=1;CT=5to3;CIPOS95=0;CIEND95=0;SVLEN=66;KIND=extra-regional;GC=33.33;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=0;OL=0;SU=38;WR=0;PE=0;SR=2;SC=40;BND=24;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=0.971;SizeDiff=0;StartDistance=-1;EndDistance=1;GTMatch=1;TruScore=65;MatchId=19.0,19.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	1/1:200:-1:-1:0.527:60:60:38:0:0:2:40:24:0:45.58:1:23:17:66:1:4:0.842:1.232:1.037:0.803
+chr20	7719014	28305	T	<INS>	8	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=7719014;CHR2=chr20;GRP=28305;NGRP=1;CT=3to5;CIPOS95=0;CIEND95=0;SVLEN=290;CONTIGA=ATCAGATGAAGTTATTCCTGTGGTTGAAACATCACATTCTGGATTAAATGCTTTCTGTAGTCTAAAATGTCCTAAGCATATAGGACATTTTATGTTTTAGACTTCATCTCCAATGACTTTCTCTTTTTCTTTcagcaattcagtttcatgggccttttcgtgattccttaaatgtgccagggatgcttttgccccctttatctttgtagcctttctttcctcttctcgagatattcttctcccaaatatctgtgga;CONTIGB=nan;KIND=extra-regional;GC=37.11;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=20;OL=0;SU=32;WR=0;PE=0;SR=0;SC=32;BND=16;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.9797;PctRecOverlap=0.9798;SizeDiff=-6;StartDistance=1;EndDistance=1;GTMatch=1;TruScore=65;MatchId=20.0,20.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	1/1:200:-1:-1:0.388:57.5:0:32:0:0:0:32:16:3.82:41.21:1:17:15:0:0:17:1.02:0.598:0.61:0.635
+chr20	8835858	75975	T	<INS>	9	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=8835858;CHR2=chr20;GRP=75975;NGRP=1;CT=3to5;CIPOS95=0;CIEND95=0;SVLEN=242;CONTIGA=ATATTTCATGATTCCCACCTCAGAGGGCACAGGAAATGGTCCAAAGCAGACGACTCTAACTTAAAATGACTGACAAGGCATCTGGGTCAGTGAGCTTTGGCTGCATAACAAACCACTTCAAAACTTAGTGACggccgggcgcggtggctcacgcctgtaatcccagcactttgggaggccgaggcgggcggatcacgaggtca;CONTIGB=nan;KIND=extra-regional;GC=53.2;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=0;OL=0;SU=9;WR=0;PE=0;SR=0;SC=9;BND=9;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.804;PctRecOverlap=0.8073;SizeDiff=-59;StartDistance=13;EndDistance=13;GTMatch=0;TruScore=53;MatchId=22.0,22.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	0/1:181:-1:-1:0.203:60:0:9:0:0:0:9:9:0:44.4:3:5:4:0:0:28:0.648:1.317:0.854:0.657
+chr20	9624560	55607	T	<INS>	7	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=9624560;CHR2=chr20;GRP=55607;NGRP=1;CT=3to5;CIPOS95=0;CIEND95=0;SVLEN=222;CONTIGA=CTTAGAAAAGAGTAGAATTTGTACACTTGGAAGGTACTTCTAGAAAGATTTTTATGCCATGTCCAGGATGGGGTAGAAATATTATAAAGGTAACAGAATTTCTTCCAACTTATCTGTTTTCTTGAAATTAAGGgggccgggcgcggtggctcacgcctgtaatcccagcactttgggaggccgaggcgggcgga;CONTIGB=nan;KIND=extra-regional;GC=45.36;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=0;OL=0;SU=8;WR=0;PE=0;SR=0;SC=8;BND=8;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.6894;PctRecOverlap=0.6862;SizeDiff=-100;StartDistance=11;EndDistance=9;GTMatch=0;TruScore=45;MatchId=23.0,23.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	0/1:200:-1:-1:0.187:60:0:8:0:0:0:8:8:0.93:42.81:1:4:4:0:0:24:1.07:1.049:1.122:0.579
+chr20	11009494	62553	G	<INS>	13	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=11009494;CHR2=chr20;GRP=62553;NGRP=1;CT=3to5;CIPOS95=0;CIEND95=0;SVLEN=277;CONTIGA=GTCTGGAGGAGCCAGTTCTGCAGTATGAGGTCCACATGCTAATTCTGTTCCATCTGGTTTCGTCCACCTCTCAAAGTGTATTTTACTTGATTACAAAACAGTCACGGTCAAAATTGTTTGTAGTTATTTcccaccgaggtggtgaatgtcttgactggctggattttctggctagatttctcccttctctgtggatggtctcctgcgcccatatgcacttttgagttccactcaagagccagaactagtct;CONTIGB=nan;KIND=extra-regional;GC=45.42;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=10;OL=0;SU=42;WR=0;PE=0;SR=0;SC=42;BND=23;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.6823;PctRecOverlap=0.6806;SizeDiff=-129;StartDistance=6;EndDistance=6;GTMatch=1;TruScore=45;MatchId=27.0,27.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	1/1:200:-1:-1:0.5:60:0:42:0:0:0:42:23:0:46:1:24:18:0:0:35:1.158:0.927:1.073:0.788
+chr20	11300936	83058	A	<INS>	13	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=11300937;CHR2=chr20;GRP=83058;NGRP=1;CT=3to5;CIPOS95=17;CIEND95=0;SVLEN=234;CONTIGA=atccatagctagtgaaatataaaatggtgcagccatttcagaaactgtttgccagctcctcaaaatgttaattctagaattactgtatgacccagtaattcctttcttagtattaaaAATAATACACAGAAAAGCATGTATATGAACAATCATAGCAGCGTTATTTTAATATCTTGAAAATATTATCATAATTCAAAGAAGCCAGTCACAAAAGGCCACATATTATATGACTCCATTTATAGAAAATGCCCCAAATAGGCAAATCTATAGAGACAGAAGTTAGAATAGTGTTTCCTAGGGCTGTGCAGGGGGAAGAAGTGGAAAAGTGACTGCTAATGGGTA;CONTIGB=nan;KIND=extra-regional;GC=34.21;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=9;OL=0;SU=19;WR=0;PE=0;SR=10;SC=21;BND=0;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.5641;PctRecOverlap=0.6102;SizeDiff=102;StartDistance=12;EndDistance=2;GTMatch=0;TruScore=39;MatchId=28.0,28.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	0/1:34:-1:-1:0.219:54.3:60:19:0:0:10:21:0:0.25:45.73:1:13:16:0:0:26:1.597:0.756:1.207:0.799
+chr20	12558810	15124	A	<INS>	5	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=12558810;CHR2=chr20;GRP=15124;NGRP=1;CT=5to3;CIPOS95=0;CIEND95=0;SVLEN=176;CONTIGA=cacacattattaaaattcagatttaaataaactgactataaaaaagtacttttgaaacaaaaactttaatcatgattatatatattAAGAAAATGTCTATTAAATTATTTAGGTAATAATACTACCATGAAATTATTTTAAAGATTGAAAGATTGTAGCTTGTTATACATTAAAATAATTAATATAGTTGTTTTTAATT;CONTIGB=nan;KIND=extra-regional;GC=17.09;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=0;OL=0;SU=8;WR=0;PE=0;SR=0;SC=8;BND=8;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.7443;PctRecOverlap=0.8305;SizeDiff=45;StartDistance=17;EndDistance=1;GTMatch=0;TruScore=52;MatchId=31.0,31.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	0/1:75:-1:-1:0.188:60:0:8:0:0:0:8:8:0.14:42.51:3:8:0:0:0:11:1.333:0.805:1.073:0.483
+chr20	17197187	8929	G	AGGGCAGGAGGGAGGAGGGAGGGCAGGGGGAGGGAGGGTGGGAAGGAAAGAAGGAAAGAAGGGAGGGAGGTGGGGAGTAGGGGAGGAGGG	10	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;CHR2=chr20;GRP=8929;NGRP=1;CT=5to3;CIPOS95=0;CIEND95=0;SVLEN=90;KIND=extra-regional;GC=51.91;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=12;OL=0;SU=7;WR=0;PE=0;SR=0;SC=7;BND=7;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.9889;PctRecOverlap=0.8791;SizeDiff=1;StartDistance=-10;EndDistance=-10;GTMatch=1;TruScore=62;MatchId=40.0,40.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	1/1:44:-1:-1:0.151:60:0:7:0:0:0:7:7:0:46.44:7:5:2:62:1:2:0.886:0.963:0.854:0.684
+chr20	18689893	77174	T	<INS>	5	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=18689893;CHR2=chr20;GRP=77174;NGRP=1;CT=5to3;CIPOS95=0;CIEND95=0;SVLEN=235;CONTIGA=ccactgtactccaacctggctgacggagcaagacattgtcactcaaaaaataaaaaataaaaaaaatagtggctgggtatggcggctcatgccttaatcccagcacactTTGGGAGGCTGAGGCAGGAGGATTACTTGAGGCCAAGAGTTAAAGACCAGCCTGGGGCAACTTAGCGAGACCTTGTCTCTACGAAAAACAAAAATAAGCCAGGCGTGGTGGTGTGT;CONTIGB=nan;KIND=extra-regional;GC=47.56;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=13;OL=0;SU=10;WR=0;PE=1;SR=0;SC=9;BND=9;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.7489;PctRecOverlap=0.7532;SizeDiff=59;StartDistance=0;EndDistance=0;GTMatch=0;TruScore=50;MatchId=42.0,42.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	0/1:200:-1:-1:0.223:60:0:10:0:1:0:9:9:1.57:40.43:5:7:4:0:0:7:1.149:0.902:1.037:0.498
+chr20	21046054	2442	C	<INS>	13	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=21046054;CHR2=chr20;GRP=2442;NGRP=1;CT=3to5;CIPOS95=0;CIEND95=0;SVLEN=279;CONTIGA=GTGTGCATATGCGcacaCACACACACACACACACACACACACACACACACATTCAGCCTGCTGAGAATGCCTGTGGGGGAGACAGCCTCAGACAGTTACAAAATTTGTAAATTTCTGCACATCTTATTTGTCAaggcttttgtgctgatccacgttcatttgctactctgtggatgttatttatttcataggtattgaaagatggcagcatttactaacacacacacatgcacaagtgtacacacacatagccgattgt;CONTIGB=nan;KIND=extra-regional;GC=42.86;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=36;OL=0;SU=55;WR=0;PE=0;SR=0;SC=55;BND=30;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.8065;PctRecOverlap=0.8065;SizeDiff=54;StartDistance=3;EndDistance=3;GTMatch=1;TruScore=53;MatchId=47.0,47.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	1/1:200:-1:-1:0.772:59.57:0:55:0:0:0:55:30:0.51:38.87:1:33:22:0:0:24:0.972:0.878:0.854:0.799
+chr20	22882763	23202	C	<INS>	7	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=22882763;CHR2=chr20;GRP=23202;NGRP=1;CT=5to3;CIPOS95=0;CIEND95=0;SVLEN=258;CONTIGA=cctccctccctcactcccccactctctctttccctttcttccttccttccttccttccttccttcCTTCCTTCCTTCCTTCCTTCTCTCTCTCTCTCTTTCTTTCTTTTTTTTTTTCTAATGGAGTCTCACTCTGTTGTCCAGGCTGGAGTGCAGTGATGCCATCTCAGTTCACTTCAACCTTTGCCTCCTGGG;CONTIGB=nan;KIND=extra-regional;GC=48.97;NEXP=28;STRIDE=4;EXPSEQ=cttccttccttccttccttccttccttc;RPOLY=44;OL=0;SU=12;WR=0;PE=0;SR=0;SC=12;BND=12;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.6473;PctRecOverlap=0.6448;SizeDiff=91;StartDistance=0;EndDistance=0;GTMatch=1;TruScore=43;MatchId=50.0,50.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	1/1:15:-1:-1:0.28:51.75:0:12:0:0:0:12:12:0.23:42.81:5:8:4:0:0:22:1.574:0.659:1.037:0.585
+chr20	24529936	64172	T	<INS>	9	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=24529936;CHR2=chr20;GRP=64172;NGRP=1;CT=3to5;CIPOS95=0;CIEND95=0;SVLEN=286;CONTIGA=tggtgatggtggtggTGATGGTGTCAGTGGTGGGGATGGTGATGGTGGTATTCCCAGTGATAGTGTCAGTGGTGGGGATGGTGATGGTGGTGGCGATGGTGGTATTCCTGGTGATGGTGTCAGTGGTGGGGAgagtggtggtgatgatggtagtacccctggtggtggtgattatg;CONTIGB=cctccgacttgtgatggtggtggtgacggtagtactcctggtgatggtgtcagtggtggggatggtgatggtggtggtgatggtagtattcccaGTGATGGTGTCAGTGGTGGGGATGGTGATGGTGGTGGTGATGGTGTCAGTGGTGGGGATggtgatggtggtattc;KIND=extra-regional;GC=55.11;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=42;OL=0;SU=19;WR=0;PE=0;SR=3;SC=22;BND=14;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.5026;PctRecOverlap=0.5044;SizeDiff=-283;StartDistance=-103;EndDistance=-103;GTMatch=1;TruScore=33;MatchId=57.0,57.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	1/1:66:-1:-1:0.34:35.33:29.67:19:0:0:3:22:14:16.2:41.12:3:13:9:0:0:9:0.477:1.841:0.878:0.66
+chr20	25067111	84620	A	<INS>	8	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=25067111;CHR2=chr20;GRP=84620;NGRP=1;CT=5to3;CIPOS95=0;CIEND95=0;SVLEN=243;CONTIGA=acacgccacaccacatagacatcacacatcacacacatgcacgcacacacatcacacaaccacacacatgcacacaccacacacaccacatgcatagACACCACACGCACACACCACACACACCATACACAGCACAAACACACCCTCACACCCCCCCACACCACACACACACACCACACACACGTCATGCACATGCACACACCACACATAGGCACA;CONTIGB=nan;KIND=extra-regional;GC=53.24;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=49;OL=0;SU=17;WR=0;PE=0;SR=0;SC=17;BND=9;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.5561;PctRecOverlap=0.5561;SizeDiff=-194;StartDistance=-20;EndDistance=-20;GTMatch=1;TruScore=37;MatchId=60.0,60.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	1/1:61:-1:-1:0.23:56.11:0:17:0:0:0:17:9:5.67:39.15:3:12:5:0:0:14:0.818:0.805:0.659:0.613
+chr20	25601611	64273	C	<INS>	14	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=25601611;CHR2=chr20;GRP=64273;NGRP=1;CT=3to5;CIPOS95=0;CIEND95=0;SVLEN=288;CONTIGA=TCATACACACAATGTACACAAACACAACTGTATAACTCACATTCACCACAACCTCACTACTACACCCACTAAGCACACACACACAACCCTTCTAGACACACCCAGTGTGACATGCACACCCCCTACACACAatcccactctacagacaccccactcagcacacatacccaccactcacacactccccacttcttacaaatacatgttactaaaaacatactactatacacccctacacacatacaacccactactacatac;CONTIGB=nan;KIND=extra-regional;GC=44.83;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=10;OL=0;SU=24;WR=0;PE=0;SR=0;SC=24;BND=15;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.7218;PctRecOverlap=0.5283;SizeDiff=-111;StartDistance=1;EndDistance=-147;GTMatch=1;TruScore=41;MatchId=63.0,63.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	1/1:200:-1:-1:0.419:58.67:0:24:0:0:0:24:15:0:35.82:5:4:20:0:0:6:0.667:1.207:0.805:0.805
+chr20	33958390	64988	A	<INS>	6	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=33958390;CHR2=chr20;GRP=64988;NGRP=1;CT=5to3;CIPOS95=0;CIEND95=0;SVLEN=182;CONTIGA=cagtccggcctgggcgacagagcgagactccgtctcaaaaaaaaaaaaaaaaaaaaaaaaaaAAAAATTATCTGGACTTGGTGGCACACGCCTTTAGTCCCAGCTACTCGGCAGGCTGAGGCAAGAGAATCGCTTGAACTTGGGAGGTAGAGGTTGCAGTGAGTGAGATGGCACCACT;CONTIGB=nan;KIND=extra-regional;GC=47.75;NEXP=26;STRIDE=1;EXPSEQ=aaaaaaaaaaaaaaaaaaaaaaaaaa;RPOLY=4;OL=0;SU=7;WR=0;PE=0;SR=0;SC=7;BND=4;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.9681;PctRecOverlap=0.9683;SizeDiff=-6;StartDistance=0;EndDistance=0;GTMatch=0;TruScore=64;MatchId=98.0,98.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	0/1:62:-1:-1:0.109:60:0:7:0:0:0:7:4:1.65:36.63:3:5:2:68:38:20:1.063:0.963:1.024:0.532
+chr20	34205640	44790	C	<INS>	8	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=34205640;CHR2=chr20;GRP=44790;NGRP=1;CT=5to3;CIPOS95=0;CIEND95=0;SVLEN=212;CONTIGA=tgacctcatgatccacccgcctcggcctcccaaagtgctgggattacaggcgtgagccaccgcgcccggccCGCTTGGTCTATTTTACAGAGCGCTGATTTCTCCATTTTACAGAGCGCTGATTTCGCCGTTTTACAGAGTGCTGATTGGTGCTTTTACAATCCTTTAGCTAGACACAGAGTGTTGATTGGTGCATTTACAATAC;CONTIGB=nan;KIND=extra-regional;GC=50.73;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=0;OL=0;SU=8;WR=0;PE=0;SR=0;SC=8;BND=8;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.6625;PctRecOverlap=0.6474;SizeDiff=-108;StartDistance=8;EndDistance=0;GTMatch=0;TruScore=43;MatchId=99.0,99.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	0/1:97:-1:-1:0.196:60:0:8:0:0:0:8:8:1.01:40.72:5:6:2:0:0:37:0.831:0.866:0.72:0.615
+chr20	36642164	38177	T	<INS>	16	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=36642192;CHR2=chr20;GRP=38177;NGRP=1;CT=5to3;CIPOS95=0;CIEND95=0;SVLEN=280;CONTIGA=attgcttgagcttgggagatggagttcacagtgagccaagatcataccacagttagtcaactgcactccagcccaggcaagagtgagacgctgTCTCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGGACCGTGGGTTGTATGATGCAGTGATGACTTGCAAGGCTTTAGGGGACTGACTGTTGAGCCACTTCCCCTCTCTGTGCCTCCTTTTCC;CONTIGB=nan;KIND=extra-regional;GC=45.37;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=29;OL=0;SU=33;WR=0;PE=0;SR=0;SC=33;BND=14;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.5882;PctRecOverlap=0.6478;SizeDiff=-196;StartDistance=0;EndDistance=28;GTMatch=1;TruScore=41;MatchId=104.0,104.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	1/1:135:-1:-1:0.406:55.07:0:33:0:0:0:33:14:0.33:34.5:1:13:20:0:0:33:0.808:0.951:0.768:0.858
+chr20	38194564	4166	C	<INS>	11	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=38194627;CHR2=chr20;GRP=4166;NGRP=1;CT=5to3;CIPOS95=0;CIEND95=0;SVLEN=225;CONTIGA=tccatccaaccatgcatccatccatccatccatccatccatccatccatccatctgtccatCCATCCATCCATCCATCCATCCATCCATCCATCCATCCTTCCATCCATCCATCCATCAATCCATCCATTCATCAAACATTTGTTTGCCCACATAATGTATTCCAGGTGCTATGCTGGGTGATTGGGATTTAGCT;CONTIGB=CTCACCACTCCCTCACATGGAGGAACAAACTTAGATGGAAGATCTGGAGGTGGCTTGGTGTTTCCATCCATCCATCTTTCCATCCGTCCATCTATCCATCCATCCATCCATCCATCCATCCATCCAaccatccatccatccatctatccatccaaccatccatc;KIND=extra-regional;GC=46.15;NEXP=48;STRIDE=4;EXPSEQ=catccatccatccatccatccatccatccatccatccatctgtccatC;RPOLY=52;OL=0;SU=19;WR=0;PE=0;SR=0;SC=19;BND=11;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.5022;PctRecOverlap=0.6414;SizeDiff=-223;StartDistance=-14;EndDistance=49;GTMatch=1;TruScore=38;MatchId=107.0,107.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	1/1:90:-1:-1:0.288:45.36:0:19:0:0:0:19:11:1.87:38.17:1:12:7:0:0:58:0.6:1.28:0.768:0.722
+chr20	42883721	79533	C	CTCCATACAGACAGACCCCCTACACATGCATACACACACACACTCATATGCTCCCATACACATGCATACACACCCTCCATACACA	11	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;CHR2=chr20;GRP=79533;NGRP=1;CT=3to5;CIPOS95=0;CIEND95=0;SVLEN=85;KIND=extra-regional;GC=48.98;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=58;OL=0;SU=18;WR=0;PE=0;SR=0;SC=18;BND=10;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.8019;PctRecOverlap=0.6589;SizeDiff=-21;StartDistance=1;EndDistance=-21;GTMatch=1;TruScore=48;MatchId=118.0,118.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	1/1:200:-1:-1:0.244:57.7:0:18:0:0:0:18:10:2.38:41.06:3:5:13:0:0:4:1.633:0.598:0.976:0.721
+chr20	42915072	38865	G	<INS>	10	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=42915072;CHR2=chr20;GRP=38865;NGRP=1;CT=3to5;CIPOS95=0;CIEND95=0;SVLEN=259;CONTIGA=CATGACGCTAGGGTACCCTTTACCATTCCAATTTTCTAAACCCTTATCCCTCTCCAAATGGCCTACTTCATAAATATGCTATCCAATGATTAATAAAATGAAAGCTAAGGAGGGAAAAAGATATAATTAAGcggcactattcacaatagcaaagacttggaaccaacccaaatgtccaacaatgatagactggattaagaaaat;CONTIGB=nan;KIND=extra-regional;GC=36.27;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=0;OL=0;SU=25;WR=0;PE=0;SR=0;SC=25;BND=25;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.5441;PctRecOverlap=0.543;SizeDiff=-217;StartDistance=9;EndDistance=9;GTMatch=1;TruScore=36;MatchId=119.0,119.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	1/1:58:-1:-1:0.617:60:0:25:0:0:0:25:25:0.29:40.52:5:10:15:0:0:56:0.61:1.439:0.878:0.716
+chr20	44061538	79651	T	<INS>	11	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=44061538;CHR2=chr20;GRP=79651;NGRP=1;CT=3to5;CIPOS95=0;CIEND95=0;SVLEN=248;CONTIGA=ACGAAAACTGCAGGCCAGTATTCCTTCTATGCCCAAAATCAGCATAGAAGGGATATACTTCAAGGTAATAAAAGCCATCTATGATAAACCAGAGCCAACATTATAGTGAATGGGGAAAAATTGAAAGCAaggccgaggcgggcggatcacgaggtcaggagatcgagaccatcccggctaaaatggtgaaaccccgtctct;CONTIGB=nan;KIND=extra-regional;GC=46.27;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=0;OL=0;SU=15;WR=0;PE=0;SR=0;SC=15;BND=15;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.9084;PctRecOverlap=0.9048;SizeDiff=-25;StartDistance=14;EndDistance=14;GTMatch=0;TruScore=60;MatchId=124.0,124.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	0/1:70:-1:-1:0.385:60:0:15:0:0:0:15:15:0:38.93:1:5:10:0:0:47:1.159:1:1.159:0.734
+chr20	45799825	45981	A	<INS>	11	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=45799825;CHR2=chr20;GRP=45981;NGRP=1;CT=3to5;CIPOS95=0;CIEND95=0;SVLEN=272;CONTIGA=TGCTTATTATCCAGATCACCCACAAACTATAAGCTCCACAAGAGCTTGTCCTAGTTACTGCTGTGTCCACAGCACTTAGGTCCCAGGTACTCAGTATTTATTAAAAGAAAAACAGCtctctccggtccgtgcctccaagatgacaaagaaaagaaggaacaatggtcgtgccaaaaagggccgcggcca;CONTIGB=nan;KIND=extra-regional;GC=46.56;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=11;OL=0;SU=17;WR=0;PE=0;SR=0;SC=17;BND=17;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.5849;PctRecOverlap=0.5871;SizeDiff=-193;StartDistance=14;EndDistance=14;GTMatch=0;TruScore=39;MatchId=129.1,129.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	0/1:100:-1:-1:0.443:60:0:17:0:0:0:17:17:0.21:38.38:5:8:9:0:0:28:0.672:1.415:0.951:0.723
+chr20	50666191	19114	T	CTTTTCTTTTCTTTTCTCTTCTCCTCTCTTCTCTTCTCTTCTCTTCTCTTCTCTTCTCTTCTCTTC	14	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=50666192;CHR2=chr20;GRP=19114;NGRP=1;CT=5to3;CIPOS95=0;CIEND95=0;SVLEN=66;KIND=extra-regional;GC=48;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=26;OL=0;SU=15;WR=0;PE=0;SR=2;SC=15;BND=13;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.6408;PctRecOverlap=0.6602;SizeDiff=-37;StartDistance=0;EndDistance=1;GTMatch=0;TruScore=43;MatchId=140.0,140.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	0/1:31:-1:-1:0.376:60:15.5:15:0:0:2:15:13:0.08:34.59:1:3:14:0:0:12:0.694:1.037:0.72:0.803
+chr20	51953835	80488	T	<INS>	6	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=51953835;CHR2=chr20;GRP=80488;NGRP=1;CT=3to5;CIPOS95=0;CIEND95=0;SVLEN=230;CONTIGA=TTCTGTCTGCCTCAGCCCCCCAAAGTGCTGGGATTACAGGCATGAGCCAAAGTGCCTGGCTAGAAAATTGTAAAAGTAACTTAATATCTGCCTCATATACTTTTGTTTTATTTAAAAATGCAAATCCggccgggcgcggtggctcacgcctgtaatcccagcactttgggaggccgaggcgggcggatcacga;CONTIGB=nan;KIND=extra-regional;GC=50.26;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=12;OL=0;SU=9;WR=0;PE=1;SR=0;SC=8;BND=8;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.7419;PctRecOverlap=0.7428;SizeDiff=-80;StartDistance=14;EndDistance=14;GTMatch=0;TruScore=49;MatchId=142.0,142.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	0/1:200:-1:-1:0.216:60:0:9:0:1:0:8:8:0:36.96:3:3:7:0:0:19:0.825:0.976:0.805:0.51
+chr20	53415706	12620	A	GTACACATGTTCATGCCTGTGTACTATATATGTGTATGTGTAGTAAAACATTATATATGTGTATATACATCTATGTATGTGCATGTGTGTATATGTGTGTGCACGTG	11	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=53415749;CHR2=chr20;GRP=12620;NGRP=1;CT=3to5;CIPOS95=0;CIEND95=0;SVLEN=107;KIND=extra-regional;GC=31.86;NEXP=10;STRIDE=2;EXPSEQ=tgtgcatgtg;RPOLY=27;OL=0;SU=36;WR=0;PE=0;SR=0;SC=36;BND=17;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.5753;PctRecOverlap=0.7273;SizeDiff=-79;StartDistance=11;EndDistance=54;GTMatch=1;TruScore=43;MatchId=146.0,146.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	1/1:200:-1:-1:0.42:50.47:0:36:0:0:0:36:17:2.09:40.49:1:11:25:0:0:9:1.379:0.707:0.976:0.74
+chr20	54021411	46801	A	<INS>	10	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=54021411;CHR2=chr20;GRP=46801;NGRP=1;CT=3to5;CIPOS95=0;CIEND95=0;SVLEN=241;CONTIGA=TCCAGGTCACTGCAATAGAGTCAATATCACAATAGAGTCACACACATTTTTCGGTTTCCCAGTGCACATAAAAGTTCTCCACTGTCCTGGAGTCTATTAAGTGTGCAATAGCATTACGTCTAAAAAAAAAGTACggccgggcgcggtggctcacgcctgtaatcccagcactttgggaggccgaggcgggcggatcacgaggtcag;CONTIGB=nan;KIND=extra-regional;GC=50;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=0;OL=0;SU=19;WR=0;PE=0;SR=0;SC=19;BND=19;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.7579;PctRecOverlap=0.7555;SizeDiff=-77;StartDistance=13;EndDistance=13;GTMatch=1;TruScore=50;MatchId=148.0,148.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	1/1:14:-1:-1:0.414:60:0:19:0:0:0:19:19:0:45.92:1:9:10:0:0:43:0.667:1.207:0.805:0.705
+chr20	55145312	53660	C	<INS>	10	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=55145312;CHR2=chr20;GRP=53660;NGRP=1;CT=3to5;CIPOS95=0;CIEND95=0;SVLEN=172;CONTIGA=AAAACCTCAGACCTAATTGAACTTTTTAATATTGTGTCTTTACTACCTGATATAAGTGTCTTTTAAATTATTAGAATTCCTACAGTTAATGCCTTATTAAATAGCTACATATATATGGAAGTATGAAAAATTTCggccgggcgcggtggctcacgcctgtaatcccagcactttgggaggccgaggcgggcgga;CONTIGB=nan;KIND=extra-regional;GC=40.21;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=9;OL=0;SU=19;WR=0;PE=0;SR=0;SC=19;BND=11;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.5426;PctRecOverlap=0.5457;SizeDiff=-145;StartDistance=10;EndDistance=10;GTMatch=1;TruScore=36;MatchId=151.0,151.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	1/1:5:-1:-1:0.255:60:0:19:0:0:0:19:11:0:43.13:1:8:11:0:0:42:1.089:0.963:1.049:0.711
+chr20	55916056	6084	C	<INS>	13	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=55916056;CHR2=chr20;GRP=6084;NGRP=1;CT=3to5;CIPOS95=0;CIEND95=0;SVLEN=267;CONTIGA=GGGTGCACTAAAATCTCAGAATCCACCACTGGAGAATTCATCCGTGTAACCAAAAACCATCTGTATCCCCAAAACTACTGAAATTTTAAAAATACAGTAGAAAAGAAATAAATTCTTAGGAAAAAAGGCAaaacaagctatagttcatctgtacctcattttttaaaatggtcaggttcaaagctgctatgcaatactggggcgcaactaagtatcattgaaatgatttgtctttttttattttgagtcaacctgaagtga;CONTIGB=nan;KIND=extra-regional;GC=34.48;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=20;OL=0;SU=73;WR=0;PE=0;SR=0;SC=73;BND=47;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.5393;PctRecOverlap=0.5431;SizeDiff=123;StartDistance=2;EndDistance=2;GTMatch=1;TruScore=36;MatchId=152.0,152.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	1/1:200:-1:-1:1:58.72:0:73:0:0:0:73:47:0:44.11:1:31:42:0:0:7:0.86:1.22:1.049:0.785
+chr20	60764343	13401	A	<INS>	10	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=60764344;CHR2=chr20;GRP=13401;NGRP=1;CT=3to5;CIPOS95=0;CIEND95=0;SVLEN=301;CONTIGA=ACATTCACACACACCTATATATACATTCACACTTACATGCACACTCACACCTATATACATCCACACACATCCCTATACATATATTCACACACACTTATACACACATTCACACACTCAcacacacctacacacatttgcacttaatgtcacacacagacctatacacccattcacccactcacatttgcacactctatcacacacacctatacacattctctcacacacctg;CONTIGB=nan;KIND=extra-regional;GC=40.69;NEXP=0;STRIDE=0;EXPSEQ;RPOLY=22;OL=0;SU=35;WR=0;PE=0;SR=0;SC=35;BND=15;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.6113;PctRecOverlap=0.6126;SizeDiff=117;StartDistance=0;EndDistance=1;GTMatch=1;TruScore=40;MatchId=165.0,165.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	1/1:200:-1:-1:0.355:60:0:35:0:0:0:35:15:0.98:42.28:1:20:15:0:0:1:1.242:0.805:1:0.694
+chr20	63847240	81731	A	TAACACACATAGACACTGACACACACAAGCAGAGACACACACACAGACACACACACTGACACAGAGACACACACACTGACACAGAG	20	PASS	SVMETHOD=DYSGUv1.9.0;SVTYPE=INS;END=63847335;CHR2=chr20;GRP=81731;NGRP=1;CT=5to3;CIPOS95=0;CIEND95=0;SVLEN=86;KIND=extra-regional;GC=48.39;NEXP=24;STRIDE=2;EXPSEQ=agacactgacacacacagacacac;RPOLY=56;OL=9;SU=20;WR=0;PE=0;SR=17;SC=37;BND=0;LPREC=0;RT=pe;PctSeqSimilarity=0;PctSizeSimilarity=0.7679;PctRecOverlap=0.5549;SizeDiff=-26;StartDistance=-94;EndDistance=1;GTMatch=1;TruScore=44;MatchId=193.0,193.0	GT:GQ:PSET:HP:AF:MAPQP:MAPQS:SU:WR:PE:SR:SC:BND:NMB:COV:NEIGH10:PS:MS:RMS:RED:BCC:FCC:ICN:OCN:PROB	1/1:54:-1:-1:0.555:40.76:27.65:20:0:0:17:37:0:4.73:30.65:3:17:20:188:1:0:0.517:1.463:0.756:0.903

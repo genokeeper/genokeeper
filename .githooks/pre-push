@@ -1,0 +1,23 @@
+#!/bin/sh
+# Refuse a push whose commits add personal genome data. It also checks the commits no
+# pre-commit hook saw: a rebase, a cherry-pick, `--no-verify`, a commit made where this hooks
+# path is not set. Its anchor is the outgoing commits' own blobs, read before git sends them,
+# which an honest push cannot change. Bound: a commit made through the GitHub API, or pushed
+# from a clone without `core.hooksPath`, runs no hook; CI checks those after the push.
+# stdin: "<local ref> <local sha> <remote ref> <remote sha>" per ref; $1 is the remote's name.
+guard="$(git rev-parse --show-toplevel)/scripts/check_no_genome_data.sh"
+status=0
+while read -r _ local_sha _ remote_sha; do
+  case "$local_sha" in *[!0]*) ;; *) continue ;; esac # a delete sends no commit
+  case "$remote_sha" in
+    *[!0]*) git cat-file -e "$remote_sha^{commit}" 2>/dev/null || remote_sha= ;;
+    *) remote_sha= ;;
+  esac
+  if [ -n "$remote_sha" ]; then
+    "$guard" --range "$remote_sha..$local_sha" || status=1
+  else
+    # A new branch, or a remote tip this clone lacks: every commit no remote ref holds.
+    "$guard" --range "$local_sha" --not --remotes="$1" || status=1
+  fi
+done
+exit "$status"

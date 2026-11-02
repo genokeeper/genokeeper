@@ -1,0 +1,2 @@
+Sample	is_biallelic(GBAP1-like_variant_exon9-11)	is_carrier(GBAP1-like_variant_exon9-11)	CN(GBA+GBAP1)	deletion_breakpoint_in_GBA	GBAP1-like_variant_exon9-11	other_unphased_variants
+sample	False	False	4	N/A	None	None

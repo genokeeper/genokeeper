@@ -1,0 +1,289 @@
+{
+  "page_title": {"en": "Genome findings", "ru": "Находки генома"},
+  "tab_feed": {"en": "Feed", "ru": "Лента"},
+  "tab_changes": {"en": "Changes", "ru": "Изменения"},
+  "search_label": {"en": "Search", "ru": "Поиск"},
+  "search_placeholder": {
+    "en": "Search: a drug, a disease, a gene…",
+    "ru": "Поиск: лекарство, болезнь, ген…"
+  },
+  "levels": {
+    "en": {"low": ["low", "low"], "medium": ["medium", "med."], "high": ["high", "high"], "conflicting": ["conflicting", "confl."], "limited": ["limited", "lim."], "moderate": ["moderate", "mod."], "strong": ["strong", "strong"]},
+    "ru": {"low": ["низкая", "низ."], "medium": ["средняя", "сред."], "high": ["высокая", "выс."], "conflicting": ["противоречивые", "прот."], "limited": ["ограниченные", "огр."], "moderate": ["умеренные", "ум."], "strong": ["сильные", "сил."]}
+  },
+  "topics": {
+    "en": {"risks": "Risks", "carrier": "Carrier status", "drugs": "Drugs", "traits": "Traits", "wellness": "Wellness", "ancestry": "Ancestry", "research": "Research associations"},
+    "ru": {"risks": "Риски", "carrier": "Носительство", "drugs": "Лекарства", "traits": "Признаки", "wellness": "Wellness", "ancestry": "Происхождение", "research": "Исследовательские ассоциации"}
+  },
+  "haploid_note": {
+    "en": null,
+    "ru": "у мужчины на chrX и chrY вне PAR одна копия хромосомы: число копий считается на ней (1 — гемизиготный носитель аллеля)"
+  },
+  "repeat_classes": {
+    "en": {"normal": "normal", "intermediate": "intermediate range", "reduced penetrance": "reduced penetrance", "pathogenic": "pathogenic range", "gap": "between ranges"},
+    "ru": {"normal": "норма", "intermediate": "промежуточный диапазон", "reduced penetrance": "сниженная пенетрантность", "pathogenic": "патогенный диапазон", "gap": "между диапазонами"}
+  },
+  "decile": {
+    "en": {"one": "{n}st decile", "two": "{n}nd decile", "few": "{n}rd decile", "other": "{n}th decile"},
+    "ru": "{n}-й дециль"
+  },
+  "percentile": {
+    "en": {"one": "{n}st percentile", "two": "{n}nd percentile", "few": "{n}rd percentile", "other": "{n}th percentile"},
+    "ru": "{n}-й перцентиль"
+  },
+  "no_percentile": {"en": "percentile not determined", "ru": "перцентиль не определён"},
+  "traits": {
+    "en": {"lactase": "lactase persistence in adults", "ADH1B": "Arg48His, alcohol breakdown rate", "ACTN3": "R577X, fast-twitch muscle fibre protein", "TAS2R38": "bitter taste perception", "CYP1A2": "−163C>A, caffeine breakdown rate"},
+    "ru": {"lactase": "сохранение лактазы у взрослых", "ADH1B": "Arg48His, скорость распада алкоголя", "ACTN3": "R577X, белок быстрых мышечных волокон", "TAS2R38": "восприятие горького вкуса", "CYP1A2": "−163C>A, скорость распада кофеина"}
+  },
+  "trait_results": {
+    "en": {"likely": "likely", "unlikely": "unlikely"},
+    "ru": {"likely": "вероятно", "unlikely": "маловероятно"}
+  },
+  "unknown_m": {"en": "not determined", "ru": "не определён"},
+  "unknown_f": {"en": "not determined", "ru": "не определена"},
+  "unknown_pl": {"en": "not determined", "ru": "не определены"},
+  "hla_allele": {"en": "allele {gene}{allele}", "ru": "аллель {gene}{allele}"},
+  "hla_association": {
+    "en": "research association {gene}{allele}",
+    "ru": "исследовательская ассоциация {gene}{allele}"
+  },
+  "coeliac_found": {"en": "found {types}", "ru": "найден {types}"},
+  "coeliac_half": {"en": "half of DQ2 found", "ru": "найдена половина DQ2"},
+  "coeliac_none": {"en": "DQ types not determined", "ru": "типы DQ не определены"},
+  "coeliac": {
+    "en": "coeliac disease: {found} — a screening result",
+    "ru": "целиакия: {found} — результат скрининга"
+  },
+  "hla_table": {
+    "en": {"one": "HLA table: {n} gene", "other": "HLA table: {n} genes"},
+    "ru": {"one": "таблица HLA: {n} ген", "few": "таблица HLA: {n} гена", "other": "таблица HLA: {n} генов"}
+  },
+  "mitomap_level": {"en": "level {level}", "ru": "уровень {level}"},
+  "hhv6": {"en": "integrated {species}", "ru": "встроенный {species}"},
+  "hhv6_ratio": {"en": "depth ratio {ratio}", "ru": "отношение глубин {ratio}"},
+  "roh": {
+    "en": {"one": "runs of homozygosity: {mb} Mb in {n} run", "other": "runs of homozygosity: {mb} Mb in {n} runs"},
+    "ru": {"one": "участки гомозиготности: {mb} Мб в {n} участке", "other": "участки гомозиготности: {mb} Мб в {n} участках"}
+  },
+  "blood_group": {"en": "blood group {system}: {value}", "ru": "группа крови {system}: {value}"},
+  "ancestry_similarity": {
+    "en": "closest to population {population}",
+    "ru": "ближе всего к популяции {population}"
+  },
+  "low_confidence": {"en": " (low confidence)", "ru": " (низкая уверенность)"},
+  "ancestry_admixture": {"en": "ancestry proportions: {shares}", "ru": "доли предков: {shares}"},
+  "neanderthal": {"en": "Neanderthal DNA share {share}%", "ru": "доля неандертальской ДНК {share}%"},
+  "no_neanderthal": {
+    "en": "Neanderthal DNA share not determined",
+    "ru": "доля неандертальской ДНК не определена"
+  },
+  "effect_copies": {"en": "effect allele copies: {n}", "ru": "копий аллеля эффекта {n}"},
+  "mito_haplogroup": {
+    "en": "mitochondrial haplogroup {haplogroup}",
+    "ru": "митохондриальная гаплогруппа {haplogroup}"
+  },
+  "y_haplogroup": {"en": "Y haplogroup {haplogroup}", "ru": "Y-гаплогруппа {haplogroup}"},
+  "weak_power": {"en": "weak predictive power", "ru": "слабая предсказательная сила"},
+  "apoe": {"en": "diplotype {diplotype}", "ru": "диплотип {diplotype}"},
+  "no_size": {"en": "size not determined", "ru": "размер не определён"},
+  "no_diplotype": {"en": "diplotype not determined", "ru": "диплотип не определён"},
+  "no_phenotype": {"en": "phenotype not determined", "ru": "фенотип не определён"},
+  "gene_level": {"en": "gene-level", "ru": "на уровне гена"},
+  "chrM_absent": {"en": "{allele} absent", "ru": "{allele} отсутствует"},
+  "chrM_present": {"en": "{allele} present", "ru": "{allele} присутствует"},
+  "copies": {"en": "copies of {allele}: {dosage}", "ru": "копий {allele}: {dosage}"},
+  "reliability_is": {"en": "reliability {level}", "ru": "надёжность {level}"},
+  "callers": {"en": "calls: {callers}", "ru": "вызовы: {callers}"},
+  "none": {"en": "none", "ru": "нет"},
+  "no_genotype": {"en": "none (a gene-level finding)", "ru": "нет (находка на уровне гена)"},
+  "not_measured": {"en": "not measured", "ru": "не измерено"},
+  "p_wrong_measured": {
+    "en": "{p}{ci} (measured on HG003, DNBSEQ-T7)",
+    "ru": "{p}{ci} (измерено на HG003, DNBSEQ-T7)"
+  },
+  "p_wrong": {"en": "chance of error {p}", "ru": "вероятность ошибки {p}"},
+  "flags": {"en": "flags: {flags}", "ru": "флаги: {flags}"},
+  "risk": {
+    "en": "risk {risk} against {baseline} ({population})",
+    "ru": "риск {risk} против {baseline} ({population})"
+  },
+  "score": {
+    "en": "{percentile}{z} (population {population}, score variants found: {match_rate})",
+    "ru": "{percentile}{z} (популяция {population}, найдено вариантов score: {match_rate})"
+  },
+  "reads_image": {"en": "image of the reads (REViewer)", "ru": "изображение прочтений (REViewer)"},
+  "reads": {"en": "Reads", "ru": "Прочтения"},
+  "what_it_means": {"en": "What it means", "ru": "Что это значит"},
+  "written_by": {
+    "en": "Written by {model} from the sources: {cites}",
+    "ru": "Написано {model} по источникам: {cites}"
+  },
+  "no_explanation": {"en": "No explanation generated yet", "ru": "Объяснение ещё не сгенерировано"},
+  "genotype": {"en": "Genotype", "ru": "Генотип"},
+  "evidence": {"en": "Strength of evidence", "ru": "Сила доказательств"},
+  "effect": {"en": "Effect", "ru": "Эффект"},
+  "actionable": {"en": "Actionable", "ru": "Требует действий"},
+  "yes": {"en": "yes", "ru": "да"},
+  "no": {"en": "no", "ru": "нет"},
+  "dates": {"en": "Dates", "ru": "Даты"},
+  "source_version": {
+    "en": "{source} {id}, version {version}",
+    "ru": "{source} {id}, версия {version}"
+  },
+  "sources": {"en": "Sources", "ru": "Источники"},
+  "no_gene": {"en": "no gene", "ru": "без гена"},
+  "bar_genotype": {"en": "genotype", "ru": "генотип"},
+  "bar_evidence": {"en": "evidence", "ru": "данные"},
+  "reliability_below": {"en": "with a genotype below “{level}”", "ru": "с генотипом ниже «{level}»"},
+  "validity_below": {
+    "en": "with evidence below “{level}”",
+    "ru": "с доказательствами ниже «{level}»"
+  },
+  "other_topics": {"en": "in other topics", "ru": "в других темах"},
+  "research_hidden": {
+    "en": "— research associations (GWAS, PharmGKB level 3; ask genome-ask about them)",
+    "ru": "— исследовательские ассоциации (GWAS, PharmGKB уровня 3; о них спрашивайте genome-ask)"
+  },
+  "unknown_genotype": {
+    "en": "with an unknown genotype {text}",
+    "ru": "с неизвестным генотипом {text}"
+  },
+  "all_topics": {"en": "All topics", "ru": "Все темы"},
+  "excluded_item": {
+    "en": "{gene}: {wording}; confirm by: {confirm}",
+    "ru": "{gene}: {wording}; подтвердить: {confirm}"
+  },
+  "no_exclusions": {"en": "no exclusions in this run", "ru": "нет исключений в этом запуске"},
+  "excluded": {"en": "Excluded by screening", "ru": "Исключено скринингом"},
+  "count": {
+    "en": {"one": "Showing {shown} of {n} finding · actionable first", "other": "Showing {shown} of {n} findings · actionable first"},
+    "ru": {"one": "Показано {shown} из {n} находки · сначала то, что требует действий", "other": "Показано {shown} из {n} находок · сначала то, что требует действий"}
+  },
+  "unmatched": {"en": "do not match the search", "ru": "не подходят под поиск"},
+  "move_sliders_or_search": {
+    "en": "Move the sliders or change the search",
+    "ru": "Сдвиньте ползунки или измените поиск"
+  },
+  "move_sliders": {"en": "Move the sliders", "ru": "Сдвиньте ползунки"},
+  "hidden": {
+    "en": "Hidden {count}: {reasons}. {how} to see them.",
+    "ru": "Скрыто {count}: {reasons}. {how}, чтобы увидеть их."
+  },
+  "unassessed": {
+    "en": "{n} more: not assessed (genotype unknown or condition not covered, see the reason) — this is not a result",
+    "ru": "Ещё {n}: не оценено (генотип не определён или условие не покрыто, см. причину) — это не результат"
+  },
+  "not_checked": {
+    "en": "Not checked — no finding here does not mean “not a carrier”",
+    "ru": "Не проверялось — отсутствие находки здесь не значит «не носитель»"
+  },
+  "uncovered_genes": {
+    "en": "Genes whose main mechanism is not assessed",
+    "ru": "Гены, основной механизм которых не оценивается"
+  },
+  "kinds": {
+    "en": {"entered": ["▲ entered the trusted", "entered the trusted"], "left": ["▼ left the trusted", "left the trusted"], "level": ["● level changed", "level changed"], "new": ["+ new", "new"], "gone": ["− gone", "gone"], "details": ["· details", "details"], "publications": ["✎ publications", "new publications"]},
+    "ru": {"entered": ["▲ вошла в достоверные", "вошла в достоверные"], "left": ["▼ вышла из достоверных", "вышла из достоверных"], "level": ["● сменился уровень", "сменился уровень"], "new": ["+ новая", "новая"], "gone": ["− исчезла", "исчезла"], "details": ["· детали", "детали"], "publications": ["✎ публикации", "новые публикации"]}
+  },
+  "clinvar_citations": {"en": "ClinVar (articles)", "ru": "ClinVar (статьи)"},
+  "statement_kinds": {
+    "en": {"finding": "finding", "watch": "watched", "unassessed": "not assessed", "non_finding": "non-finding"},
+    "ru": {"finding": "находка", "watch": "под наблюдением", "unassessed": "не оценено", "non_finding": "не находка"}
+  },
+  "fields": {
+    "en": {"kind": "kind", "validity": "strength of evidence", "source_level": "source level", "reason": "basis", "effect": "effect", "actionable": "actionable", "topic": "topic", "dosage": "allele copies", "level": "genotype reliability", "result": "result"},
+    "ru": {"kind": "вид", "validity": "сила доказательств", "source_level": "уровень источника", "reason": "основание", "effect": "эффект", "actionable": "требует действий", "topic": "тема", "dosage": "копий аллеля", "level": "надёжность генотипа", "result": "результат"}
+  },
+  "on_or_before": {"en": "on or before", "ru": "не позже"},
+  "found_on": {"en": "found {date}", "ru": "обнаружена {date}"},
+  "changed_on": {"en": "changed {date}", "ru": "изменена {date}"},
+  "assessment_changed_on": {"en": "assessment changed {date}", "ru": "оценка изменена {date}"},
+  "cause_analyser": {"en": "analyser", "ru": "анализатор"},
+  "cause_genotype": {"en": "genotype", "ru": "генотип"},
+  "cause_reference": {"en": "reference genome", "ru": "референсный геном"},
+  "columns": {
+    "en": {"change": "Change", "gene": "Gene · variant", "topic": "Topic", "validity": "Validity: before → after", "reliability": "Reliability", "cause": "Cause", "found": "Found", "changed": "Changed", "assessed": "Assessment changed"},
+    "ru": {"change": "Изменение", "gene": "Ген · вариант", "topic": "Тема", "validity": "Валидность: было → стало", "reliability": "Надёжность", "cause": "Причина", "found": "Обнаружена", "changed": "Изменена", "assessed": "Оценка изменена"}
+  },
+  "what_changed": {"en": "What changed", "ru": "Что изменилось"},
+  "statement_gone": {
+    "en": "The statement is no longer among the findings",
+    "ru": "Утверждения больше нет в находках"
+  },
+  "statement_new": {"en": "The statement appeared", "ru": "Утверждение появилось"},
+  "history_evidence": {"en": "evidence {level}", "ru": "доказательства {level}"},
+  "history_genotype": {"en": "genotype {level}", "ru": "генотип {level}"},
+  "history": {"en": "History by snapshot", "ru": "История по снимкам"},
+  "source": {"en": "Source", "ru": "Источник"},
+  "new_articles": {"en": "New articles", "ru": "Новые статьи"},
+  "attached_by_lab": {
+    "en": "Attached by the lab in ClinVar",
+    "ru": "Приложены лабораторией в ClinVar"
+  },
+  "update_head": {"en": "Update {date} ({run})", "ru": "Обновление {date} ({run})"},
+  "compared_label": {"en": "Compared with", "ru": "Сравнение с"},
+  "base_refresh": {"en": "refresh", "ru": "обновление"},
+  "base_run": {"en": "run", "ru": "запуск"},
+  "compared_with": {"en": " · compared with ", "ru": " · сравнение с "},
+  "check_never": {
+    "en": "The update check has never run. ",
+    "ru": "Проверка обновлений ни разу не запускалась. "
+  },
+  "check_stale": {
+    "en": {"one": "The update check has not run for {n} day. ", "other": "The update check has not run for {n} days. "},
+    "ru": "Проверка обновлений не запускалась {n} дн. "
+  },
+  "check_unknown": {
+    "en": "What the sources have released since is unknown.",
+    "ru": "Что вышло нового в источниках, неизвестно."
+  },
+  "check_ran": {
+    "en": {"one": "Update check: {n} day ago. ", "other": "Update check: {n} days ago. "},
+    "ru": "Проверка обновлений: {n} дн. назад. "
+  },
+  "check_newer": {"en": "Newer than yours: {sources}.", "ru": "Новее, чем у вас: {sources}."},
+  "check_none_newer": {"en": "No newer versions.", "ru": "Новых версий нет."},
+  "check_failed": {"en": "Could not check: {sources}.", "ru": "Не удалось проверить: {sources}."},
+  "since_old": {"en": "against the old version {version}", "ru": "со старой версией {version}"},
+  "since_previous": {"en": "against the previous version", "ru": "с прежней версией"},
+  "not_updated": {"en": "{source} was not updated. ", "ru": "{source} не обновился. "},
+  "not_updated_detail": {
+    "en": "Its rows were compared {since}; this report sees no changes from it.",
+    "ru": "Его строки сравнивались {since}; изменений из него этот отчёт не видит."
+  },
+  "no_base": {
+    "en": "Nothing to compare with: no earlier snapshot of the findings.",
+    "ru": "Сравнивать не с чем: нет более раннего снимка находок."
+  },
+  "chip_level": {"en": "Level", "ru": "Уровень"},
+  "tier_first": {"en": "Among the trusted ({n})", "ru": "Среди достоверных ({n})"},
+  "tier_all": {"en": "All changes ({n})", "ru": "Все изменения ({n})"},
+  "chip_all": {"en": "all", "ru": "все"},
+  "no_changes": {
+    "en": "No changes under the chosen filters",
+    "ru": "Нет изменений под выбранные фильтры"
+  },
+  "no_cause": {"en": "cause not determined", "ru": "причина не определена"},
+  "research_counts": {
+    "en": "Research associations are not listed here (ask genome-ask about them): {counts}.",
+    "ru": "Исследовательские ассоциации здесь не перечисляются (о них спрашивайте genome-ask): {counts}."
+  },
+  "reliability_label": {
+    "en": "Genotype reliability: at least “{level}”",
+    "ru": "Надёжность генотипа: не ниже «{level}»"
+  },
+  "validity_label": {
+    "en": "Strength of evidence: at least “{level}”",
+    "ru": "Сила доказательств: не ниже «{level}»"
+  },
+  "footer": {"en": "Run {run} · {versions}", "ru": "Запуск {run} · {versions}"},
+  "carrier_not_covered": {
+    "en": null,
+    "ru": ["изменения числа копий: делеции и дупликации экзонов или целых генов (SMN1 оценивает этап 3a)", "структурные варианты: инверсии, транслокации, крупные вставки", "экспансии повторов вне 24 локусов, RFC1 и поли-T/TG гена CFTR этапов 3a и 3e (FMR1 и AFF2 оцениваются по дозе X; локусы, которые короткие прочтения оценить не могут, названы как непокрытые, с причиной)", "варианты в паралогах и псевдогенах, которые короткие прочтения не могут разместить", "варианты, которые ClinVar не относит к патогенным или вероятно патогенным"]
+  },
+  "carrier_mechanisms": {
+    "en": null,
+    "ru": {"SMN1": "гомозиготная потеря экзона 7 SMN1 — делецией или конверсией в паралог SMN2 (число копий почти идентичных паралогов)", "HBA1": "делеция одного или обоих генов альфа-глобина (например, -alpha3.7, -alpha4.2, --SEA): число копий между дуплицированными HBA2 и HBA1", "HBA2": "делеция одного или обоих генов альфа-глобина (например, -alpha3.7, -alpha4.2, --SEA): число копий между дуплицированными HBA2 и HBA1", "CYP21A2": "делеция или крупная конверсия с псевдогеном CYP21A1P; большинство других патогенных аллелей пришли из псевдогена, где короткие прочтения картируются неверно", "GBA1": "рекомбинантные аллели с псевдогеном GBAP1 (например, RecNciI), которые короткие прочтения не могут разместить", "F8": "инверсия интрона 22 (и интрона 1), самая частая причина тяжёлой гемофилии A: структурное событие, невидимое для поиска однонуклеотидных вариантов", "DMD": "делеция или дупликация одного или нескольких экзонов (число копий) — самые частые патогенные варианты DMD", "FMR1": "экспансия CGG-повтора в 5'-UTR (премутация 55–200 повторов, полная мутация свыше 200), размер которой секвенирование генома не определяет"}
+  }
+}

@@ -1,0 +1,16 @@
+# source: GCA_000001405.15_GRCh38_no_alt_analysis_set_maskedGRC_exclusions_v2.fasta.gz
+# sha256: 74482c74f2a47e8908404028d5305167636c9942fba4129ea0d70c5f04cab5ad
+# derived: the positions the masked FASTA sets to N where NCBI's no-alt analysis set has a base, merged; 0-based half-open
+chrom	start	end
+chr11_KI270721v1_random	1	100316
+chr13	86252979	86269524
+chr13	111753855	111789114
+chr16	34339329	34456556
+chr21	5010000	5166246
+chr21	5966593	6161371
+chr21	6427258	6580181
+chr21	6789085	6934219
+chr21	7743700	7865746
+chr22_KI270734v1_random	1	165050
+chr9	70701806	70719798
+chrX	37085011	37099262

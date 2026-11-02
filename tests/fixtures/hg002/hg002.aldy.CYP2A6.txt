@@ -1,0 +1,12 @@
+#Sample	Gene	SolutionID	Major	Minor	Copy	Allele	Location	Type	Coverage	Effect	dbSNP	Code	Status
+#Solution 1: *(1.009 -rs7248240 -rs55971367), *(1.009 -rs7248240 -rs55971367); gene=CYP2A6-pharmvar-6.2.14 (2025-07-20)
+sample	CYP2A6	1	*1/*1	1.009;1.009	0	1.009	40847201	T>C	48	none	rs56113850	
+sample	CYP2A6	1	*1/*1	1.009;1.009	0	1.009	40847943	C>T	32	none	rs2388868	
+sample	CYP2A6	1	*1/*1	1.009;1.009	0	1.009	40848806	A>G	12	none	rs8192725	
+sample	CYP2A6	1	*1/*1	1.009;1.009	0	1.009	40850375	T>C	26	none	rs1137115	
+sample	CYP2A6	1	*1/*1	1.009;1.009	0	1.009	40851438	T>C	17	none	rs4803381	
+sample	CYP2A6	1	*1/*1	1.009;1.009	1	1.009	40847201	T>C	48	none	rs56113850	
+sample	CYP2A6	1	*1/*1	1.009;1.009	1	1.009	40847943	C>T	32	none	rs2388868	
+sample	CYP2A6	1	*1/*1	1.009;1.009	1	1.009	40848806	A>G	12	none	rs8192725	
+sample	CYP2A6	1	*1/*1	1.009;1.009	1	1.009	40850375	T>C	26	none	rs1137115	
+sample	CYP2A6	1	*1/*1	1.009;1.009	1	1.009	40851438	T>C	17	none	rs4803381	

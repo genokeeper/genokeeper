@@ -1,0 +1,135 @@
+# The package's checks, on GitHub-hosted ubuntu-24.04: type check, lint, format check and tests.
+# The tests run the tools the bootstrap installs on a user's Mac, so the steps install them at
+# the same versions: bcftools, samtools, htslib, seqtk, bwa and mosdepth from bioconda, rtg-tools
+# from its release zip (sha256-pinned, as `scripts/bootstrap.sh` does) and WhatsHap's pinned
+# image. The genome-data guard runs apart, on every change, in guard.yml.
+#
+# A change to text files alone runs nothing here (`paths-ignore`); a comment edited inside a
+# `.py` file still runs everything, which path filters cannot tell apart. Require only checks
+# that run on every change in branch protection, so a skipped run blocks no merge.
+#
+# The repository variable `DNA_CI` set to `0` skips the job on pushes and pull requests; a
+# dispatch still runs. It is a switch, not a control.
+name: ci
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - LICENSE
+      - NOTICE
+      - CITATION.cff
+      - ".github/ISSUE_TEMPLATE/**"
+      - .github/pull_request_template.md
+      - .github/FUNDING.yml
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - LICENSE
+      - NOTICE
+      - CITATION.cff
+      - ".github/ISSUE_TEMPLATE/**"
+      - .github/pull_request_template.md
+      - .github/FUNDING.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    if: vars.DNA_CI != '0' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # No later step pushes: leave no token in .git/config for one to find.
+          persist-credentials: false
+      - name: Find the tools the runner lacks
+        id: probe
+        run: |
+          if command -v uv >/dev/null; then echo "uv=present"; else echo "uv=missing"; fi >> "$GITHUB_OUTPUT"
+      - name: Install uv
+        if: steps.probe.outputs.uv == 'missing'
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.1"
+      # Ubuntu's bcftools and samtools are 1.19, older than the options the code uses
+      # (`--write-index=tbi`), and it has no seqtk 1.5. These are the versions the bootstrap
+      # installs on a Mac: Homebrew's current bcftools, samtools and htslib, and the bwa and
+      # mosdepth the bootstrap pins (`bwa_version`, `mosdepth_version`).
+      - name: Install bcftools, samtools, htslib, seqtk, bwa and mosdepth
+        id: bio
+        uses: mamba-org/setup-micromamba@f457c30a868e4760d3a6fcea5f25dc655b8edf39 # v3.2.1
+        with:
+          micromamba-version: "2.9.0-0"
+          environment-name: ci-tools
+          create-args: >-
+            bcftools=1.24
+            samtools=1.24
+            htslib=1.24
+            seqtk=1.5
+            bwa=0.7.19
+            mosdepth=0.3.14
+          condarc: |
+            channels: [conda-forge, bioconda]
+            channel_priority: strict
+          cache-environment: true
+          post-cleanup: none
+      - name: Put the tools on PATH
+        env:
+          PREFIX: ${{ steps.bio.outputs.environment-path }}
+        run: |
+          echo "$PREFIX/bin" >> "$GITHUB_PATH"
+          for tool in bcftools samtools tabix seqtk bwa mosdepth; do test -x "$PREFIX/bin/$tool"; done
+          "$PREFIX/bin/bcftools" --version | sed -n 1p
+          "$PREFIX/bin/samtools" --version | sed -n 1p
+      # Where `genokeeper.calibrate.rtg_path` reads it, as the bootstrap's step_rtg installs it,
+      # with the runner's Java in place of Homebrew's openjdk.
+      - name: Install rtg-tools
+        env:
+          RTG_VERSION: "3.13"
+          RTG_SHA256: bc5c6badb07d7e20d1c5c557bd6d571a022bbd9f58fa1e3840bcff9431a18f96
+        run: |
+          work=$RUNNER_TEMP/rtg
+          dir=$HOME/genome-lab/tools/rtg-tools-$RTG_VERSION
+          mkdir -p "$work" "$(dirname "$dir")"
+          curl -fsSL --retry 5 -o "$work/rtg.zip" \
+            "https://github.com/RealTimeGenomics/rtg-tools/releases/download/$RTG_VERSION/rtg-tools-$RTG_VERSION-nojre.zip"
+          echo "$RTG_SHA256  $work/rtg.zip" | sha256sum -c -
+          unzip -q "$work/rtg.zip" -d "$work"
+          printf 'RTG_JAVA="%s"\nRTG_TALKBACK=false\nRTG_USAGE=\n' "$(command -v java)" \
+            > "$work/rtg-tools-$RTG_VERSION/rtg.cfg"
+          mv "$work/rtg-tools-$RTG_VERSION" "$dir"
+          "$dir/rtg" version | sed -n 1p
+      - name: Install the locked environment
+        run: uv sync --locked
+      # The phasing tests run WhatsHap in its container, which is never pulled at run time
+      # (`--pull never`); the digest and platform are the ones `genokeeper.containers` pins.
+      - name: Pull WhatsHap's image
+        run: |
+          read -r platform image < <(uv run python -c \
+            'from genokeeper.containers import IMAGES, PLATFORMS; print(PLATFORMS["whatshap"], IMAGES["whatshap"])')
+          docker pull -q --platform "$platform" "$image"
+      - name: Type check
+        run: uv run basedpyright
+      - name: Lint
+        run: uv run ruff check
+      - name: Format check
+        run: uv run ruff format --check
+      - name: Tests
+        # Spread over the runner's cores (pytest-xdist): serial, the suite takes minutes.
+        run: uv run pytest -q -n auto

@@ -1,0 +1,506 @@
+##fileformat=VCFv4.2
+##FILTER=<ID=PASS,Description="All filters passed">
+##contig=<ID=chr1,length=248956422>
+##contig=<ID=chr2,length=242193529>
+##contig=<ID=chr3,length=198295559>
+##contig=<ID=chr4,length=190214555>
+##contig=<ID=chr5,length=181538259>
+##contig=<ID=chr6,length=170805979>
+##contig=<ID=chr7,length=159345973>
+##contig=<ID=chr8,length=145138636>
+##contig=<ID=chr9,length=138394717>
+##contig=<ID=chr10,length=133797422>
+##contig=<ID=chr11,length=135086622>
+##contig=<ID=chr12,length=133275309>
+##contig=<ID=chr13,length=114364328>
+##contig=<ID=chr14,length=107043718>
+##contig=<ID=chr15,length=101991189>
+##contig=<ID=chr16,length=90338345>
+##contig=<ID=chr17,length=83257441>
+##contig=<ID=chr18,length=80373285>
+##contig=<ID=chr19,length=58617616>
+##contig=<ID=chr20,length=64444167>
+##contig=<ID=chr21,length=46709983>
+##contig=<ID=chr22,length=50818468>
+##contig=<ID=chrX,length=156040895>
+##contig=<ID=chrY,length=57227415>
+##contig=<ID=chrM,length=16569>
+##contig=<ID=chr1_KI270706v1_random,length=175055>
+##contig=<ID=chr1_KI270707v1_random,length=32032>
+##contig=<ID=chr1_KI270708v1_random,length=127682>
+##contig=<ID=chr1_KI270709v1_random,length=66860>
+##contig=<ID=chr1_KI270710v1_random,length=40176>
+##contig=<ID=chr1_KI270711v1_random,length=42210>
+##contig=<ID=chr1_KI270712v1_random,length=176043>
+##contig=<ID=chr1_KI270713v1_random,length=40745>
+##contig=<ID=chr1_KI270714v1_random,length=41717>
+##contig=<ID=chr2_KI270715v1_random,length=161471>
+##contig=<ID=chr2_KI270716v1_random,length=153799>
+##contig=<ID=chr3_GL000221v1_random,length=155397>
+##contig=<ID=chr4_GL000008v2_random,length=209709>
+##contig=<ID=chr5_GL000208v1_random,length=92689>
+##contig=<ID=chr9_KI270717v1_random,length=40062>
+##contig=<ID=chr9_KI270718v1_random,length=38054>
+##contig=<ID=chr9_KI270719v1_random,length=176845>
+##contig=<ID=chr9_KI270720v1_random,length=39050>
+##contig=<ID=chr11_KI270721v1_random,length=100316>
+##contig=<ID=chr14_GL000009v2_random,length=201709>
+##contig=<ID=chr14_GL000225v1_random,length=211173>
+##contig=<ID=chr14_KI270722v1_random,length=194050>
+##contig=<ID=chr14_GL000194v1_random,length=191469>
+##contig=<ID=chr14_KI270723v1_random,length=38115>
+##contig=<ID=chr14_KI270724v1_random,length=39555>
+##contig=<ID=chr14_KI270725v1_random,length=172810>
+##contig=<ID=chr14_KI270726v1_random,length=43739>
+##contig=<ID=chr15_KI270727v1_random,length=448248>
+##contig=<ID=chr16_KI270728v1_random,length=1872759>
+##contig=<ID=chr17_GL000205v2_random,length=185591>
+##contig=<ID=chr17_KI270729v1_random,length=280839>
+##contig=<ID=chr17_KI270730v1_random,length=112551>
+##contig=<ID=chr22_KI270731v1_random,length=150754>
+##contig=<ID=chr22_KI270732v1_random,length=41543>
+##contig=<ID=chr22_KI270733v1_random,length=179772>
+##contig=<ID=chr22_KI270734v1_random,length=165050>
+##contig=<ID=chr22_KI270735v1_random,length=42811>
+##contig=<ID=chr22_KI270736v1_random,length=181920>
+##contig=<ID=chr22_KI270737v1_random,length=103838>
+##contig=<ID=chr22_KI270738v1_random,length=99375>
+##contig=<ID=chr22_KI270739v1_random,length=73985>
+##contig=<ID=chrY_KI270740v1_random,length=37240>
+##contig=<ID=chrUn_KI270302v1,length=2274>
+##contig=<ID=chrUn_KI270304v1,length=2165>
+##contig=<ID=chrUn_KI270303v1,length=1942>
+##contig=<ID=chrUn_KI270305v1,length=1472>
+##contig=<ID=chrUn_KI270322v1,length=21476>
+##contig=<ID=chrUn_KI270320v1,length=4416>
+##contig=<ID=chrUn_KI270310v1,length=1201>
+##contig=<ID=chrUn_KI270316v1,length=1444>
+##contig=<ID=chrUn_KI270315v1,length=2276>
+##contig=<ID=chrUn_KI270312v1,length=998>
+##contig=<ID=chrUn_KI270311v1,length=12399>
+##contig=<ID=chrUn_KI270317v1,length=37690>
+##contig=<ID=chrUn_KI270412v1,length=1179>
+##contig=<ID=chrUn_KI270411v1,length=2646>
+##contig=<ID=chrUn_KI270414v1,length=2489>
+##contig=<ID=chrUn_KI270419v1,length=1029>
+##contig=<ID=chrUn_KI270418v1,length=2145>
+##contig=<ID=chrUn_KI270420v1,length=2321>
+##contig=<ID=chrUn_KI270424v1,length=2140>
+##contig=<ID=chrUn_KI270417v1,length=2043>
+##contig=<ID=chrUn_KI270422v1,length=1445>
+##contig=<ID=chrUn_KI270423v1,length=981>
+##contig=<ID=chrUn_KI270425v1,length=1884>
+##contig=<ID=chrUn_KI270429v1,length=1361>
+##contig=<ID=chrUn_KI270442v1,length=392061>
+##contig=<ID=chrUn_KI270466v1,length=1233>
+##contig=<ID=chrUn_KI270465v1,length=1774>
+##contig=<ID=chrUn_KI270467v1,length=3920>
+##contig=<ID=chrUn_KI270435v1,length=92983>
+##contig=<ID=chrUn_KI270438v1,length=112505>
+##contig=<ID=chrUn_KI270468v1,length=4055>
+##contig=<ID=chrUn_KI270510v1,length=2415>
+##contig=<ID=chrUn_KI270509v1,length=2318>
+##contig=<ID=chrUn_KI270518v1,length=2186>
+##contig=<ID=chrUn_KI270508v1,length=1951>
+##contig=<ID=chrUn_KI270516v1,length=1300>
+##contig=<ID=chrUn_KI270512v1,length=22689>
+##contig=<ID=chrUn_KI270519v1,length=138126>
+##contig=<ID=chrUn_KI270522v1,length=5674>
+##contig=<ID=chrUn_KI270511v1,length=8127>
+##contig=<ID=chrUn_KI270515v1,length=6361>
+##contig=<ID=chrUn_KI270507v1,length=5353>
+##contig=<ID=chrUn_KI270517v1,length=3253>
+##contig=<ID=chrUn_KI270529v1,length=1899>
+##contig=<ID=chrUn_KI270528v1,length=2983>
+##contig=<ID=chrUn_KI270530v1,length=2168>
+##contig=<ID=chrUn_KI270539v1,length=993>
+##contig=<ID=chrUn_KI270538v1,length=91309>
+##contig=<ID=chrUn_KI270544v1,length=1202>
+##contig=<ID=chrUn_KI270548v1,length=1599>
+##contig=<ID=chrUn_KI270583v1,length=1400>
+##contig=<ID=chrUn_KI270587v1,length=2969>
+##contig=<ID=chrUn_KI270580v1,length=1553>
+##contig=<ID=chrUn_KI270581v1,length=7046>
+##contig=<ID=chrUn_KI270579v1,length=31033>
+##contig=<ID=chrUn_KI270589v1,length=44474>
+##contig=<ID=chrUn_KI270590v1,length=4685>
+##contig=<ID=chrUn_KI270584v1,length=4513>
+##contig=<ID=chrUn_KI270582v1,length=6504>
+##contig=<ID=chrUn_KI270588v1,length=6158>
+##contig=<ID=chrUn_KI270593v1,length=3041>
+##contig=<ID=chrUn_KI270591v1,length=5796>
+##contig=<ID=chrUn_KI270330v1,length=1652>
+##contig=<ID=chrUn_KI270329v1,length=1040>
+##contig=<ID=chrUn_KI270334v1,length=1368>
+##contig=<ID=chrUn_KI270333v1,length=2699>
+##contig=<ID=chrUn_KI270335v1,length=1048>
+##contig=<ID=chrUn_KI270338v1,length=1428>
+##contig=<ID=chrUn_KI270340v1,length=1428>
+##contig=<ID=chrUn_KI270336v1,length=1026>
+##contig=<ID=chrUn_KI270337v1,length=1121>
+##contig=<ID=chrUn_KI270363v1,length=1803>
+##contig=<ID=chrUn_KI270364v1,length=2855>
+##contig=<ID=chrUn_KI270362v1,length=3530>
+##contig=<ID=chrUn_KI270366v1,length=8320>
+##contig=<ID=chrUn_KI270378v1,length=1048>
+##contig=<ID=chrUn_KI270379v1,length=1045>
+##contig=<ID=chrUn_KI270389v1,length=1298>
+##contig=<ID=chrUn_KI270390v1,length=2387>
+##contig=<ID=chrUn_KI270387v1,length=1537>
+##contig=<ID=chrUn_KI270395v1,length=1143>
+##contig=<ID=chrUn_KI270396v1,length=1880>
+##contig=<ID=chrUn_KI270388v1,length=1216>
+##contig=<ID=chrUn_KI270394v1,length=970>
+##contig=<ID=chrUn_KI270386v1,length=1788>
+##contig=<ID=chrUn_KI270391v1,length=1484>
+##contig=<ID=chrUn_KI270383v1,length=1750>
+##contig=<ID=chrUn_KI270393v1,length=1308>
+##contig=<ID=chrUn_KI270384v1,length=1658>
+##contig=<ID=chrUn_KI270392v1,length=971>
+##contig=<ID=chrUn_KI270381v1,length=1930>
+##contig=<ID=chrUn_KI270385v1,length=990>
+##contig=<ID=chrUn_KI270382v1,length=4215>
+##contig=<ID=chrUn_KI270376v1,length=1136>
+##contig=<ID=chrUn_KI270374v1,length=2656>
+##contig=<ID=chrUn_KI270372v1,length=1650>
+##contig=<ID=chrUn_KI270373v1,length=1451>
+##contig=<ID=chrUn_KI270375v1,length=2378>
+##contig=<ID=chrUn_KI270371v1,length=2805>
+##contig=<ID=chrUn_KI270448v1,length=7992>
+##contig=<ID=chrUn_KI270521v1,length=7642>
+##contig=<ID=chrUn_GL000195v1,length=182896>
+##contig=<ID=chrUn_GL000219v1,length=179198>
+##contig=<ID=chrUn_GL000220v1,length=161802>
+##contig=<ID=chrUn_GL000224v1,length=179693>
+##contig=<ID=chrUn_KI270741v1,length=157432>
+##contig=<ID=chrUn_GL000226v1,length=15008>
+##contig=<ID=chrUn_GL000213v1,length=164239>
+##contig=<ID=chrUn_KI270743v1,length=210658>
+##contig=<ID=chrUn_KI270744v1,length=168472>
+##contig=<ID=chrUn_KI270745v1,length=41891>
+##contig=<ID=chrUn_KI270746v1,length=66486>
+##contig=<ID=chrUn_KI270747v1,length=198735>
+##contig=<ID=chrUn_KI270748v1,length=93321>
+##contig=<ID=chrUn_KI270749v1,length=158759>
+##contig=<ID=chrUn_KI270750v1,length=148850>
+##contig=<ID=chrUn_KI270751v1,length=150742>
+##contig=<ID=chrUn_KI270752v1,length=27745>
+##contig=<ID=chrUn_KI270753v1,length=62944>
+##contig=<ID=chrUn_KI270754v1,length=40191>
+##contig=<ID=chrUn_KI270755v1,length=36723>
+##contig=<ID=chrUn_KI270756v1,length=79590>
+##contig=<ID=chrUn_KI270757v1,length=71251>
+##contig=<ID=chrUn_GL000214v1,length=137718>
+##contig=<ID=chrUn_KI270742v1,length=186739>
+##contig=<ID=chrUn_GL000216v2,length=176608>
+##contig=<ID=chrUn_GL000218v1,length=161147>
+##contig=<ID=chrEBV,length=171823>
+##INFO=<ID=END,Number=1,Type=Integer,Description="End position">
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="SV type">
+##INFO=<ID=SVLEN,Number=1,Type=Integer,Description="SV length">
+##INFO=<ID=CLASS,Number=1,Type=String,Description="Call class">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##INFO=<ID=TruScore,Number=1,Type=Integer,Description="Truvari score for similarity of match">
+##INFO=<ID=PctSeqSimilarity,Number=1,Type=Float,Description="Pct sequence similarity between this variant and its closest match">
+##INFO=<ID=PctSizeSimilarity,Number=1,Type=Float,Description="Pct size similarity between this variant and its closest match">
+##INFO=<ID=PctRecOverlap,Number=1,Type=Float,Description="Percent reciprocal overlap percent of the two calls' coordinates">
+##INFO=<ID=StartDistance,Number=1,Type=Integer,Description="Distance of the base call's end from comparison call's start">
+##INFO=<ID=EndDistance,Number=1,Type=Integer,Description="Distance of the base call's end from comparison call's end">
+##INFO=<ID=SizeDiff,Number=1,Type=Float,Description="Difference in size of base and comp calls">
+##INFO=<ID=GTMatch,Number=1,Type=Integer,Description="Base/Comparison genotypes AC difference">
+##INFO=<ID=MatchId,Number=.,Type=String,Description="Tuple of base and comparison call ids which were matched">
+##INFO=<ID=Multi,Number=0,Type=Flag,Description="Call is false due to non-multimatching">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	HG002
+chr20	393038	truth74	T	<DEL>	.	PASS	END=393161;SVTYPE=DEL;SVLEN=-123;CLASS=truth;MatchId=1.0,	GT	0/1
+chr20	407964	truth78	C	<DEL>	.	PASS	END=408016;SVTYPE=DEL;SVLEN=-52;CLASS=truth;MatchId=2.0,	GT	0/1
+chr20	709759	truth144	A	<DEL>	.	PASS	END=709852;SVTYPE=DEL;SVLEN=-93;CLASS=truth;MatchId=4.0,	GT	0/1
+chr20	949516	truth196	C	<DEL>	.	PASS	END=949619;SVTYPE=DEL;SVLEN=-103;CLASS=truth;MatchId=5.0,	GT	0/1
+chr20	1301895	truth247	A	<DEL>	.	PASS	END=1302364;SVTYPE=DEL;SVLEN=-469;CLASS=truth;MatchId=6.0,	GT	0/1
+chr20	1572827	truth293	A	<DEL>	.	PASS	END=1605855;SVTYPE=DEL;SVLEN=-33028;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.9995;PctRecOverlap=0.7689;SizeDiff=-18;StartDistance=-7619;EndDistance=-7637;GTMatch=0;TruScore=58;MatchId=7.0,7.0;Multi	GT	0/1
+chr20	1580345	truth294	C	<DEL>	.	PASS	END=1613395;SVTYPE=DEL;SVLEN=-33050;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.9999;PctRecOverlap=0.9969;SizeDiff=4;StartDistance=-101;EndDistance=-97;GTMatch=0;TruScore=66;MatchId=7.1,7.0;Multi	GT	0/1
+chr20	1839721	truth317	G	<DEL>	.	PASS	END=1839901;SVTYPE=DEL;SVLEN=-180;CLASS=truth;MatchId=8.0,	GT	0/1
+chr20	1953119	truth345	A	<DEL>	.	PASS	END=1953155;SVTYPE=DEL;SVLEN=-36;CLASS=truth;MatchId=9.0,	GT	0/1
+chr20	2241044	truth391	C	<DEL>	.	PASS	END=2241127;SVTYPE=DEL;SVLEN=-83;CLASS=truth;MatchId=11.0,	GT	0/1
+chr20	2241063	truth392	T	<DEL>	.	PASS	END=2241146;SVTYPE=DEL;SVLEN=-83;CLASS=truth;MatchId=11.1,	GT	0/1
+chr20	2241063	truth393	T	<DEL>	.	PASS	END=2241146;SVTYPE=DEL;SVLEN=-83;CLASS=truth;MatchId=11.2,	GT	0/1
+chr20	2443524	truth445	C	<DEL>	.	PASS	END=2443585;SVTYPE=DEL;SVLEN=-61;CLASS=truth;MatchId=12.0,	GT	0/1
+chr20	2867474	truth525	T	<DEL>	.	PASS	END=2867520;SVTYPE=DEL;SVLEN=-46;CLASS=truth;MatchId=14.0,	GT	0/1
+chr20	2969562	truth549	A	<DEL>	.	PASS	END=2969674;SVTYPE=DEL;SVLEN=-112;CLASS=truth;MatchId=16.0,	GT	0/1
+chr20	3018760	truth564	G	<DEL>	.	PASS	END=3018887;SVTYPE=DEL;SVLEN=-127;CLASS=truth;MatchId=17.0,	GT	0/1
+chr20	3441150	truth677	G	<DEL>	.	PASS	END=3441199;SVTYPE=DEL;SVLEN=-49;CLASS=truth;MatchId=20.0,	GT	0/1
+chr20	4032358	truth817	T	<DEL>	.	PASS	END=4032398;SVTYPE=DEL;SVLEN=-40;CLASS=truth;MatchId=21.0,	GT	0/1
+chr20	5726977	truth1182	T	<DEL>	.	PASS	END=5727017;SVTYPE=DEL;SVLEN=-40;CLASS=truth;MatchId=25.0,	GT	0/1
+chr20	6270521	truth1344	A	<DEL>	.	PASS	END=6270596;SVTYPE=DEL;SVLEN=-75;CLASS=truth;MatchId=29.0,	GT	0/1
+chr20	7718403	truth1603	A	<DEL>	.	PASS	END=7722233;SVTYPE=DEL;SVLEN=-3830;CLASS=truth;MatchId=31.0,	GT	0/1
+chr20	9015824	truth1794	G	<DEL>	.	PASS	END=9015882;SVTYPE=DEL;SVLEN=-58;CLASS=truth;MatchId=33.0,	GT	0/1
+chr20	9189049	truth1831	A	<DEL>	.	PASS	END=9189097;SVTYPE=DEL;SVLEN=-48;CLASS=truth;MatchId=34.0,	GT	0/1
+chr20	10116788	truth1972	C	<DEL>	.	PASS	END=10116824;SVTYPE=DEL;SVLEN=-36;CLASS=truth;MatchId=36.0,	GT	0/1
+chr20	10117718	truth1977	A	<DEL>	.	PASS	END=10117804;SVTYPE=DEL;SVLEN=-86;CLASS=truth;MatchId=36.1,	GT	0/1
+chr20	10150114	truth1995	T	<DEL>	.	PASS	END=10150176;SVTYPE=DEL;SVLEN=-62;CLASS=truth;MatchId=37.0,	GT	0/1
+chr20	10518456	truth2069	T	<DEL>	.	PASS	END=10518498;SVTYPE=DEL;SVLEN=-42;CLASS=truth;MatchId=38.0,	GT	0/1
+chr20	10518456	truth2070	T	<DEL>	.	PASS	END=10518498;SVTYPE=DEL;SVLEN=-42;CLASS=truth;MatchId=38.1,	GT	0/1
+chr20	10802728	truth2115	C	<DEL>	.	PASS	END=10802798;SVTYPE=DEL;SVLEN=-70;CLASS=truth;MatchId=39.0,	GT	0/1
+chr20	11277342	truth2173	T	<DEL>	.	PASS	END=11277377;SVTYPE=DEL;SVLEN=-35;CLASS=truth;MatchId=40.0,	GT	0/1
+chr20	11705951	truth2229	A	<DEL>	.	PASS	END=11705999;SVTYPE=DEL;SVLEN=-48;CLASS=truth;MatchId=41.0,	GT	0/1
+chr20	12460794	truth2387	G	<DEL>	.	PASS	END=12460837;SVTYPE=DEL;SVLEN=-43;CLASS=truth;MatchId=42.0,	GT	0/1
+chr20	13067044	truth2517	C	<DEL>	.	PASS	END=13067086;SVTYPE=DEL;SVLEN=-42;CLASS=truth;MatchId=43.0,	GT	0/1
+chr20	14699823	truth2768	T	<DEL>	.	PASS	END=14699883;SVTYPE=DEL;SVLEN=-60;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.6977;PctRecOverlap=0;SizeDiff=-26;StartDistance=-2730;EndDistance=-2756;GTMatch=0;TruScore=23;MatchId=46.0,46.0	GT	0/1
+chr20	15777494	truth2934	T	<DEL>	.	PASS	END=15777542;SVTYPE=DEL;SVLEN=-48;CLASS=truth;MatchId=47.0,	GT	0/1
+chr20	16227176	truth3040	C	<DEL>	.	PASS	END=16227223;SVTYPE=DEL;SVLEN=-47;CLASS=truth;MatchId=49.0,	GT	0/1
+chr20	16227379	truth3041	G	<DEL>	.	PASS	END=16227457;SVTYPE=DEL;SVLEN=-78;CLASS=truth;MatchId=49.1,	GT	0/1
+chr20	16227502	truth3042	G	<DEL>	.	PASS	END=16227728;SVTYPE=DEL;SVLEN=-226;CLASS=truth;MatchId=49.2,	GT	0/1
+chr20	16259677	truth3055	A	<DEL>	.	PASS	END=16260095;SVTYPE=DEL;SVLEN=-418;CLASS=truth;MatchId=50.0,	GT	0/1
+chr20	16905673	truth3146	C	<DEL>	.	PASS	END=16905715;SVTYPE=DEL;SVLEN=-42;CLASS=truth;MatchId=53.0,	GT	0/1
+chr20	16927975	truth3150	T	<DEL>	.	PASS	END=16928023;SVTYPE=DEL;SVLEN=-48;CLASS=truth;MatchId=54.0,	GT	0/1
+chr20	17081299	truth3179	T	<DEL>	.	PASS	END=17081365;SVTYPE=DEL;SVLEN=-66;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.9706;PctRecOverlap=0.1594;SizeDiff=-2;StartDistance=58;EndDistance=56;GTMatch=0;TruScore=37;MatchId=55.2,55.0;Multi	GT	0/1
+chr20	17081299	truth3178	T	<DEL>	.	PASS	END=17081365;SVTYPE=DEL;SVLEN=-66;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.9706;PctRecOverlap=0.1594;SizeDiff=-2;StartDistance=58;EndDistance=56;GTMatch=0;TruScore=37;MatchId=55.1,55.0;Multi	GT	0/1
+chr20	17303442	truth3221	A	<DEL>	.	PASS	END=17303525;SVTYPE=DEL;SVLEN=-83;CLASS=truth;MatchId=57.0,	GT	0/1
+chr20	17779292	truth3332	G	<DEL>	.	PASS	END=17779329;SVTYPE=DEL;SVLEN=-37;CLASS=truth;MatchId=59.0,	GT	0/1
+chr20	18016330	truth3398	C	<DEL>	.	PASS	END=18016366;SVTYPE=DEL;SVLEN=-36;CLASS=truth;MatchId=60.0,	GT	0/1
+chr20	18112234	truth3421	G	<DEL>	.	PASS	END=18112318;SVTYPE=DEL;SVLEN=-84;CLASS=truth;MatchId=61.0,	GT	0/1
+chr20	18210093	truth3442	T	<DEL>	.	PASS	END=18210134;SVTYPE=DEL;SVLEN=-41;CLASS=truth;MatchId=62.0,	GT	0/1
+chr20	18708198	truth3573	T	<DEL>	.	PASS	END=18708244;SVTYPE=DEL;SVLEN=-46;CLASS=truth;MatchId=63.0,	GT	0/1
+chr20	18776542	truth3586	A	<DEL>	.	PASS	END=18776768;SVTYPE=DEL;SVLEN=-226;CLASS=truth;MatchId=64.0,	GT	0/1
+chr20	18962206	truth3609	A	<DEL>	.	PASS	END=18962243;SVTYPE=DEL;SVLEN=-37;CLASS=truth;MatchId=65.0,	GT	0/1
+chr20	19230626	truth3662	G	<DEL>	.	PASS	END=19230661;SVTYPE=DEL;SVLEN=-35;CLASS=truth;MatchId=68.0,	GT	0/1
+chr20	20189445	truth3831	A	<DEL>	.	PASS	END=20189483;SVTYPE=DEL;SVLEN=-38;CLASS=truth;MatchId=69.0,	GT	0/1
+chr20	20254011	truth3837	T	<DEL>	.	PASS	END=20254046;SVTYPE=DEL;SVLEN=-35;CLASS=truth;MatchId=70.0,	GT	0/1
+chr20	20296016	truth3855	T	<DEL>	.	PASS	END=20296117;SVTYPE=DEL;SVLEN=-101;CLASS=truth;MatchId=71.0,	GT	0/1
+chr20	20355395	truth3867	A	<DEL>	.	PASS	END=20355435;SVTYPE=DEL;SVLEN=-40;CLASS=truth;MatchId=72.0,	GT	0/1
+chr20	20356540	truth3869	G	<DEL>	.	PASS	END=20356656;SVTYPE=DEL;SVLEN=-116;CLASS=truth;MatchId=72.1,	GT	0/1
+chr20	20356540	truth3870	G	<DEL>	.	PASS	END=20356656;SVTYPE=DEL;SVLEN=-116;CLASS=truth;MatchId=72.2,	GT	0/1
+chr20	20357113	truth3872	G	<DEL>	.	PASS	END=20357172;SVTYPE=DEL;SVLEN=-59;CLASS=truth;MatchId=72.3,	GT	0/1
+chr20	21120299	truth3943	A	<DEL>	.	PASS	END=21120431;SVTYPE=DEL;SVLEN=-132;CLASS=truth;MatchId=73.0,	GT	0/1
+chr20	21120333	truth3944	A	<DEL>	.	PASS	END=21120461;SVTYPE=DEL;SVLEN=-128;CLASS=truth;MatchId=73.1,	GT	0/1
+chr20	21120333	truth3945	A	<DEL>	.	PASS	END=21120461;SVTYPE=DEL;SVLEN=-128;CLASS=truth;MatchId=73.2,	GT	0/1
+chr20	22378432	truth4102	A	<DEL>	.	PASS	END=22378468;SVTYPE=DEL;SVLEN=-36;CLASS=truth;MatchId=78.0,	GT	0/1
+chr20	22538850	truth4120	T	<DEL>	.	PASS	END=22538922;SVTYPE=DEL;SVLEN=-72;CLASS=truth;MatchId=79.0,	GT	0/1
+chr20	22538856	truth4121	T	<DEL>	.	PASS	END=22538922;SVTYPE=DEL;SVLEN=-66;CLASS=truth;MatchId=79.1,	GT	0/1
+chr20	22538856	truth4122	T	<DEL>	.	PASS	END=22538922;SVTYPE=DEL;SVLEN=-66;CLASS=truth;MatchId=79.2,	GT	0/1
+chr20	22648478	truth4132	A	<DEL>	.	PASS	END=22648516;SVTYPE=DEL;SVLEN=-38;CLASS=truth;MatchId=80.0,	GT	0/1
+chr20	23122667	truth4188	G	<DEL>	.	PASS	END=23122995;SVTYPE=DEL;SVLEN=-328;CLASS=truth;MatchId=81.0,	GT	0/1
+chr20	23532502	truth4226	G	<DEL>	.	PASS	END=23532537;SVTYPE=DEL;SVLEN=-35;CLASS=truth;MatchId=82.0,	GT	0/1
+chr20	23561023	truth4237	C	<DEL>	.	PASS	END=23561098;SVTYPE=DEL;SVLEN=-75;CLASS=truth;MatchId=83.0,	GT	0/1
+chr20	24208333	truth4326	T	<DEL>	.	PASS	END=24208375;SVTYPE=DEL;SVLEN=-42;CLASS=truth;MatchId=85.0,	GT	0/1
+chr20	24408074	truth4350	G	<DEL>	.	PASS	END=24408304;SVTYPE=DEL;SVLEN=-230;CLASS=truth;MatchId=86.0,	GT	0/1
+chr20	24408733	truth4351	G	<DEL>	.	PASS	END=24408780;SVTYPE=DEL;SVLEN=-47;CLASS=truth;MatchId=86.1,	GT	0/1
+chr20	24408773	truth4352	G	<DEL>	.	PASS	END=24408820;SVTYPE=DEL;SVLEN=-47;CLASS=truth;MatchId=86.2,	GT	0/1
+chr20	24408773	truth4353	G	<DEL>	.	PASS	END=24408820;SVTYPE=DEL;SVLEN=-47;CLASS=truth;MatchId=86.3,	GT	0/1
+chr20	24682067	truth4384	C	<DEL>	.	PASS	END=24682125;SVTYPE=DEL;SVLEN=-58;CLASS=truth;MatchId=88.0,	GT	0/1
+chr20	24893047	truth4418	C	<DEL>	.	PASS	END=24893112;SVTYPE=DEL;SVLEN=-65;CLASS=truth;MatchId=90.0,	GT	0/1
+chr20	24913579	truth4420	G	<DEL>	.	PASS	END=24913699;SVTYPE=DEL;SVLEN=-120;CLASS=truth;MatchId=91.0,	GT	0/1
+chr20	24982234	truth4429	A	<DEL>	.	PASS	END=24982291;SVTYPE=DEL;SVLEN=-57;CLASS=truth;MatchId=93.0,	GT	0/1
+chr20	25543955	truth4527	C	<DEL>	.	PASS	END=25544089;SVTYPE=DEL;SVLEN=-134;CLASS=truth;MatchId=94.0,	GT	0/1
+chr20	31189254	truth5298	A	<DEL>	.	PASS	END=31189302;SVTYPE=DEL;SVLEN=-48;CLASS=truth;MatchId=95.0,	GT	0/1
+chr20	31219928	truth5332	A	<DEL>	.	PASS	END=31220025;SVTYPE=DEL;SVLEN=-97;CLASS=truth;MatchId=96.0,	GT	0/1
+chr20	31226303	truth5340	A	<DEL>	.	PASS	END=31226338;SVTYPE=DEL;SVLEN=-35;CLASS=truth;MatchId=97.0,	GT	0/1
+chr20	31241785	truth5352	C	<DEL>	.	PASS	END=31241865;SVTYPE=DEL;SVLEN=-80;CLASS=truth;MatchId=98.0,	GT	0/1
+chr20	31471316	truth5413	C	<DEL>	.	PASS	END=31471364;SVTYPE=DEL;SVLEN=-48;CLASS=truth;MatchId=99.0,	GT	0/1
+chr20	32122211	truth5526	G	<DEL>	.	PASS	END=32122259;SVTYPE=DEL;SVLEN=-48;CLASS=truth;MatchId=100.0,	GT	0/1
+chr20	32176435	truth5545	A	<DEL>	.	PASS	END=32177139;SVTYPE=DEL;SVLEN=-704;CLASS=truth;MatchId=101.0,	GT	0/1
+chr20	32723063	truth5689	T	<DEL>	.	PASS	END=32724971;SVTYPE=DEL;SVLEN=-1908;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.9937;PctRecOverlap=0.9937;SizeDiff=12;StartDistance=-12;EndDistance=0;GTMatch=0;TruScore=66;MatchId=103.1,103.0;Multi	GT	0/1
+chr20	32739555	truth5700	G	<DEL>	.	PASS	END=32740227;SVTYPE=DEL;SVLEN=-672;CLASS=truth;MatchId=104.0,	GT	0/1
+chr20	33093545	truth5771	C	<DEL>	.	PASS	END=33093648;SVTYPE=DEL;SVLEN=-103;CLASS=truth;MatchId=105.0,	GT	0/1
+chr20	33455779	truth5824	T	<DEL>	.	PASS	END=33456462;SVTYPE=DEL;SVLEN=-683;CLASS=truth;MatchId=106.0,	GT	0/1
+chr20	33699587	truth5848	T	<DEL>	.	PASS	END=33699762;SVTYPE=DEL;SVLEN=-175;CLASS=truth;MatchId=107.0,	GT	0/1
+chr20	34200969	truth5961	T	<DEL>	.	PASS	END=34201005;SVTYPE=DEL;SVLEN=-36;CLASS=truth;MatchId=109.0,	GT	0/1
+chr20	34817117	truth6061	C	<DEL>	.	PASS	END=34817210;SVTYPE=DEL;SVLEN=-93;CLASS=truth;MatchId=112.0,	GT	0/1
+chr20	35539213	truth6240	T	<DEL>	.	PASS	END=35539285;SVTYPE=DEL;SVLEN=-72;CLASS=truth;MatchId=116.0,	GT	0/1
+chr20	35539287	truth6243	T	<DEL>	.	PASS	END=35539335;SVTYPE=DEL;SVLEN=-48;CLASS=truth;MatchId=116.1,	GT	0/1
+chr20	35539532	truth6245	T	<DEL>	.	PASS	END=35539582;SVTYPE=DEL;SVLEN=-50;CLASS=truth;MatchId=116.2,	GT	0/1
+chr20	36977648	truth6466	A	<DEL>	.	PASS	END=36977685;SVTYPE=DEL;SVLEN=-37;CLASS=truth;MatchId=117.0,	GT	0/1
+chr20	37126244	truth6496	T	<DEL>	.	PASS	END=37126293;SVTYPE=DEL;SVLEN=-49;CLASS=truth;MatchId=118.0,	GT	0/1
+chr20	37361786	truth6541	C	<DEL>	.	PASS	END=37361886;SVTYPE=DEL;SVLEN=-100;CLASS=truth;MatchId=121.0,	GT	0/1
+chr20	37361826	truth6542	G	<DEL>	.	PASS	END=37361870;SVTYPE=DEL;SVLEN=-44;CLASS=truth;MatchId=121.1,	GT	0/1
+chr20	37361826	truth6543	G	<DEL>	.	PASS	END=37361870;SVTYPE=DEL;SVLEN=-44;CLASS=truth;MatchId=121.2,	GT	0/1
+chr20	37384613	truth6546	A	<DEL>	.	PASS	END=37384681;SVTYPE=DEL;SVLEN=-68;CLASS=truth;MatchId=122.0,	GT	0/1
+chr20	38123800	truth6670	T	<DEL>	.	PASS	END=38123836;SVTYPE=DEL;SVLEN=-36;CLASS=truth;MatchId=123.0,	GT	0/1
+chr20	38379009	truth6709	G	<DEL>	.	PASS	END=38379056;SVTYPE=DEL;SVLEN=-47;CLASS=truth;MatchId=124.0,	GT	0/1
+chr20	38708354	truth6756	A	<DEL>	.	PASS	END=38708418;SVTYPE=DEL;SVLEN=-64;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.9697;PctRecOverlap=0.8507;SizeDiff=-2;StartDistance=10;EndDistance=8;GTMatch=0;TruScore=60;MatchId=125.2,125.0;Multi	GT	0/1
+chr20	38708354	truth6755	A	<DEL>	.	PASS	END=38708418;SVTYPE=DEL;SVLEN=-64;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.9697;PctRecOverlap=0.8507;SizeDiff=-2;StartDistance=10;EndDistance=8;GTMatch=0;TruScore=60;MatchId=125.1,125.0;Multi	GT	0/1
+chr20	38895905	truth6806	C	<DEL>	.	PASS	END=38895959;SVTYPE=DEL;SVLEN=-54;CLASS=truth;MatchId=126.0,	GT	0/1
+chr20	40460204	truth7006	G	<DEL>	.	PASS	END=40460252;SVTYPE=DEL;SVLEN=-48;CLASS=truth;MatchId=128.0,	GT	0/1
+chr20	40982733	truth7061	T	<DEL>	.	PASS	END=40982777;SVTYPE=DEL;SVLEN=-44;CLASS=truth;MatchId=129.0,	GT	0/1
+chr20	41197210	truth7098	C	<DEL>	.	PASS	END=41197248;SVTYPE=DEL;SVLEN=-38;CLASS=truth;MatchId=130.0,	GT	0/1
+chr20	41767620	truth7214	G	<DEL>	.	PASS	END=41767664;SVTYPE=DEL;SVLEN=-44;CLASS=truth;MatchId=133.0,	GT	0/1
+chr20	42509072	truth7300	C	<DEL>	.	PASS	END=42509138;SVTYPE=DEL;SVLEN=-66;CLASS=truth;MatchId=135.0,	GT	0/1
+chr20	45208176	truth7670	A	<DEL>	.	PASS	END=45208356;SVTYPE=DEL;SVLEN=-180;CLASS=truth;MatchId=139.0,	GT	0/1
+chr20	45738910	truth7776	C	<DEL>	.	PASS	END=45738994;SVTYPE=DEL;SVLEN=-84;CLASS=truth;MatchId=142.0,	GT	0/1
+chr20	45744972	truth7782	A	<DEL>	.	PASS	END=45745012;SVTYPE=DEL;SVLEN=-40;CLASS=truth;MatchId=143.0,	GT	0/1
+chr20	45760365	truth7792	A	<DEL>	.	PASS	END=45760410;SVTYPE=DEL;SVLEN=-45;CLASS=truth;MatchId=144.0,	GT	0/1
+chr20	45773799	truth7794	G	<DEL>	.	PASS	END=45773920;SVTYPE=DEL;SVLEN=-121;CLASS=truth;MatchId=145.0,	GT	0/1
+chr20	45800691	truth7810	A	<DEL>	.	PASS	END=45800726;SVTYPE=DEL;SVLEN=-35;CLASS=truth;MatchId=146.0,	GT	0/1
+chr20	46834793	truth7976	T	<DEL>	.	PASS	END=46834841;SVTYPE=DEL;SVLEN=-48;CLASS=truth;MatchId=148.0,	GT	0/1
+chr20	46834795	truth7977	T	<DEL>	.	PASS	END=46834843;SVTYPE=DEL;SVLEN=-48;CLASS=truth;MatchId=148.1,	GT	0/1
+chr20	46834795	truth7978	T	<DEL>	.	PASS	END=46834843;SVTYPE=DEL;SVLEN=-48;CLASS=truth;MatchId=148.2,	GT	0/1
+chr20	48504547	truth8253	T	<DEL>	.	PASS	END=48504596;SVTYPE=DEL;SVLEN=-49;CLASS=truth;MatchId=150.0,	GT	0/1
+chr20	48505243	truth8255	G	<DEL>	.	PASS	END=48505830;SVTYPE=DEL;SVLEN=-587;CLASS=truth;MatchId=150.1,	GT	0/1
+chr20	48506452	truth8256	A	<DEL>	.	PASS	END=48508514;SVTYPE=DEL;SVLEN=-2062;CLASS=truth;MatchId=150.2,	GT	0/1
+chr20	48509044	truth8257	T	<DEL>	.	PASS	END=48509436;SVTYPE=DEL;SVLEN=-392;CLASS=truth;MatchId=150.3,	GT	0/1
+chr20	48509709	truth8258	C	<DEL>	.	PASS	END=48511570;SVTYPE=DEL;SVLEN=-1861;CLASS=truth;MatchId=150.4,	GT	0/1
+chr20	48511985	truth8260	T	<DEL>	.	PASS	END=48512083;SVTYPE=DEL;SVLEN=-98;CLASS=truth;MatchId=150.5,	GT	0/1
+chr20	48512316	truth8261	G	<DEL>	.	PASS	END=48513687;SVTYPE=DEL;SVLEN=-1371;CLASS=truth;MatchId=150.6,	GT	0/1
+chr20	48515201	truth8262	T	<DEL>	.	PASS	END=48515298;SVTYPE=DEL;SVLEN=-97;CLASS=truth;MatchId=150.7,	GT	0/1
+chr20	48573458	truth8278	A	<DEL>	.	PASS	END=48573497;SVTYPE=DEL;SVLEN=-39;CLASS=truth;MatchId=151.0,	GT	0/1
+chr20	48870950	truth8315	C	<DEL>	.	PASS	END=48871558;SVTYPE=DEL;SVLEN=-608;CLASS=truth;MatchId=152.0,	GT	0/1
+chr20	48870950	truth8316	C	<DEL>	.	PASS	END=48871560;SVTYPE=DEL;SVLEN=-610;CLASS=truth;MatchId=152.1,	GT	0/1
+chr20	48897134	truth8324	A	<DEL>	.	PASS	END=48897224;SVTYPE=DEL;SVLEN=-90;CLASS=truth;MatchId=153.0,	GT	0/1
+chr20	49834407	truth8603	A	<DEL>	.	PASS	END=49834469;SVTYPE=DEL;SVLEN=-62;CLASS=truth;MatchId=154.0,	GT	0/1
+chr20	50301101	truth8747	T	<DEL>	.	PASS	END=50301198;SVTYPE=DEL;SVLEN=-97;CLASS=truth;MatchId=157.0,	GT	0/1
+chr20	51396034	truth8932	G	<DEL>	.	PASS	END=51396070;SVTYPE=DEL;SVLEN=-36;CLASS=truth;MatchId=159.0,	GT	0/1
+chr20	51890786	truth9098	A	<DEL>	.	PASS	END=51890857;SVTYPE=DEL;SVLEN=-71;CLASS=truth;MatchId=160.0,	GT	0/1
+chr20	52456947	truth9277	G	<DEL>	.	PASS	END=52456987;SVTYPE=DEL;SVLEN=-40;CLASS=truth;MatchId=162.0,	GT	0/1
+chr20	52554131	truth9291	T	<DEL>	.	PASS	END=52554255;SVTYPE=DEL;SVLEN=-124;CLASS=truth;MatchId=163.0,	GT	0/1
+chr20	53190086	truth9389	A	<DEL>	.	PASS	END=53190124;SVTYPE=DEL;SVLEN=-38;CLASS=truth;MatchId=164.0,	GT	0/1
+chr20	53228573	truth9397	G	<DEL>	.	PASS	END=53228630;SVTYPE=DEL;SVLEN=-57;CLASS=truth;MatchId=165.0,	GT	0/1
+chr20	53807480	truth9539	A	<DEL>	.	PASS	END=53807518;SVTYPE=DEL;SVLEN=-38;CLASS=truth;MatchId=166.0,	GT	0/1
+chr20	53807503	truth9540	A	<DEL>	.	PASS	END=53807541;SVTYPE=DEL;SVLEN=-38;CLASS=truth;MatchId=166.1,	GT	0/1
+chr20	53807503	truth9541	A	<DEL>	.	PASS	END=53807541;SVTYPE=DEL;SVLEN=-38;CLASS=truth;MatchId=166.2,	GT	0/1
+chr20	53868407	truth9558	A	<DEL>	.	PASS	END=53868545;SVTYPE=DEL;SVLEN=-138;CLASS=truth;MatchId=167.0,	GT	0/1
+chr20	55353623	truth9795	A	<DEL>	.	PASS	END=55353659;SVTYPE=DEL;SVLEN=-36;CLASS=truth;MatchId=170.0,	GT	0/1
+chr20	55353623	truth9796	A	<DEL>	.	PASS	END=55353663;SVTYPE=DEL;SVLEN=-40;CLASS=truth;MatchId=170.1,	GT	0/1
+chr20	55532671	truth9836	T	<DEL>	.	PASS	END=55532840;SVTYPE=DEL;SVLEN=-169;CLASS=truth;MatchId=172.0,	GT	0/1
+chr20	55625224	truth9863	G	<DEL>	.	PASS	END=55625275;SVTYPE=DEL;SVLEN=-51;CLASS=truth;MatchId=173.0,	GT	0/1
+chr20	55628127	truth9871	A	<DEL>	.	PASS	END=55628251;SVTYPE=DEL;SVLEN=-124;CLASS=truth;MatchId=173.1,	GT	0/1
+chr20	55628167	truth9872	T	<DEL>	.	PASS	END=55628251;SVTYPE=DEL;SVLEN=-84;CLASS=truth;MatchId=173.2,	GT	0/1
+chr20	55628167	truth9873	T	<DEL>	.	PASS	END=55628251;SVTYPE=DEL;SVLEN=-84;CLASS=truth;MatchId=173.3,	GT	0/1
+chr20	55945043	truth9918	A	<DEL>	.	PASS	END=55945175;SVTYPE=DEL;SVLEN=-132;CLASS=truth;MatchId=178.0,	GT	0/1
+chr20	55966915	truth9920	A	<DEL>	.	PASS	END=55967051;SVTYPE=DEL;SVLEN=-136;CLASS=truth;MatchId=179.0,	GT	0/1
+chr20	56782070	truth10075	G	<DEL>	.	PASS	END=56782130;SVTYPE=DEL;SVLEN=-60;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.6;PctRecOverlap=0.604;SizeDiff=-40;StartDistance=35;EndDistance=-5;GTMatch=0;TruScore=40;MatchId=181.0,181.0	GT	0/1
+chr20	57110451	truth10164	C	<DEL>	.	PASS	END=57110593;SVTYPE=DEL;SVLEN=-142;CLASS=truth;MatchId=183.0,	GT	0/1
+chr20	57110487	truth10165	C	<DEL>	.	PASS	END=57110593;SVTYPE=DEL;SVLEN=-106;CLASS=truth;MatchId=183.1,	GT	0/1
+chr20	57110487	truth10166	C	<DEL>	.	PASS	END=57110593;SVTYPE=DEL;SVLEN=-106;CLASS=truth;MatchId=183.2,	GT	0/1
+chr20	57190356	truth10179	A	<DEL>	.	PASS	END=57190392;SVTYPE=DEL;SVLEN=-36;CLASS=truth;MatchId=184.0,	GT	0/1
+chr20	57190356	truth10180	A	<DEL>	.	PASS	END=57190428;SVTYPE=DEL;SVLEN=-72;CLASS=truth;MatchId=184.1,	GT	0/1
+chr20	57894722	truth10264	G	<DEL>	.	PASS	END=57894785;SVTYPE=DEL;SVLEN=-63;CLASS=truth;MatchId=187.0,	GT	0/1
+chr20	57949179	truth10274	G	<DEL>	.	PASS	END=57949233;SVTYPE=DEL;SVLEN=-54;CLASS=truth;MatchId=188.0,	GT	0/1
+chr20	58542227	truth10362	A	<DEL>	.	PASS	END=58542299;SVTYPE=DEL;SVLEN=-72;CLASS=truth;MatchId=189.0,	GT	0/1
+chr20	59384583	truth10477	A	<DEL>	.	PASS	END=59384701;SVTYPE=DEL;SVLEN=-118;CLASS=truth;MatchId=190.0,	GT	0/1
+chr20	59785860	truth10535	T	<DEL>	.	PASS	END=59785896;SVTYPE=DEL;SVLEN=-36;CLASS=truth;MatchId=191.0,	GT	0/1
+chr20	59822000	truth10539	A	<DEL>	.	PASS	END=59822040;SVTYPE=DEL;SVLEN=-40;CLASS=truth;MatchId=192.0,	GT	0/1
+chr20	59822126	truth10540	C	<DEL>	.	PASS	END=59822166;SVTYPE=DEL;SVLEN=-40;CLASS=truth;MatchId=192.1,	GT	0/1
+chr20	60087440	truth10560	A	<DEL>	.	PASS	END=60087534;SVTYPE=DEL;SVLEN=-94;CLASS=truth;MatchId=193.0,	GT	0/1
+chr20	60087440	truth10561	A	<DEL>	.	PASS	END=60087581;SVTYPE=DEL;SVLEN=-141;CLASS=truth;MatchId=193.1,	GT	0/1
+chr20	60303007	truth10587	C	<DEL>	.	PASS	END=60303051;SVTYPE=DEL;SVLEN=-44;CLASS=truth;MatchId=194.0,	GT	0/1
+chr20	60356441	truth10604	C	<DEL>	.	PASS	END=60356477;SVTYPE=DEL;SVLEN=-36;CLASS=truth;MatchId=195.0,	GT	0/1
+chr20	60967427	truth10705	G	<DEL>	.	PASS	END=60967467;SVTYPE=DEL;SVLEN=-40;CLASS=truth;MatchId=196.0,	GT	0/1
+chr20	61023963	truth10715	C	<DEL>	.	PASS	END=61024012;SVTYPE=DEL;SVLEN=-49;CLASS=truth;MatchId=197.0,	GT	0/1
+chr20	61045964	truth10721	C	<DEL>	.	PASS	END=61046114;SVTYPE=DEL;SVLEN=-150;CLASS=truth;MatchId=198.0,	GT	0/1
+chr20	61100922	truth10732	T	<DEL>	.	PASS	END=61101146;SVTYPE=DEL;SVLEN=-224;CLASS=truth;MatchId=199.0,	GT	0/1
+chr20	61101707	truth10733	A	<DEL>	.	PASS	END=61101763;SVTYPE=DEL;SVLEN=-56;CLASS=truth;MatchId=199.1,	GT	0/1
+chr20	61101943	truth10734	T	<DEL>	.	PASS	END=61101999;SVTYPE=DEL;SVLEN=-56;CLASS=truth;MatchId=199.2,	GT	0/1
+chr20	61229617	truth10755	G	<DEL>	.	PASS	END=61229663;SVTYPE=DEL;SVLEN=-46;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.9388;PctRecOverlap=0.92;SizeDiff=-3;StartDistance=-1;EndDistance=-4;GTMatch=0;TruScore=61;MatchId=200.0,200.0;Multi	GT	0/1
+chr20	61290211	truth10763	G	<DEL>	.	PASS	END=61290273;SVTYPE=DEL;SVLEN=-62;CLASS=truth;MatchId=202.0,	GT	0/1
+chr20	61565308	truth10821	T	<DEL>	.	PASS	END=61565358;SVTYPE=DEL;SVLEN=-50;CLASS=truth;MatchId=206.0,	GT	0/1
+chr20	61565337	truth10822	G	<DEL>	.	PASS	END=61565395;SVTYPE=DEL;SVLEN=-58;CLASS=truth;MatchId=206.1,	GT	0/1
+chr20	61565337	truth10823	G	<DEL>	.	PASS	END=61565395;SVTYPE=DEL;SVLEN=-58;CLASS=truth;MatchId=206.2,	GT	0/1
+chr20	61585672	truth10827	G	<DEL>	.	PASS	END=61585782;SVTYPE=DEL;SVLEN=-110;CLASS=truth;MatchId=207.0,	GT	0/1
+chr20	61641810	truth10835	C	<DEL>	.	PASS	END=61642013;SVTYPE=DEL;SVLEN=-203;CLASS=truth;MatchId=208.0,	GT	0/1
+chr20	61653597	truth10840	T	<DEL>	.	PASS	END=61653830;SVTYPE=DEL;SVLEN=-233;CLASS=truth;MatchId=209.0,	GT	0/1
+chr20	61654896	truth10841	C	<DEL>	.	PASS	END=61654932;SVTYPE=DEL;SVLEN=-36;CLASS=truth;MatchId=209.1,	GT	0/1
+chr20	61723886	truth10850	G	<DEL>	.	PASS	END=61723936;SVTYPE=DEL;SVLEN=-50;CLASS=truth;MatchId=210.0,	GT	0/1
+chr20	61744402	truth10855	A	<DEL>	.	PASS	END=61744555;SVTYPE=DEL;SVLEN=-153;CLASS=truth;MatchId=211.0,	GT	0/1
+chr20	61744511	truth10856	G	<DEL>	.	PASS	END=61744592;SVTYPE=DEL;SVLEN=-81;CLASS=truth;MatchId=211.1,	GT	0/1
+chr20	61744511	truth10857	G	<DEL>	.	PASS	END=61744592;SVTYPE=DEL;SVLEN=-81;CLASS=truth;MatchId=211.2,	GT	0/1
+chr20	61783959	truth10861	C	<DEL>	.	PASS	END=61784021;SVTYPE=DEL;SVLEN=-62;CLASS=truth;MatchId=212.0,	GT	0/1
+chr20	61784448	truth10862	T	<DEL>	.	PASS	END=61784635;SVTYPE=DEL;SVLEN=-187;CLASS=truth;MatchId=212.1,	GT	0/1
+chr20	61784635	truth10863	G	<DEL>	.	PASS	END=61784698;SVTYPE=DEL;SVLEN=-63;CLASS=truth;MatchId=212.2,	GT	0/1
+chr20	61784635	truth10864	G	<DEL>	.	PASS	END=61784698;SVTYPE=DEL;SVLEN=-63;CLASS=truth;MatchId=212.3,	GT	0/1
+chr20	61942997	truth10902	T	<DEL>	.	PASS	END=61943047;SVTYPE=DEL;SVLEN=-50;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.1645;PctRecOverlap=0;SizeDiff=-254;StartDistance=-8250;EndDistance=-8504;GTMatch=0;TruScore=5;MatchId=215.0,215.1	GT	0/1
+chr20	61943317	truth10903	T	<DEL>	.	PASS	END=61943367;SVTYPE=DEL;SVLEN=-50;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.1645;PctRecOverlap=0;SizeDiff=-254;StartDistance=-7930;EndDistance=-8184;GTMatch=0;TruScore=5;MatchId=215.1,215.1	GT	0/1
+chr20	61943513	truth10904	C	<DEL>	.	PASS	END=61945040;SVTYPE=DEL;SVLEN=-1527;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.5519;PctRecOverlap=0;SizeDiff=-1240;StartDistance=-1778;EndDistance=-3018;GTMatch=0;TruScore=18;MatchId=215.2,215.0	GT	0/1
+chr20	61943643	truth10905	A	<DEL>	.	PASS	END=61943765;SVTYPE=DEL;SVLEN=-122;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.4013;PctRecOverlap=0;SizeDiff=-182;StartDistance=-7604;EndDistance=-7786;GTMatch=0;TruScore=13;MatchId=215.3,215.1	GT	0/1
+chr20	61943643	truth10906	A	<DEL>	.	PASS	END=61943765;SVTYPE=DEL;SVLEN=-122;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.4013;PctRecOverlap=0;SizeDiff=-182;StartDistance=-7604;EndDistance=-7786;GTMatch=0;TruScore=13;MatchId=215.4,215.1	GT	0/1
+chr20	61943913	truth10908	T	<DEL>	.	PASS	END=61943963;SVTYPE=DEL;SVLEN=-50;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.1645;PctRecOverlap=0;SizeDiff=-254;StartDistance=-7334;EndDistance=-7588;GTMatch=0;TruScore=5;MatchId=215.6,215.1	GT	0/1
+chr20	61943913	truth10907	T	<DEL>	.	PASS	END=61943963;SVTYPE=DEL;SVLEN=-50;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.1645;PctRecOverlap=0;SizeDiff=-254;StartDistance=-7334;EndDistance=-7588;GTMatch=0;TruScore=5;MatchId=215.5,215.1	GT	0/1
+chr20	61944196	truth10909	C	<DEL>	.	PASS	END=61944246;SVTYPE=DEL;SVLEN=-50;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.1645;PctRecOverlap=0;SizeDiff=-254;StartDistance=-7051;EndDistance=-7305;GTMatch=0;TruScore=5;MatchId=215.7,215.1	GT	0/1
+chr20	61944196	truth10910	C	<DEL>	.	PASS	END=61944246;SVTYPE=DEL;SVLEN=-50;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.1645;PctRecOverlap=0;SizeDiff=-254;StartDistance=-7051;EndDistance=-7305;GTMatch=0;TruScore=5;MatchId=215.8,215.1	GT	0/1
+chr20	61945288	truth10911	A	<DEL>	.	PASS	END=61945542;SVTYPE=DEL;SVLEN=-254;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.8355;PctRecOverlap=0;SizeDiff=-50;StartDistance=-5959;EndDistance=-6009;GTMatch=0;TruScore=27;MatchId=215.9,215.1	GT	0/1
+chr20	61945686	truth10912	A	<DEL>	.	PASS	END=61945836;SVTYPE=DEL;SVLEN=-150;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.4934;PctRecOverlap=0;SizeDiff=-154;StartDistance=-5561;EndDistance=-5715;GTMatch=0;TruScore=16;MatchId=215.10,215.1	GT	0/1
+chr20	61946250	truth10913	A	<DEL>	.	PASS	END=61947090;SVTYPE=DEL;SVLEN=-840;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.3036;PctRecOverlap=0.3038;SizeDiff=-1927;StartDistance=959;EndDistance=-968;GTMatch=0;TruScore=20;MatchId=215.11,215.0	GT	0/1
+chr20	61946618	truth10915	C	<DEL>	.	PASS	END=61946664;SVTYPE=DEL;SVLEN=-46;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.1513;PctRecOverlap=0;SizeDiff=-258;StartDistance=-4629;EndDistance=-4887;GTMatch=0;TruScore=5;MatchId=215.13,215.1	GT	0/1
+chr20	61946618	truth10914	C	<DEL>	.	PASS	END=61946664;SVTYPE=DEL;SVLEN=-46;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.1513;PctRecOverlap=0;SizeDiff=-258;StartDistance=-4629;EndDistance=-4887;GTMatch=0;TruScore=5;MatchId=215.12,215.1	GT	0/1
+chr20	61947330	truth10916	T	<DEL>	.	PASS	END=61947826;SVTYPE=DEL;SVLEN=-496;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.6129;PctRecOverlap=0;SizeDiff=192;StartDistance=-3917;EndDistance=-3725;GTMatch=0;TruScore=20;MatchId=215.14,215.1	GT	0/1
+chr20	61947919	truth10917	C	<DEL>	.	PASS	END=61948019;SVTYPE=DEL;SVLEN=-100;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.3289;PctRecOverlap=0;SizeDiff=-204;StartDistance=-3328;EndDistance=-3532;GTMatch=0;TruScore=10;MatchId=215.15,215.1	GT	0/1
+chr20	61948263	truth10919	A	<DEL>	.	PASS	END=61948513;SVTYPE=DEL;SVLEN=-250;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.8224;PctRecOverlap=0;SizeDiff=-54;StartDistance=-2984;EndDistance=-3038;GTMatch=0;TruScore=27;MatchId=215.16,215.1	GT	0/1
+chr20	61970871	truth10927	G	<DEL>	.	PASS	END=61970933;SVTYPE=DEL;SVLEN=-62;CLASS=truth;MatchId=216.0,	GT	0/1
+chr20	61978201	truth10928	A	<DEL>	.	PASS	END=61978263;SVTYPE=DEL;SVLEN=-62;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=0;SizeDiff=0;StartDistance=-6471;EndDistance=-6471;GTMatch=0;TruScore=33;MatchId=217.0,217.1	GT	0/1
+chr20	62057603	truth10938	C	<DEL>	.	PASS	END=62058413;SVTYPE=DEL;SVLEN=-810;CLASS=truth;MatchId=219.0,	GT	0/1
+chr20	62058620	truth10939	C	<DEL>	.	PASS	END=62058695;SVTYPE=DEL;SVLEN=-75;CLASS=truth;MatchId=219.1,	GT	0/1
+chr20	62213051	truth10971	T	<DEL>	.	PASS	END=62213171;SVTYPE=DEL;SVLEN=-120;CLASS=truth;MatchId=220.0,	GT	0/1
+chr20	62231977	truth10977	G	<DEL>	.	PASS	END=62232015;SVTYPE=DEL;SVLEN=-38;CLASS=truth;MatchId=221.0,	GT	0/1
+chr20	62270414	truth10987	G	<DEL>	.	PASS	END=62270469;SVTYPE=DEL;SVLEN=-55;CLASS=truth;MatchId=222.0,	GT	0/1
+chr20	62270676	truth10989	C	<DEL>	.	PASS	END=62270827;SVTYPE=DEL;SVLEN=-151;CLASS=truth;MatchId=222.1,	GT	0/1
+chr20	62360411	truth11011	A	<DEL>	.	PASS	END=62360462;SVTYPE=DEL;SVLEN=-51;CLASS=truth;MatchId=223.0,	GT	0/1
+chr20	62360511	truth11014	A	<DEL>	.	PASS	END=62360546;SVTYPE=DEL;SVLEN=-35;CLASS=truth;MatchId=223.1,	GT	0/1
+chr20	62373504	truth11020	C	<DEL>	.	PASS	END=62373644;SVTYPE=DEL;SVLEN=-140;CLASS=truth;MatchId=224.0,	GT	0/1
+chr20	62417505	truth11026	A	<DEL>	.	PASS	END=62417558;SVTYPE=DEL;SVLEN=-53;CLASS=truth;MatchId=225.0,	GT	0/1
+chr20	62417853	truth11027	C	<DEL>	.	PASS	END=62417906;SVTYPE=DEL;SVLEN=-53;CLASS=truth;MatchId=225.1,	GT	0/1
+chr20	62509989	truth11039	T	<DEL>	.	PASS	END=62510035;SVTYPE=DEL;SVLEN=-46;CLASS=truth;MatchId=226.0,	GT	0/1
+chr20	62655309	truth11067	T	<DEL>	.	PASS	END=62655365;SVTYPE=DEL;SVLEN=-56;CLASS=truth;MatchId=228.0,	GT	0/1
+chr20	62758179	truth11084	G	<DEL>	.	PASS	END=62758217;SVTYPE=DEL;SVLEN=-38;CLASS=truth;MatchId=229.0,	GT	0/1
+chr20	62767647	truth11087	A	<DEL>	.	PASS	END=62767690;SVTYPE=DEL;SVLEN=-43;CLASS=truth;MatchId=230.0,	GT	0/1
+chr20	62824167	truth11100	C	<DEL>	.	PASS	END=62824221;SVTYPE=DEL;SVLEN=-54;CLASS=truth;MatchId=231.0,	GT	0/1
+chr20	62966030	truth11133	A	<DEL>	.	PASS	END=62966085;SVTYPE=DEL;SVLEN=-55;CLASS=truth;MatchId=232.0,	GT	0/1
+chr20	62990016	truth11143	C	<DEL>	.	PASS	END=62990055;SVTYPE=DEL;SVLEN=-39;CLASS=truth;MatchId=234.0,	GT	0/1
+chr20	62993616	truth11145	G	<DEL>	.	PASS	END=62993683;SVTYPE=DEL;SVLEN=-67;CLASS=truth;MatchId=234.1,	GT	0/1
+chr20	63028906	truth11150	A	<DEL>	.	PASS	END=63029030;SVTYPE=DEL;SVLEN=-124;CLASS=truth;MatchId=236.0,	GT	0/1
+chr20	63035143	truth11154	A	<DEL>	.	PASS	END=63035179;SVTYPE=DEL;SVLEN=-36;CLASS=truth;MatchId=237.0,	GT	0/1
+chr20	63045225	truth11158	C	<DEL>	.	PASS	END=63045304;SVTYPE=DEL;SVLEN=-79;CLASS=truth;MatchId=238.0,	GT	0/1
+chr20	63051208	truth11159	C	<DEL>	.	PASS	END=63051244;SVTYPE=DEL;SVLEN=-36;CLASS=truth;MatchId=239.0,	GT	0/1
+chr20	63084877	truth11168	G	<DEL>	.	PASS	END=63084919;SVTYPE=DEL;SVLEN=-42;CLASS=truth;MatchId=240.0,	GT	0/1
+chr20	63134754	truth11173	G	<DEL>	.	PASS	END=63134877;SVTYPE=DEL;SVLEN=-123;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.1937;PctRecOverlap=0.195;SizeDiff=-512;StartDistance=222;EndDistance=-290;GTMatch=0;TruScore=12;MatchId=242.2,242.0	GT	0/1
+chr20	63134754	truth11172	G	<DEL>	.	PASS	END=63134877;SVTYPE=DEL;SVLEN=-123;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.1937;PctRecOverlap=0.195;SizeDiff=-512;StartDistance=222;EndDistance=-290;GTMatch=0;TruScore=12;MatchId=242.1,242.0	GT	0/1
+chr20	63134923	truth11175	A	<DEL>	.	PASS	END=63135240;SVTYPE=DEL;SVLEN=-317;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.4992;PctRecOverlap=0.3852;SizeDiff=-318;StartDistance=391;EndDistance=73;GTMatch=0;TruScore=29;MatchId=242.4,242.0	GT	0/1
+chr20	63134923	truth11174	A	<DEL>	.	PASS	END=63135240;SVTYPE=DEL;SVLEN=-317;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.4992;PctRecOverlap=0.3852;SizeDiff=-318;StartDistance=391;EndDistance=73;GTMatch=0;TruScore=29;MatchId=242.3,242.0	GT	0/1
+chr20	63154688	truth11183	C	<DEL>	.	PASS	END=63154740;SVTYPE=DEL;SVLEN=-52;CLASS=truth;MatchId=243.0,	GT	0/1
+chr20	63156797	truth11185	C	<DEL>	.	PASS	END=63156949;SVTYPE=DEL;SVLEN=-152;CLASS=truth;MatchId=243.1,	GT	0/1
+chr20	63156797	truth11186	C	<DEL>	.	PASS	END=63156987;SVTYPE=DEL;SVLEN=-190;CLASS=truth;MatchId=243.2,	GT	0/1
+chr20	63220292	truth11196	G	<DEL>	.	PASS	END=63220367;SVTYPE=DEL;SVLEN=-75;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.5208;PctRecOverlap=0;SizeDiff=-69;StartDistance=-1218;EndDistance=-1287;GTMatch=0;TruScore=17;MatchId=244.0,244.0	GT	0/1
+chr20	63304190	truth11209	T	<DEL>	.	PASS	END=63304270;SVTYPE=DEL;SVLEN=-80;CLASS=truth;MatchId=246.0,	GT	0/1
+chr20	63314805	truth11212	C	<DEL>	.	PASS	END=63314857;SVTYPE=DEL;SVLEN=-52;CLASS=truth;MatchId=247.0,	GT	0/1
+chr20	63335316	truth11219	A	<DEL>	.	PASS	END=63335372;SVTYPE=DEL;SVLEN=-56;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.6747;PctRecOverlap=0.3095;SizeDiff=-27;StartDistance=-31;EndDistance=-58;GTMatch=0;TruScore=32;MatchId=248.0,248.0	GT	0/1
+chr20	63340338	truth11221	G	<DEL>	.	PASS	END=63340533;SVTYPE=DEL;SVLEN=-195;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.4256;PctRecOverlap=0;SizeDiff=112;StartDistance=4991;EndDistance=5103;GTMatch=0;TruScore=14;MatchId=248.2,248.0	GT	0/1
+chr20	63351169	truth11225	C	<DEL>	.	PASS	END=63351217;SVTYPE=DEL;SVLEN=-48;CLASS=truth;MatchId=249.0,	GT	0/1
+chr20	63351169	truth11226	C	<DEL>	.	PASS	END=63351217;SVTYPE=DEL;SVLEN=-48;CLASS=truth;MatchId=249.1,	GT	0/1
+chr20	63364753	truth11231	C	<DEL>	.	PASS	END=63364802;SVTYPE=DEL;SVLEN=-49;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.6125;PctRecOverlap=0;SizeDiff=-31;StartDistance=-1378;EndDistance=-1409;GTMatch=0;TruScore=20;MatchId=250.0,250.0	GT	0/1
+chr20	63372215	truth11234	C	<DEL>	.	PASS	END=63372400;SVTYPE=DEL;SVLEN=-185;CLASS=truth;MatchId=251.0,	GT	0/1
+chr20	63372252	truth11235	C	<DEL>	.	PASS	END=63372400;SVTYPE=DEL;SVLEN=-148;CLASS=truth;MatchId=251.1,	GT	0/1
+chr20	63372252	truth11236	C	<DEL>	.	PASS	END=63372400;SVTYPE=DEL;SVLEN=-148;CLASS=truth;MatchId=251.2,	GT	0/1
+chr20	63392630	truth11241	C	<DEL>	.	PASS	END=63392694;SVTYPE=DEL;SVLEN=-64;CLASS=truth;MatchId=252.0,	GT	0/1
+chr20	63402000	truth11242	A	<DEL>	.	PASS	END=63402059;SVTYPE=DEL;SVLEN=-59;CLASS=truth;MatchId=253.0,	GT	0/1
+chr20	63409752	truth11243	A	<DEL>	.	PASS	END=63409797;SVTYPE=DEL;SVLEN=-45;CLASS=truth;MatchId=254.0,	GT	0/1
+chr20	63415416	truth11246	G	<DEL>	.	PASS	END=63415457;SVTYPE=DEL;SVLEN=-41;CLASS=truth;MatchId=255.0,	GT	0/1
+chr20	63553558	truth11282	C	<DEL>	.	PASS	END=63553658;SVTYPE=DEL;SVLEN=-100;CLASS=truth;MatchId=256.0,	GT	0/1
+chr20	63559416	truth11283	A	<DEL>	.	PASS	END=63559676;SVTYPE=DEL;SVLEN=-260;CLASS=truth;MatchId=257.0,	GT	0/1
+chr20	63559437	truth11284	G	<DEL>	.	PASS	END=63559477;SVTYPE=DEL;SVLEN=-40;CLASS=truth;MatchId=257.1,	GT	0/1
+chr20	63559437	truth11285	G	<DEL>	.	PASS	END=63559477;SVTYPE=DEL;SVLEN=-40;CLASS=truth;MatchId=257.2,	GT	0/1
+chr20	63559641	truth11288	G	<DEL>	.	PASS	END=63559719;SVTYPE=DEL;SVLEN=-78;CLASS=truth;MatchId=257.3,	GT	0/1
+chr20	63559641	truth11289	G	<DEL>	.	PASS	END=63559719;SVTYPE=DEL;SVLEN=-78;CLASS=truth;MatchId=257.4,	GT	0/1
+chr20	63607268	truth11297	C	<DEL>	.	PASS	END=63607304;SVTYPE=DEL;SVLEN=-36;CLASS=truth;MatchId=258.0,	GT	0/1
+chr20	63607338	truth11299	T	<DEL>	.	PASS	END=63607712;SVTYPE=DEL;SVLEN=-374;CLASS=truth;MatchId=258.1,	GT	0/1
+chr20	63607338	truth11300	T	<DEL>	.	PASS	END=63607712;SVTYPE=DEL;SVLEN=-374;CLASS=truth;MatchId=258.2,	GT	0/1
+chr20	63607917	truth11309	T	<DEL>	.	PASS	END=63607952;SVTYPE=DEL;SVLEN=-35;CLASS=truth;MatchId=258.3,	GT	0/1
+chr20	63608216	truth11310	C	<DEL>	.	PASS	END=63608419;SVTYPE=DEL;SVLEN=-203;CLASS=truth;MatchId=258.4,	GT	0/1
+chr20	63608799	truth11320	C	<DEL>	.	PASS	END=63608834;SVTYPE=DEL;SVLEN=-35;CLASS=truth;MatchId=258.5,	GT	0/1
+chr20	63609029	truth11324	C	<DEL>	.	PASS	END=63609204;SVTYPE=DEL;SVLEN=-175;CLASS=truth;MatchId=258.6,	GT	0/1
+chr20	63609474	truth11335	T	<DEL>	.	PASS	END=63609709;SVTYPE=DEL;SVLEN=-235;CLASS=truth;MatchId=258.7,	GT	0/1
+chr20	63626356	truth11339	A	<DEL>	.	PASS	END=63626400;SVTYPE=DEL;SVLEN=-44;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.1767;PctRecOverlap=0.18;SizeDiff=-205;StartDistance=133;EndDistance=-72;GTMatch=0;TruScore=11;MatchId=259.0,259.0	GT	0/1
+chr20	63670100	truth11348	G	<DEL>	.	PASS	END=63670442;SVTYPE=DEL;SVLEN=-342;CLASS=truth;MatchId=261.0,	GT	0/1
+chr20	63677697	truth11353	G	<DEL>	.	PASS	END=63677844;SVTYPE=DEL;SVLEN=-147;CLASS=truth;MatchId=262.0,	GT	0/1
+chr20	63723447	truth11365	G	<DEL>	.	PASS	END=63723503;SVTYPE=DEL;SVLEN=-56;CLASS=truth;MatchId=263.0,	GT	0/1
+chr20	63731457	truth11372	G	<DEL>	.	PASS	END=63731561;SVTYPE=DEL;SVLEN=-104;CLASS=truth;MatchId=264.0,	GT	0/1
+chr20	63770937	truth11387	T	<DEL>	.	PASS	END=63771014;SVTYPE=DEL;SVLEN=-77;CLASS=truth;MatchId=265.0,	GT	0/1
+chr20	63880123	truth11416	T	<DEL>	.	PASS	END=63880243;SVTYPE=DEL;SVLEN=-120;CLASS=truth;MatchId=268.0,	GT	0/1
+chr20	63960740	truth11424	G	<DEL>	.	PASS	END=63960782;SVTYPE=DEL;SVLEN=-42;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.0364;PctRecOverlap=0;SizeDiff=-1111;StartDistance=-4156;EndDistance=-5267;GTMatch=0;TruScore=1;MatchId=269.0,269.0	GT	0/1
+chr20	63966021	truth11426	T	<DEL>	.	PASS	END=63966113;SVTYPE=DEL;SVLEN=-92;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.0798;PctRecOverlap=0.0251;SizeDiff=-1061;StartDistance=1125;EndDistance=64;GTMatch=0;TruScore=3;MatchId=269.2,269.0	GT	0/1
+chr20	64118524	truth11461	G	<DEL>	.	PASS	END=64118574;SVTYPE=DEL;SVLEN=-50;CLASS=truth;MatchId=270.0,	GT	0/1
+chr20	64125830	truth11469	T	<DEL>	.	PASS	END=64125866;SVTYPE=DEL;SVLEN=-36;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.6667;PctRecOverlap=0;SizeDiff=-18;StartDistance=-10606;EndDistance=-10624;GTMatch=0;TruScore=22;MatchId=271.0,271.1	GT	0/1
+chr20	64126754	truth11470	C	<DEL>	.	PASS	END=64126792;SVTYPE=DEL;SVLEN=-38;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.7037;PctRecOverlap=0;SizeDiff=-16;StartDistance=-9682;EndDistance=-9698;GTMatch=0;TruScore=23;MatchId=271.1,271.1	GT	0/1
+chr20	64127245	truth11471	C	<DEL>	.	PASS	END=64127815;SVTYPE=DEL;SVLEN=-570;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.9702;PctRecOverlap=0.9072;SizeDiff=17;StartDistance=-53;EndDistance=-36;GTMatch=0;TruScore=62;MatchId=271.2,271.0;Multi	GT	0/1
+chr20	64127305	truth11472	C	<DEL>	.	PASS	END=64127875;SVTYPE=DEL;SVLEN=-570;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.9702;PctRecOverlap=0.958;SizeDiff=17;StartDistance=7;EndDistance=24;GTMatch=0;TruScore=64;MatchId=271.3,271.0;Multi	GT	0/1
+chr20	64131401	truth11475	G	<DEL>	.	PASS	END=64131441;SVTYPE=DEL;SVLEN=-40;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.7407;PctRecOverlap=0;SizeDiff=-14;StartDistance=-5035;EndDistance=-5049;GTMatch=0;TruScore=24;MatchId=271.5,271.1	GT	0/1
+chr20	64135110	truth11485	A	<DEL>	.	PASS	END=64135242;SVTYPE=DEL;SVLEN=-132;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.4091;PctRecOverlap=0;SizeDiff=78;StartDistance=-1326;EndDistance=-1248;GTMatch=0;TruScore=13;MatchId=271.6,271.1	GT	0/1
+chr20	64135110	truth11486	A	<DEL>	.	PASS	END=64135308;SVTYPE=DEL;SVLEN=-198;CLASS=truth;PctSeqSimilarity=0;PctSizeSimilarity=0.358;PctRecOverlap=0;SizeDiff=-355;StartDistance=7812;EndDistance=7457;GTMatch=0;TruScore=11;MatchId=271.7,271.0	GT	0/1
+chr20	64158228	truth11500	C	<DEL>	.	PASS	END=64158323;SVTYPE=DEL;SVLEN=-95;CLASS=truth;MatchId=272.0,	GT	0/1
+chr20	64235172	truth11540	A	<DEL>	.	PASS	END=64235220;SVTYPE=DEL;SVLEN=-48;CLASS=truth;MatchId=273.0,	GT	0/1

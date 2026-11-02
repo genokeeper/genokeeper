@@ -1,0 +1,23 @@
+name: Feature request
+description: A result, an input format or a tool you would like genokeeper to support.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: want
+    attributes:
+      label: What you would like
+      description: What you want to learn or do, and why the current results do not cover it.
+    validations:
+      required: true
+  - type: textarea
+    id: sources
+    attributes:
+      label: Tools, data or publications
+      description: An open-source tool, a public dataset or a guideline that would back it, with its licence if you know it.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy
+      options:
+        - label: This request contains no personal genome data.
+          required: true

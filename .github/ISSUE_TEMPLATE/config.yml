@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security or privacy problem
+    url: https://github.com/genokeeper/genokeeper/security/advisories/new
+    about: A way for genome data to leave the machine, a way past the genome-data guard, or anything else in SECURITY.md. Reported privately.

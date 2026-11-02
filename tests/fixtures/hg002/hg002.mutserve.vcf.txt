@@ -1,0 +1,25 @@
+##fileformat=VCFv4.2
+##FILTER=<ID=PASS,Description="Variants passed mtDNA-Server">
+##FORMAT=<ID=AF,Number=1,Type=String,Description="Inferred Allele Frequency of top (non-reference) allele">
+##FORMAT=<ID=BQ,Number=1,Type=String,Description="Mean Base Quality of ALT Allele">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##Mutserve=v2.0.3
+##contig=<ID=chrM,length=16569>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	HG002
+chrM	263	.	A	G	.	PASS	.	GT:AF:BQ:DP	1:0.998:36.05:14334
+chrM	302	.	A	C	.	PASS	.	GT:AF:BQ:DP	0/1:0.009:35.25:12843
+chrM	310	.	T	C	.	PASS	.	GT:AF:BQ:DP	1/0:0.908:36.25:12616
+chrM	456	.	C	T	.	PASS	.	GT:AF:BQ:DP	1:0.999:36.76:15015
+chrM	750	.	A	G	.	PASS	.	GT:AF:BQ:DP	1:1.00:36.85:17866
+chrM	1438	.	A	G	.	PASS	.	GT:AF:BQ:DP	1:0.999:36.99:18061
+chrM	3107	.	N	C,T	.	PASS	.	GT:AF:BQ:DP	1/2:0.59,0.53:37.47:400
+chrM	4336	.	T	C	.	PASS	.	GT:AF:BQ:DP	1:1.00:36.97:19852
+chrM	4769	.	A	G	.	PASS	.	GT:AF:BQ:DP	1:0.999:36.97:14753
+chrM	6210	.	T	C	.	PASS	.	GT:AF:BQ:DP	0/1:0.019:37.32:15803
+chrM	6800	.	A	G	.	PASS	.	GT:AF:BQ:DP	1:0.999:36.91:15496
+chrM	8557	.	G	A	.	PASS	.	GT:AF:BQ:DP	1:0.999:36.19:21558
+chrM	8860	.	A	G	.	PASS	.	GT:AF:BQ:DP	1:0.999:36.49:17161
+chrM	15175	.	C	T	.	PASS	.	GT:AF:BQ:DP	1:1.00:36.95:19146
+chrM	15326	.	A	G	.	PASS	.	GT:AF:BQ:DP	1:0.999:36.40:18345
+chrM	16304	.	T	C	.	PASS	.	GT:AF:BQ:DP	1:0.998:36.77:19262

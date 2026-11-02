@@ -1,0 +1,38 @@
+# Weekly updates, grouped so each ecosystem opens at most one pull request a week.
+#
+# The tool images under docker/ never move through Dependabot. Their pins are compiled lock files
+# (`docker/*.requirements.txt`); an image's name is the digest of those files
+# (src/genokeeper/containers.py, checked by tests/test_containers.py), and that name is part of
+# the pipeline's step cache keys, so a bump re-runs steps and invalidates the calibration measured
+# with the old tools. They move by hand, in a reviewed pull request that re-measures what changed.
+# Their vulnerability alerts still show on the Security tab; the images run with --network none
+# on local files only.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+  - package-ecosystem: uv
+    directory: /
+    exclude-paths:
+      - "docker/**"
+    schedule:
+      interval: weekly
+    groups:
+      python:
+        patterns: ["*"]
+    ignore:
+      # A new major DuckDB may change the store's file format; it moves by hand.
+      - dependency-name: duckdb
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: pip
+    directory: /docker
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    ignore:
+      - dependency-name: "*"

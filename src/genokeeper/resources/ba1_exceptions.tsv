@@ -1,0 +1,16 @@
+# source: Ghosh R, Harrison SM, Rehm HL, Plon SE, Biesecker LG; ClinGen Sequence Variant Interpretation Working Group. Updated recommendation for the benign stand-alone ACMG/AMP criterion. Hum Mutat 2018;39(11):1525-1530. PMID 30311383, doi:10.1002/humu.23642; the exception table (Table 1 in the PMC copy, PMC6188666), accessed 2026-10-19
+# source: ClinGen SVI "BA1 Exception List", https://clinicalgenome.org/docs/ba1-exception-list/ (dated 2018-07-30, the list ClinGen still publishes), accessed 2026-10-19; it lists the same nine variants as the paper
+# version: 2018-07-30
+# vid: each variant's record in ClinVar's GRCh38 VCF of 2026-10-11 (https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz), found by the ClinVar variation ID the table gives; every REF checked against GRCh38 (NCBI nuccore)
+# normalised: bcftools norm -m -both leaves each record as it is (biallelic); the eight SNVs cannot move, and ACAD9's insertion of TAAG after C cannot shift left (C is not G)
+# hgvs: as the table writes it; ClinVar's current names use newer transcripts (BTD D444H is NM_001370658.1:c.1270G>C p.Asp424His there)
+vid	gene	hgvs	source
+GRCh38:chr3:128879647:C:CTAAG	ACAD9	NM_014049.4:c.-44_-41dupTAAG	Ghosh2018;ClinGen;ClinVar:1018
+GRCh38:chr13:20189473:C:T	GJB2	NM_004004.5:c.109G>A (p.Val37Ile)	Ghosh2018;ClinGen;ClinVar:17023
+GRCh38:chr6:26090951:C:G	HFE	NM_000410.3:c.187C>G (p.His63Asp)	Ghosh2018;ClinGen;ClinVar:10
+GRCh38:chr6:26092913:G:A	HFE	NM_000410.3:c.845G>A (p.Cys282Tyr)	Ghosh2018;ClinGen;ClinVar:9
+GRCh38:chr16:3249586:G:A	MEFV	NM_000243.2:c.1105C>T (p.Pro369Ser)	Ghosh2018;ClinGen;ClinVar:2551
+GRCh38:chr16:3249468:C:T	MEFV	NM_000243.2:c.1223G>A (p.Arg408Gln)	Ghosh2018;ClinGen;ClinVar:2552
+GRCh38:chr13:72835359:G:A	PIBF1	NM_006346.2:c.1214G>A (p.Arg405Gln)	Ghosh2018;ClinGen;ClinVar:217689
+GRCh38:chr12:120737875:C:T	ACADS	NM_000017.3:c.511C>T (p.Arg171Trp)	Ghosh2018;ClinGen;ClinVar:3830
+GRCh38:chr3:15645186:G:C	BTD	NM_000060.4:c.1330G>C (p.Asp444His)	Ghosh2018;ClinGen;ClinVar:1900

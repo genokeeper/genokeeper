@@ -1,0 +1,473 @@
+# Grading thresholds (stage 1 design, "Grading").
+# Read by genokeeper.config.load_grading; an unknown section or key is an error.
+
+[reliability]
+# Display level from p_wrong, the error rate measured on HG003 for the call's cell (stage 2b;
+# DeepVariant's own 10^(-GQ/10) outside the calibrated regions): high when p_wrong <= p_high
+# and no difficult-region flag; low when p_wrong > p_low, on a haploid-contig het or on a
+# NoCall; medium otherwise.
+p_high = 1e-3
+p_low = 1e-2
+# Depth warnings: DP below min_dp, or above max_dp_factor x the chromosome's median depth
+# (spec: depth thresholds use per-chromosome medians).
+min_dp = 10
+max_dp_factor = 2.0
+
+[par]
+# GRCh38 pseudoautosomal regions, 1-based inclusive: GRC's GRCh38 PAR1 and PAR2, the outer
+# bounds of GIAB v3.6 XY/GRCh38_chrX_PAR.bed.gz and XY/GRCh38_chrY_PAR.bed.gz (0-based there).
+chrX = [[10001, 2781479], [155701383, 156030895]]
+chrY = [[10001, 2781479], [56887903, 57217415]]
+
+[frequency]
+# A gnomAD grpmax filtering allele frequency above BA1/BS1 marks a ClinVar claim conflicting.
+# BA1: the ACMG/AMP stand-alone benign threshold (ClinGen SVI, Ghosh et al. 2018).
+ba1 = 0.05
+# Fallback BS1 for genes missing from [bs1_by_gene]. Johnston & Biesecker 2025
+# (https://pmc.ncbi.nlm.nih.gov/articles/PMC12458940/) gives no single default BS1: it sets BS1
+# to each disease entity's disease allele frequency threshold (DAFT), says those values must not
+# be used for other diseases, and lists them per gene (below); 0.01 is above every value there.
+# Design decision of 2026-10-19 (findings track design, A2): an
+# autosomal recessive gene outside [bs1_by_gene] gets no BS1, only BA1 (carriers are healthy,
+# so a pathogenic allele can be common: CFTR F508del, HFE C282Y); every other gene outside it,
+# X-linked and unknown inheritance included, uses this value. An allele on the ClinGen BA1
+# exception list (src/genokeeper/resources/ba1_exceptions.tsv) is exempt from BA1 and BS1.
+bs1 = 0.01
+
+[bs1_by_gene]
+# BS1 per ACMG SF gene, as an allele-frequency fraction, from Johnston & Biesecker 2025
+# (bioRxiv 10.1101/2025.09.19.676605, PMC12458940), Tables 1-3, read 2026-10-18.
+# Grading.bs1_for(gene, *, autosomal_recessive=False) returns the gene's value; else None
+# when autosomal_recessive (no BS1), else [frequency] bs1. A value here applies whatever the
+# gene's inheritance. Table 1's VCEP footnote a applies: some VCEPs also set BS1_supporting
+# or extra rules (ClinGen CSpec registry).
+# Table 1: values set by ClinGen Variant Curation Expert Panels.
+ABCD1 = 0.000017  # preliminary VCEP specification, not yet approved
+ACTC1 = 0.0001
+ACVRL1 = 0.002
+APC = 0.00001
+APOB = 0.002  # preliminary VCEP specification, not yet approved
+BMPR1A = 0.000001  # preliminary VCEP specification, not yet approved
+BRCA1 = 0.0001
+BRCA2 = 0.0001
+CYP27A1 = 0.00076  # preliminary VCEP specification, not yet approved
+ENG = 0.002
+FBN1 = 0.00005
+GAA = 0.005
+HNF1A = 0.000033
+KCNQ1 = 0.0004
+LDLR = 0.002
+MLH1 = 0.0001
+MSH2 = 0.0001
+MSH6 = 0.00022
+MUTYH = 0.00105  # preliminary VCEP specification, not yet approved
+MYBPC3 = 0.0002
+MYH7 = 0.0001
+MYL2 = 0.0001
+MYL3 = 0.0001
+OTC = 0.002  # preliminary VCEP specification, not yet approved
+PALB2 = 0.0001
+PCSK9 = 0.0001  # preliminary VCEP specification, not yet approved
+PMS2 = 0.0001
+PTEN = 0.000043
+RPE65 = 0.0008
+RYR1 = 0.0008
+SMAD4 = 0.000001  # preliminary VCEP specification, not yet approved
+TNNI3 = 0.0001
+TNNT2 = 0.0001
+TP53 = 0.0003
+TPM1 = 0.0001
+VHL = 0.0000156
+# Table 2: calculated (BS1 = DAFT) for genes with one SF disease entity.
+ACTA2 = 0.000042
+ATP7B = 0.005774
+BAG3 = 0.000195
+BTD = 0.005726
+CACNA1S = 0.000050
+CASQ2 = 0.002236
+COL3A1 = 0.000020
+DES = 0.000065
+DSC2 = 0.000033
+DSG2 = 0.000433
+KCNH2 = 0.000122
+LMNA = 0.000328
+MAX = 0.000032
+MEN1 = 0.000095
+MYH11 = 0.000002
+NF2 = 0.000010
+PKP2 = 0.000767
+PRKAG2 = 0.000010
+RB1 = 0.000053
+RBM20 = 0.000130
+RET = 0.000029
+RYR2 = 0.000047
+SDHAF2 = 0.000008
+SDHB = 0.000200
+SDHC = 0.000040
+SDHD = 0.000100
+SMAD3 = 0.000004
+STK11 = 0.000020
+TGFBR1 = 0.000002
+TGFBR2 = 0.000010
+TMEM127 = 0.000040
+TMEM43 = 0.000005
+TNNC1 = 0.000065
+TSC1 = 0.000022
+TSC2 = 0.000059
+TTN = 0.001299
+TTR = 0.001859
+WT1 = 0.000003
+# Table 3: calculated for genes with several SF disease entities. Each value is the table's
+# COMBINED row for the gene (the entity DAFTs summed; SCN5A: Brugada + DCM), which is also
+# the most conservative (highest) number the table gives for that gene.
+CALM1 = 0.000006
+CALM2 = 0.000006
+CALM3 = 0.000006
+DSP = 0.000780
+FLNC = 0.000286
+GLA = 0.000363
+PLN = 0.000142
+SCN5A = 0.00103
+TRDN = 0.004756
+
+[strata]
+# Context flag -> GIAB genome stratifications v3.6 GRCh38 BED file name
+# (https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/genome-stratifications/v3.6/GRCh38@all/).
+low_complexity = "GRCh38_AllTandemRepeatsandHomopolymers_slop5.bed.gz"
+segdup = "GRCh38_segdups.bed.gz"
+low_mappability = "GRCh38_lowmappabilityall.bed.gz"
+mhc = "GRCh38_MHC.bed.gz"
+kir = "GRCh38_KIR.bed.gz"
+vdj = "GRCh38_VDJ.bed.gz"
+difficult = "GRCh38_alldifficultregions.bed.gz"
+
+[qc]
+# The stage 2 QC gate (genokeeper.qc): a sample outside any value refuses the run before
+# calling, naming the metric. Every key is required. Sources, read 2026-10-19:
+#   MGI    Marshall et al. 2020, "Best practices for the analytical validation of clinical
+#          whole-genome sequencing", npj Genomic Medicine 5:47 (PMC7585436), Table 3;
+#   gnomAD the gnomAD v2 genome hard filters (gnomad.broadinstitute.org/news/2017-02-the-
+#          genome-aggregation-database), kept in v3;
+#   GEL    Genomics England aggV2 sample QC (re-docs.genomicsengland.co.uk/sample_qc);
+#   VBID   the VerifyBamID documentation (genome.sph.umich.edu/wiki/VerifyBamID);
+#   Zook   Zook et al. 2014, Nat Biotechnol 32:246 (arXiv 1307.4661): genome-wide Ti/Tv
+#          2.04-2.14.
+# Mean depth (mosdepth) over non-gap autosomes: gnomAD drops genomes below 15x. MGI's clinical
+# cut-off is 30x, which a delivered "30x" may miss by a little; that is not a refusal here.
+min_mean_depth = 15.0
+# Reads below this MAPQ do not count towards depth (MGI Table 3 footnote d: MQ 20).
+depth_mapq = 20
+# Share of non-gap autosomal bases at 20x or more. MGI's clinical cut-off is 90% (20x% >= 90%);
+# as for mean depth above, a delivered 30x may miss it by a little and that is not a refusal:
+# the gate refuses failed samples, and every call is still graded on its own depth.
+min_fraction_20x = 0.80
+# samtools stats: mapped reads over all primary reads (MGI: PF reads aligned > 98%).
+min_mapped_fraction = 0.98
+# samtools stats: duplicate-marked over mapped reads (MGI: duplication < 10%).
+max_duplicate_fraction = 0.10
+# samtools stats: median insert size in bp (gnomAD and GEL: 250).
+min_median_insert = 250.0
+# VerifyBamID2 FREEMIX (VBID: >= 0.03 "possibly contaminated"; GEL: < 0.03).
+max_freemix = 0.03
+# bcftools stats on PASS SNVs, after calling: Ti/Tv around Zook's 2.04-2.14 (the margins are
+# the builder's call) and the het/hom ratio below GEL's 3.
+min_titv = 1.9
+max_titv = 2.3
+max_het_hom = 3.0
+
+[sex]
+# Sex (genokeeper.sex) from mosdepth depth at MAPQ >= mapq over chrX's mappable non-PAR region
+# and chrY's X-degenerate region, each divided by the depth over the mappable autosomes: one
+# copy against two autosomal copies gives about 0.5 (spec, stage 2a "Sex"). Since slice 3c the
+# X copy count decides the sex used for calling ([dosage]): one X is male, two female, and a
+# ratio between refuses and asks for --sex.
+mapq = 30
+
+[mito]
+# chrM from mutserve (genokeeper.mito): a variant at this heteroplasmy level or above is
+# homoplasmic, the whole of the user's mitochondria; below it, a heteroplasmy, carried at its
+# level and graded low. mutserve itself reports levels from 0.01 (its --level). 0.9 is the
+# track plan's value and the builder's call; slice 1b (MT-RNR1) and slice 1d (the haplogroup)
+# read only calls at or above it as homoplasmic.
+min_homoplasmy = 0.9
+# A chrM claim's allele carried below this level is genotype unknown, its level kept, so a
+# would-be finding is unassessed (slice 3f): NUMT reads and contamination give false
+# heteroplasmies at a few percent. The run's floor is the larger of this and the 3f
+# calibration table's measured floor; at least 0.02 and below min_homoplasmy. MT-RNR1 and
+# the haplogroup keep min_homoplasmy. 0.10 is the closing design's value.
+heteroplasmy_floor = 0.10
+
+[hhv6]
+# Inherited chromosomally integrated HHV-6 (slice 3f, genokeeper.hhv6): the viral mean depth
+# over each genome's unique region (between its direct repeats) divided by the haploid human
+# depth (the run's mean depth / 2). One integrated copy per cell is a ratio of 1. The trio
+# offers no positive, so the band is arithmetic: a ratio from min_ratio to max_ratio is a
+# finding, carrying the "information, not calibrated" note. The calibration measures the
+# background: the highest ratio over its libraries times background_factor is the ceiling
+# below which a ratio is a non-finding; between the ceiling and the band needs a ddPCR test.
+min_ratio = 0.5
+max_ratio = 1.5
+background_factor = 3.0
+
+[roh]
+# Runs of homozygosity (slice 3f, genokeeper.roh): `bcftools roh -G30 --AF-file` on our
+# genotypes at the AF file's alleles. Runs of min_run bp or more are summed and counted; a
+# single run of isodisomy_min bp or more may suggest isodisomy (the closing design).
+min_run = 5000000
+isodisomy_min = 10000000
+
+[predicted]
+# Slice 1e (genokeeper.evidence.predicted): variants ClinVar has not classified. A missense in a
+# listed gene is a finding at validity limited from a score at or above its tool's ClinGen
+# calibration; one tool per variant (ClinGen SVI: no combining of predictors), REVEL first,
+# AlphaMissense where REVEL has no score. The PP3_Moderate thresholds are the builder's call
+# (Supporting would make a finding of evidence ClinGen weighs at 1 point of 10):
+# - REVEL >= 0.773: PP3_Moderate in Pejaver et al. 2022, "Calibration of computational tools
+#   for missense variant pathogenicity classification and ClinGen recommendations for
+#   PP3/BP4 criteria", Am J Hum Genet 109:2163 (PMC9748256) (Supporting 0.644, Strong
+#   0.932);
+# - AlphaMissense >= 0.906: PP3_Moderate in Bergquist et al. 2025, "Calibration of additional
+#   computational tools expands ClinGen recommendation options for variant classification
+#   with PP3/BP4 criteria", Genet Med 27:101402 (bioRxiv 10.1101/2024.09.17.611902, read
+#   2026-10-23) (Supporting 0.792, Strong 0.990).
+revel = 0.773
+alphamissense = 0.906
+# SpliceAI's largest delta score at or above this predicts a splice change: the track
+# design's 0.2, Jaganathan et al. 2019's high-recall cut-off and ClinGen SVI's PP3 value for
+# splicing (Walker et al. 2023, Am J Hum Genet 110:1046).
+spliceai = 0.2
+# The LoF filter (design decision, 2026-10-23): gate 5's gnomAD v4.1 base-level pext, as a
+# fraction of the gene's largest, and gate 1's homopolymer length in bases.
+min_pext = 0.5
+homopolymer = 6
+
+[repeats]
+# Slice 3a (genokeeper.sources.repeats): an allele carries a finding only with at least this
+# many spanning, flanking and in-repeat reads together. Set from the stage 3 calibration of
+# 2026-10-28 (`genokeeper calibrate --stage3`, catalog 57789eab): the fewest reads behind
+# any of HG002's alleles on its two libraries, ATXN7's two on the PCR-free one (4 each).
+min_allele_reads = 4
+
+[repeat_loci]
+# STRchive v2.28.0, its STRchive-loci.json, read 2026-10-24: per gene the catalog ids, the
+# motif and chromosome, `normal_max` (benign max), the `intermediate` and `reduced_penetrance`
+# ranges (inclusive; absent where STRchive has none), `pathogenic_min`, STRchive's `evidence`
+# and the dashboard topic (FXN: carrier). A count between two ranges is borderline (AR 35,
+# ATXN7 36). One override: STRchive's HTT pathogenic minimum is 36; this design keeps 36-39 as
+# reduced penetrance (a watch) and 40 as the finding minimum. The catalog ids, regions and
+# motifs are Illumina's ExpansionHunter v5.0.0 GRCh38 catalog's (design decision, 2026-10-28:
+# STRchive's regions are locus bounds that carry part of a unit, and ExpansionHunter counted
+# HG002 one repeat high at six loci on them), each motif in its region's phase. `variant_id`
+# is the VARID ExpansionHunter writes for the repeat the thresholds count: the entry's
+# `VariantId` for a locus of several repeats (HTT, ATXN7, FXN), else its LocusId.
+HTT = { locus_id = "HTT", variant_id = "HTT", chrom = "chr4", motif = "CAG", normal_max = 26, intermediate = [27, 35], reduced_penetrance = [36, 39], pathogenic_min = 40, evidence = "Definitive", topic = "risks", note = "intermediate may expand when passed on by a father" }
+AR = { locus_id = "AR", variant_id = "AR", chrom = "chrX", motif = "GCA", normal_max = 34, reduced_penetrance = [36, 37], pathogenic_min = 38, evidence = "Definitive", topic = "risks" }
+DMPK = { locus_id = "DMPK", variant_id = "DMPK", chrom = "chr19", motif = "CAG", normal_max = 34, intermediate = [35, 49], pathogenic_min = 50, evidence = "Definitive", topic = "risks", note = "35-49 is a premutation" }
+C9orf72 = { locus_id = "C9ORF72", variant_id = "C9ORF72", chrom = "chr9", motif = "GGCCCC", normal_max = 23, intermediate = [24, 30], pathogenic_min = 31, evidence = "Definitive", topic = "risks" }
+ATXN1 = { locus_id = "ATXN1", variant_id = "ATXN1", chrom = "chr6", motif = "TGC", normal_max = 35, intermediate = [36, 38], pathogenic_min = 39, evidence = "Definitive", topic = "risks", note = "interruption status unknown" }
+ATXN2 = { locus_id = "ATXN2", variant_id = "ATXN2", chrom = "chr12", motif = "GCT", normal_max = 28, intermediate = [29, 34], pathogenic_min = 35, evidence = "Definitive", topic = "risks", note = "interruption status unknown" }
+ATXN3 = { locus_id = "ATXN3", variant_id = "ATXN3", chrom = "chr14", motif = "GCT", normal_max = 44, intermediate = [45, 59], pathogenic_min = 60, evidence = "Definitive", topic = "risks" }
+ATXN7 = { locus_id = "ATXN7", variant_id = "ATXN7", chrom = "chr3", motif = "GCA", normal_max = 27, intermediate = [28, 35], pathogenic_min = 37, evidence = "Definitive", topic = "risks" }
+CACNA1A = { locus_id = "CACNA1A", variant_id = "CACNA1A", chrom = "chr19", motif = "CTG", normal_max = 18, intermediate = [19, 20], pathogenic_min = 21, evidence = "Definitive", topic = "risks" }
+ATN1 = { locus_id = "ATN1", variant_id = "ATN1", chrom = "chr12", motif = "CAG", normal_max = 35, intermediate = [36, 47], pathogenic_min = 48, evidence = "Definitive", topic = "risks" }
+FXN = { locus_id = "FXN", variant_id = "FXN", chrom = "chr9", motif = "GAA", normal_max = 33, intermediate = [34, 55], pathogenic_min = 56, evidence = "Definitive", topic = "carrier" }
+# Slice 3e: thirteen loci from STRchive v2.28.0 (STRchive-loci-v2.28.0.json, sha256
+# 16301ecb00239f0e3c684913aefc2f48c6f5a7c2a481958aab4db55d282bca86, read 2026-10-30), the
+# catalog's regions per resources/repeats/SOURCE.md. `rule` grades the locus (absent:
+# standard, 3a's): `exclusion` says "normal" only from two distinct alleles read across in
+# full, else unassessed or a "possible" finding; `x_linked` is that by the run's X dosage
+# and never a finding; `distinct` (FGF14, whose expansions are beyond the read) never a
+# finding. `validity` overrides the evidence's mapping (TCF4: the expansion is a risk
+# factor, not a cause). `recessive_at`: both alleles from it to below `pathogenic_min` are a
+# possible recessive finding (PABPN1 11/11). ATXN10's intermediate is STRchive's 33-850 cut
+# to 33-799, below its own pathogenic minimum of 800. THAP11 has no intermediate range.
+TCF4 = { locus_id = "TCF4", variant_id = "TCF4", chrom = "chr18", motif = "CAG", normal_max = 39, intermediate = [40, 50], pathogenic_min = 51, evidence = "Definitive", topic = "risks", validity = "limited" }
+PABPN1 = { locus_id = "PABPN1", variant_id = "PABPN1", chrom = "chr14", motif = "GCN", normal_max = 10, intermediate = [11, 11], pathogenic_min = 12, evidence = "Definitive", topic = "risks", recessive_at = 11, note = "11 is a modifier allele, or recessive OPMD on both copies" }
+FMR1 = { locus_id = "FMR1", variant_id = "FMR1", chrom = "chrX", motif = "CGG", normal_max = 44, intermediate = [45, 200], pathogenic_min = 201, evidence = "Definitive", topic = "carrier", rule = "x_linked" }
+AFF2 = { locus_id = "AFF2", variant_id = "AFF2", chrom = "chrX", motif = "GCC", normal_max = 39, intermediate = [40, 200], pathogenic_min = 201, evidence = "Definitive", topic = "carrier", rule = "x_linked" }
+CNBP = { locus_id = "CNBP", variant_id = "CNBP", chrom = "chr3", motif = "CAGG", normal_max = 26, intermediate = [27, 74], pathogenic_min = 75, evidence = "Definitive", topic = "risks", rule = "exclusion" }
+ATXN10 = { locus_id = "ATXN10", variant_id = "ATXN10", chrom = "chr22", motif = "ATTCT", normal_max = 32, intermediate = [33, 799], pathogenic_min = 800, evidence = "Definitive", topic = "risks", rule = "exclusion" }
+NOP56 = { locus_id = "NOP56", variant_id = "NOP56", chrom = "chr20", motif = "GGCCTG", normal_max = 14, intermediate = [15, 649], pathogenic_min = 650, evidence = "Definitive", topic = "risks", rule = "exclusion" }
+PPP2R2B = { locus_id = "PPP2R2B", variant_id = "PPP2R2B", chrom = "chr5", motif = "GCT", normal_max = 32, intermediate = [40, 49], pathogenic_min = 51, evidence = "Moderate", topic = "risks", rule = "exclusion" }
+JPH3 = { locus_id = "JPH3", variant_id = "JPH3", chrom = "chr16", motif = "CTG", normal_max = 28, intermediate = [29, 39], pathogenic_min = 40, evidence = "Definitive", topic = "risks", rule = "exclusion" }
+ZFHX3 = { locus_id = "ZFHX3", variant_id = "ZFHX3", chrom = "chr16", motif = "CCG", normal_max = 26, intermediate = [27, 45], pathogenic_min = 46, evidence = "Definitive", topic = "risks", rule = "exclusion" }
+THAP11 = { locus_id = "THAP11", variant_id = "THAP11", chrom = "chr16", motif = "CAG", normal_max = 38, pathogenic_min = 45, evidence = "Definitive", topic = "risks", rule = "exclusion" }
+TBP = { locus_id = "TBP", variant_id = "TBP", chrom = "chr6", motif = "GCA", normal_max = 40, intermediate = [41, 48], pathogenic_min = 49, evidence = "Definitive", topic = "risks", rule = "exclusion" }
+FGF14 = { locus_id = "FGF14", variant_id = "FGF14", chrom = "chr13", motif = "AAG", normal_max = 179, intermediate = [180, 319], pathogenic_min = 320, evidence = "Definitive", topic = "risks", rule = "distinct" }
+
+[exclusion]
+# Slice 3e (genokeeper.sources.repeats.excluded): the spanning reads every allele of a
+# non-standard locus needs before it is called normal; at least 3, a floor in code.
+min_spanning = 3
+
+[smn]
+# Slice 3a (genokeeper.sources.smn): Parascopy's SMN1 call counts only when it passed its
+# filters at this quality or above; below it the call is unusable and SMN1 is unassessed.
+# The value is the builder's call.
+min_parascopy_qual = 20
+
+[yleaf]
+# Slice 3a (genokeeper.sources.yleaf): Yleaf's QC-score is the share of the path's markers in a
+# consistent state. Below this no Y haplogroup is stated (the mitochondrial haplogroup's
+# analogue, MAX_UNCOVERED). The builder's value, kept on 2026-10-28: HG002's two
+# libraries both score 1.0 (J-C134621, about 170,000 valid markers each), the scale's top, so
+# the calibration gives no lower bound, and 1.0 would drop a haplogroup over one marker.
+min_qc_score = 0.95
+
+[deletions]
+# Slice 3b (genokeeper.deletions.screen): deletions of min_length bp or more over an exon
+# (+/- exon_margin) of an ACMG SF or carrier Tier 3 gene, called by DELLY and/or Dysgu. Only
+# three filters cut (under min_length, no listed exon, common in gnomAD-SV); every other
+# feature is a call class with its own chance of being false (design decision 5, 2026-10-27).
+# The screen starts where DeepVariant's reach ends (design decision 4, 2026-10-27).
+min_length = 50
+# The long band starts here (design decision 4): in HG002 v5.0q, 77% of the clean 50-999 bp
+# deletions have an end in a tandem repeat against 32% of those of 1 kb or more, so the
+# repeat class is read only in the short band.
+long_from = 1000
+# bp each side of every MANE exon. No current CNV or SV standard gives a base-pair margin
+# (Riggs et al., Genet Med 2020, PMC7313390); 20 bp is the smallest that covers ClinGen
+# SVI's splice region (Walker et al., AJHG 2023, PMC10357475: donor +3..+6, acceptor
+# -3..-20), beside the +/-10 and +/-15 bp flanks of two clinical panels (PMC13605360,
+# PMC13544127). Breakpoint imprecision is not the margin's job.
+exon_margin = 20
+# Common in gnomAD-SV v4.1 (design decision 2, 2026-10-27): a PASS SVTYPE=DEL record with AN
+# at least min_gnomad_an, reciprocal overlap at least min_reciprocal_overlap and overall AF
+# above max_gnomad_af. ClinGen's Dosage Sensitivity SOP v2.0 (May 2026) calls a CNV common
+# at 1% "or greater (with at least 2000 alleles tested)"; 1% is also ACMG/ClinGen rule 4O
+# (Riggs et al., above) and AnnotSV v3.5.10's and Exomiser 15.1.0's default, both on overall
+# AF. Reciprocal overlap 0.5 is the CNV convention (Rao et al., BMC Genomics 2025,
+# PMC11938577) and tolerates gnomAD-SV's imprecise breakpoints.
+max_gnomad_af = 0.01
+min_gnomad_an = 2000
+min_reciprocal_overlap = 0.5
+# Read depth supports a deletion when DELLY's inside read count over its two flanks' is
+# below this: duphold's DHFFC test (design decision 5) without duphold, unmaintained since
+# 2020 and without an arm64 build.
+max_depth_ratio = 0.7
+# A shown deletion is "likely present" when its class's chance of being false is below
+# this, so its chance of being true above 0.9, else "possible" (design decision, 2026-10-27;
+# the plan's wording constraint; 0.1 since the final PR review, 2026-10-29). A wording rule:
+# the deletion table's versions leave it out (`deletion_versions`).
+likely_below = 0.1
+
+[identity]
+# Slice 3c (genokeeper.sample_identity): before grading, the run's genotypes are compared with
+# the delivered 23andMe-format file (`*.txt`, not `*.vc.txt`, in data/raw) at the GWAS panel's
+# autosomal biallelic SNVs both hold, joined by rsID, A/T and C/G SNPs skipped (the closing
+# design, "Sample identity"; the slice 3c plan's Decisions). Two independent pipelines on the
+# same person agree above 0.99 (R6 §9); a swap between unrelated people agrees at about
+# 0.5-0.7. Below min_concordance the run refuses ("the FASTQ does not match the delivered
+# genotypes"). With fewer than min_compared SNPs compared the run records "identity not
+# checked" and goes on: 1,000 SNPs put a 95% interval of about +/-0.01 around 0.98. The
+# delivered genotypes come from the same reads, so this catches a FASTQ mix-up, not a lab's
+# sample swap.
+min_concordance = 0.98
+min_compared = 1000
+
+[coverage]
+# Slice 3c (genokeeper.coverage): per gene, the share of its MANE v1.5 CDS (+/- cds_margin bp)
+# covered at MAPQ >= mapq by at least min_depth_per_copy reads per expected copy (mosdepth),
+# over the ACMG SF v3.3 and carrier Tier 3 genes, the stage-3 genes and CBS, KCNE1, CRYAA and
+# U2AF1. Marshall et al. 2020 (best practices for clinical WGS validation) count a base
+# callable at MQ 20 and 20x, a diploid's depth: so 10x per copy, 20x on the autosomes, the
+# PARs and a female's X, and 10x on a male's chrX outside the PARs and on chrY (R6 §9; a
+# male's X sits near half the autosomal mean depth). cds_margin takes in the canonical splice-site bases
+# beside each CDS block (the slice 3c plan's Decisions).
+mapq = 20
+min_depth_per_copy = 10
+cds_margin = 2
+# Below this callable share a gene's "no finding" answers read "not reliably assessed" (the
+# closing design's 0.95), unless a stage-3 source owns the gene.
+min_callable = 0.95
+
+[dosage]
+# Slice 3c (genokeeper.sex, genokeeper.sources.dosage): the sex-chromosome dosage (the closing
+# design, "Sex-chromosome dosage"; the slice 3c plan's Decisions). A depth ratio is n copies
+# when it lies within tolerance of n/2, else "between". tolerance is half the smallest mosaic
+# share the screen reports (a 30% mosaic moves a ratio by 0.15): a design value the
+# calibration never lowers, only checks (twice the largest control deviation must stay below
+# it). The chrX allele balance: among SNV records in chrX's mappable non-PAR region (PASS or
+# RefCall, DP >= the reliability min_dp) whose ALT fraction is at least het_low, the share whose
+# fraction is at most het_high, read from min_x_sites such sites or more; one X with x_het_min
+# of them balanced suggests a 46,XY/47,XXY mosaic. A Y ratio at most y_absent_max is no Y (the
+# female control's noise). x_het_min and y_absent_max are set from `genokeeper calibrate
+# --only foundation --report` (Task 15, a commit citing the report); until then they are the
+# plan's placeholders and calibrated_on is empty. The dosage statement is unassessed while
+# the foundation table is missing ("not calibrated") or stale; calibrated_on is its
+# source_version.
+tolerance = 0.15
+het_low = 0.2
+het_high = 0.8
+x_het_min = 0.25
+min_x_sites = 1000
+y_absent_max = 0.02
+calibrated_on = ""
+
+[af_guard]
+# Slice 3c (genokeeper.genotype.clonal, genotype.reliability.guard_allele_fraction): the
+# allele-fraction guard (the closing design, "Allele-fraction guard"; the slice 3c plan's
+# Decisions). A heterozygous call whose VAF (DeepVariant's own FORMAT/VAF, AD[alt] / DP with DP
+# every good read at the site) is below min_het_vaf is warned "allele fraction low"; in one of
+# clonal_genes (the genes clonal haematopoiesis mutates most; their MANE v1.5 spans in
+# resources/af_guard/) it is warned that it may be clonal, not inherited, and its level is
+# capped at low. min_het_vaf is set from `genokeeper calibrate --only foundation --report`
+# (HG002 PCR-free's 0.6% quantile of its true heterozygous SNVs' VAF, rounded down to 0.01;
+# Task 15, a commit citing the report); until then it is the design's 0.30 and calibrated_on
+# is empty.
+min_het_vaf = 0.30
+clonal_genes = ["TP53", "CHEK2", "DNMT3A", "TET2", "ASXL1", "PPM1D", "JAK2", "SF3B1", "SRSF2"]
+calibrated_on = ""
+
+[insertions]
+# Slice 3d's insertion screen (genokeeper.insertions): Dysgu's and INSurVeyor's insertions of
+# min_length bp or more, matched by Truvari, and Scramble's mobile elements. Every value but
+# this one is [deletions]'s, one source of each. An insertion is common in gnomAD-SV when a
+# PASS SVTYPE=INS record lies within max_distance bp of it (Truvari's --refdist default;
+# research note R3: gnomAD-SV insertion breakpoints are imprecise, so a position window, not
+# overlap), with a size ratio of at least min_reciprocal_overlap only when the call's length
+# is exact (C20).
+max_distance = 500
+
+[cnv]
+# Slice 3d's depth copy-number screen (genokeeper.cnv.screen): DELLY's cnv mode and CNVpytor.
+# The exon margin, gnomAD-SV's "common" rule, reciprocal overlap and the "likely" threshold
+# are [deletions]'s, one source of each value.
+# The spec's "what is shown": a loss or gain of 1 kb or more over a target exon; events under
+# about 1 kb are named as not covered.
+min_length = 1000
+# The 5kb+ band starts here (the plan's Decisions, "Depth bands"): R1 section 4.1 stratifies
+# GIAB HG002 v5.0q by 1-5 kb and 5 kb and over, so the 1-5kb band is 1,000-4,999 bp.
+band_from = 5000
+# The large band (the spec's "Large events"): 500 kb or more, shown only over a ClinGen
+# recurrent CNV region or a dosage-sensitive gene, "screening result, needs a chromosomal
+# microarray", never calibrated.
+large_from = 500000
+# CNVpytor's bin size in bp: its authors want the read-depth mean over its standard deviation
+# at 4 or more; at 500 bp the autosomes' median was 5.01 on HG002 (the plan's Task 6,
+# 2026-10-30).
+bin_size = 500
+
+[paralogs]
+# Slice 3d's paralog loci (genokeeper.sources.paralogs): Parascopy's rows over a locus count
+# only when every one passed its filter at this quality or above (3a's SMN value, [smn]).
+min_qual = 20
+# STRC's one copy needs CATSPER2's unique depth (the part no STRC duplication covers) over the
+# run's mean depth within this band: a one-copy loss halves depth, +/-0.2 for DNBSEQ's
+# overdispersion (research note R1, section 1).
+unique_loss_ratio = [0.3, 0.7]
+# Gauchian's carrier call counts only with at least this many reads supporting its variant.
+# HG002 is wild type, so the floor cannot be measured here; it is Gauchian's own floor for an
+# exon 9-11 (GBAP1-like) call, more than 4 supporting reads (gauchian/caller/
+# copy_number_call.py lines 40 and 150 at commit 371a6d79599389e590038c4fecf13ec853abb8ab,
+# tag v1.0.2; research note R2).
+# Checked 2026-10-30 at 371a6d79 (depth_calling/copy_number_call.py, depth_calling/gene_caller.py, caller/gba_caller.py): `count_reg1 > min_read` floors the same alt count variant_raw_count gives (var_alt, var_homo_alt), but only for other_unphased_variants; the exon 9-11 GBAP1-like call comes from read haplotypes (caller/phasing_gba.py, filter_hap's 2-read floor), so 5 is this repository's floor, not Gauchian's.
+gba_min_reads = 5
+
+[lpa]
+# Slice 3d's Lp(a) KIV-2 count from KILDA. A FRACTION of HG002's assembly-derived KIV-2
+# count, not copies: the calibration withholds LPA when |KILDA - truth| > max_kiv2_error x
+# truth. KILDA's paper (NAR Genom Bioinform lqaf070, 2025) publishes no mean absolute
+# difference, only regressions (against Bionano y = 1.10x - 0.36, Supp. Fig. S5; against
+# DRAGEN-LPA y = 1.09x - 0.2, Fig. 1); the bound is twice KILDA's own ~10% over-count.
+max_kiv2_error = 0.20

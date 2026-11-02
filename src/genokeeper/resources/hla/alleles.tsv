@@ -1,0 +1,33 @@
+# HLA alleles slice 3f reads from the OptiType + T1K agreement (class I) or from T1K alone
+# (class II), beyond PharmCAT's own (HLA-A*31:01, HLA-B*15:02, *57:01, *58:01: never listed
+# here). One allele per row: an annotation PharmGKB writes for several alleles is cited on
+# each of them (ruling R4). An allele of one field (*27) is the allele group.
+# Columns: gene; allele; topic (drugs, risks, research); validity; condition; drugs
+# (";"-separated); level (the statement's source level); source (the citation).
+# Sources, all read 2026-10-30:
+# - drugs: PharmGKB/ClinPGx clinical annotations frozen 2025-07-05 (clinical_annotations.tsv,
+#   clinical_ann_alleles.tsv), levels 2A and 2B, category Toxicity;
+# - HLA-B*27, ankylosing spondylitis: carried by about 8% of Europeans (Reveille et al.
+#   2012, doi:10.1002/art.33503; Braun et al., Z Rheumatol 2024, doi:10.1007/s00393-023-01460-0);
+# - HLA-C*06:02 with psoriasis: carriers OR 5.05 (95% CI 3.67–6.97) in Caucasians (Wu et
+#   al., Genet Mol Res 2011, doi:10.4238/2011.December.15.2);
+# - HLA-B*51 with Behçet's disease: carriers OR 5.78 (95% CI 5.00–6.67) (de Menthon et al.,
+#   Arthritis Rheum 2009, doi:10.1002/art.24642);
+# - HLA-DQB1*06:02 with narcolepsy with cataplexy (Mignot et al., Am J Hum Genet 2001;
+#   68:686-699, doi:10.1086/318799).
+gene	allele	topic	validity	condition	drugs	level	source
+HLA-B	*13:01	drugs	limited	severe drug hypersensitivity (DRESS, SJS/TEN)	dapsone;co-trimoxazole	PharmGKB 2A	PharmGKB 20250705: 1183681792, 1451704000
+HLA-B	*38:02	drugs	limited	severe cutaneous adverse reactions (SJS/TEN)	co-trimoxazole	PharmGKB 2A	PharmGKB 20250705: 1451704000
+HLA-B	*40:01	drugs	limited	severe cutaneous adverse reactions (DRESS, SJS/TEN)	carbamazepine	PharmGKB 2A	PharmGKB 20250705: 1183693378
+HLA-B	*59:01	drugs	limited	severe cutaneous adverse reactions (SJS/TEN)	methazolamide	PharmGKB 2A	PharmGKB 20250705: 1184997207
+HLA-A	*33:03	drugs	limited	drug hypersensitivity (SJS)	allopurinol	PharmGKB 2B	PharmGKB 20250705: 1183701210
+HLA-C	*03:02	drugs	limited	severe cutaneous adverse reactions (SJS/TEN)	allopurinol	PharmGKB 2B	PharmGKB 20250705: 1184654139
+HLA-C	*04:01	drugs	limited	drug hypersensitivity (DRESS, SJS/TEN)	nevirapine	PharmGKB 2B	PharmGKB 20250705: 1449156175
+HLA-C	*01:02	drugs	limited	severe cutaneous adverse reactions (SJS/TEN)	methazolamide	PharmGKB 2B	PharmGKB 20250705: 1444706709
+HLA-C	*06:02	drugs	limited	severe cutaneous adverse reactions (SJS/TEN)	co-trimoxazole	PharmGKB 2B	PharmGKB 20250705: 1451703980
+HLA-C	*07:27	drugs	limited	severe cutaneous adverse reactions (SJS/TEN)	co-trimoxazole	PharmGKB 2B	PharmGKB 20250705: 1451703980
+HLA-C	*08:01	drugs	limited	severe cutaneous adverse reactions (SJS/TEN)	co-trimoxazole	PharmGKB 2B	PharmGKB 20250705: 1451703980
+HLA-B	*27	risks	moderate	ankylosing spondylitis		risk information	Reveille et al. 2012, doi:10.1002/art.33503; Braun et al. 2024, doi:10.1007/s00393-023-01460-0
+HLA-C	*06:02	research	limited	psoriasis		carriers OR 5.05 (95% CI 3.67–6.97)	Wu et al. 2011, doi:10.4238/2011.December.15.2
+HLA-B	*51	research	limited	Behçet's disease		carriers OR 5.78 (95% CI 5.00–6.67)	de Menthon et al. 2009, doi:10.1002/art.24642
+HLA-DQB1	*06:02	research	limited	narcolepsy with cataplexy		association	Mignot et al. 2001, doi:10.1086/318799

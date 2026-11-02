@@ -1,0 +1,5 @@
+#Sample	Gene	SolutionID	Major	Minor	Copy	Allele	Location	Type	Coverage	Effect	dbSNP	Code	Status
+#Solution 1: *(1.001), *(6.001); gene=CYP2B6-pharmvar-6.2.14 (2025-07-20); cpic=intermediate
+S	CYP2B6	1	*1/*6	1.001;6.001	0	1.001							
+S	CYP2B6	1	*1/*6	1.001;6.001	1	6.001	41006936	G>T	31	Q172H	rs3745274	
+S	CYP2B6	1	*1/*6	1.001;6.001	1	6.001	41009358	A>G	29	K262R	rs2279343	

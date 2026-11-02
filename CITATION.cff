@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If you use Genokeeper, please cite it as below."
+title: "Genokeeper: a local, privacy-first analyser of your own whole genome"
+type: software
+authors:
+  - alias: Nezhinskiy
+repository-code: "https://github.com/genokeeper/genokeeper"
+license: AGPL-3.0-or-later
+version: 0.1.0
+keywords:
+  - whole-genome sequencing
+  - personal genomics
+  - variant calling
+  - pharmacogenomics
+  - privacy

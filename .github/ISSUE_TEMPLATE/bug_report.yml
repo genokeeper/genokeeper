@@ -1,0 +1,43 @@
+name: Bug report
+description: Something genokeeper does wrong or refuses to do.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Never paste your genome data here**: no genotypes, rsIDs with your alleles, findings, haplogroups, `genokeeper query` or `dashboard` output, file names that carry a kit or sample ID. Describe the problem on GIAB's public HG002 sample or on invented data, or describe its shape (counts, which step, which message).
+  - type: input
+    id: command
+    attributes:
+      label: Command
+      description: The command you ran, with your own paths shortened.
+      placeholder: uv run genokeeper run
+    validations:
+      required: true
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened
+      description: The message or behaviour, without personal data.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version and machine
+      description: "`git rev-parse --short HEAD`, macOS version, chip, Docker version."
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy
+      options:
+        - label: This report contains no genotypes, findings or other personal genome data.
+          required: true

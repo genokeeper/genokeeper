@@ -1,0 +1,5 @@
+# Haplogrep3's configuration in genomelab's image: no tree repository, as the run is
+# offline, and the one tree baked in at build (docker/haplogrep3.Dockerfile).
+repositories: []
+phylotrees:
+  - /opt/haplogrep3/trees/phylotree-rcrs/17.3/tree.yaml

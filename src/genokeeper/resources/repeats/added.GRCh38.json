@@ -1,0 +1,42 @@
+[
+  {
+    "LocusId": "PABPN1",
+    "LocusStructure": "(GCN)*",
+    "ReferenceRegion": "chr14:23321472-23321502",
+    "VariantType": "Repeat"
+  },
+  {
+    "LocusId": "ZFHX3",
+    "LocusStructure": "(CCG)*",
+    "ReferenceRegion": "chr16:72787695-72787755",
+    "VariantType": "Repeat"
+  },
+  {
+    "LocusId": "THAP11",
+    "LocusStructure": "(CAG)*",
+    "ReferenceRegion": "chr16:67842863-67842950",
+    "VariantType": "Repeat"
+  },
+  {
+    "LocusId": "FGF14",
+    "LocusStructure": "(AAG)*",
+    "ReferenceRegion": "chr13:102161574-102161724",
+    "VariantType": "Repeat"
+  },
+  {
+    "LocusId": "CFTR",
+    "LocusStructure": "(TG)*(T)*",
+    "ReferenceRegion": [
+      "chr7:117548606-117548628",
+      "chr7:117548628-117548635"
+    ],
+    "VariantId": [
+      "CFTR_TG",
+      "CFTR_T"
+    ],
+    "VariantType": [
+      "Repeat",
+      "Repeat"
+    ]
+  }
+]

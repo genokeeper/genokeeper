@@ -1,0 +1,66 @@
+# Personal genome data never goes into git — not even a private repo.
+data/
+reports
+results/
+work/
+
+# Genomic formats, wherever they appear
+*.cram
+*.crai
+*.bam
+*.bai
+*.sam
+*.fq
+*.fq.gz
+*.fq.bz2
+*.fastq
+*.fastq.gz
+*.fastq.bz2
+*.vcf
+*.vcf.gz
+*.vcf.bgz
+*.vcf.zst
+*.vcf.gz.tbi
+*.vcf.gz.csi
+*.gvcf
+*.gvcf.gz
+*.bcf
+*.bed
+*.bed.gz
+*.bim
+*.fam
+*.pgen
+*.psam
+*.pvar.zst
+*.sqlite
+*.sqlite3
+*.db
+*.duckdb
+*.duckdb.wal
+*.parquet
+
+# Local tool installs and annotation databases
+.venv/
+oc-venv/
+oc-modules/
+*.egg-info/
+__pycache__/
+node_modules/
+.nextflow*
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+# stayfixed:ignore:begin
+# stayfixed's local state: yours, never a collaborator's.
+.stayfixed/local/
+.stayfixed/assessment.json
+# stayfixed:ignore:end
+
+# Brainstorm mockups (local)
+.superpowers/
+
+# Local notes and tool config that are not the project's.
+docs/memory/
+.codex/

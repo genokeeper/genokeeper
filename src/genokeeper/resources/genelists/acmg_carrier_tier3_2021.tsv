@@ -1,0 +1,127 @@
+# source: https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=8488021
+# version: 2021
+# title: Gregg AR et al., Screening for autosomal recessive and X-linked conditions during pregnancy and preconception: a practice resource of the ACMG (Genet Med 2021;23(10):1793-1806, doi:10.1038/s41436-021-01203-z, PMC8488021), Tables 1-6
+# erratum: PMC8776567 (doi:10.1038/s41436-021-01300-z) revises wording only; it changes no table
+# tier 3: the 97 autosomal recessive genes of Tables 1-5 (carrier frequency >= 1/200, or ascertained outside gnomAD) and the 16 X-linked genes of Table 6
+# symbols: as printed, except G6PC -> G6PC1 and GBA -> GBA1, renamed by HGNC since (HGNC:4056, HGNC:4177), so that they match ClinVar GENEINFO
+# transcribed: 2026-10-18
+gene	inheritance
+# Table 1: autosomal recessive, carrier frequency >= 1/50
+HBB	AR
+XPC	AR
+TYR	AR
+CYP21A2	AR
+PAH	AR
+CFTR	AR
+TNXB	AR
+HEXA	AR
+GJB2	AR
+DHCR7	AR
+ATP7B	AR
+ASPA	AR
+ACADM	AR
+NPHS1	AR
+PMM2	AR
+FKTN	AR
+SLC26A4	AR
+ERCC2	AR
+DYNC2H1	AR
+# Table 2: autosomal recessive, carrier frequency < 1/50 to >= 1/100
+CEP290	AR
+GBE1	AR
+GAA	AR
+CHRNE	AR
+G6PC1	AR
+OCA2	AR
+COL7A1	AR
+ABCC8	AR
+ALDOB	AR
+FANCC	AR
+GRIP1	AR
+BCKDHB	AR
+ANO10	AR
+NAGA	AR
+SMPD1	AR
+USH2A	AR
+MMUT	AR
+CPT2	AR
+AHI1	AR
+# Table 3: autosomal recessive, carrier frequency < 1/100 to >= 1/150
+DHDDS	AR
+SLC19A3	AR
+GALT	AR
+CYP11A1	AR
+TF	AR
+MMACHC	AR
+ABCA3	AR
+GBA1	AR
+MCOLN1	AR
+GNPTAB	AR
+AGA	AR
+PCDH15	AR
+FAH	AR
+AIRE	AR
+BBS2	AR
+CYP27A1	AR
+CCDC88C	AR
+FMO3	AR
+TMEM216	AR
+CNGB3	AR
+MCPH1	AR
+SLC37A4	AR
+PRF1	AR
+SCO2	AR
+AGXT	AR
+# Table 4: autosomal recessive, carrier frequency < 1/150 to >= 1/200
+ACADVL	AR
+ASL	AR
+EVC2	AR
+ARSA	AR
+MVK	AR
+PKHD1	AR
+BTD	AR
+ALPL	AR
+BBS1	AR
+CLCN1	AR
+CYP27B1	AR
+POLG	AR
+MCCC2	AR
+MLC1	AR
+ACAT1	AR
+CC2D2A	AR
+SLC26A2	AR
+CBS	AR
+LRP2	AR
+IDUA	AR
+FKRP	AR
+RNASEH2B	AR
+RARS2	AR
+# Table 5: autosomal recessive, ascertained outside the gnomAD criteria
+HBA1	AR
+HBA2	AR
+SMN1	AR
+HPS1	AR
+HPS3	AR
+ELP1	AR
+FXN	AR
+DLD	AR
+NEB	AR
+CLRN1	AR
+BLM	AR
+# Table 6: X-linked
+ABCD1	XL
+AFF2	XL
+ARX	XL
+DMD	XL
+F8	XL
+F9	XL
+FMR1	XL
+GLA	XL
+L1CAM	XL
+MID1	XL
+NR0B1	XL
+OTC	XL
+PLP1	XL
+RPGR	XL
+RS1	XL
+SLC6A8	XL

@@ -1,0 +1,297 @@
+##fileformat=VCFv4.2
+##FILTER=<ID=PASS,Description="All filters passed">
+##contig=<ID=chr1,length=248956422>
+##contig=<ID=chr2,length=242193529>
+##contig=<ID=chr3,length=198295559>
+##contig=<ID=chr4,length=190214555>
+##contig=<ID=chr5,length=181538259>
+##contig=<ID=chr6,length=170805979>
+##contig=<ID=chr7,length=159345973>
+##contig=<ID=chr8,length=145138636>
+##contig=<ID=chr9,length=138394717>
+##contig=<ID=chr10,length=133797422>
+##contig=<ID=chr11,length=135086622>
+##contig=<ID=chr12,length=133275309>
+##contig=<ID=chr13,length=114364328>
+##contig=<ID=chr14,length=107043718>
+##contig=<ID=chr15,length=101991189>
+##contig=<ID=chr16,length=90338345>
+##contig=<ID=chr17,length=83257441>
+##contig=<ID=chr18,length=80373285>
+##contig=<ID=chr19,length=58617616>
+##contig=<ID=chr20,length=64444167>
+##contig=<ID=chr21,length=46709983>
+##contig=<ID=chr22,length=50818468>
+##contig=<ID=chrX,length=156040895>
+##contig=<ID=chrY,length=57227415>
+##contig=<ID=chrM,length=16569>
+##contig=<ID=chr1_KI270706v1_random,length=175055>
+##contig=<ID=chr1_KI270707v1_random,length=32032>
+##contig=<ID=chr1_KI270708v1_random,length=127682>
+##contig=<ID=chr1_KI270709v1_random,length=66860>
+##contig=<ID=chr1_KI270710v1_random,length=40176>
+##contig=<ID=chr1_KI270711v1_random,length=42210>
+##contig=<ID=chr1_KI270712v1_random,length=176043>
+##contig=<ID=chr1_KI270713v1_random,length=40745>
+##contig=<ID=chr1_KI270714v1_random,length=41717>
+##contig=<ID=chr2_KI270715v1_random,length=161471>
+##contig=<ID=chr2_KI270716v1_random,length=153799>
+##contig=<ID=chr3_GL000221v1_random,length=155397>
+##contig=<ID=chr4_GL000008v2_random,length=209709>
+##contig=<ID=chr5_GL000208v1_random,length=92689>
+##contig=<ID=chr9_KI270717v1_random,length=40062>
+##contig=<ID=chr9_KI270718v1_random,length=38054>
+##contig=<ID=chr9_KI270719v1_random,length=176845>
+##contig=<ID=chr9_KI270720v1_random,length=39050>
+##contig=<ID=chr11_KI270721v1_random,length=100316>
+##contig=<ID=chr14_GL000009v2_random,length=201709>
+##contig=<ID=chr14_GL000225v1_random,length=211173>
+##contig=<ID=chr14_KI270722v1_random,length=194050>
+##contig=<ID=chr14_GL000194v1_random,length=191469>
+##contig=<ID=chr14_KI270723v1_random,length=38115>
+##contig=<ID=chr14_KI270724v1_random,length=39555>
+##contig=<ID=chr14_KI270725v1_random,length=172810>
+##contig=<ID=chr14_KI270726v1_random,length=43739>
+##contig=<ID=chr15_KI270727v1_random,length=448248>
+##contig=<ID=chr16_KI270728v1_random,length=1872759>
+##contig=<ID=chr17_GL000205v2_random,length=185591>
+##contig=<ID=chr17_KI270729v1_random,length=280839>
+##contig=<ID=chr17_KI270730v1_random,length=112551>
+##contig=<ID=chr22_KI270731v1_random,length=150754>
+##contig=<ID=chr22_KI270732v1_random,length=41543>
+##contig=<ID=chr22_KI270733v1_random,length=179772>
+##contig=<ID=chr22_KI270734v1_random,length=165050>
+##contig=<ID=chr22_KI270735v1_random,length=42811>
+##contig=<ID=chr22_KI270736v1_random,length=181920>
+##contig=<ID=chr22_KI270737v1_random,length=103838>
+##contig=<ID=chr22_KI270738v1_random,length=99375>
+##contig=<ID=chr22_KI270739v1_random,length=73985>
+##contig=<ID=chrY_KI270740v1_random,length=37240>
+##contig=<ID=chrUn_KI270302v1,length=2274>
+##contig=<ID=chrUn_KI270304v1,length=2165>
+##contig=<ID=chrUn_KI270303v1,length=1942>
+##contig=<ID=chrUn_KI270305v1,length=1472>
+##contig=<ID=chrUn_KI270322v1,length=21476>
+##contig=<ID=chrUn_KI270320v1,length=4416>
+##contig=<ID=chrUn_KI270310v1,length=1201>
+##contig=<ID=chrUn_KI270316v1,length=1444>
+##contig=<ID=chrUn_KI270315v1,length=2276>
+##contig=<ID=chrUn_KI270312v1,length=998>
+##contig=<ID=chrUn_KI270311v1,length=12399>
+##contig=<ID=chrUn_KI270317v1,length=37690>
+##contig=<ID=chrUn_KI270412v1,length=1179>
+##contig=<ID=chrUn_KI270411v1,length=2646>
+##contig=<ID=chrUn_KI270414v1,length=2489>
+##contig=<ID=chrUn_KI270419v1,length=1029>
+##contig=<ID=chrUn_KI270418v1,length=2145>
+##contig=<ID=chrUn_KI270420v1,length=2321>
+##contig=<ID=chrUn_KI270424v1,length=2140>
+##contig=<ID=chrUn_KI270417v1,length=2043>
+##contig=<ID=chrUn_KI270422v1,length=1445>
+##contig=<ID=chrUn_KI270423v1,length=981>
+##contig=<ID=chrUn_KI270425v1,length=1884>
+##contig=<ID=chrUn_KI270429v1,length=1361>
+##contig=<ID=chrUn_KI270442v1,length=392061>
+##contig=<ID=chrUn_KI270466v1,length=1233>
+##contig=<ID=chrUn_KI270465v1,length=1774>
+##contig=<ID=chrUn_KI270467v1,length=3920>
+##contig=<ID=chrUn_KI270435v1,length=92983>
+##contig=<ID=chrUn_KI270438v1,length=112505>
+##contig=<ID=chrUn_KI270468v1,length=4055>
+##contig=<ID=chrUn_KI270510v1,length=2415>
+##contig=<ID=chrUn_KI270509v1,length=2318>
+##contig=<ID=chrUn_KI270518v1,length=2186>
+##contig=<ID=chrUn_KI270508v1,length=1951>
+##contig=<ID=chrUn_KI270516v1,length=1300>
+##contig=<ID=chrUn_KI270512v1,length=22689>
+##contig=<ID=chrUn_KI270519v1,length=138126>
+##contig=<ID=chrUn_KI270522v1,length=5674>
+##contig=<ID=chrUn_KI270511v1,length=8127>
+##contig=<ID=chrUn_KI270515v1,length=6361>
+##contig=<ID=chrUn_KI270507v1,length=5353>
+##contig=<ID=chrUn_KI270517v1,length=3253>
+##contig=<ID=chrUn_KI270529v1,length=1899>
+##contig=<ID=chrUn_KI270528v1,length=2983>
+##contig=<ID=chrUn_KI270530v1,length=2168>
+##contig=<ID=chrUn_KI270539v1,length=993>
+##contig=<ID=chrUn_KI270538v1,length=91309>
+##contig=<ID=chrUn_KI270544v1,length=1202>
+##contig=<ID=chrUn_KI270548v1,length=1599>
+##contig=<ID=chrUn_KI270583v1,length=1400>
+##contig=<ID=chrUn_KI270587v1,length=2969>
+##contig=<ID=chrUn_KI270580v1,length=1553>
+##contig=<ID=chrUn_KI270581v1,length=7046>
+##contig=<ID=chrUn_KI270579v1,length=31033>
+##contig=<ID=chrUn_KI270589v1,length=44474>
+##contig=<ID=chrUn_KI270590v1,length=4685>
+##contig=<ID=chrUn_KI270584v1,length=4513>
+##contig=<ID=chrUn_KI270582v1,length=6504>
+##contig=<ID=chrUn_KI270588v1,length=6158>
+##contig=<ID=chrUn_KI270593v1,length=3041>
+##contig=<ID=chrUn_KI270591v1,length=5796>
+##contig=<ID=chrUn_KI270330v1,length=1652>
+##contig=<ID=chrUn_KI270329v1,length=1040>
+##contig=<ID=chrUn_KI270334v1,length=1368>
+##contig=<ID=chrUn_KI270333v1,length=2699>
+##contig=<ID=chrUn_KI270335v1,length=1048>
+##contig=<ID=chrUn_KI270338v1,length=1428>
+##contig=<ID=chrUn_KI270340v1,length=1428>
+##contig=<ID=chrUn_KI270336v1,length=1026>
+##contig=<ID=chrUn_KI270337v1,length=1121>
+##contig=<ID=chrUn_KI270363v1,length=1803>
+##contig=<ID=chrUn_KI270364v1,length=2855>
+##contig=<ID=chrUn_KI270362v1,length=3530>
+##contig=<ID=chrUn_KI270366v1,length=8320>
+##contig=<ID=chrUn_KI270378v1,length=1048>
+##contig=<ID=chrUn_KI270379v1,length=1045>
+##contig=<ID=chrUn_KI270389v1,length=1298>
+##contig=<ID=chrUn_KI270390v1,length=2387>
+##contig=<ID=chrUn_KI270387v1,length=1537>
+##contig=<ID=chrUn_KI270395v1,length=1143>
+##contig=<ID=chrUn_KI270396v1,length=1880>
+##contig=<ID=chrUn_KI270388v1,length=1216>
+##contig=<ID=chrUn_KI270394v1,length=970>
+##contig=<ID=chrUn_KI270386v1,length=1788>
+##contig=<ID=chrUn_KI270391v1,length=1484>
+##contig=<ID=chrUn_KI270383v1,length=1750>
+##contig=<ID=chrUn_KI270393v1,length=1308>
+##contig=<ID=chrUn_KI270384v1,length=1658>
+##contig=<ID=chrUn_KI270392v1,length=971>
+##contig=<ID=chrUn_KI270381v1,length=1930>
+##contig=<ID=chrUn_KI270385v1,length=990>
+##contig=<ID=chrUn_KI270382v1,length=4215>
+##contig=<ID=chrUn_KI270376v1,length=1136>
+##contig=<ID=chrUn_KI270374v1,length=2656>
+##contig=<ID=chrUn_KI270372v1,length=1650>
+##contig=<ID=chrUn_KI270373v1,length=1451>
+##contig=<ID=chrUn_KI270375v1,length=2378>
+##contig=<ID=chrUn_KI270371v1,length=2805>
+##contig=<ID=chrUn_KI270448v1,length=7992>
+##contig=<ID=chrUn_KI270521v1,length=7642>
+##contig=<ID=chrUn_GL000195v1,length=182896>
+##contig=<ID=chrUn_GL000219v1,length=179198>
+##contig=<ID=chrUn_GL000220v1,length=161802>
+##contig=<ID=chrUn_GL000224v1,length=179693>
+##contig=<ID=chrUn_KI270741v1,length=157432>
+##contig=<ID=chrUn_GL000226v1,length=15008>
+##contig=<ID=chrUn_GL000213v1,length=164239>
+##contig=<ID=chrUn_KI270743v1,length=210658>
+##contig=<ID=chrUn_KI270744v1,length=168472>
+##contig=<ID=chrUn_KI270745v1,length=41891>
+##contig=<ID=chrUn_KI270746v1,length=66486>
+##contig=<ID=chrUn_KI270747v1,length=198735>
+##contig=<ID=chrUn_KI270748v1,length=93321>
+##contig=<ID=chrUn_KI270749v1,length=158759>
+##contig=<ID=chrUn_KI270750v1,length=148850>
+##contig=<ID=chrUn_KI270751v1,length=150742>
+##contig=<ID=chrUn_KI270752v1,length=27745>
+##contig=<ID=chrUn_KI270753v1,length=62944>
+##contig=<ID=chrUn_KI270754v1,length=40191>
+##contig=<ID=chrUn_KI270755v1,length=36723>
+##contig=<ID=chrUn_KI270756v1,length=79590>
+##contig=<ID=chrUn_KI270757v1,length=71251>
+##contig=<ID=chrUn_GL000214v1,length=137718>
+##contig=<ID=chrUn_KI270742v1,length=186739>
+##contig=<ID=chrUn_GL000216v2,length=176608>
+##contig=<ID=chrUn_GL000218v1,length=161147>
+##contig=<ID=chrEBV,length=171823>
+##INFO=<ID=END,Number=1,Type=Integer,Description="End position">
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="SV type">
+##INFO=<ID=SVLEN,Number=1,Type=Integer,Description="SV length">
+##INFO=<ID=CLASS,Number=1,Type=String,Description="Call class">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##INFO=<ID=TruScore,Number=1,Type=Integer,Description="Truvari score for similarity of match">
+##INFO=<ID=PctSeqSimilarity,Number=1,Type=Float,Description="Pct sequence similarity between this variant and its closest match">
+##INFO=<ID=PctSizeSimilarity,Number=1,Type=Float,Description="Pct size similarity between this variant and its closest match">
+##INFO=<ID=PctRecOverlap,Number=1,Type=Float,Description="Percent reciprocal overlap percent of the two calls' coordinates">
+##INFO=<ID=StartDistance,Number=1,Type=Integer,Description="Distance of the base call's end from comparison call's start">
+##INFO=<ID=EndDistance,Number=1,Type=Integer,Description="Distance of the base call's end from comparison call's end">
+##INFO=<ID=SizeDiff,Number=1,Type=Float,Description="Difference in size of base and comp calls">
+##INFO=<ID=GTMatch,Number=1,Type=Integer,Description="Base/Comparison genotypes AC difference">
+##INFO=<ID=MatchId,Number=.,Type=String,Description="Tuple of base and comparison call ids which were matched">
+##INFO=<ID=Multi,Number=0,Type=Flag,Description="Call is false due to non-multimatching">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	HG002
+chr20	613784	x0	G	<DEL>	.	PASS	END=613837;SVTYPE=DEL;SVLEN=-53;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9815;PctRecOverlap=0.9818;SizeDiff=1;StartDistance=-1;EndDistance=0;GTMatch=0;TruScore=65;MatchId=3.0,3.0	GT	0/1
+chr20	1580446	x1	G	<DEL>	.	PASS	END=1613492;SVTYPE=DEL;SVLEN=-33046;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9999;PctRecOverlap=0.9969;SizeDiff=4;StartDistance=-101;EndDistance=-97;GTMatch=0;TruScore=66;MatchId=7.2,7.0	GT	0/1
+chr20	2014856	x2	A	<DEL>	.	PASS	END=2016886;SVTYPE=DEL;SVLEN=-2030;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9995;PctRecOverlap=0.9995;SizeDiff=1;StartDistance=-1;EndDistance=0;GTMatch=0;TruScore=66;MatchId=10.0,10.0	GT	0/1
+chr20	2822517	x3	G	<DEL>	.	PASS	END=2825763;SVTYPE=DEL;SVLEN=-3246;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9951;PctRecOverlap=0.9951;SizeDiff=16;StartDistance=-16;EndDistance=0;GTMatch=0;TruScore=66;MatchId=13.0,13.0	GT	0/1
+chr20	2883371	x5	G	<DEL>	.	PASS	END=2883692;SVTYPE=DEL;SVLEN=-321;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9969;PctRecOverlap=0.9505;SizeDiff=1;StartDistance=-16;EndDistance=-15;GTMatch=0;TruScore=64;MatchId=15.0,15.1	GT	0/1
+chr20	3041109	x7	A	<DEL>	.	PASS	END=3041406;SVTYPE=DEL;SVLEN=-297;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=1;SizeDiff=0;StartDistance=0;EndDistance=0;GTMatch=0;TruScore=66;MatchId=18.0,18.1	GT	0/1
+chr20	3057220	x8	C	<DEL>	.	PASS	END=3057536;SVTYPE=DEL;SVLEN=-316;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=1;SizeDiff=0;StartDistance=0;EndDistance=0;GTMatch=0;TruScore=66;MatchId=19.0,19.0	GT	0/1
+chr20	4227652	x9	T	<DEL>	.	PASS	END=4227704;SVTYPE=DEL;SVLEN=-52;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=1;SizeDiff=0;StartDistance=0;EndDistance=0;GTMatch=0;TruScore=66;MatchId=22.0,22.0	GT	0/1
+chr20	5553899	x10	A	<DEL>	.	PASS	END=5554275;SVTYPE=DEL;SVLEN=-376;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=1;SizeDiff=0;StartDistance=0;EndDistance=0;GTMatch=0;TruScore=66;MatchId=23.0,23.0	GT	0/1
+chr20	5962341	x12	A	<DEL>	.	PASS	END=5962670;SVTYPE=DEL;SVLEN=-329;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=1;SizeDiff=0;StartDistance=0;EndDistance=0;GTMatch=0;TruScore=66;MatchId=26.0,26.0	GT	0/1
+chr20	6045062	x13	T	<DEL>	.	PASS	END=6046878;SVTYPE=DEL;SVLEN=-1816;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9473;PctRecOverlap=0.9473;SizeDiff=101;StartDistance=-13;EndDistance=88;GTMatch=0;TruScore=63;MatchId=27.0,27.0	GT	0/1
+chr20	6170313	x14	G	<DEL>	.	PASS	END=6170644;SVTYPE=DEL;SVLEN=-331;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.997;PctRecOverlap=0.955;SizeDiff=1;StartDistance=-15;EndDistance=-14;GTMatch=0;TruScore=65;MatchId=28.0,28.0	GT	0/1
+chr20	7293704	x16	T	<DEL>	.	PASS	END=7294016;SVTYPE=DEL;SVLEN=-312;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9968;PctRecOverlap=0.9522;SizeDiff=1;StartDistance=-15;EndDistance=-14;GTMatch=0;TruScore=64;MatchId=30.0,30.1	GT	0/1
+chr20	8206976	x17	A	<DEL>	.	PASS	END=8207158;SVTYPE=DEL;SVLEN=-182;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9945;PctRecOverlap=0.9674;SizeDiff=1;StartDistance=-6;EndDistance=-5;GTMatch=0;TruScore=65;MatchId=32.0,32.0	GT	0/1
+chr20	9716114	x18	A	<DEL>	.	PASS	END=9716167;SVTYPE=DEL;SVLEN=-53;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9815;PctRecOverlap=0.9818;SizeDiff=1;StartDistance=-1;EndDistance=0;GTMatch=0;TruScore=65;MatchId=35.0,35.0	GT	0/1
+chr20	14485661	x19	A	<DEL>	.	PASS	END=14485724;SVTYPE=DEL;SVLEN=-63;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9844;PctRecOverlap=0.9846;SizeDiff=1;StartDistance=-1;EndDistance=0;GTMatch=0;TruScore=65;MatchId=44.0,44.0	GT	0/1
+chr20	14548422	x20	T	<DEL>	.	PASS	END=14548735;SVTYPE=DEL;SVLEN=-313;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=1;SizeDiff=0;StartDistance=0;EndDistance=0;GTMatch=0;TruScore=66;MatchId=45.0,45.0	GT	0/1
+chr20	14702553	x21	G	<DEL>	.	PASS	END=14702639;SVTYPE=DEL;SVLEN=-86;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=0.8736;SizeDiff=0;StartDistance=11;EndDistance=11;GTMatch=0;TruScore=62;MatchId=46.1,46.0	GT	0/1
+chr20	16098358	x22	A	<DEL>	.	PASS	END=16104724;SVTYPE=DEL;SVLEN=-6366;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9928;PctRecOverlap=0.9928;SizeDiff=-46;StartDistance=46;EndDistance=0;GTMatch=0;TruScore=66;MatchId=48.0,48.0	GT	0/1
+chr20	16395179	x23	A	<DEL>	.	PASS	END=16395324;SVTYPE=DEL;SVLEN=-145;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=0.6644;SizeDiff=0;StartDistance=49;EndDistance=49;GTMatch=0;TruScore=55;MatchId=51.0,51.0	GT	0/1
+chr20	16501297	x24	G	<DEL>	.	PASS	END=16501374;SVTYPE=DEL;SVLEN=-77;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9872;PctRecOverlap=0.5316;SizeDiff=1;StartDistance=-37;EndDistance=-36;GTMatch=0;TruScore=50;MatchId=52.0,52.0	GT	0/1
+chr20	17081241	x25	A	<DEL>	.	PASS	END=17081309;SVTYPE=DEL;SVLEN=-68;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9577;PctRecOverlap=0.2222;SizeDiff=3;StartDistance=53;EndDistance=56;GTMatch=0;TruScore=39;MatchId=55.0,55.0	GT	0/1
+chr20	17122789	x26	T	<DEL>	.	PASS	END=17123128;SVTYPE=DEL;SVLEN=-339;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9769;PctRecOverlap=0.9282;SizeDiff=8;StartDistance=17;EndDistance=25;GTMatch=0;TruScore=63;MatchId=56.0,56.0	GT	0/1
+chr20	19080787	x28	T	<DEL>	.	PASS	END=19081099;SVTYPE=DEL;SVLEN=-312;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9968;PctRecOverlap=0.9522;SizeDiff=1;StartDistance=-15;EndDistance=-14;GTMatch=0;TruScore=64;MatchId=66.0,66.0	GT	0/1
+chr20	19154873	x29	A	<DEL>	.	PASS	END=19154926;SVTYPE=DEL;SVLEN=-53;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=1;SizeDiff=0;StartDistance=0;EndDistance=0;GTMatch=0;TruScore=66;MatchId=67.0,67.0	GT	0/1
+chr20	21305490	x30	G	<DEL>	.	PASS	END=21308111;SVTYPE=DEL;SVLEN=-2621;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9773;PctRecOverlap=0.9773;SizeDiff=61;StartDistance=-38;EndDistance=23;GTMatch=0;TruScore=65;MatchId=74.0,74.0	GT	0/1
+chr20	21869264	x32	G	<DEL>	.	PASS	END=21869551;SVTYPE=DEL;SVLEN=-287;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=1;SizeDiff=0;StartDistance=0;EndDistance=0;GTMatch=0;TruScore=66;MatchId=75.0,75.1	GT	0/1
+chr20	22117028	x33	T	<DEL>	.	PASS	END=22117082;SVTYPE=DEL;SVLEN=-54;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9818;PctRecOverlap=0.9821;SizeDiff=1;StartDistance=-1;EndDistance=0;GTMatch=0;TruScore=65;MatchId=76.0,76.0	GT	0/1
+chr20	22327860	x34	A	<DEL>	.	PASS	END=22327921;SVTYPE=DEL;SVLEN=-61;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9344;PctRecOverlap=0.0968;SizeDiff=-4;StartDistance=-52;EndDistance=-56;GTMatch=0;TruScore=34;MatchId=77.0,77.0	GT	0/1
+chr20	23774621	x37	C	<DEL>	.	PASS	END=23774686;SVTYPE=DEL;SVLEN=-65;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=1;SizeDiff=0;StartDistance=0;EndDistance=0;GTMatch=0;TruScore=66;MatchId=84.0,84.1	GT	0/1
+chr20	24923064	x41	A	<DEL>	.	PASS	END=24923779;SVTYPE=DEL;SVLEN=-715;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9958;PctRecOverlap=0.9958;SizeDiff=3;StartDistance=-3;EndDistance=0;GTMatch=0;TruScore=66;MatchId=92.0,92.0	GT	0/1
+chr20	32311424	x60	T	<DEL>	.	PASS	END=32311729;SVTYPE=DEL;SVLEN=-305;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=1;SizeDiff=0;StartDistance=0;EndDistance=0;GTMatch=0;TruScore=66;MatchId=102.0,102.0	GT	0/1
+chr20	32723075	x61	A	<DEL>	.	PASS	END=32724971;SVTYPE=DEL;SVLEN=-1896;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9968;PctRecOverlap=0.9937;SizeDiff=6;StartDistance=-12;EndDistance=-6;GTMatch=0;TruScore=66;MatchId=103.0,103.0	GT	0/1
+chr20	34228133	x65	T	<DEL>	.	PASS	END=34231419;SVTYPE=DEL;SVLEN=-3286;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9967;PctRecOverlap=0.9967;SizeDiff=11;StartDistance=-11;EndDistance=0;GTMatch=0;TruScore=66;MatchId=110.0,110.0	GT	0/1
+chr20	34528027	x66	A	<DEL>	.	PASS	END=34528359;SVTYPE=DEL;SVLEN=-332;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.997;PctRecOverlap=0.9371;SizeDiff=1;StartDistance=-21;EndDistance=-20;GTMatch=0;TruScore=64;MatchId=111.0,111.0	GT	0/1
+chr20	34889401	x67	C	<DEL>	.	PASS	END=34889533;SVTYPE=DEL;SVLEN=-132;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9925;PctRecOverlap=0.7612;SizeDiff=1;StartDistance=-32;EndDistance=-31;GTMatch=0;TruScore=58;MatchId=113.0,113.0	GT	0/1
+chr20	35033864	x68	G	<DEL>	.	PASS	END=35034185;SVTYPE=DEL;SVLEN=-321;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9969;PctRecOverlap=0.9628;SizeDiff=1;StartDistance=-12;EndDistance=-11;GTMatch=0;TruScore=65;MatchId=114.0,114.0	GT	0/1
+chr20	35128254	x69	G	<DEL>	.	PASS	END=35129002;SVTYPE=DEL;SVLEN=-748;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9987;PctRecOverlap=0.9987;SizeDiff=-1;StartDistance=0;EndDistance=-1;GTMatch=0;TruScore=66;MatchId=115.0,115.0	GT	0/1
+chr20	37187206	x71	T	<DEL>	.	PASS	END=37187518;SVTYPE=DEL;SVLEN=-312;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=1;SizeDiff=0;StartDistance=0;EndDistance=0;GTMatch=0;TruScore=66;MatchId=120.0,120.0	GT	0/1
+chr20	38708344	x72	A	<DEL>	.	PASS	END=38708410;SVTYPE=DEL;SVLEN=-66;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9429;PctRecOverlap=0.9437;SizeDiff=4;StartDistance=-4;EndDistance=0;GTMatch=0;TruScore=62;MatchId=125.0,125.0	GT	0/1
+chr20	39709006	x73	G	<DEL>	.	PASS	END=39709142;SVTYPE=DEL;SVLEN=-136;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9927;PctRecOverlap=0.8841;SizeDiff=1;StartDistance=-16;EndDistance=-15;GTMatch=0;TruScore=62;MatchId=127.0,127.0	GT	0/1
+chr20	41257679	x74	T	<DEL>	.	PASS	END=41257967;SVTYPE=DEL;SVLEN=-288;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=0.8754;SizeDiff=0;StartDistance=36;EndDistance=36;GTMatch=0;TruScore=62;MatchId=131.0,131.0	GT	0/1
+chr20	41277755	x75	C	<DEL>	.	PASS	END=41278844;SVTYPE=DEL;SVLEN=-1089;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9221;PctRecOverlap=0.9222;SizeDiff=92;StartDistance=-78;EndDistance=14;GTMatch=0;TruScore=61;MatchId=132.0,132.0	GT	0/1
+chr20	41912433	x76	T	<DEL>	.	PASS	END=41912488;SVTYPE=DEL;SVLEN=-55;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9821;PctRecOverlap=0.9298;SizeDiff=1;StartDistance=-4;EndDistance=-3;GTMatch=0;TruScore=63;MatchId=134.0,134.0	GT	0/1
+chr20	43395973	x77	T	<DEL>	.	PASS	END=43397152;SVTYPE=DEL;SVLEN=-1179;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9841;PctRecOverlap=0.9842;SizeDiff=19;StartDistance=-19;EndDistance=0;GTMatch=0;TruScore=65;MatchId=136.0,136.0	GT	0/1
+chr20	43643260	x78	T	<DEL>	.	PASS	END=43645937;SVTYPE=DEL;SVLEN=-2677;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9827;PctRecOverlap=0.9828;SizeDiff=47;StartDistance=-36;EndDistance=11;GTMatch=0;TruScore=65;MatchId=137.0,137.0	GT	0/1
+chr20	44047489	x79	C	<DEL>	.	PASS	END=44047887;SVTYPE=DEL;SVLEN=-398;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9975;PctRecOverlap=0.99;SizeDiff=1;StartDistance=-4;EndDistance=-3;GTMatch=0;TruScore=66;MatchId=138.0,138.0	GT	0/1
+chr20	45575426	x80	T	<DEL>	.	PASS	END=45578660;SVTYPE=DEL;SVLEN=-3234;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9988;PctRecOverlap=0.9988;SizeDiff=4;StartDistance=-4;EndDistance=0;GTMatch=0;TruScore=66;MatchId=140.0,140.0	GT	0/1
+chr20	45730774	x81	T	<DEL>	.	PASS	END=45730885;SVTYPE=DEL;SVLEN=-111;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9911;PctRecOverlap=0.9912;SizeDiff=1;StartDistance=-1;EndDistance=0;GTMatch=0;TruScore=66;MatchId=141.0,141.0	GT	0/1
+chr20	45906708	x82	C	<DEL>	.	PASS	END=45907144;SVTYPE=DEL;SVLEN=-436;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=1;SizeDiff=0;StartDistance=0;EndDistance=0;GTMatch=0;TruScore=66;MatchId=147.0,147.0	GT	0/1
+chr20	47156115	x83	C	<DEL>	.	PASS	END=47156165;SVTYPE=DEL;SVLEN=-50;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=1;SizeDiff=0;StartDistance=0;EndDistance=0;GTMatch=0;TruScore=66;MatchId=149.0,149.0	GT	0/1
+chr20	49927198	x84	C	<DEL>	.	PASS	END=49927278;SVTYPE=DEL;SVLEN=-80;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=1;SizeDiff=0;StartDistance=0;EndDistance=0;GTMatch=0;TruScore=66;MatchId=155.0,155.0	GT	0/1
+chr20	50156291	x85	C	<DEL>	.	PASS	END=50156595;SVTYPE=DEL;SVLEN=-304;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.959;PctRecOverlap=0.8302;SizeDiff=13;StartDistance=-54;EndDistance=-41;GTMatch=0;TruScore=59;MatchId=156.0,156.0	GT	0/1
+chr20	50452073	x86	G	<DEL>	.	PASS	END=50452133;SVTYPE=DEL;SVLEN=-60;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9836;PctRecOverlap=0.9839;SizeDiff=1;StartDistance=-1;EndDistance=0;GTMatch=0;TruScore=65;MatchId=158.0,158.0	GT	0/1
+chr20	52167426	x87	C	<DEL>	.	PASS	END=52167493;SVTYPE=DEL;SVLEN=-67;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9853;PctRecOverlap=0.9855;SizeDiff=1;StartDistance=-1;EndDistance=0;GTMatch=0;TruScore=65;MatchId=161.0,161.0	GT	0/1
+chr20	54676127	x88	T	<DEL>	.	PASS	END=54676440;SVTYPE=DEL;SVLEN=-313;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9968;PctRecOverlap=0.9524;SizeDiff=1;StartDistance=-15;EndDistance=-14;GTMatch=0;TruScore=64;MatchId=168.0,168.0	GT	0/1
+chr20	55347333	x89	G	<DEL>	.	PASS	END=55347410;SVTYPE=DEL;SVLEN=-77;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9872;PctRecOverlap=0.5063;SizeDiff=1;StartDistance=-39;EndDistance=-38;GTMatch=0;TruScore=49;MatchId=169.0,169.0	GT	0/1
+chr20	55497627	x90	G	<DEL>	.	PASS	END=55497984;SVTYPE=DEL;SVLEN=-357;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.8964;PctRecOverlap=0.8911;SizeDiff=-37;StartDistance=-2;EndDistance=-39;GTMatch=0;TruScore=59;MatchId=171.0,171.0	GT	0/1
+chr20	55633612	x91	C	<DEL>	.	PASS	END=55633758;SVTYPE=DEL;SVLEN=-146;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9932;PctRecOverlap=0.7432;SizeDiff=1;StartDistance=-38;EndDistance=-37;GTMatch=0;TruScore=57;MatchId=174.0,174.0	GT	0/1
+chr20	55638896	x92	A	<DEL>	.	PASS	END=55639029;SVTYPE=DEL;SVLEN=-133;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=1;SizeDiff=0;StartDistance=0;EndDistance=0;GTMatch=0;TruScore=66;MatchId=175.0,175.0	GT	0/1
+chr20	55859568	x93	G	<DEL>	.	PASS	END=55865560;SVTYPE=DEL;SVLEN=-5992;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9977;PctRecOverlap=0.9977;SizeDiff=14;StartDistance=-14;EndDistance=0;GTMatch=0;TruScore=66;MatchId=176.0,176.0	GT	0/1
+chr20	55888179	x94	T	<DEL>	.	PASS	END=55888495;SVTYPE=DEL;SVLEN=-316;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9968;PctRecOverlap=0.9528;SizeDiff=1;StartDistance=-15;EndDistance=-14;GTMatch=0;TruScore=64;MatchId=177.0,177.0	GT	0/1
+chr20	56365905	x95	A	<DEL>	.	PASS	END=56366003;SVTYPE=DEL;SVLEN=-98;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=1;SizeDiff=0;StartDistance=0;EndDistance=0;GTMatch=0;TruScore=66;MatchId=180.0,180.0	GT	0/1
+chr20	57031812	x97	A	<DEL>	.	PASS	END=57031925;SVTYPE=DEL;SVLEN=-113;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9262;PctRecOverlap=0.7154;SizeDiff=9;StartDistance=26;EndDistance=35;GTMatch=0;TruScore=54;MatchId=182.0,182.0	GT	0/1
+chr20	57598510	x98	G	<DEL>	.	PASS	END=57598559;SVTYPE=DEL;SVLEN=-49;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.98;PctRecOverlap=0.0196;SizeDiff=1;StartDistance=-50;EndDistance=-49;GTMatch=0;TruScore=33;MatchId=185.0,185.0	GT	0/1
+chr20	61229618	x100	A	<DEL>	.	PASS	END=61229667;SVTYPE=DEL;SVLEN=-49;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.98;PctRecOverlap=0.9804;SizeDiff=1;StartDistance=-1;EndDistance=0;GTMatch=0;TruScore=65;MatchId=200.1,200.0	GT	0/1
+chr20	61309320	x102	T	<DEL>	.	PASS	END=61309371;SVTYPE=DEL;SVLEN=-51;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=0.3077;SizeDiff=0;StartDistance=36;EndDistance=36;GTMatch=0;TruScore=43;MatchId=203.0,203.0	GT	0/1
+chr20	61399110	x104	A	<DEL>	.	PASS	END=61399431;SVTYPE=DEL;SVLEN=-321;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=1;SizeDiff=0;StartDistance=0;EndDistance=0;GTMatch=0;TruScore=66;MatchId=205.0,205.0	GT	0/1
+chr20	61951247	x108	G	<DEL>	.	PASS	END=61951551;SVTYPE=DEL;SVLEN=-304;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9967;PctRecOverlap=0.951;SizeDiff=1;StartDistance=-15;EndDistance=-14;GTMatch=0;TruScore=64;MatchId=215.17,215.1	GT	0/1
+chr20	61995583	x111	G	<DEL>	.	PASS	END=61995901;SVTYPE=DEL;SVLEN=-318;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9969;PctRecOverlap=0.9531;SizeDiff=1;StartDistance=-15;EndDistance=-14;GTMatch=0;TruScore=64;MatchId=218.0,218.0	GT	0/1
+chr20	62622421	x112	C	<DEL>	.	PASS	END=62622472;SVTYPE=DEL;SVLEN=-51;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9808;PctRecOverlap=0.3208;SizeDiff=1;StartDistance=-36;EndDistance=-35;GTMatch=0;TruScore=43;MatchId=227.0,227.0	GT	0/1
+chr20	62976036	x113	C	<DEL>	.	PASS	END=62976116;SVTYPE=DEL;SVLEN=-80;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=0.3333;SizeDiff=0;StartDistance=54;EndDistance=54;GTMatch=0;TruScore=44;MatchId=233.0,233.0	GT	0/1
+chr20	63093347	x116	C	<DEL>	.	PASS	END=63094245;SVTYPE=DEL;SVLEN=-898;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=0.9978;SizeDiff=0;StartDistance=-2;EndDistance=-2;GTMatch=0;TruScore=66;MatchId=241.0,241.0	GT	0/1
+chr20	63134532	x117	A	<DEL>	.	PASS	END=63135167;SVTYPE=DEL;SVLEN=-635;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9984;PctRecOverlap=0.8854;SizeDiff=1;StartDistance=72;EndDistance=73;GTMatch=0;TruScore=62;MatchId=242.0,242.0	GT	0/1
+chr20	63221510	x118	C	<DEL>	.	PASS	END=63221654;SVTYPE=DEL;SVLEN=-144;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=1;SizeDiff=0;StartDistance=0;EndDistance=0;GTMatch=0;TruScore=66;MatchId=244.1,244.0	GT	0/1
+chr20	63250560	x119	G	<DEL>	.	PASS	END=63250616;SVTYPE=DEL;SVLEN=-56;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9825;PctRecOverlap=0.9828;SizeDiff=1;StartDistance=-1;EndDistance=0;GTMatch=0;TruScore=65;MatchId=245.0,245.0	GT	0/1
+chr20	63335347	x120	C	<DEL>	.	PASS	END=63335430;SVTYPE=DEL;SVLEN=-83;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9881;PctRecOverlap=0.6353;SizeDiff=1;StartDistance=-31;EndDistance=-30;GTMatch=0;TruScore=54;MatchId=248.1,248.0	GT	0/1
+chr20	63366131	x121	A	<DEL>	.	PASS	END=63366211;SVTYPE=DEL;SVLEN=-80;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=1;SizeDiff=0;StartDistance=0;EndDistance=0;GTMatch=0;TruScore=66;MatchId=250.1,250.0	GT	0/1
+chr20	63636201	x123	T	<DEL>	.	PASS	END=63636709;SVTYPE=DEL;SVLEN=-508;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9941;PctRecOverlap=0.9352;SizeDiff=-3;StartDistance=-30;EndDistance=-33;GTMatch=0;TruScore=64;MatchId=260.0,260.0	GT	0/1
+chr20	63777071	x124	G	<DEL>	.	PASS	END=63777160;SVTYPE=DEL;SVLEN=-89;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9889;PctRecOverlap=0.7363;SizeDiff=1;StartDistance=-24;EndDistance=-23;GTMatch=0;TruScore=57;MatchId=266.0,266.0	GT	0/1
+chr20	63849825	x125	A	<DEL>	.	PASS	END=63849876;SVTYPE=DEL;SVLEN=-51;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=1;SizeDiff=0;StartDistance=0;EndDistance=0;GTMatch=0;TruScore=66;MatchId=267.0,267.0	GT	0/1
+chr20	63964896	x126	A	<DEL>	.	PASS	END=63966049;SVTYPE=DEL;SVLEN=-1153;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9506;PctRecOverlap=0.8917;SizeDiff=-57;StartDistance=-68;EndDistance=-125;GTMatch=0;TruScore=61;MatchId=269.1,269.0	GT	0/1
+chr20	64127298	x127	C	<DEL>	.	PASS	END=64127851;SVTYPE=DEL;SVLEN=-553;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=0.9702;PctRecOverlap=0.958;SizeDiff=17;StartDistance=7;EndDistance=24;GTMatch=0;TruScore=64;MatchId=271.4,271.0	GT	0/1
+chr20	64136436	x128	A	<DEL>	.	PASS	END=64136490;SVTYPE=DEL;SVLEN=-54;CLASS=x;PctSeqSimilarity=0;PctSizeSimilarity=1;PctRecOverlap=0.8;SizeDiff=0;StartDistance=11;EndDistance=11;GTMatch=0;TruScore=60;MatchId=271.8,271.1	GT	0/1

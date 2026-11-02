@@ -1,0 +1,1605 @@
+{
+ "title": "pharmcat.example",
+ "timestamp": "2026-07-13T22:32:26.437Z",
+ "pharmcatVersion": "v3.3.0-8-g8ff5870f",
+ "dataVersion": "2026-07-13-11-40",
+ "genes": {
+  "CYP2C19": {
+   "alleleDefinitionVersion": "2026-07-13-11-40",
+   "alleleDefinitionSource": "CLINPGX",
+   "phenotypeVersion": "2026-07-13-11-40",
+   "geneSymbol": "CYP2C19",
+   "chr": "chr10",
+   "phased": false,
+   "effectivelyPhased": true,
+   "callSource": "MATCHER",
+   "uncalledHaplotypes": [],
+   "messages": [
+    {
+     "rule_name": "reference-allele",
+     "version": null,
+     "matches": null,
+     "exception_type": "note",
+     "message": "The CYP2C19 *38 allele assignment is characterized by the absence of variants at the positions that are included in the underlying allele definitions."
+    }
+   ],
+   "relatedDrugs": [
+    {
+     "name": "abrocitinib",
+     "id": "PA166272921"
+    },
+    {
+     "name": "amitriptyline",
+     "id": "PA448385"
+    },
+    {
+     "name": "belzutifan",
+     "id": "PA166268761"
+    }
+   ],
+   "sourceDiplotypes": [
+    {
+     "allele1": {
+      "gene": "CYP2C19",
+      "name": "*38",
+      "function": "Normal function",
+      "reference": true,
+      "activityValue": "n/a"
+     },
+     "allele2": {
+      "gene": "CYP2C19",
+      "name": "*38",
+      "function": "Normal function",
+      "reference": true,
+      "activityValue": "n/a"
+     },
+     "gene": "CYP2C19",
+     "matchScore": 70,
+     "phenotypes": [
+      "Normal Metabolizer"
+     ],
+     "outsidePhenotype": false,
+     "outsidePhenotypeMismatch": null,
+     "activityScore": null,
+     "outsideActivityScore": false,
+     "outsideActivityScoreMismatch": null,
+     "variant": null,
+     "lookupKey": [
+      "Normal Metabolizer"
+     ],
+     "label": "*38/*38",
+     "inferred": false,
+     "inferredSourceDiplotypes": null,
+     "combination": false,
+     "diplotypeKey": {
+      "*38": 2.0
+     }
+    }
+   ],
+   "matcherComponentHaplotypes": [],
+   "matcherHomozygousComponentHaplotypes": [],
+   "recommendationDiplotypes": [
+    {
+     "allele1": {
+      "gene": "CYP2C19",
+      "name": "*38",
+      "function": "Normal function",
+      "reference": true,
+      "activityValue": "n/a"
+     },
+     "allele2": {
+      "gene": "CYP2C19",
+      "name": "*38",
+      "function": "Normal function",
+      "reference": true,
+      "activityValue": "n/a"
+     },
+     "gene": "CYP2C19",
+     "matchScore": 70,
+     "phenotypes": [
+      "Normal Metabolizer"
+     ],
+     "outsidePhenotype": false,
+     "outsidePhenotypeMismatch": null,
+     "activityScore": null,
+     "outsideActivityScore": false,
+     "outsideActivityScoreMismatch": null,
+     "variant": null,
+     "lookupKey": [
+      "Normal Metabolizer"
+     ],
+     "label": "*38/*38",
+     "inferred": false,
+     "inferredSourceDiplotypes": null,
+     "combination": false,
+     "diplotypeKey": {
+      "*38": 2.0
+     }
+    }
+   ],
+   "variants": [
+    {
+     "gene": "CYP2C19",
+     "chromosome": "chr10",
+     "position": 94761900,
+     "dbSnpId": "rs12248560",
+     "call": "C/C",
+     "alleles": [
+      "*1",
+      "*4",
+      "*17"
+     ],
+     "phased": false,
+     "phaseSet": null,
+     "referenceAllele": "C",
+     "hasUndocumentedVariations": false,
+     "warnings": []
+    },
+    {
+     "gene": "CYP2C19",
+     "chromosome": "chr10",
+     "position": 94762706,
+     "dbSnpId": "rs28399504",
+     "call": null,
+     "alleles": [
+      "*1",
+      "*4"
+     ],
+     "phased": false,
+     "phaseSet": null,
+     "referenceAllele": "A",
+     "hasUndocumentedVariations": false,
+     "warnings": []
+    },
+    {
+     "gene": "CYP2C19",
+     "chromosome": "chr10",
+     "position": 94762712,
+     "dbSnpId": "rs367543002",
+     "call": "C/C",
+     "alleles": [
+      "*1",
+      "*34",
+      "*40"
+     ],
+     "phased": false,
+     "phaseSet": null,
+     "referenceAllele": "C",
+     "hasUndocumentedVariations": false,
+     "warnings": []
+    }
+   ],
+   "variantsOfInterest": [],
+   "hasUndocumentedVariations": false,
+   "treatUndocumentedVariationsAsReference": false
+  },
+  "CYP2D6": {
+   "alleleDefinitionVersion": null,
+   "alleleDefinitionSource": "UNKNOWN",
+   "phenotypeVersion": "2026-07-13-11-40",
+   "geneSymbol": "CYP2D6",
+   "chr": null,
+   "phased": false,
+   "effectivelyPhased": false,
+   "callSource": "OUTSIDE",
+   "uncalledHaplotypes": [],
+   "messages": [
+    {
+     "rule_name": "pcat-outside-call",
+     "version": "1",
+     "matches": {
+      "gene": null,
+      "hapsCalled": [],
+      "hapsMissing": [],
+      "variantsMissing": [],
+      "variant": [],
+      "dips": [],
+      "drugs": []
+     },
+     "exception_type": "",
+     "message": "This comes from an outside data source which does not supply position-level detail.  For specific disclaimers and limitations, see the original genotyping source."
+    }
+   ],
+   "relatedDrugs": [
+    {
+     "name": "acetaminophen / caffeine / dihydrocodeine",
+     "id": "PA166246281"
+    },
+    {
+     "name": "amitriptyline",
+     "id": "PA448385"
+    },
+    {
+     "name": "amoxapine",
+     "id": "PA448405"
+    }
+   ],
+   "sourceDiplotypes": [
+    {
+     "allele1": {
+      "gene": "CYP2D6",
+      "name": "*1",
+      "function": "Normal function",
+      "reference": true,
+      "activityValue": "1.0"
+     },
+     "allele2": {
+      "gene": "CYP2D6",
+      "name": "*3",
+      "function": "No function",
+      "reference": false,
+      "activityValue": "0.0"
+     },
+     "gene": "CYP2D6",
+     "matchScore": 0,
+     "phenotypes": [
+      "Intermediate Metabolizer"
+     ],
+     "outsidePhenotype": false,
+     "outsidePhenotypeMismatch": null,
+     "activityScore": "1.0",
+     "outsideActivityScore": false,
+     "outsideActivityScoreMismatch": null,
+     "variant": null,
+     "lookupKey": [
+      "1.0"
+     ],
+     "label": "*1/*3",
+     "inferred": false,
+     "inferredSourceDiplotypes": null,
+     "combination": false,
+     "diplotypeKey": {}
+    }
+   ],
+   "matcherComponentHaplotypes": [],
+   "matcherHomozygousComponentHaplotypes": [],
+   "recommendationDiplotypes": [
+    {
+     "allele1": {
+      "gene": "CYP2D6",
+      "name": "*1",
+      "function": "Normal function",
+      "reference": true,
+      "activityValue": "1.0"
+     },
+     "allele2": {
+      "gene": "CYP2D6",
+      "name": "*3",
+      "function": "No function",
+      "reference": false,
+      "activityValue": "0.0"
+     },
+     "gene": "CYP2D6",
+     "matchScore": 0,
+     "phenotypes": [
+      "Intermediate Metabolizer"
+     ],
+     "outsidePhenotype": false,
+     "outsidePhenotypeMismatch": null,
+     "activityScore": "1.0",
+     "outsideActivityScore": false,
+     "outsideActivityScoreMismatch": null,
+     "variant": null,
+     "lookupKey": [
+      "1.0"
+     ],
+     "label": "*1/*3",
+     "inferred": false,
+     "inferredSourceDiplotypes": null,
+     "combination": false,
+     "diplotypeKey": {}
+    }
+   ],
+   "variants": [],
+   "variantsOfInterest": [],
+   "hasUndocumentedVariations": false,
+   "treatUndocumentedVariationsAsReference": false
+  },
+  "DPYD": {
+   "alleleDefinitionVersion": "2026-07-13-11-40",
+   "alleleDefinitionSource": "CLINPGX",
+   "phenotypeVersion": "2026-07-13-11-40",
+   "geneSymbol": "DPYD",
+   "chr": "chr1",
+   "phased": false,
+   "effectivelyPhased": true,
+   "callSource": "MATCHER",
+   "uncalledHaplotypes": [],
+   "messages": [
+    {
+     "rule_name": "DPYD lowest activity score note",
+     "version": "2",
+     "matches": {
+      "gene": "DPYD",
+      "hapsCalled": [],
+      "hapsMissing": [],
+      "variantsMissing": [],
+      "variant": [],
+      "dips": [],
+      "drugs": []
+     },
+     "exception_type": "note",
+     "message": "The two lowest activity values (variant activity scores, see CPIC guideline PMID:29152729) are used for unphased data and the lowest activity value per allele is used for phased data to determine the gene activity score and phenotype to retrieve prescribing recommendations. "
+    },
+    {
+     "rule_name": "DPYD reverse complement footnote",
+     "version": "1",
+     "matches": {
+      "gene": "DPYD",
+      "hapsCalled": [],
+      "hapsMissing": [],
+      "variantsMissing": [],
+      "variant": [],
+      "dips": [],
+      "drugs": []
+     },
+     "exception_type": "footnote",
+     "message": "The DPYD gene is on the negative chromosomal strand, all genotype calls for DPYD in this report refer to the positive chromosomal strand.  Therefore, genotype calls are complemented from gene bases."
+    },
+    {
+     "rule_name": "reference-allele",
+     "version": null,
+     "matches": null,
+     "exception_type": "note",
+     "message": "The DPYD Reference allele assignment is characterized by the absence of variants at the positions that are included in the underlying allele definitions."
+    }
+   ],
+   "relatedDrugs": [
+    {
+     "name": "capecitabine",
+     "id": "PA448771"
+    },
+    {
+     "name": "flucytosine",
+     "id": "PA449654"
+    },
+    {
+     "name": "fluorouracil",
+     "id": "PA128406956"
+    }
+   ],
+   "sourceDiplotypes": [
+    {
+     "allele1": {
+      "gene": "DPYD",
+      "name": "Reference",
+      "function": "Normal function",
+      "reference": true,
+      "activityValue": "1.0"
+     },
+     "allele2": {
+      "gene": "DPYD",
+      "name": "Reference",
+      "function": "Normal function",
+      "reference": true,
+      "activityValue": "1.0"
+     },
+     "gene": "DPYD",
+     "matchScore": 166,
+     "phenotypes": [
+      "Normal Metabolizer"
+     ],
+     "outsidePhenotype": false,
+     "outsidePhenotypeMismatch": null,
+     "activityScore": "2.0",
+     "outsideActivityScore": false,
+     "outsideActivityScoreMismatch": null,
+     "variant": null,
+     "lookupKey": [
+      "2.0"
+     ],
+     "label": "Reference/Reference",
+     "inferred": false,
+     "inferredSourceDiplotypes": null,
+     "combination": false,
+     "diplotypeKey": {
+      "Reference": 2.0
+     }
+    }
+   ],
+   "matcherComponentHaplotypes": [
+    {
+     "allele1": {
+      "gene": "DPYD",
+      "name": "Reference",
+      "function": "Normal function",
+      "reference": true,
+      "activityValue": "1.0"
+     },
+     "allele2": null,
+     "gene": "DPYD",
+     "matchScore": 83,
+     "phenotypes": [
+      "Indeterminate"
+     ],
+     "outsidePhenotype": false,
+     "outsidePhenotypeMismatch": null,
+     "activityScore": "n/a",
+     "outsideActivityScore": false,
+     "outsideActivityScoreMismatch": null,
+     "variant": null,
+     "lookupKey": [
+      "n/a"
+     ],
+     "label": "Reference",
+     "inferred": false,
+     "inferredSourceDiplotypes": null,
+     "combination": false,
+     "diplotypeKey": {
+      "Reference": 1.0
+     }
+    }
+   ],
+   "matcherHomozygousComponentHaplotypes": [],
+   "recommendationDiplotypes": [
+    {
+     "allele1": {
+      "gene": "DPYD",
+      "name": "Reference",
+      "function": "Normal function",
+      "reference": true,
+      "activityValue": "1.0"
+     },
+     "allele2": {
+      "gene": "DPYD",
+      "name": "Reference",
+      "function": "Normal function",
+      "reference": true,
+      "activityValue": "1.0"
+     },
+     "gene": "DPYD",
+     "matchScore": 0,
+     "phenotypes": [
+      "Normal Metabolizer"
+     ],
+     "outsidePhenotype": false,
+     "outsidePhenotypeMismatch": null,
+     "activityScore": "2.0",
+     "outsideActivityScore": false,
+     "outsideActivityScoreMismatch": null,
+     "variant": null,
+     "lookupKey": [
+      "2.0"
+     ],
+     "label": "Reference/Reference",
+     "inferred": false,
+     "inferredSourceDiplotypes": [
+      {
+       "allele1": {
+        "gene": "DPYD",
+        "name": "Reference",
+        "function": "Normal function",
+        "reference": true,
+        "activityValue": "1.0"
+       },
+       "allele2": {
+        "gene": "DPYD",
+        "name": "Reference",
+        "function": "Normal function",
+        "reference": true,
+        "activityValue": "1.0"
+       },
+       "gene": "DPYD",
+       "matchScore": 166,
+       "phenotypes": [
+        "Normal Metabolizer"
+       ],
+       "outsidePhenotype": false,
+       "outsidePhenotypeMismatch": null,
+       "activityScore": "2.0",
+       "outsideActivityScore": false,
+       "outsideActivityScoreMismatch": null,
+       "variant": null,
+       "lookupKey": [
+        "2.0"
+       ],
+       "label": "Reference/Reference",
+       "inferred": false,
+       "inferredSourceDiplotypes": null,
+       "combination": false,
+       "diplotypeKey": {
+        "Reference": 2.0
+       }
+      }
+     ],
+     "combination": false,
+     "diplotypeKey": {
+      "Reference": 2.0
+     }
+    }
+   ],
+   "variants": [
+    {
+     "gene": "DPYD",
+     "chromosome": "chr1",
+     "position": 97078987,
+     "dbSnpId": "rs114096998",
+     "call": "G/G",
+     "alleles": [
+      "c.3067C>A"
+     ],
+     "phased": false,
+     "phaseSet": null,
+     "referenceAllele": "G",
+     "hasUndocumentedVariations": false,
+     "warnings": []
+    },
+    {
+     "gene": "DPYD",
+     "chromosome": "chr1",
+     "position": 97078993,
+     "dbSnpId": "rs148799944",
+     "call": "C/C",
+     "alleles": [
+      "c.3061G>C"
+     ],
+     "phased": false,
+     "phaseSet": null,
+     "referenceAllele": "C",
+     "hasUndocumentedVariations": false,
+     "warnings": []
+    },
+    {
+     "gene": "DPYD",
+     "chromosome": "chr1",
+     "position": 97079005,
+     "dbSnpId": "rs140114515",
+     "call": "C/C",
+     "alleles": [
+      "c.3049G>A"
+     ],
+     "phased": false,
+     "phaseSet": null,
+     "referenceAllele": "C",
+     "hasUndocumentedVariations": false,
+     "warnings": []
+    }
+   ],
+   "variantsOfInterest": [],
+   "hasUndocumentedVariations": false,
+   "treatUndocumentedVariationsAsReference": false
+  },
+  "HLA-A": {
+   "alleleDefinitionVersion": null,
+   "alleleDefinitionSource": "UNKNOWN",
+   "phenotypeVersion": null,
+   "geneSymbol": "HLA-A",
+   "chr": null,
+   "phased": false,
+   "effectivelyPhased": false,
+   "callSource": "NONE",
+   "uncalledHaplotypes": [],
+   "messages": [],
+   "relatedDrugs": [
+    {
+     "name": "carbamazepine",
+     "id": "PA448785"
+    }
+   ],
+   "sourceDiplotypes": [
+    {
+     "allele1": {
+      "gene": "HLA-A",
+      "name": "Unknown",
+      "function": null,
+      "reference": false,
+      "activityValue": null
+     },
+     "allele2": {
+      "gene": "HLA-A",
+      "name": "Unknown",
+      "function": null,
+      "reference": false,
+      "activityValue": null
+     },
+     "gene": "HLA-A",
+     "matchScore": 0,
+     "phenotypes": [],
+     "outsidePhenotype": false,
+     "outsidePhenotypeMismatch": null,
+     "activityScore": null,
+     "outsideActivityScore": false,
+     "outsideActivityScoreMismatch": null,
+     "variant": null,
+     "lookupKey": [
+      "No Result"
+     ],
+     "label": "Unknown/Unknown",
+     "inferred": false,
+     "inferredSourceDiplotypes": null,
+     "combination": false,
+     "diplotypeKey": {
+      "Unknown": 2.0
+     }
+    }
+   ],
+   "matcherComponentHaplotypes": [],
+   "matcherHomozygousComponentHaplotypes": [],
+   "recommendationDiplotypes": [
+    {
+     "allele1": {
+      "gene": "HLA-A",
+      "name": "Unknown",
+      "function": null,
+      "reference": false,
+      "activityValue": null
+     },
+     "allele2": {
+      "gene": "HLA-A",
+      "name": "Unknown",
+      "function": null,
+      "reference": false,
+      "activityValue": null
+     },
+     "gene": "HLA-A",
+     "matchScore": 0,
+     "phenotypes": [],
+     "outsidePhenotype": false,
+     "outsidePhenotypeMismatch": null,
+     "activityScore": null,
+     "outsideActivityScore": false,
+     "outsideActivityScoreMismatch": null,
+     "variant": null,
+     "lookupKey": [
+      "No Result"
+     ],
+     "label": "Unknown/Unknown",
+     "inferred": false,
+     "inferredSourceDiplotypes": null,
+     "combination": false,
+     "diplotypeKey": {
+      "Unknown": 2.0
+     }
+    }
+   ],
+   "variants": [],
+   "variantsOfInterest": [],
+   "hasUndocumentedVariations": false,
+   "treatUndocumentedVariationsAsReference": false
+  },
+  "HLA-B": {
+   "alleleDefinitionVersion": null,
+   "alleleDefinitionSource": "UNKNOWN",
+   "phenotypeVersion": null,
+   "geneSymbol": "HLA-B",
+   "chr": null,
+   "phased": false,
+   "effectivelyPhased": false,
+   "callSource": "OUTSIDE",
+   "uncalledHaplotypes": [],
+   "messages": [
+    {
+     "rule_name": "pcat-outside-call",
+     "version": "1",
+     "matches": {
+      "gene": null,
+      "hapsCalled": [],
+      "hapsMissing": [],
+      "variantsMissing": [],
+      "variant": [],
+      "dips": [],
+      "drugs": []
+     },
+     "exception_type": "",
+     "message": "This comes from an outside data source which does not supply position-level detail.  For specific disclaimers and limitations, see the original genotyping source."
+    }
+   ],
+   "relatedDrugs": [
+    {
+     "name": "abacavir",
+     "id": "PA448004"
+    },
+    {
+     "name": "allopurinol",
+     "id": "PA448320"
+    },
+    {
+     "name": "carbamazepine",
+     "id": "PA448785"
+    }
+   ],
+   "sourceDiplotypes": [
+    {
+     "allele1": {
+      "gene": "HLA-B",
+      "name": "*15:02",
+      "function": null,
+      "reference": false,
+      "activityValue": null
+     },
+     "allele2": {
+      "gene": "HLA-B",
+      "name": "*57:01",
+      "function": null,
+      "reference": false,
+      "activityValue": null
+     },
+     "gene": "HLA-B",
+     "matchScore": 0,
+     "phenotypes": [
+      "*15:02 positive",
+      "*57:01 positive",
+      "*58:01 negative"
+     ],
+     "outsidePhenotype": false,
+     "outsidePhenotypeMismatch": null,
+     "activityScore": null,
+     "outsideActivityScore": false,
+     "outsideActivityScoreMismatch": null,
+     "variant": null,
+     "lookupKey": [
+      "*15:02 positive",
+      "*57:01 positive",
+      "*58:01 negative"
+     ],
+     "label": "*15:02/*57:01",
+     "inferred": false,
+     "inferredSourceDiplotypes": null,
+     "combination": false,
+     "diplotypeKey": {}
+    }
+   ],
+   "matcherComponentHaplotypes": [],
+   "matcherHomozygousComponentHaplotypes": [],
+   "recommendationDiplotypes": [
+    {
+     "allele1": {
+      "gene": "HLA-B",
+      "name": "*15:02",
+      "function": null,
+      "reference": false,
+      "activityValue": null
+     },
+     "allele2": {
+      "gene": "HLA-B",
+      "name": "*57:01",
+      "function": null,
+      "reference": false,
+      "activityValue": null
+     },
+     "gene": "HLA-B",
+     "matchScore": 0,
+     "phenotypes": [
+      "*15:02 positive",
+      "*57:01 positive",
+      "*58:01 negative"
+     ],
+     "outsidePhenotype": false,
+     "outsidePhenotypeMismatch": null,
+     "activityScore": null,
+     "outsideActivityScore": false,
+     "outsideActivityScoreMismatch": null,
+     "variant": null,
+     "lookupKey": [
+      "*15:02 positive",
+      "*57:01 positive",
+      "*58:01 negative"
+     ],
+     "label": "*15:02/*57:01",
+     "inferred": false,
+     "inferredSourceDiplotypes": null,
+     "combination": false,
+     "diplotypeKey": {}
+    }
+   ],
+   "variants": [],
+   "variantsOfInterest": [],
+   "hasUndocumentedVariations": false,
+   "treatUndocumentedVariationsAsReference": false
+  }
+ },
+ "drugs": {
+  "CPIC Guideline Annotation": {
+   "clopidogrel": {
+    "name": "clopidogrel",
+    "id": "PA449053",
+    "source": "CPIC_GUIDELINE",
+    "version": "2026-07-13-11-40",
+    "messages": [],
+    "variants": [],
+    "urls": [
+     "https://www.clinpgx.org/guidelineAnnotation/PA166104948"
+    ],
+    "citations": [
+     {
+      "pmid": "21716271",
+      "title": "Clinical Pharmacogenetics Implementation Consortium guidelines for cytochrome P450-2C19 (CYP2C19) genotype and clopidogrel therapy.",
+      "journal": "Clinical pharmacology and therapeutics",
+      "year": 2011,
+      "_sameAs": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3234301"
+     }
+    ],
+    "guidelines": [
+     {
+      "id": "PA166104948",
+      "name": "Annotation of CPIC Guideline for clopidogrel and CYP2C19",
+      "source": "CPIC_GUIDELINE",
+      "version": "2026-07-13-11-40",
+      "url": "https://www.clinpgx.org/guidelineAnnotation/PA166104948",
+      "annotations": [
+       {
+        "implications": [
+         "CYP2C19: Normal clopidogrel active metabolite formation; normal on-treatment platelet reactivity"
+        ],
+        "drugRecommendation": "If considering clopidogrel, use at standard dose (75 mg/day)",
+        "classification": "Strong",
+        "population": "CVI ACS PCI",
+        "genotypes": [
+         {
+          "diplotypes": [
+           {
+            "allele1": {
+             "gene": "CYP2C19",
+             "name": "*38",
+             "function": "Normal function",
+             "reference": true,
+             "activityValue": "n/a"
+            },
+            "allele2": {
+             "gene": "CYP2C19",
+             "name": "*38",
+             "function": "Normal function",
+             "reference": true,
+             "activityValue": "n/a"
+            },
+            "gene": "CYP2C19",
+            "matchScore": 70,
+            "phenotypes": [
+             "Normal Metabolizer"
+            ],
+            "outsidePhenotype": false,
+            "outsidePhenotypeMismatch": null,
+            "activityScore": null,
+            "outsideActivityScore": false,
+            "outsideActivityScoreMismatch": null,
+            "variant": null,
+            "lookupKey": [
+             "Normal Metabolizer"
+            ],
+            "label": "*38/*38",
+            "inferred": false,
+            "inferredSourceDiplotypes": null,
+            "combination": false,
+            "diplotypeKey": {
+             "*38": 2.0
+            }
+           }
+          ]
+         }
+        ],
+        "messages": [],
+        "highlightedVariants": [],
+        "dosingInformation": false,
+        "alternateDrugAvailable": false,
+        "otherPrescribingGuidance": false,
+        "lookupKey": [
+         {
+          "CYP2C19": "Normal Metabolizer"
+         }
+        ]
+       },
+       {
+        "implications": [
+         "CYP2C19: Normal clopidogrel active metabolite formation; normal on-treatment platelet reactivity"
+        ],
+        "drugRecommendation": "If considering clopidogrel, use at standard dose (75 mg/day)",
+        "classification": "Strong",
+        "population": "CVI non-ACS non-PCI",
+        "genotypes": [
+         {
+          "diplotypes": [
+           {
+            "allele1": {
+             "gene": "CYP2C19",
+             "name": "*38",
+             "function": "Normal function",
+             "reference": true,
+             "activityValue": "n/a"
+            },
+            "allele2": {
+             "gene": "CYP2C19",
+             "name": "*38",
+             "function": "Normal function",
+             "reference": true,
+             "activityValue": "n/a"
+            },
+            "gene": "CYP2C19",
+            "matchScore": 70,
+            "phenotypes": [
+             "Normal Metabolizer"
+            ],
+            "outsidePhenotype": false,
+            "outsidePhenotypeMismatch": null,
+            "activityScore": null,
+            "outsideActivityScore": false,
+            "outsideActivityScoreMismatch": null,
+            "variant": null,
+            "lookupKey": [
+             "Normal Metabolizer"
+            ],
+            "label": "*38/*38",
+            "inferred": false,
+            "inferredSourceDiplotypes": null,
+            "combination": false,
+            "diplotypeKey": {
+             "*38": 2.0
+            }
+           }
+          ]
+         }
+        ],
+        "messages": [],
+        "highlightedVariants": [],
+        "dosingInformation": false,
+        "alternateDrugAvailable": false,
+        "otherPrescribingGuidance": false,
+        "lookupKey": [
+         {
+          "CYP2C19": "Normal Metabolizer"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "codeine": {
+    "name": "codeine",
+    "id": "PA449088",
+    "source": "CPIC_GUIDELINE",
+    "version": "2026-07-13-11-40",
+    "messages": [],
+    "variants": [],
+    "urls": [
+     "https://www.clinpgx.org/guidelineAnnotation/PA166104996"
+    ],
+    "citations": [
+     {
+      "pmid": "22205192",
+      "title": "Clinical Pharmacogenetics Implementation Consortium (CPIC) guidelines for codeine therapy in the context of cytochrome P450 2D6 (CYP2D6) genotype.",
+      "journal": "Clinical pharmacology and therapeutics",
+      "year": 2012,
+      "_sameAs": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3289963"
+     }
+    ],
+    "guidelines": [
+     {
+      "id": "PA166104996",
+      "name": "Annotation of CPIC Guideline for codeine and CYP2D6",
+      "source": "CPIC_GUIDELINE",
+      "version": "2026-07-13-11-40",
+      "url": "https://www.clinpgx.org/guidelineAnnotation/PA166104996",
+      "annotations": [
+       {
+        "implications": [
+         "CYP2D6: Reduced morphine formation"
+        ],
+        "drugRecommendation": "Use codeine label recommended age- or weight-specific dosing. If no response and opioid use is warranted, consider a non-tramadol opioid.",
+        "classification": "Moderate",
+        "population": "general",
+        "genotypes": [
+         {
+          "diplotypes": [
+           {
+            "allele1": {
+             "gene": "CYP2D6",
+             "name": "*1",
+             "function": "Normal function",
+             "reference": true,
+             "activityValue": "1.0"
+            },
+            "allele2": {
+             "gene": "CYP2D6",
+             "name": "*3",
+             "function": "No function",
+             "reference": false,
+             "activityValue": "0.0"
+            },
+            "gene": "CYP2D6",
+            "matchScore": 0,
+            "phenotypes": [
+             "Intermediate Metabolizer"
+            ],
+            "outsidePhenotype": false,
+            "outsidePhenotypeMismatch": null,
+            "activityScore": "1.0",
+            "outsideActivityScore": false,
+            "outsideActivityScoreMismatch": null,
+            "variant": null,
+            "lookupKey": [
+             "1.0"
+            ],
+            "label": "*1/*3",
+            "inferred": false,
+            "inferredSourceDiplotypes": null,
+            "combination": false,
+            "diplotypeKey": {}
+           }
+          ]
+         }
+        ],
+        "messages": [],
+        "highlightedVariants": [],
+        "dosingInformation": false,
+        "alternateDrugAvailable": false,
+        "otherPrescribingGuidance": true,
+        "lookupKey": [
+         {
+          "CYP2D6": "1.0"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "abacavir": {
+    "name": "abacavir",
+    "id": "PA448004",
+    "source": "CPIC_GUIDELINE",
+    "version": "2026-07-13-11-40",
+    "messages": [],
+    "variants": [],
+    "urls": [
+     "https://www.clinpgx.org/guidelineAnnotation/PA166104997"
+    ],
+    "citations": [
+     {
+      "pmid": "22378157",
+      "title": "Clinical pharmacogenetics implementation consortium guidelines for HLA-B genotype and abacavir dosing.",
+      "journal": "Clinical pharmacology and therapeutics",
+      "year": 2012,
+      "_sameAs": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3374459"
+     }
+    ],
+    "guidelines": [
+     {
+      "id": "PA166104997",
+      "name": "Annotation of CPIC Guideline for abacavir and HLA-B",
+      "source": "CPIC_GUIDELINE",
+      "version": "2026-07-13-11-40",
+      "url": "https://www.clinpgx.org/guidelineAnnotation/PA166104997",
+      "annotations": [
+       {
+        "implications": [
+         "HLA-B: Significantly increased risk of abacavir hypersensitivity"
+        ],
+        "drugRecommendation": "Abacavir is not recommended",
+        "classification": "Strong",
+        "population": "general",
+        "genotypes": [
+         {
+          "diplotypes": [
+           {
+            "allele1": {
+             "gene": "HLA-B",
+             "name": "*15:02",
+             "function": null,
+             "reference": false,
+             "activityValue": null
+            },
+            "allele2": {
+             "gene": "HLA-B",
+             "name": "*57:01",
+             "function": null,
+             "reference": false,
+             "activityValue": null
+            },
+            "gene": "HLA-B",
+            "matchScore": 0,
+            "phenotypes": [
+             "*15:02 positive",
+             "*57:01 positive",
+             "*58:01 negative"
+            ],
+            "outsidePhenotype": false,
+            "outsidePhenotypeMismatch": null,
+            "activityScore": null,
+            "outsideActivityScore": false,
+            "outsideActivityScoreMismatch": null,
+            "variant": null,
+            "lookupKey": [
+             "*15:02 positive",
+             "*57:01 positive",
+             "*58:01 negative"
+            ],
+            "label": "*15:02/*57:01",
+            "inferred": false,
+            "inferredSourceDiplotypes": null,
+            "combination": false,
+            "diplotypeKey": {}
+           }
+          ]
+         }
+        ],
+        "messages": [],
+        "highlightedVariants": [],
+        "dosingInformation": false,
+        "alternateDrugAvailable": true,
+        "otherPrescribingGuidance": false,
+        "lookupKey": [
+         {
+          "HLA-B": "*57:01 positive"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "fluorouracil": {
+    "name": "fluorouracil",
+    "id": "PA128406956",
+    "source": "CPIC_GUIDELINE",
+    "version": "2026-07-13-11-40",
+    "messages": [],
+    "variants": [],
+    "urls": [
+     "https://www.clinpgx.org/guidelineAnnotation/PA166122686"
+    ],
+    "citations": [
+     {
+      "pmid": "23988873",
+      "title": "Clinical Pharmacogenetics Implementation Consortium guidelines for dihydropyrimidine dehydrogenase genotype and fluoropyrimidine dosing.",
+      "journal": "Clinical pharmacology and therapeutics",
+      "year": 2013,
+      "_sameAs": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3831181"
+     }
+    ],
+    "guidelines": [
+     {
+      "id": "PA166122686",
+      "name": "Annotation of CPIC Guideline for fluorouracil and DPYD",
+      "source": "CPIC_GUIDELINE",
+      "version": "2026-07-13-11-40",
+      "url": "https://www.clinpgx.org/guidelineAnnotation/PA166122686",
+      "annotations": [
+       {
+        "implications": [
+         "DPYD: Normal DPD activity and \"normal\" risk for fluoropyrimidine toxicity"
+        ],
+        "drugRecommendation": "Based on genotype, there is no indication to change dose or therapy. Use label-recommended dosage and administration.",
+        "classification": "Strong",
+        "population": "general",
+        "genotypes": [
+         {
+          "diplotypes": [
+           {
+            "allele1": {
+             "gene": "DPYD",
+             "name": "Reference",
+             "function": "Normal function",
+             "reference": true,
+             "activityValue": "1.0"
+            },
+            "allele2": {
+             "gene": "DPYD",
+             "name": "Reference",
+             "function": "Normal function",
+             "reference": true,
+             "activityValue": "1.0"
+            },
+            "gene": "DPYD",
+            "matchScore": 0,
+            "phenotypes": [
+             "Normal Metabolizer"
+            ],
+            "outsidePhenotype": false,
+            "outsidePhenotypeMismatch": null,
+            "activityScore": "2.0",
+            "outsideActivityScore": false,
+            "outsideActivityScoreMismatch": null,
+            "variant": null,
+            "lookupKey": [
+             "2.0"
+            ],
+            "label": "Reference/Reference",
+            "inferred": false,
+            "inferredSourceDiplotypes": [
+             {
+              "allele1": {
+               "gene": "DPYD",
+               "name": "Reference",
+               "function": "Normal function",
+               "reference": true,
+               "activityValue": "1.0"
+              },
+              "allele2": {
+               "gene": "DPYD",
+               "name": "Reference",
+               "function": "Normal function",
+               "reference": true,
+               "activityValue": "1.0"
+              },
+              "gene": "DPYD",
+              "matchScore": 166,
+              "phenotypes": [
+               "Normal Metabolizer"
+              ],
+              "outsidePhenotype": false,
+              "outsidePhenotypeMismatch": null,
+              "activityScore": "2.0",
+              "outsideActivityScore": false,
+              "outsideActivityScoreMismatch": null,
+              "variant": null,
+              "lookupKey": [
+               "2.0"
+              ],
+              "label": "Reference/Reference",
+              "inferred": false,
+              "inferredSourceDiplotypes": null,
+              "combination": false,
+              "diplotypeKey": {
+               "Reference": 2.0
+              }
+             }
+            ],
+            "combination": false,
+            "diplotypeKey": {
+             "Reference": 2.0
+            }
+           }
+          ]
+         }
+        ],
+        "messages": [],
+        "highlightedVariants": [],
+        "dosingInformation": false,
+        "alternateDrugAvailable": false,
+        "otherPrescribingGuidance": false,
+        "lookupKey": [
+         {
+          "DPYD": "2.0"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "DPWG Guideline Annotation": {
+   "clopidogrel": {
+    "name": "clopidogrel",
+    "id": "PA449053",
+    "source": "DPWG_GUIDELINE",
+    "version": "2026-07-13-11-40",
+    "messages": [],
+    "variants": [],
+    "urls": [
+     "https://www.clinpgx.org/guidelineAnnotation/PA166104956"
+    ],
+    "citations": [
+     {
+      "pmid": "21412232",
+      "title": "Pharmacogenetics: from bench to byte--an update of guidelines.",
+      "journal": "Clinical pharmacology and therapeutics",
+      "year": 2011,
+      "_sameAs": "https://www.ncbi.nlm.nih.gov/pubmed/21412232"
+     }
+    ],
+    "guidelines": [
+     {
+      "id": "PA166104956",
+      "name": "Annotation of DPWG Guideline for clopidogrel and CYP2C19",
+      "source": "DPWG_GUIDELINE",
+      "version": "2026-07-13-11-40",
+      "url": "https://www.clinpgx.org/guidelineAnnotation/PA166104956",
+      "annotations": [
+       {
+        "implications": [
+         "The guideline does not provide a description of the impact of a normal metabolizer phenotype on clopidogrel."
+        ],
+        "drugRecommendation": "The guideline does not provide a recommendation for clopidogrel in normal metabolizers.",
+        "classification": "No recommendation",
+        "population": null,
+        "genotypes": [
+         {
+          "diplotypes": [
+           {
+            "allele1": {
+             "gene": "CYP2C19",
+             "name": "*38",
+             "function": "Normal function",
+             "reference": true,
+             "activityValue": "n/a"
+            },
+            "allele2": {
+             "gene": "CYP2C19",
+             "name": "*38",
+             "function": "Normal function",
+             "reference": true,
+             "activityValue": "n/a"
+            },
+            "gene": "CYP2C19",
+            "matchScore": 70,
+            "phenotypes": [
+             "Normal Metabolizer"
+            ],
+            "outsidePhenotype": false,
+            "outsidePhenotypeMismatch": null,
+            "activityScore": null,
+            "outsideActivityScore": false,
+            "outsideActivityScoreMismatch": null,
+            "variant": null,
+            "lookupKey": [
+             "Normal Metabolizer"
+            ],
+            "label": "*38/*38",
+            "inferred": false,
+            "inferredSourceDiplotypes": null,
+            "combination": false,
+            "diplotypeKey": {
+             "*38": 2.0
+            }
+           }
+          ]
+         }
+        ],
+        "messages": [],
+        "highlightedVariants": [],
+        "dosingInformation": false,
+        "alternateDrugAvailable": false,
+        "otherPrescribingGuidance": false,
+        "lookupKey": [
+         {
+          "CYP2C19": "Normal Metabolizer"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "atomoxetine": {
+    "name": "atomoxetine",
+    "id": "PA134688071",
+    "source": "DPWG_GUIDELINE",
+    "version": "2026-07-13-11-40",
+    "messages": [],
+    "variants": [],
+    "urls": [
+     "https://www.clinpgx.org/guidelineAnnotation/PA166104989"
+    ],
+    "citations": [
+     {
+      "pmid": "21412232",
+      "title": "Pharmacogenetics: from bench to byte--an update of guidelines.",
+      "journal": "Clinical pharmacology and therapeutics",
+      "year": 2011,
+      "_sameAs": "https://www.ncbi.nlm.nih.gov/pubmed/21412232"
+     }
+    ],
+    "guidelines": [
+     {
+      "id": "PA166104989",
+      "name": "Annotation of DPWG Guideline for atomoxetine and CYP2D6",
+      "source": "DPWG_GUIDELINE",
+      "version": "2026-07-13-11-40",
+      "url": "https://www.clinpgx.org/guidelineAnnotation/PA166104989",
+      "annotations": [
+       {
+        "implications": [
+         "The dose requirement can be reduced, because the genetic variation results in a higher atomoxetine plasma concentration."
+        ],
+        "drugRecommendation": "In the event of side effects occurring and/or a response later than 9 weeks: reduce the dose and check whether the effect is conserved The plasma concentration of atomoxetine is a factor of 2-3 times higher for IM than for NM at the same dose.",
+        "classification": "Unspecified",
+        "population": null,
+        "genotypes": [
+         {
+          "diplotypes": [
+           {
+            "allele1": {
+             "gene": "CYP2D6",
+             "name": "*1",
+             "function": "Normal function",
+             "reference": true,
+             "activityValue": "1.0"
+            },
+            "allele2": {
+             "gene": "CYP2D6",
+             "name": "*3",
+             "function": "No function",
+             "reference": false,
+             "activityValue": "0.0"
+            },
+            "gene": "CYP2D6",
+            "matchScore": 0,
+            "phenotypes": [
+             "Intermediate Metabolizer"
+            ],
+            "outsidePhenotype": false,
+            "outsidePhenotypeMismatch": null,
+            "activityScore": "1.0",
+            "outsideActivityScore": false,
+            "outsideActivityScoreMismatch": null,
+            "variant": null,
+            "lookupKey": [
+             "1.0"
+            ],
+            "label": "*1/*3",
+            "inferred": false,
+            "inferredSourceDiplotypes": null,
+            "combination": false,
+            "diplotypeKey": {}
+           }
+          ]
+         }
+        ],
+        "messages": [],
+        "highlightedVariants": [],
+        "dosingInformation": true,
+        "alternateDrugAvailable": false,
+        "otherPrescribingGuidance": false,
+        "lookupKey": [
+         {
+          "CYP2D6": "1.0"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "FDA Label Annotation": {
+   "clopidogrel": {
+    "name": "clopidogrel",
+    "id": "PA449053",
+    "source": "FDA_LABEL",
+    "version": "2026-07-13-11-40",
+    "messages": [],
+    "variants": [],
+    "urls": [
+     "https://www.clinpgx.org/labelAnnotation/PA166104777"
+    ],
+    "citations": [
+     {
+      "pmid": null,
+      "title": "Drugs@FDA: Drug Product Plavix (clopidogrel bisulfate), NDA020839, Rebel Distributors Corp",
+      "journal": null,
+      "year": -1,
+      "_sameAs": "https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=overview.process&varApplNo=020839"
+     }
+    ],
+    "guidelines": [
+     {
+      "id": "PA166104777",
+      "name": "Annotation of FDA Label for clopidogrel and CYP2C19",
+      "source": "FDA_LABEL",
+      "version": "2026-07-13-11-40",
+      "url": "https://www.clinpgx.org/labelAnnotation/PA166104777",
+      "annotations": []
+     }
+    ]
+   }
+  }
+ },
+ "messages": [],
+ "matcherMetadata": {
+  "namedAlleleMatcherVersion": "2.0.0",
+  "genomeBuild": "GRCh38.p14",
+  "inputFilename": "pharmcat.example.vcf",
+  "timestamp": "2026-07-13T22:32:25.984Z",
+  "topCandidatesOnly": true,
+  "findCombinations": false,
+  "callCyp2d": false,
+  "sampleId": "Sample_1",
+  "sampleProps": null
+ },
+ "unannotatedGeneCalls": [
+  {
+   "alleleDefinitionVersion": "2026-07-13-11-40",
+   "alleleDefinitionSource": "CLINPGX",
+   "phenotypeVersion": "2026-07-13-11-40",
+   "geneSymbol": "F2",
+   "chr": "chr11",
+   "phased": false,
+   "effectivelyPhased": true,
+   "callSource": "MATCHER",
+   "uncalledHaplotypes": [],
+   "messages": [],
+   "relatedDrugs": [],
+   "sourceDiplotypes": [
+    {
+     "allele1": {
+      "gene": "F2",
+      "name": "rs1799963 reference (G)",
+      "function": "Prothrombin 20210A negative",
+      "reference": true,
+      "activityValue": "n/a"
+     },
+     "allele2": {
+      "gene": "F2",
+      "name": "rs1799963 reference (G)",
+      "function": "Prothrombin 20210A negative",
+      "reference": true,
+      "activityValue": "n/a"
+     },
+     "gene": "F2",
+     "matchScore": 2,
+     "phenotypes": [
+      "n/a"
+     ],
+     "outsidePhenotype": false,
+     "outsidePhenotypeMismatch": null,
+     "activityScore": null,
+     "outsideActivityScore": false,
+     "outsideActivityScoreMismatch": null,
+     "variant": null,
+     "lookupKey": [
+      "n/a"
+     ],
+     "label": "rs1799963 reference (G)/rs1799963 reference (G)",
+     "inferred": false,
+     "inferredSourceDiplotypes": null,
+     "combination": false,
+     "diplotypeKey": {
+      "rs1799963 reference (G)": 2.0
+     }
+    }
+   ],
+   "matcherComponentHaplotypes": [],
+   "matcherHomozygousComponentHaplotypes": [],
+   "recommendationDiplotypes": [
+    {
+     "allele1": {
+      "gene": "F2",
+      "name": "rs1799963 reference (G)",
+      "function": "Prothrombin 20210A negative",
+      "reference": true,
+      "activityValue": "n/a"
+     },
+     "allele2": {
+      "gene": "F2",
+      "name": "rs1799963 reference (G)",
+      "function": "Prothrombin 20210A negative",
+      "reference": true,
+      "activityValue": "n/a"
+     },
+     "gene": "F2",
+     "matchScore": 2,
+     "phenotypes": [
+      "n/a"
+     ],
+     "outsidePhenotype": false,
+     "outsidePhenotypeMismatch": null,
+     "activityScore": null,
+     "outsideActivityScore": false,
+     "outsideActivityScoreMismatch": null,
+     "variant": null,
+     "lookupKey": [
+      "n/a"
+     ],
+     "label": "rs1799963 reference (G)/rs1799963 reference (G)",
+     "inferred": false,
+     "inferredSourceDiplotypes": null,
+     "combination": false,
+     "diplotypeKey": {
+      "rs1799963 reference (G)": 2.0
+     }
+    }
+   ],
+   "variants": [
+    {
+     "gene": "F2",
+     "chromosome": "chr11",
+     "position": 46739505,
+     "dbSnpId": "rs1799963",
+     "call": "G/G",
+     "alleles": [
+      "rs1799963 Prothrombin 20210A"
+     ],
+     "phased": false,
+     "phaseSet": null,
+     "referenceAllele": "G",
+     "hasUndocumentedVariations": false,
+     "warnings": []
+    }
+   ],
+   "variantsOfInterest": [],
+   "hasUndocumentedVariations": false,
+   "treatUndocumentedVariationsAsReference": false
+  }
+ ]
+}

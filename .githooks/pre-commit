@@ -1,0 +1,5 @@
+#!/bin/sh
+# Refuse commits that would put personal genome data into git. Second line of defence after
+# .gitignore, which `git add -f` bypasses. The pre-push hook checks the outgoing commits, CI
+# every tracked file.
+exec "$(git rev-parse --show-toplevel)/scripts/check_no_genome_data.sh" --staged

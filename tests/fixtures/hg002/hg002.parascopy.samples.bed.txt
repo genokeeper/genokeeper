@@ -1,0 +1,11 @@
+## parascopy cn-using /parascopy/models_GRCh38_1KGP/EUR/SMN1.gz -i /in/sample.cram::HG002 -f /ref/GRCh38_no_alt.fa -t /parascopy/homology_table/GRCh38.bed.gz -d /out/depth/depth.csv -o /out/cn -@ 4
+## parascopy v1.19.0
+#chrom	start	end	locus	sample	agCN_filter	agCN	agCN_qual	psCN_filter	psCN	psCN_qual	info	homologous_regions
+chr5	70895669	70899241	SMN1	HG002	PASS	6	66.84	PASS	?,2,?	0,423,0	group=03-01;n_windows=35;hmm_windows=34;n_psvs=85;indep_psvs=29;rel_psvs=23;semirel_psvs=1;psv_info=1.000;max_f_value=0.998;gene_conv=F;link=0;region_ix=0	chr5:22010466-22014055:+,chr5:70020247-70023823:+
+chr5	70899241	70900613	SMN1	HG002	PASS	6	20.90	PASS	?,2,?	0,423,0	group=03-01;n_windows=13;hmm_windows=13;n_psvs=85;indep_psvs=29;rel_psvs=23;semirel_psvs=1;agCN_psvs=4;psv_info=1.000;max_f_value=0.998;gene_conv=F;link=0;agCN_probs=6:0.9814,5:0.01864;region_ix=0;init_agCN=6:17	chr5:22014056-22015433:+,chr5:70023824-70025195:+
+chr5	70900613	70906578	SMN1	HG002	PASS	4	76.68	NoReliable	?,?	0,0	group=02-01;n_windows=59;hmm_windows=32;n_psvs=10;indep_psvs=5;rel_psvs=0;semirel_psvs=0;region_ix=1	chr5:70025196-70031159:+
+chr5	70906578	70907778	SMN1	HG002	PASS	4	18.14	NoReliable	?,?	0,0	group=02-01;n_windows=12;hmm_windows=12;n_psvs=1;indep_psvs=1;rel_psvs=0;semirel_psvs=0;agCN_probs=4:0.9846,3:0.01536;region_ix=1	chr5:70031160-70032359:+
+chr5	70907778	70925378	SMN1	HG002	PASS	3	12.64	NoReliable	?,?	0,0	group=02-01;n_windows=176;hmm_windows=116;n_psvs=40;indep_psvs=22;rel_psvs=0;semirel_psvs=0;agCN_probs=3:0.9455,4:0.05449;region_ix=1	chr5:70032360-70049960:+
+chr5	70925378	70930178	SMN1	HG002	PASS	4	15.37	PASS	2,2	156,156	group=02-01;n_windows=48;hmm_windows=23;n_psvs=33;indep_psvs=21;rel_psvs=10;semirel_psvs=6;psv_info=1.000;max_f_value=0.998;gene_conv=F;link=2;agCN_probs=4:0.971,3:0.02903;region_ix=1	chr5:70049961-70054754:+
+chr5	70930178	70946944	SMN1	HG002	PASS	4	211.73	PASS	2,2	156,156	group=02-01;n_windows=167;hmm_windows=144;n_psvs=33;indep_psvs=21;rel_psvs=10;semirel_psvs=6;psv_info=1.000;max_f_value=0.998;gene_conv=F;link=2;region_ix=1	chr5:70054755-70071519:+
+chr5	70947243	70956598	SMN1	HG002	PASS	4	115.55	PASS	2,2	156,156	group=02-01;n_windows=92;hmm_windows=63;n_psvs=33;indep_psvs=21;rel_psvs=10;semirel_psvs=6;psv_info=1.000;max_f_value=0.998;gene_conv=F;link=2;region_ix=3	chr5:70071819-70081144:+

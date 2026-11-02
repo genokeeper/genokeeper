@@ -1,0 +1,6 @@
+# source: https://www.ncbi.nlm.nih.gov/clinvar/variation/5546/ (ClinVar VCV000005546, variation ID 5546, del(GJB6-D13S1830), Pathogenic; GRCh38 chr13:20,223,038-20,531,806, 1-based, 308,769 bp; read from NCBI E-utilities esummary on 2026-10-30)
+# version: 2026-10-30
+# columns: start and end 0-based half-open, as BED; gene is the gene a deletion here is stated on (GJB6-D13S1830 removes GJB6 and silences GJB2 in cis: DFNB1)
+# rule: a 3b deletion or a depth loss at reciprocal overlap >= 0.5 with a row is a possible carrier finding on its gene with reason, or on both copies (1/1) a finding under risks with homozygous_reason (the slice 3d spec, amended 2026-10-30; controller ruling 2026-10-30)
+name	chrom	start	end	gene	reason	homozygous_reason
+GJB6-D13S1830	chr13	20223037	20531806	GJB2	possible GJB6-D13S1830 deletion: with a GJB2 variant on the other copy it causes DFNB1 hearing loss; needs confirmation by PCR across the breakpoint	possible homozygous GJB6-D13S1830 deletion: causes DFNB1 hearing loss; needs confirmation by PCR across the breakpoint

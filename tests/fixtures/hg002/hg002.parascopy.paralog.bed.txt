@@ -1,0 +1,8 @@
+## parascopy cn-using /parascopy/models_GRCh38_1KGP/EUR/SMN1.gz -i /in/sample.cram::HG002 -f /ref/GRCh38_no_alt.fa -t /parascopy/homology_table/GRCh38.bed.gz -d /out/depth/depth.csv -o /out/cn -@ 4
+## parascopy v1.19.0
+#chrom	start	end	sample	cn_filter	cn	cn_qual	agcn_filter	agcn	agcn_qual	main_region
+chr5	22010465	22015433	HG002	PASS	2	423	PASS	6	67	chr5:70895670-70899241
+chr5	70049960	70071519	HG002	PASS	2	156	PASS	4	15	chr5:70925379-70930178
+chr5	70071818	70081144	HG002	PASS	2	156	PASS	4	116	chr5:70947244-70956598
+chr5	70925378	70946944	HG002	PASS	2	156	PASS	4	15	chr5:70925379-70930178
+chr5	70947243	70956598	HG002	PASS	2	156	PASS	4	116	chr5:70947244-70956598

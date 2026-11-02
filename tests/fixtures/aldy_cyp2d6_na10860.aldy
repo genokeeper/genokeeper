@@ -1,0 +1,7 @@
+#Sample	Gene	SolutionID	Major	Minor	Copy	Allele	Location	Type	Coverage	Effect	dbSNP	Code	Status
+#Solution 1: *(1.018 +rs28371713), *(4.001 +rs111564371 +rs112568578 +rs113889384), *(4.021X -rs28371738); gene=CYP2D6-pharmvar-6.2.14 (2025-07-20); cpic=intermediate; cpic_score=1.0
+NA10860	CYP2D6	1	*1/*4+*4.021X	1.018;4.001;4.021X	0	1.018	42128792	A>G	14	none	rs28371713	
+NA10860	CYP2D6	1	*1/*4+*4.021X	1.018;4.001;4.021X	0	1.018	42130521	G>A	11	none	rs29001678	
+#Solution 2: *(1.018 +rs28371713), *(4.013X -rs28371738), *(4.021 +rs111564371 +rs112568578 +rs113889384); gene=CYP2D6-pharmvar-6.2.14 (2025-07-20); cpic=intermediate; cpic_score=1.0
+NA10860	CYP2D6	2	*1/*4.021+*4NX	1.018;4.021;4.013X	0	1.018	42128792	A>G	14	none	rs28371713	
+NA10860	CYP2D6	2	*1/*4.021+*4NX	1.018;4.021;4.013X	0	1.018	42130521	G>A	11	none	rs29001678	

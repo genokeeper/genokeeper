@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="{{lang}}">
+<head>
+<meta http-equiv="Content-Security-Policy" content="{{csp}}">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{page_title}}</title>
+<style>{{css}}</style>
+</head>
+<body>
+<main class="frame">
+  <h1>{{page_title}}</h1>
+  <nav class="tabs">
+    <button type="button" class="tab" id="tab-feed">{{tab_feed}}</button>
+    <button type="button" class="tab" id="tab-changes">{{tab_changes}}</button>
+  </nav>
+  <div class="filters">
+    <input type="search" id="search" aria-label="{{search_label}}" placeholder="{{search_placeholder}}">
+    <div class="chips" id="chips"></div>
+    <label><span id="reliability-label"></span><input type="range" id="reliability" min="0" max="2"></label>
+    <label><span id="validity-label"></span><input type="range" id="validity" min="0" max="3"></label>
+  </div>
+  <section class="view" id="feed-view">
+    <p class="count" id="count"></p>
+    <div id="feed"></div>
+    <div class="note" id="excluded"></div>
+    <p class="note" id="hidden"></p>
+    <div class="note" id="unassessed"></div>
+    <div class="note" id="not-covered"></div>
+  </section>
+  <section class="view" id="changes-view">
+    <p class="sub" id="changes-head"></p>
+    <div id="check"></div>
+    <div id="banner"></div>
+    <p class="note" id="no-base"></p>
+    <div class="groups" id="change-chips"></div>
+    <div class="wrap"><table class="changes" id="changes"></table></div>
+    <p class="note" id="research"></p>
+  </section>
+  <footer class="sub" id="footer"></footer>
+</main>
+<script type="application/json" id="data">{{data}}</script>
+<script>{{js}}</script>
+</body>
+</html>

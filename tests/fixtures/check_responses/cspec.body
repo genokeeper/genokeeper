@@ -1,0 +1,1456 @@
+{
+ "@context": "https://cspec.genome.network/cspec/api/context/SequenceVariantInterpretation",
+ "data": [
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN002",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50002",
+    "@type": "Organization",
+    "label": "Cardiomyopathy Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50002"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/135640453",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=MYH7",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0005021",
+         "@type": "Disease",
+         "label": "MONDO:0005021",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        },
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0005045",
+         "@type": "Disease",
+         "label": "MONDO:0005045",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "MYH7"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN002",
+   "version": "2.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN003",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50012",
+    "@type": "Organization",
+    "label": "PTEN Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50012"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/135640513",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=PTEN",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0017623",
+         "@type": "Disease",
+         "label": "MONDO:0017623",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "PTEN"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN003",
+   "version": "3.2"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN009",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50013",
+    "@type": "Organization",
+    "label": "TP53 Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50013"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/135640873",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=TP53",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0018875",
+         "@type": "Disease",
+         "label": "MONDO:0018875",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "TP53"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN009",
+   "version": "2.4"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN010",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50009",
+    "@type": "Organization",
+    "label": "Lysosomal Diseases Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50009"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/135640933",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=GAA",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0009290",
+         "@type": "Disease",
+         "label": "MONDO:0009290"
+        }
+       ],
+       "label": "GAA"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN010",
+   "version": "2.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN012",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50038",
+    "@type": "Organization",
+    "label": "Malignant Hyperthermia Susceptibility Variant Curation Expert Panel",
+    "url": "https://www.clinicalgenome.org/affiliation/50038"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/135641053",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=RYR1",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0018493",
+         "@type": "Disease",
+         "label": "MONDO:0018493"
+        }
+       ],
+       "label": "RYR1"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN012",
+   "version": "2.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN013",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50004",
+    "@type": "Organization",
+    "label": "Familial Hypercholesterolemia Variant Curation Expert Panel",
+    "url": "https://www.clinicalgenome.org/affiliation/50004"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/135640393",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=LDLR",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0007750",
+         "@type": "Disease",
+         "label": "MONDO:0007750"
+        }
+       ],
+       "label": "LDLR"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN013",
+   "version": "1.2"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN017",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50016",
+    "@type": "Organization",
+    "label": "Monogenic Diabetes Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50016"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/467903870",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=HNF1A",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0015967",
+         "@type": "Disease",
+         "label": "MONDO:0015967"
+        }
+       ],
+       "label": "HNF1A"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN017",
+   "version": "3.1"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN022",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50046",
+    "@type": "Organization",
+    "label": "FBN1 Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50046"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/643243099",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=FBN1",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0007947",
+         "@type": "Disease",
+         "label": "MONDO:0007947"
+        }
+       ],
+       "label": "FBN1"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN022",
+   "version": "1.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN077",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50039",
+    "@type": "Organization",
+    "label": "Hereditary Breast, Ovarian and Pancreatic Cancer Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50039"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1526222369",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=PALB2",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0700272",
+         "@type": "Disease",
+         "label": "MONDO:0700272",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        },
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0012565",
+         "@type": "Disease",
+         "label": "MONDO:0012565",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000007",
+           "@label": "Autosomal recessive inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "PALB2"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN077",
+   "version": "1.3"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN078",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50036",
+    "@type": "Organization",
+    "label": "VHL Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50036"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1527855768",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=VHL",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0008667",
+         "@type": "Disease",
+         "label": "MONDO:0008667",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "VHL"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN078",
+   "version": "1.1"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN089",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50099",
+    "@type": "Organization",
+    "label": "InSiGHT Hereditary Colorectal Cancer/Polyposis Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50099"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1529292804",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=APC",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0021056",
+         "@type": "Disease",
+         "label": "MONDO:0021056"
+        }
+       ],
+       "label": "APC"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN089",
+   "version": "2.1"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN092",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50087",
+    "@type": "Organization",
+    "label": "ENIGMA BRCA1 and BRCA2 Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50087"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1530970800",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=BRCA1",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0700268",
+         "@type": "Disease",
+         "label": "MONDO:0700268",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "BRCA1"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN092",
+   "version": "1.2"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN095",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50002",
+    "@type": "Organization",
+    "label": "Cardiomyopathy Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50002"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1535304693",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=MYBPC3",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0005045",
+         "@type": "Disease",
+         "label": "MONDO:0005045",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "MYBPC3"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN095",
+   "version": "1.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN097",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50087",
+    "@type": "Organization",
+    "label": "ENIGMA BRCA1 and BRCA2 Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50087"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1535438847",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=BRCA2",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0700269",
+         "@type": "Disease",
+         "label": "MONDO:0700269",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "BRCA2"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN097",
+   "version": "1.2"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN098",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50002",
+    "@type": "Organization",
+    "label": "Cardiomyopathy Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50002"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1535821579",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=TNNI3",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0005045",
+         "@type": "Disease",
+         "label": "MONDO:0005045",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "TNNI3"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN098",
+   "version": "1.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN099",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50002",
+    "@type": "Organization",
+    "label": "Cardiomyopathy Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50002"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1535826201",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=TNNT2",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0005045",
+         "@type": "Disease",
+         "label": "MONDO:0005045",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        },
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0005021",
+         "@type": "Disease",
+         "label": "MONDO:0005021",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "TNNT2"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN099",
+   "version": "1.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN100",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50002",
+    "@type": "Organization",
+    "label": "Cardiomyopathy Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50002"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1535827410",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=TPM1",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0005045",
+         "@type": "Disease",
+         "label": "MONDO:0005045",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "TPM1"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN100",
+   "version": "1.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN101",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50002",
+    "@type": "Organization",
+    "label": "Cardiomyopathy Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50002"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1535829283",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=ACTC1",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0005045",
+         "@type": "Disease",
+         "label": "MONDO:0005045",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "ACTC1"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN101",
+   "version": "1.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN102",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50002",
+    "@type": "Organization",
+    "label": "Cardiomyopathy Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50002"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1535830819",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=MYL2",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0005045",
+         "@type": "Disease",
+         "label": "MONDO:0005045",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "MYL2"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN102",
+   "version": "1.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN103",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50002",
+    "@type": "Organization",
+    "label": "Cardiomyopathy Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50002"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1535831955",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=MYL3",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0005045",
+         "@type": "Disease",
+         "label": "MONDO:0005045",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "MYL3"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN103",
+   "version": "1.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN105",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50049",
+    "@type": "Organization",
+    "label": "Peroxisomal Disorders Variant Curation Expert Panel ",
+    "url": "https://clinicalgenome.org/affiliation/50049"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1537428530",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=ABCD1",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0018544",
+         "@type": "Disease",
+         "label": "MONDO:0018544",
+         "modeOfInheritance": [
+          {
+           "@id": "",
+           "@label": "X-linked inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "ABCD1"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN105",
+   "version": "1.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN112",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50108",
+    "@type": "Organization",
+    "label": "Potassium Channel Arrhythmia Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50108"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1562365913",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=KCNQ1",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0100316",
+         "@type": "Disease",
+         "label": "MONDO:0100316",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          },
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000007",
+           "@label": "Autosomal recessive inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "KCNQ1"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN112",
+   "version": "1.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN115",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50099",
+    "@type": "Organization",
+    "label": "InSiGHT Hereditary Colorectal Cancer/Polyposis Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50099"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1564688423",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=MLH1",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0012249",
+         "@type": "Disease",
+         "label": "MONDO:0012249",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        },
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0010159",
+         "@type": "Disease",
+         "label": "MONDO:0010159",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000007",
+           "@label": "Autosomal recessive inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "MLH1"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN115",
+   "version": "2.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN120",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50082",
+    "@type": "Organization",
+    "label": "Leber Congenital Amaurosis/early onset Retinal Dystrophy Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50082"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1566365968",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=RPE65",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0100368",
+         "@type": "Disease",
+         "label": "MONDO:0100368",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000007",
+           "@label": "Autosomal recessive inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "RPE65"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN120",
+   "version": "1.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN135",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50037",
+    "@type": "Organization",
+    "label": "Hereditary Hemorrhagic Telangiectasia Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50037"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1576018580",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=ACVRL1",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0010880",
+         "@type": "Disease",
+         "label": "MONDO:0010880",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "ACVRL1"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN135",
+   "version": "1.1"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN136",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50037",
+    "@type": "Organization",
+    "label": "Hereditary Hemorrhagic Telangiectasia Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50037"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1576926556",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=ENG",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0008535",
+         "@type": "Disease",
+         "label": "MONDO:0008535",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "ENG"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN136",
+   "version": "1.1"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN137",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50099",
+    "@type": "Organization",
+    "label": "InSiGHT Hereditary Colorectal Cancer/Polyposis Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50099"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1577628949",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=MSH2",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0007356",
+         "@type": "Disease",
+         "label": "MONDO:0007356",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        },
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0010159",
+         "@type": "Disease",
+         "label": "MONDO:0010159",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000007",
+           "@label": "Autosomal recessive inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "MSH2"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN137",
+   "version": "2.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN138",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50099",
+    "@type": "Organization",
+    "label": "InSiGHT Hereditary Colorectal Cancer/Polyposis Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50099"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1578294898",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=MSH6",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0005835",
+         "@type": "Disease",
+         "label": "MONDO:0005835",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        },
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0010159",
+         "@type": "Disease",
+         "label": "MONDO:0010159",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000007",
+           "@label": "Autosomal recessive inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "MSH6"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN138",
+   "version": "2.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN139",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50099",
+    "@type": "Organization",
+    "label": "InSiGHT Hereditary Colorectal Cancer/Polyposis Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50099"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1578297071",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=PMS2",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0013699",
+         "@type": "Disease",
+         "label": "MONDO:0013699",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        },
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0010159",
+         "@type": "Disease",
+         "label": "MONDO:0010159",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000007",
+           "@label": "Autosomal recessive inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "PMS2"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN139",
+   "version": "2.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN150",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50031",
+    "@type": "Organization",
+    "label": "Congenital Myopathies Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50031"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1616389166",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=RYR1",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0100150",
+         "@type": "Disease",
+         "label": "MONDO:0100150",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "RYR1"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN150",
+   "version": "2.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN156",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50100",
+    "@type": "Organization",
+    "label": "Urea Cycle Disorders Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50100"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1622722972",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=OTC",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0010703",
+         "@type": "Disease",
+         "label": "MONDO:0010703",
+         "modeOfInheritance": [
+          {
+           "@id": "",
+           "@label": "X-linked inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "OTC"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN156",
+   "version": "1.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN168",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50099",
+    "@type": "Organization",
+    "label": "InSiGHT Hereditary Colorectal Cancer/Polyposis Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50099"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1742141543",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=MUTYH",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0012041",
+         "@type": "Disease",
+         "label": "MONDO:0012041",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000007",
+           "@label": "Autosomal recessive inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "MUTYH"
+      }
+     ]
+    }
+   ],
+   "status": "Pilot Rules In Prep",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN168",
+   "version": "1.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN179",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50031",
+    "@type": "Organization",
+    "label": "Congenital Myopathies Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50031"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1795775094",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=RYR1",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0100150",
+         "@type": "Disease",
+         "label": "MONDO:0100150",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000007",
+           "@label": "Autosomal recessive inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "RYR1"
+      }
+     ]
+    }
+   ],
+   "status": "Released",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN179",
+   "version": "2.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN227",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50166",
+    "@type": "Organization",
+    "label": "Pediatric Cataract Variant Curation Expert Panel",
+    "url": "https://clinicalgenome.org/affiliation/50166"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/520573078",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=CYP27A1",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0008948",
+         "@type": "Disease",
+         "label": "MONDO:0008948",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000007",
+           "@label": "Autosomal recessive inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "CYP27A1"
+      }
+     ]
+    }
+   ],
+   "status": "Pilot Rules In Prep",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN227",
+   "version": "1.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN237",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50004",
+    "@type": "Organization",
+    "label": "Familial Hypercholesterolemia Variant Curation Expert Panel",
+    "url": "https://www.clinicalgenome.org/affiliation/50004"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1324216522",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=APOB",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0007751",
+         "@type": "Disease",
+         "label": "MONDO:0007751",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0032113",
+           "@label": "Semidominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "APOB"
+      }
+     ]
+    }
+   ],
+   "status": "Classification Rules In Prep",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN237",
+   "version": "1.0"
+  },
+  {
+   "@id": "https://cspec.genome.network/cspec/api/SequenceVariantInterpretation/id/GN245",
+   "affiliation": {
+    "@id": "https://cspec.genome.network/cspec/api/Organization/id/50099",
+    "@type": "Organization",
+    "label": "InSiGHT Hereditary Colorectal Cancer/Polyposis Variant Curation Expert Panel",
+    "url": "http://clinicalgenome.org/affiliation/50099"
+   },
+   "ruleSets": [
+    {
+     "@id": "https://cspec.genome.network/cspec/api/RuleSet/id/1639305193",
+     "@type": "RuleSet",
+     "genes": [
+      {
+       "@id": "https://www.genenames.org/tools/search/#!/?query=SMAD4",
+       "@type": "Gene",
+       "diseases": [
+        {
+         "@id": "http://purl.obolibrary.org/obo/MONDO_0008278",
+         "@type": "Disease",
+         "label": "MONDO:0008278",
+         "modeOfInheritance": [
+          {
+           "@id": "https://hpo.jax.org/app/browse/term/HP:0000006",
+           "@label": "Autosomal dominant inheritance",
+           "@type": "Mode of inheritance"
+          }
+         ]
+        }
+       ],
+       "label": "SMAD4"
+      }
+     ]
+    }
+   ],
+   "status": "Classification Rules In Prep",
+   "url": "https://cspec.genome.network/cspec/ui/svi/doc/GN245",
+   "version": "1.0.0"
+  }
+ ]
+}

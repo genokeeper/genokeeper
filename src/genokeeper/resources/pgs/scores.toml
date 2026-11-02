@@ -1,0 +1,662 @@
+# The polygenic scores slice 1d runs (track design, "Scores"; design decision 2026-10-19):
+# one per condition, chosen on 2026-10-21 from the PGS Catalog REST API (release
+# 2026-09-17, www.pgscatalog.org/rest/score/search?trait_id=...) by the design's criteria,
+# in order: genome-wide (at least 100,000 variants), trained on more than one ancestry where
+# such a score exists, and with an independent evaluation (another publication, or cohorts
+# outside the score's GWAS and training samples) of the condition itself.
+#
+# evaluations: the PGS Catalog performance metrics (PPM) the choice rests on, each with its
+# sample's ancestry in pgsc_calc's population codes (genokeeper.prs.scores.POPULATIONS),
+# mapped from the catalog's broad categories: European EUR; African (unspecified,
+# Sub-Saharan, African American or Afro-Caribbean) AFR; East Asian EAS; South Asian CSA;
+# Hispanic or Latin American AMR; Greater Middle Eastern MID. "mixed" is a sample set of
+# several ancestries, which matches no population. At most three per code.
+# development_ancestry: the catalog's ancestry distribution of the GWAS and of the score's
+# development sample, in its own codes (MAE multi-ancestry including European, MAO
+# excluding European, GME Greater Middle Eastern, ASN Asian unspecified).
+# licence: the catalog's licence field, verbatim.
+# The topic comes from efo_topics.tsv by trait_efo.
+#
+# Slice 3g (closing design, "Slice 3g", 2026-10-30) adds the scores after Parkinson's disease,
+# chosen from release 2026-10-23 by the same rule read strictly: the evaluation in European
+# samples must lie in cohorts outside the score's GWAS and training samples (not a held-out
+# part of its tuning cohort), and a single non-European GWAS ancestry is not multi-ancestry.
+# Every candidate, chosen or not, is in research note R8 (scores) of the closing design.
+
+# The most widely evaluated CAD score (90 European evaluations in other publications), from
+# a multi-ancestry meta-analysis.
+[[score]]
+pgs_id = "PGS000018"  # metaGRS_CAD, 1,745,179 variants, metaGRS
+condition = "coronary artery disease"
+trait_efo = "MONDO_0005010"  # coronary artery disorder
+publication = "Inouye M et al., J Am Coll Cardiol 2018, doi:10.1016/j.jacc.2018.07.079"
+development_ancestry = "GWAS MAE 50.9%, EUR 37%, SAS 6.7%, EAS 3%, AMR 1.1%, AFR 0.8%, GME 0.6%; development MAE 100%"
+evaluations = [["PPM000034", "EUR"], ["PPM000036", "EUR"], ["PPM017205", "AFR"], ["PPM017204", "AMR"], ["PPM015571", "MID"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# Multi-ancestry GWAS (2025), evaluated in All of Us, HUNT and LOOP by another publication;
+# GPS_AF (PGS000016) has more evaluations but a European-only training sample and an
+# academic-use licence.
+[[score]]
+pgs_id = "PGS005168"  # PRSAF, 1,113,668 variants, PRS-CS
+condition = "atrial fibrillation"
+trait_efo = "MONDO_0004981"  # atrial fibrillation
+publication = "Roselli C et al., Nat Genet 2025, doi:10.1038/s41588-024-02072-3"
+development_ancestry = "GWAS EUR 80.5%, EAS 17.1%, AFR 1.3%, AMR 1.1%, SAS 0.07%"
+evaluations = [["PPM030616", "EUR"], ["PPM030634", "EUR"], ["PPM030638", "EUR"], ["PPM030622", "AFR"], ["PPM030619", "AMR"], ["PPM030625", "CSA"], ["PPM030628", "EAS"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# No multi-ancestry hypertension score has a single-ancestry evaluation (the multi-ancestry
+# PRSsum, PGS004236, is evaluated only in mixed sample sets): this European one is
+# evaluated in FinnGen, outside its UK Biobank GWAS.
+[[score]]
+pgs_id = "PGS002765"  # SBP_prscs, 1,077,894 variants, PRS-CS
+condition = "hypertension"
+trait_efo = "MONDO_0005044"  # hypertensive disorder
+publication = "Mars N et al., Am J Hum Genet 2022, doi:10.1016/j.ajhg.2022.10.009"
+development_ancestry = "GWAS EUR 100%"
+evaluations = [["PPM014965", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# Five-ancestry GWAS, evaluated by another publication (Ritchie 2024) in every population
+# code but CSA's mixed South-East Asian set.
+[[score]]
+pgs_id = "PGS003867"  # T2D_PRScs_ARB, 1,068,166 variants, PRS-CS
+condition = "type 2 diabetes"
+trait_efo = "MONDO_0005148"  # type 2 diabetes mellitus
+publication = "Shim I et al., Nature Communications 2023, doi:10.1038/s41467-023-41985-1"
+development_ancestry = "GWAS EUR 51.1%, EAS 28.4%, SAS 8.3%, AFR 6.6%, AMR 5.6%"
+evaluations = [["PPM021415", "EUR"], ["PPM021443", "EUR"], ["PPM021466", "AFR"], ["PPM021492", "AMR"], ["PPM021535", "CSA"], ["PPM021513", "EAS"], ["PPM022895", "MID"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# A multi-ancestry GLGC meta-analysis built without UK Biobank, so its evaluation there is
+# independent; no LDL score has one in another publication.
+[[score]]
+pgs_id = "PGS003978"  # meta_without-UKB_LDL, 348,056 variants, PRS-CSx
+condition = "LDL cholesterol"
+trait_efo = "EFO_0004611"  # low density lipoprotein cholesterol measurement
+publication = "Hassanin E et al., Front Genet 2023, doi:10.3389/fgene.2023.1286561"
+development_ancestry = "GWAS EUR 79.8%, EAS 8.9%, AFR 6%, AMR 2.9%, SAS 2.5%"
+evaluations = [["PPM019139", "EUR"], ["PPM019141", "EAS"], ["PPM019144", "EAS"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# Multi-ancestry GWAS, evaluated in All of Us and Mass General Brigham, cohorts outside
+# its GWAS and UK Biobank training sample; GPS_BMI (PGS000027) has a European-only GWAS
+# and an academic-use licence.
+[[score]]
+pgs_id = "PGS005331"  # O_MetPRS_EUR, 1,297,046 variants, LDpred2
+condition = "body mass index"
+trait_efo = "EFO_0004340"  # body mass index
+publication = "Kim MS et al., Cell Metab 2026, doi:10.1016/j.cmet.2026.02.009"
+development_ancestry = "GWAS EUR 66.9%, EAS 22.5%, AFR 2.9%, MAE 2.8%, MAO 2.6%, AMR 1.9%, SAS 0.3%, ASN 0.02%; development EUR 100%"
+evaluations = [["PPM023108", "EUR"], ["PPM023114", "EUR"], ["PPM023106", "AMR"], ["PPM023112", "AMR"], ["PPM023109", "MID"], ["PPM023116", "MID"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# Multi-ancestry GWAS, evaluated in the Australian QSKIN and MCCS cohorts; the SBayesRC
+# sibling (PGS005241) has the same evaluations with four times the variants. The UK Biobank
+# evaluations are not recorded: prostate cancer meta-analyses commonly include it.
+[[score]]
+pgs_id = "PGS005240"  # SBayesR, 904,103 variants, SBayesR
+condition = "prostate cancer"
+trait_efo = "MONDO_0005159"  # prostate carcinoma
+publication = "Tanha HM et al., HGG Adv 2025, doi:10.1016/j.xhgg.2025.100477"
+development_ancestry = "GWAS EUR 75.8%, EAS 11.7%, AFR 9.1%, AMR 3.4%"
+evaluations = [["PPM022688", "EUR"], ["PPM022693", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# East Asian and European GWAS, evaluated in held-out cohorts of four ancestries.
+[[score]]
+pgs_id = "PGS003852"  # CRC_PRS_EUR_EAS, 1,016,596 variants, LDpred2
+condition = "colorectal cancer"
+trait_efo = "MONDO_0005575"  # colorectal cancer
+publication = "Thomas M et al., Nat Commun 2023, doi:10.1038/s41467-023-41819-0"
+development_ancestry = "GWAS EAS 72.9%, EUR 27.1%"
+evaluations = [["PPM018676", "EUR"], ["PPM018674", "AFR"], ["PPM018675", "AMR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# No multi-ancestry melanoma score exists; this one is evaluated for incident melanoma in
+# four biobanks outside its GWAS. PRSweb's PGS000430 has evaluations in another
+# publication, but of skin colour, not melanoma.
+[[score]]
+pgs_id = "PGS004886"  # INTERVENE_MegaPRS_Melanoma, 692,834 variants, megaprs.auto
+condition = "melanoma"
+trait_efo = "MONDO_0005105"  # melanoma
+publication = "Jermy B et al., Nat Commun 2024, doi:10.1038/s41467-024-48938-2"
+development_ancestry = "GWAS EUR 100%; development EUR 100%"
+evaluations = [["PPM021259", "EUR"], ["PPM021260", "EUR"], ["PPM021261", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# Built without the APOE region (the catalog's reported trait): its harmonised GRCh38 file
+# has no variant within 1 Mb of APOE, none in chr19:43.91-45.90 Mb (nearest 43,907,391 and
+# 45,909,273; rs429358 is at 44,908,684; checked 2026-10-21 on the file whose md5 is
+# 9c87347edfb18860fa15cc42a44700d1). Ruling R18's chr19:44.4-46.5 Mb is that window in
+# GRCh37 (APOE at 45.41 Mb): in GRCh38 it reaches 1.6 Mb past APOE, where the file has 230
+# variants. So the APOE result stands beside it rather than inside it; multi-ancestry GWAS. Its one evaluation (ADSP) is a mixed
+# sample set: validity stays limited until an ancestry-specific one appears. A named exception to
+# slice 3g's strict reading (coordinator ruling 2026-10-30): the scores that pass it all carry
+# the APOE region (R8).
+[[score]]
+pgs_id = "PGS012590"  # PRS_AD, 1,070,111 variants, weighted PRS-CS sum
+condition = "Alzheimer's disease"
+trait_efo = "MONDO_0004975"  # Alzheimer disease
+publication = "Kurniansyah N et al., Nat Genet 2026, doi:10.1038/s41588-026-02722-8"
+development_ancestry = "GWAS EUR 93.8%, AFR 4.1%, EAS 2.1%"
+evaluations = [["PPM030765", "mixed"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# The catalog has no genome-wide Parkinson's score: this is the largest, from the
+# multi-ancestry meta-analysis, evaluated by other publications in European and South
+# Asian samples. A named exception to slice 3g's strict reading (coordinator ruling
+# 2026-10-30): no Parkinson's score has 100,000 variants (R8).
+[[score]]
+pgs_id = "PGS000903"  # PRS1805_PD, 1,805 variants, clumping and thresholding
+condition = "Parkinson's disease"
+trait_efo = "MONDO_0005180"  # Parkinson disease
+publication = "Nalls MA et al., Lancet Neurol 2019, doi:10.1016/s1474-4422(19)30320-5"
+development_ancestry = "GWAS MAE 100%; development MAE 100%"
+evaluations = [["PPM012831", "EUR"], ["PPM014928", "CSA"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# Five-ancestry GIGASTROKE GWAS, trained in the Estonian Biobank and evaluated for incident
+# ischaemic stroke in MVP and pooled trials, and in MVP again by another publication (Vassy
+# 2023); the 2019 metaGRS (PGS000039) is 96.8% European.
+[[score]]
+pgs_id = "PGS002724"  # GIGASTROKE_iPGS_EUR, 1,213,574 variants, integrative metaGRS of 22 PGSs
+condition = "ischaemic stroke"
+trait_efo = "HP_0002140"  # Ischemic stroke
+publication = "Mishra A et al., Nature 2022, doi:10.1038/s41586-022-05165-3"
+development_ancestry = "GWAS EUR 63.2%, MAE 32.8%, NR 3.6%, SAS 0.2%, EAS 0.09%, AMR 0.03%, AFR 0.02%, GME 0.02%; development EUR 100%"
+evaluations = [["PPM014736", "EUR"], ["PPM020275", "EUR"], ["PPM014738", "EUR"], ["PPM014740", "AFR"], ["PPM020273", "AFR"], ["PPM020274", "AMR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+weak = true
+
+# Multi-ancestry GBMI GWAS built without UK Biobank, evaluated there (358,905 Europeans);
+# MVP's PRS-CSx score (PGS005085) is independent too, on a tenth of the sample.
+[[score]]
+pgs_id = "PGS001790"  # 1kgeur_gbmi_leaveUKBBout_HF_pst_eff_a1_b0.5_phiauto, 910,146 variants, PRS-CS-auto
+condition = "heart failure"
+trait_efo = "MONDO_0005252"  # heart failure
+publication = "Wang Y et al., Cell Genom 2023, doi:10.1016/j.xgen.2022.100241"
+development_ancestry = "GWAS EUR 65.3%, EAS 28%, AFR 2.7%, ASN 2.4%, OTH 1.6%"
+evaluations = [["PPM009294", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+weak = true
+
+# Multi-ancestry AAAgen GWAS, evaluated in two cohorts outside it (AC-WTCCC and SMART).
+[[score]]
+pgs_id = "PGS003972"  # PRSAAA, 1,118,997 variants, PRS-CS
+condition = "abdominal aortic aneurysm"
+trait_efo = "MONDO_0005350"  # abdominal aortic aneurysm
+publication = "Roychowdhury T et al., Nat Genet 2023, doi:10.1038/s41588-023-01510-y"
+development_ancestry = "GWAS EUR 92%, AFR 8%"
+evaluations = [["PPM019135", "EUR"], ["PPM019136", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# The only PAD score evaluated outside its development cohorts: multi-ancestry, multi-trait,
+# trained in UK Biobank, evaluated in All of Us (OR 1.25 per SD in Europeans).
+[[score]]
+pgs_id = "PGS005217"  # PRS_PAD, 1,296,292 variants, LDpred2
+condition = "peripheral artery disease"
+trait_efo = "MONDO_0005386"  # peripheral arterial disease
+publication = "Flores AM et al., JAMA Cardiol 2025, doi:10.1001/jamacardio.2025.1182"
+development_ancestry = "GWAS EUR 74.5%, MAE 13.9%, EAS 6.8%, MAO 2.4%, SAS 1%, AFR 0.7%, AMR 0.5%, OTH 0.06%, NR 0.02%; development EUR 100%"
+evaluations = [["PPM022605", "EUR"], ["PPM022603", "AFR"], ["PPM022606", "AMR"], ["PPM022608", "CSA"], ["PPM022604", "EAS"], ["PPM022607", "MID"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# Multi-ancestry GBMI GWAS built without UK Biobank, evaluated there; Ghouse 2023's European
+# score (PGS003332) is evaluated only in its own cohorts.
+[[score]]
+pgs_id = "PGS001796"  # 1kgeur_gbmi_leaveUKBBout_VTE_pst_eff_a1_b0.5_phiauto, 910,337 variants, PRS-CS-auto
+condition = "venous thromboembolism"
+trait_efo = "MONDO_0005399"  # venous thromboembolism
+publication = "Wang Y et al., Cell Genom 2023, doi:10.1016/j.xgen.2022.100241"
+development_ancestry = "GWAS EUR 79%, EAS 12.4%, AFR 4.1%, ASN 2.4%, OTH 2.2%"
+evaluations = [["PPM009300", "EUR"], ["PPM009310", "AFR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# Multi-ancestry GBMI GWAS built without UK Biobank, evaluated there.
+[[score]]
+pgs_id = "PGS001792"  # 1kgeur_gbmi_leaveUKBBout_POAG_pst_eff_a1_b0.5_phiauto, 911,402 variants, PRS-CS-auto
+condition = "primary open-angle glaucoma"
+trait_efo = "MONDO_0005041"  # glaucoma
+publication = "Wang Y et al., Cell Genom 2023, doi:10.1016/j.xgen.2022.100241"
+development_ancestry = "GWAS EUR 71.9%, EAS 25.3%, AFR 1.9%, OTH 0.9%"
+evaluations = [["PPM009296", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# GWAS without UK Biobank participants (Loesch 2025, Methods; the catalog's GWAS record,
+# GCST003140, is wrong), evaluated for CKD in UK Biobank Europeans (OR 1.35 per SD). The eGFR
+# score PGS000883 qualifies as well and stands behind it (design, the pairs rule).
+[[score]]
+pgs_id = "PGS005113"  # PGS_CKD, 1,116,379 variants, PRS-CS
+condition = "chronic kidney disease"
+trait_efo = "MONDO_0005300"  # chronic kidney disease
+publication = "Loesch DP et al., Nat Commun 2025, doi:10.1038/s41467-025-56695-z"
+development_ancestry = "GWAS EUR 100%"
+evaluations = [["PPM022315", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# Multi-ancestry GBMI GWAS built without UK Biobank, evaluated there (AUROC 0.81 with
+# covariates).
+[[score]]
+pgs_id = "PGS001789"  # 1kgeur_gbmi_leaveUKBBout_Gout_pst_eff_a1_b0.5_phiauto, 910,151 variants, PRS-CS-auto
+condition = "gout"
+trait_efo = "MONDO_0005393"  # gout
+publication = "Wang Y et al., Cell Genom 2023, doi:10.1016/j.xgen.2022.100241"
+development_ancestry = "GWAS EUR 60.2%, EAS 33.3%, AFR 2.7%, ASN 2.1%, OTH 1.7%"
+evaluations = [["PPM009293", "EUR"], ["PPM009309", "AFR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# A heel bone-density score of a UK Biobank GWAS, evaluated for osteoporosis in FinnGen (OR
+# 1.31 per SD), as the hypertension score is evaluated for hypertension; the multi-ancestry
+# PGS005155 is evaluated only in a Korean cohort.
+# Its sign: LRP5 rs3736228's T (A1330V, lowers bone density) weighs -0.01032524 in the
+# GRCh38 harmonised file, so a high percentile is denser bone, a lower osteoporosis risk.
+[[score]]
+pgs_id = "PGS002768"  # BMD_prscs, 1,091,549 variants, PRS-CS
+condition = "bone mineral density (a low percentile means a higher osteoporosis risk)"
+trait_efo = "EFO_0009270"  # heel bone mineral density
+publication = "Mars N et al., Am J Hum Genet 2022, doi:10.1016/j.ajhg.2022.10.009"
+development_ancestry = "GWAS EUR 100%"
+evaluations = [["PPM014968", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# The only qualifying score: a Biobank Japan GWAS evaluated in UK Biobank Europeans
+# (incremental R² 0.009). GLGC's CT-SLEB scores are tested on the other half of their tuning
+# cohort, which does not count.
+[[score]]
+pgs_id = "PGS002378"  # biochemistry_Triglycerides.BOLT-LMM-BBJ, 920,927 variants, BOLT-LMM-BBJ
+condition = "triglycerides"
+trait_efo = "EFO_0004530"  # triglyceride measurement
+publication = "Weissbrod O et al., Nat Genet 2022, doi:10.1038/s41588-022-01036-9"
+development_ancestry = "GWAS EAS 100%"
+evaluations = [["PPM013336", "EUR"], ["PPM013290", "AFR"], ["PPM013313", "EAS"], ["PPM013359", "CSA"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+weak = true
+
+# Multi-ancestry GERA GWAS, ensembled in UK Biobank, evaluated in the Estonian Biobank and
+# HUNT (R² 0.08 and 0.13); the best of Monti's siblings on the same evaluations.
+[[score]]
+pgs_id = "PGS004156"  # UKBB_EnsPGS.GCST007140.HDL, 1,138,452 variants, UKBB-EUR.MultiPRS.CV
+condition = "HDL cholesterol"
+trait_efo = "EFO_0004612"  # high density lipoprotein cholesterol measurement
+publication = "Monti R et al., Am J Hum Genet 2024, doi:10.1016/j.ajhg.2024.06.003"
+development_ancestry = "GWAS EUR 87.3%, AMR 8.9%, AFR 3.4%, SAS 0.5%; development EUR 100%"
+evaluations = [["PPM019601", "EUR"], ["PPM019603", "EUR"], ["PPM019602", "CSA"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# IAMDGC GWAS, evaluated in MVP Europeans outside it (OR 1.76 per SD); no multi-ancestry AMD
+# score has an independent evaluation.
+[[score]]
+pgs_id = "PGS004606"  # AMD-IAMDGC-EUR, 1,000,946 variants, PRS-CS
+condition = "age-related macular degeneration"
+trait_efo = "MONDO_0005150"  # age-related macular degeneration
+publication = "Gorman BR et al., Nat Genet 2024, doi:10.1038/s41588-024-01764-0"
+development_ancestry = "GWAS EUR 100%"
+evaluations = [["PPM020767", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# European and East Asian GWAS, evaluated for incident lung cancer in HUNT, Genomics England
+# and Mass General Brigham (HR 1.32, 1.26 and 1.13 per SD).
+[[score]]
+pgs_id = "PGS004884"  # INTERVENE_MegaPRS_Lung_cancer, 655,479 variants, megaprs.auto
+condition = "lung cancer"
+trait_efo = "MONDO_0005138"  # lung carcinoma
+publication = "Jermy B et al., Nat Commun 2024, doi:10.1038/s41467-024-48938-2"
+development_ancestry = "GWAS EUR 73.4%, EAS 26.6%; development EUR 100%"
+evaluations = [["PPM021246", "EUR"], ["PPM021247", "EUR"], ["PPM021245", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# The only qualifying score: a FinnGen GWAS evaluated in UK Biobank, weak there (OR 1.09 per
+# SD, AUROC 0.52).
+[[score]]
+pgs_id = "PGS019980"  # Pancreas, 1,083,386 variants, SDPR
+condition = "pancreatic cancer"
+trait_efo = "MONDO_0005192"  # exocrine pancreatic carcinoma
+publication = "Hu J et al., PLoS Genet 2026, doi:10.1371/journal.pgen.1012308"
+development_ancestry = "GWAS EUR 100%"
+evaluations = [["PPM038186", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+weak = true
+
+# Multi-ancestry GBMI GWAS built without UK Biobank, evaluated there.
+[[score]]
+pgs_id = "PGS001794"  # 1kgeur_gbmi_leaveUKBBout_ThC_pst_eff_a1_b0.5_phiauto, 911,462 variants, PRS-CS-auto
+condition = "thyroid cancer"
+trait_efo = "MONDO_0015075"  # thyroid gland carcinoma
+publication = "Wang Y et al., Cell Genom 2023, doi:10.1016/j.xgen.2022.100241"
+development_ancestry = "GWAS EUR 76.6%, EAS 21.2%, AFR 1.2%, OTH 0.9%"
+evaluations = [["PPM009298", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# Trans-ancestry PRS-CSx with the HLA term of GRS2, evaluated in All of Us Europeans, outside
+# its GWAS and Montreal training cohort (AUROC 0.82).
+[[score]]
+pgs_id = "PGS012555"  # TA-PS, 1,116,345 variants, PRS-CSx
+condition = "type 1 diabetes"
+trait_efo = "MONDO_0005147"  # type 1 diabetes mellitus
+publication = "Jumentier B et al., Diabetologia 2026, doi:10.1007/s00125-026-06706-5"
+development_ancestry = "GWAS EUR 62.8%, EAS 16.1%, AFR 14.1%, AMR 7%; development EUR 88.1%, AMR 5.1%, AFR 3%, SAS 2.7%, EAS 1.2%"
+evaluations = [["PPM030680", "EUR"], ["PPM030682", "AFR"], ["PPM030681", "AMR"], ["PPM030679", "EAS"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# East Asian and European GWAS, evaluated for incident RA in HUNT, FinnGen and the Estonian
+# Biobank (HR 1.59, 1.65 and 1.43 per SD).
+[[score]]
+pgs_id = "PGS004873"  # INTERVENE_MegaPRS_RA, 551,074 variants, megaprs.auto
+condition = "rheumatoid arthritis"
+trait_efo = "MONDO_0008383"  # rheumatoid arthritis
+publication = "Jermy B et al., Nat Commun 2024, doi:10.1038/s41467-024-48938-2"
+development_ancestry = "GWAS EAS 81.3%, EUR 18.7%; development EUR 100%"
+evaluations = [["PPM021167", "EUR"], ["PPM021171", "EUR"], ["PPM021172", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# The only qualifying score: a Chinese GWAS applied to three European case-control sets
+# (AUROC 0.65, 0.65, 0.62).
+[[score]]
+pgs_id = "PGS000754"  # PRS_SLE, 293,684 variants, lassosum
+condition = "systemic lupus erythematosus"
+trait_efo = "MONDO_0007915"  # systemic lupus erythematosus
+publication = "Wang YF et al., Nat Commun 2021, doi:10.1038/s41467-021-21049-y"
+development_ancestry = "GWAS EAS 100%"
+evaluations = [["PPM001921", "EUR"], ["PPM001920", "EUR"], ["PPM001922", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# IMSGC discovery GWAS, evaluated in UK Biobank and Kaiser Permanente (AUROC 0.73 and 0.80);
+# no multi-ancestry MS score exists.
+[[score]]
+pgs_id = "PGS002726"  # PGS_MS_Brain, 476,399 variants, Genome-wide significant variants
+condition = "multiple sclerosis"
+trait_efo = "MONDO_0005301"  # multiple sclerosis
+publication = "Shams H et al., Brain 2022, doi:10.1093/brain/awac092"
+development_ancestry = "GWAS EUR 100%"
+evaluations = [["PPM014749", "EUR"], ["PPM014750", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# The only genome-wide Crohn's score: the IIBDGC GWAS (European; the catalog's MAE is European
+# plus not reported), tuned in UK Biobank, evaluated in BioVU (OR 2.18 per SD).
+[[score]]
+pgs_id = "PGS004254"  # cd_ldpred2, 744,682 variants, LDpred2-auto
+condition = "Crohn's disease"
+trait_efo = "MONDO_0005011"  # Crohn disease
+publication = "Middha P et al., Nat Commun 2024, doi:10.1038/s41467-023-44512-4"
+development_ancestry = "GWAS MAE 100%; development EUR 100%"
+evaluations = [["PPM020322", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# The IIBDGC GWAS, tuned in UK Biobank, evaluated in BioVU (OR 1.75 per SD); inflammatory
+# bowel disease is not added beside it and Crohn's disease (design, the pairs rule).
+[[score]]
+pgs_id = "PGS004253"  # uc_ldpred2, 744,575 variants, LDpred2-auto
+condition = "ulcerative colitis"
+trait_efo = "MONDO_0005101"  # ulcerative colitis
+publication = "Middha P et al., Nat Commun 2024, doi:10.1038/s41467-023-44512-4"
+development_ancestry = "GWAS MAE 100%; development EUR 100%"
+evaluations = [["PPM020320", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# UK Biobank GWAS, evaluated for spontaneous hypothyroidism in 51,070 BioVU Europeans (OR
+# 1.33 per SD); the multi-ancestry PGS005268 is evaluated only in a mixed sample set.
+[[score]]
+pgs_id = "PGS000820"  # PRS_hypothyroidism, 890,908 variants, LDpred
+condition = "hypothyroidism"
+trait_efo = "MONDO_0005420"  # hypothyroidism
+publication = "Luo J et al., Clin Cancer Res 2021, doi:10.1158/1078-0432.ccr-21-0921"
+development_ancestry = "GWAS EUR 100%"
+evaluations = [["PPM002193", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# Multi-ancestry GBMI GWAS built without UK Biobank, evaluated there.
+[[score]]
+pgs_id = "PGS001787"  # 1kgeur_gbmi_leaveUKBBout_Asthma_pst_eff_a1_b0.5_phiauto, 909,990 variants, PRS-CS-auto
+condition = "asthma"
+trait_efo = "MONDO_0004979"  # asthma
+publication = "Wang Y et al., Cell Genom 2023, doi:10.1016/j.xgen.2022.100241"
+development_ancestry = "GWAS EUR 70.5%, EAS 24.7%, AFR 1.9%, ASN 1.6%, OTH 1.3%"
+evaluations = [["PPM009291", "EUR"], ["PPM009308", "AFR"], ["PPM009307", "EAS"], ["PPM009302", "MID"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# Multi-ancestry EAGLE GWAS, evaluated for incident atopic dermatitis in UK Biobank by another
+# publication (Gu 2023; HR 1.25, high against low).
+[[score]]
+pgs_id = "PGS002755"  # Atopic_dermatitis_prscs, 1,090,702 variants, PRS-CS
+condition = "atopic dermatitis"
+trait_efo = "MONDO_0004980"  # atopic eczema
+publication = "Mars N et al., Am J Hum Genet 2022, doi:10.1016/j.ajhg.2022.10.009"
+development_ancestry = "GWAS EUR 88.2%, EAS 8.1%, AMR 1.6%, AFR 1.1%, NR 1%"
+evaluations = [["PPM020709", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+weak = true
+
+# Multi-ancestry GBMI GWAS built without UK Biobank, evaluated there.
+[[score]]
+pgs_id = "PGS001788"  # 1kgeur_gbmi_leaveUKBBout_COPD_pst_eff_a1_b0.5_phiauto, 910,082 variants, PRS-CS-auto
+condition = "COPD"
+trait_efo = "MONDO_0005002"  # chronic obstructive pulmonary disease
+publication = "Wang Y et al., Cell Genom 2023, doi:10.1016/j.xgen.2022.100241"
+development_ancestry = "GWAS EUR 60.7%, EAS 33.2%, AFR 2.4%, ASN 2.2%, OTH 1.5%"
+evaluations = [["PPM009292", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# Fitted in UK Biobank from 35 biomarker scores, evaluated in FinnGen (HR 1.34 per SD); no
+# multi-ancestry gallstone score has a European evaluation.
+[[score]]
+pgs_id = "PGS000705"  # HC188, 183,458 variants, snpnet (multi-PRS)
+condition = "gallstones"
+trait_efo = "MONDO_0005346"  # gallstones
+publication = "Sinnott-Armstrong N et al., Nat Genet 2021, doi:10.1038/s41588-020-00757-z"
+development_ancestry = "development EUR 100%"
+evaluations = [["PPM001613", "EUR"]]
+licence = "Creative Commons Attribution 4.0 International (CC BY 4.0)"
+
+# UK Biobank, FinnGen and BioVU GWAS, evaluated in CARTaGENE (146 cases): the only
+# diverticular score evaluated outside its GWAS.
+[[score]]
+pgs_id = "PGS004614"  # DivD_SNPWeights, 1,082,282 variants, SBayesR
+condition = "diverticular disease"
+trait_efo = "EFO_0009959"  # diverticular disease
+publication = "Wu Y et al., Cell Genom 2023, doi:10.1016/j.xgen.2023.100326"
+development_ancestry = "GWAS EUR 100%"
+evaluations = [["PPM020789", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# The only genome-wide CLL score: a FinnGen GWAS evaluated in UK Biobank (OR 1.74 per SD).
+[[score]]
+pgs_id = "PGS019967"  # CLL, 1,083,426 variants, SDPR
+condition = "chronic lymphocytic leukaemia"
+trait_efo = "MONDO_0003864"  # chronic lymphocytic leukemia/small lymphocytic lymphoma
+publication = "Hu J et al., PLoS Genet 2026, doi:10.1371/journal.pgen.1012308"
+development_ancestry = "GWAS EUR 100%"
+evaluations = [["PPM038173", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# The only genome-wide myeloma score: a FinnGen GWAS evaluated in UK Biobank, weak there (OR
+# 1.15 per SD).
+[[score]]
+pgs_id = "PGS019973"  # MultiMyelema, 1,083,375 variants, SDPR
+condition = "multiple myeloma"
+trait_efo = "MONDO_0009693"  # plasma cell myeloma
+publication = "Hu J et al., PLoS Genet 2026, doi:10.1371/journal.pgen.1012308"
+development_ancestry = "GWAS EUR 100%"
+evaluations = [["PPM038179", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+weak = true
+
+# The only genome-wide testicular cancer score: a FinnGen GWAS evaluated in UK Biobank (OR
+# 1.53 per SD).
+[[score]]
+pgs_id = "PGS019983"  # Testis, 1,083,407 variants, SDPR
+condition = "testicular cancer"
+trait_efo = "MONDO_0005447"  # testicular cancer
+publication = "Hu J et al., PLoS Genet 2026, doi:10.1371/journal.pgen.1012308"
+development_ancestry = "GWAS EUR 100%"
+evaluations = [["PPM038189", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# INTERVENE score of a European GWAS, evaluated for incident depression in FinnGen, the
+# Estonian Biobank and HUNT (HR 1.15-1.27 per SD). Tier 3: weak predictive power.
+[[score]]
+pgs_id = "PGS004885"  # INTERVENE_MegaPRS_MDD, 801,544 variants, megaprs.auto
+condition = "depression"
+trait_efo = "MONDO_0002009"  # major depressive disorder
+publication = "Jermy B et al., Nat Commun 2024, doi:10.1038/s41467-024-48938-2"
+development_ancestry = "GWAS EUR 100%; development EUR 100%"
+evaluations = [["PPM021257", "EUR"], ["PPM021258", "EUR"], ["PPM021253", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+weak = true
+
+# PGC GWAS, evaluated in Geisinger MyCode, not a PGC cohort (OR 1.48 per SD, AUROC 0.60).
+# Tier 3: weak predictive power.
+[[score]]
+pgs_id = "PGS000134"  # SCZ_GHS, 830,589 variants, PRS-CS
+condition = "schizophrenia"
+trait_efo = "MONDO_0005090"  # schizophrenia
+publication = "Zheutlin AB et al., Am J Psychiatry 2019, doi:10.1176/appi.ajp.2019.18091085"
+development_ancestry = "GWAS EUR 94%, EAS 6%"
+evaluations = [["PPM000414", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+weak = true
+
+# GIANT 2022's multi-ancestry GWAS, evaluated in Lifelines (R² 0.40).
+[[score]]
+pgs_id = "PGS002802"  # GIANT_HEIGHT_YENGO_2022_PGS_WEIGHTS_ALL, 1,103,042 variants, SBayesC
+condition = "height"
+trait_efo = "OBA_VT0001253"  # body height
+publication = "Yengo L et al., Nature 2022, doi:10.1038/s41586-022-05275-y"
+development_ancestry = "GWAS MAE 100%"
+evaluations = [["PPM015525", "EUR"], ["PPM015531", "AMR"], ["PPM015533", "AFR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# UK Biobank GWAS of 25-hydroxyvitamin D, evaluated in QIMR (its own publication) and in the
+# Biobank of the Americas (Moreno-Grau 2024), both outside UK Biobank.
+[[score]]
+pgs_id = "PGS000882"  # 25OHD_SBayesR_PGS, 1,094,650 variants, SBayesR
+condition = "vitamin D"
+trait_efo = "OBA_1000968"  # amount of vitamin D
+publication = "Revez JA et al., Nat Commun 2020, doi:10.1038/s41467-020-15421-7"
+development_ancestry = "GWAS EUR 100%"
+evaluations = [["PPM021729", "EUR"], ["PPM002526", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+
+# The conditions no score qualifies for under the rule read strictly (closing design,
+# "Slice 3g", "Not covered"; R8): each is one unassessed statement whose reason says so and
+# why, never a weaker score.
+[[not_covered]]
+condition = "intraocular pressure"
+topic = "wellness"
+why = "no genome-wide score"
+
+[[not_covered]]
+condition = "urate"
+topic = "wellness"
+why = "European evaluations only in UK Biobank, the training cohort"
+
+[[not_covered]]
+condition = "apolipoprotein B"
+topic = "wellness"
+why = "trained and evaluated only in UK Biobank"
+
+[[not_covered]]
+condition = "lipoprotein(a)"
+topic = "wellness"
+why = "no genome-wide score with an independent evaluation; a blood test measures it directly"
+
+[[not_covered]]
+condition = "basal cell carcinoma"
+topic = "risks"
+why = "evaluated for basal cell carcinoma only in its own cohort"
+
+[[not_covered]]
+condition = "psoriasis"
+topic = "risks"
+why = "evaluated only for severity among people with psoriasis"
+
+[[not_covered]]
+condition = "kidney stones"
+topic = "risks"
+why = "evaluated only in its own cohort"
+
+[[not_covered]]
+condition = "benign prostatic hyperplasia"
+topic = "risks"
+why = "evaluated only in its own cohort"
+
+[[not_covered]]
+condition = "migraine"
+topic = "risks"
+why = "evaluated only in its own cohort"
+
+[[not_covered]]
+condition = "MASLD"
+topic = "risks"
+why = "no genome-wide score with a European evaluation"
+
+[[not_covered]]
+condition = "cataract"
+topic = "risks"
+why = "independent evaluations only in East Asian samples"
+
+[[not_covered]]
+condition = "hearing loss"
+topic = "risks"
+why = "no independent evaluation of hearing loss itself"
+
+[[not_covered]]
+condition = "glioma"
+topic = "risks"
+why = "no genome-wide score"
+
+[[not_covered]]
+condition = "coeliac disease"
+topic = "risks"
+why = "no genome-wide score (the largest has 58,231 variants)"
+
+[[not_covered]]
+condition = "anxiety"
+topic = "risks"
+why = "European evaluations only in the development cohort"
+
+[[not_covered]]
+condition = "insomnia"
+topic = "risks"
+why = "European evaluations only in the development cohort"
+
+[[not_covered]]
+condition = "bipolar disorder"
+topic = "risks"
+why = "evaluated only for other phenotypes"
+
+[[not_covered]]
+condition = "chronotype"
+topic = "traits"
+why = "European evaluations only in the development cohort"
+
+[[not_covered]]
+condition = "neuroticism"
+topic = "traits"
+why = "European evaluations only in the development cohort"
+
+[[not_covered]]
+condition = "risk tolerance"
+topic = "traits"
+why = "evaluated only for other phenotypes"
+
+[[not_covered]]
+condition = "sleep duration"
+topic = "traits"
+why = "evaluated only in mixed-ancestry samples or for sleep apnoea"
+
+[[not_covered]]
+condition = "educational attainment"
+topic = "traits"
+why = "trained and evaluated only in UK Biobank"
+
+[[not_covered]]
+condition = "hair colour"
+topic = "traits"
+why = "trained and evaluated only in UK Biobank"
+
+[[not_covered]]
+condition = "FEV1"
+topic = "wellness"
+why = "evaluated only in UK Biobank or for COPD"

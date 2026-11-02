@@ -1,0 +1,14 @@
+# Monsuur et al. 2008's six HLA-DQ tag SNPs for coeliac disease (PLoS ONE 3:e2270,
+# doi:10.1371/journal.pone.0002270, Table 3 and Table S1), at their GRCh38 positions from dbSNP
+# build 157 (NC_000006.12, read 2026-10-30). The tag allele is the ALT in every row; Monsuur's
+# labels for rs7454108 and rs7775228 are on the minus strand and were flipped. DQ2.2 is the
+# haplotype T,C,A at rs2395182, rs7775228, rs4713586 (Monsuur's T,G,A); T,C,G is DQ4 instead.
+# DQ7 (rs4639334) tags DQ7.5, whose DQA1*05 is half of DQ2. Validated in Dutch, Spanish,
+# Italian and UK cohorts only.
+rsid	chrom	pos	ref	alt	tags
+rs2187668	chr6	32638107	C	T	DQ2.5
+rs2395182	chr6	32445540	G	T	DQ2.2 (first of three)
+rs7775228	chr6	32690302	T	C	DQ2.2 (second of three)
+rs4713586	chr6	32691805	A	G	DQ4 (rules DQ2.2 out)
+rs7454108	chr6	32713706	T	C	DQ8
+rs4639334	chr6	32634437	G	A	DQ7

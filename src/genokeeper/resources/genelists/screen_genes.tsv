@@ -1,0 +1,6 @@
+# source: slice 3d's plan, research notes R4 (typing, DPYD) and R7 (gaps, CHEK2)
+# version: 2026-10-30
+# placement: lof goes through the gene gate as a listed gene's loss; drug_response is placed as a drug-response finding instead (A4)
+gene	inheritance	placement	reason
+DPYD	AR	drug_response	CPIC level A for fluoropyrimidines; an exon deletion is outside PharmCAT's activity score (R4)
+CHEK2	AD	lof	exon 9-10 founder deletion (del5395), among the commonest pathogenic CHEK2 alleles in Eastern-European ancestry (R7)

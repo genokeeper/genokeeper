@@ -1,0 +1,14 @@
+# HG002's (NA24385) HLA types at two fields, maternal (from HG004) and paternal (from HG003):
+# the trio-phased clinical typing in Chin et al., Nat Commun 2020;11:4794
+# (doi:10.1038/s41467-020-18564-9), Supplementary Table 4, read 2026-10-30; Immuannot on the
+# HPRC HG002 assemblies (Zhou et al., Genome Res 2024, doi:10.1101/gr.278985.124; Zenodo
+# 8372992) agrees. The maternal DQA1 is the G group DQA1*01:01:01G clinically and DQA1*01:05
+# by full sequence, so either name matches (ruling R4): alleles joined by "," are each a match.
+# No HG003 or HG004 types are published.
+gene	maternal	paternal
+HLA-A	*01:01	*26:01
+HLA-B	*35:08	*38:01
+HLA-C	*04:01	*12:03
+HLA-DQA1	*01:05,*01:01	*03:01
+HLA-DQB1	*05:01	*03:02
+HLA-DRB1	*10:01	*04:02

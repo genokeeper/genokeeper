@@ -1,0 +1,158 @@
+Genokeeper
+Copyright 2026 The Genokeeper authors
+
+Licensed under the GNU Affero General Public License, version 3 or (at your option) any later
+version (LICENSE). This repository also carries the
+third-party material below, each under its own terms. The tools and data the bootstrap fetches
+at run time (README.md, "Building the store") are not part of this repository and keep their
+own licences; the container images built from docker/ must not be published (README.md,
+"Licence").
+
+
+ExpansionHunter variant catalog (Illumina, Inc.)
+------------------------------------------------
+src/genokeeper/resources/repeats/stage3a.GRCh38.json is cut from Illumina's ExpansionHunter
+GRCh38 variant catalog at tag v5.0.0 (variant_catalog/grch38/variant_catalog.json,
+https://github.com/Illumina/ExpansionHunter), Copyright (c) 2016 Illumina, Inc., under the
+Apache License, Version 2.0 at that tag. Modified: the repeat loci's entries and RFC1's
+kept, their OfftargetRegions removed and their contigs renamed, PABPN1's replaced, RFC1's
+motif analysis turned on, and entries for ZFHX3, THAP11, FGF14 and CFTR added
+(src/genokeeper/resources/repeats/SOURCE.md).
+
+
+STRchive v2.28.0
+----------------
+The repeat thresholds in config/grading.toml ([repeat_loci]: the normal, intermediate,
+reduced-penetrance and pathogenic bounds and the evidence level) are taken from STRchive
+v2.28.0's STRchive-loci.json, with the changes stated there (HTT's pathogenic minimum,
+ATXN10's intermediate maximum). The regions of PABPN1, ZFHX3, THAP11 and FGF14 in
+src/genokeeper/resources/repeats/added.GRCh38.json are taken from STRchive v2.28.0's
+ExpansionHunter catalog (STRchive-disease-loci-v2.28.0.hg38.expansionhunter.json), modified:
+trimmed to whole repeat units and renamed (src/genokeeper/resources/repeats/SOURCE.md).
+STRchive (https://strchive.org) by Harriet Dashnow is licensed under CC BY 4.0
+(https://creativecommons.org/licenses/by/4.0/); its repository
+(https://github.com/dashnowlab/STRchive) is under the MIT License, Copyright (c) 2023 Harriet
+Dashnow. Please cite:
+
+  Hiatt L, Weisburd B, Dolzhenko E, Rubinetti V, Avvaru AK, VanNoy GE, Kurtas NE, Rehm HL,
+  Quinlan A, Dashnow H. STRchive: a dynamic resource detailing population-level and
+  locus-specific insights at tandem repeat disease loci. Genome Medicine (2025).
+  https://doi.org/10.1186/s13073-025-01454-4
+
+
+ClinGen
+-------
+tests/fixtures/check_responses/clingen.body, clingen_dosage.body and cspec.body are responses
+recorded from the Clinical Genome Resource's public endpoints on 2026-10-27. ClinGen releases
+its curations under CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/) and asks
+that they be attributed to ClinGen (https://clinicalgenome.org).
+
+
+PharmCAT example report (MPL-2.0)
+---------------------------------
+tests/fixtures/pharmcat_report_mini.json is trimmed from PharmCAT's published example report
+(docs/examples/pharmcat.example.report.json at tag v3.4.0, a synthetic sample;
+https://github.com/PharmGKB/PharmCAT). That file remains under the Mozilla Public License,
+Version 2.0 (https://mozilla.org/MPL/2.0/); its source is the file named above.
+
+
+MITOMAP Confirmed mutations (CC BY 3.0)
+---------------------------------------
+src/genokeeper/resources/mito/mitomap_confirmed.tsv is cut from MITOMAP's Confirmed pathogenic
+mutations (https://www.mitomap.org/foswiki/bin/view/MITOMAP/ConfirmedMutations), report date
+2026-10-30. MITOMAP: A Human Mitochondrial Genome Database (https://www.mitomap.org) is
+licensed under the Creative Commons Attribution 3.0 License
+(https://creativecommons.org/licenses/by/3.0/); cite it as
+https://www.mitomap.org/MITOMAP/CitingMitomap asks. Modified: only the single-base
+substitutions kept, five of its nine columns (the file's header says which).
+
+
+RBCeq2 allele positions (MIT)
+-----------------------------
+src/genokeeper/resources/bloodgroups/rbceq2_2.4.4_positions.tsv is cut from the GRCh38 column
+of rbceq2/resources/db.tsv inside the rbceq2 2.4.4 wheel (https://github.com/limcintyre/RBCeq2),
+Copyright 2025 Australian Red Cross Lifeblood, under the MIT License
+(https://opensource.org/license/mit), whose full text is that wheel's
+rbceq2-2.4.4.dist-info/licenses/LICENSE. Modified: systems and positions only, the platelet
+antigens, RH and MNS left out (the file's header says how).
+
+
+GenCC
+-----
+tests/fixtures/gencc_head.tsv is the first rows of the Gene Curation Coalition's submissions
+export (https://thegencc.org), and tests/fixtures/check_responses/gencc.headers a response
+recorded from its download endpoint. GenCC releases its data under CC0 1.0
+(https://creativecommons.org/publicdomain/zero/1.0/).
+
+
+PharmGKB / ClinPGx clinical annotations (CC BY-SA 4.0)
+------------------------------------------------------
+src/genokeeper/resources/hla/alleles.tsv lists HLA alleles with the drugs, levels and annotation
+IDs of PharmGKB's clinical annotations as frozen on 2025-07-05 (clinical_annotations.tsv,
+clinical_ann_alleles.tsv; https://www.clinpgx.org), released under the Creative Commons
+Attribution-ShareAlike 4.0 License (https://creativecommons.org/licenses/by-sa/4.0/).
+Modified: one allele per row, levels 2A and 2B of category Toxicity, plus disease rows cited to
+their publications in the file's header. This file, as adapted material, is under CC BY-SA 4.0,
+not the Apache License; attribution: PharmGKB/ClinPGx (Whirl-Carrillo M et al., Clin Pharmacol
+Ther 2021, doi:10.1002/cpt.2350).
+
+
+Publications whose tables are cited in resource files
+-----------------------------------------------------
+- src/genokeeper/resources/hla/dq_tags.tsv: the six HLA-DQ tag SNPs of Monsuur AJ et al., PLoS ONE
+  2008;3:e2270 (doi:10.1371/journal.pone.0002270), an open-access article under a Creative
+  Commons Attribution licence; positions from dbSNP (public domain).
+- src/genokeeper/resources/hla/hg002_truth.tsv: HG002's HLA types from Chin CS et al., Nat Commun
+  2020;11:4794 (doi:10.1038/s41467-020-18564-9, CC BY 4.0), checked against Immuannot's typing of
+  the HPRC HG002 assemblies (Zhou et al., Genome Res 2024, doi:10.1101/gr.278985.124).
+- src/genokeeper/resources/genelists/: the ACMG SF v3.3 and carrier Tier 3 gene lists (Genet Med
+  2025 and 2021, cited in each file), and ClinGen's gene-disease validity export (CC0 1.0) for
+  Tier 4.
+- src/genokeeper/resources/mechanism_not_assessed.tsv: one GeneReviews chapter per gene (University
+  of Washington, Seattle), cited by authors, NBK accession and PMID and summarised, not quoted.
+
+
+Public-domain sources
+---------------------
+The gene, exon and coding spans under src/genokeeper/resources/ (af_guard/, coverage/, deletions/,
+paralogs/, bs1_gene_spans.tsv) are cut from NCBI's MANE release 1.5 and NCBI Gene, the variant
+positions from ClinVar and dbSNP, and the masked intervals and the HG002 truths from GIAB
+(NIST): works of the United States government, each file naming its source and checksum.
+
+
+Recorded API responses in tests
+-------------------------------
+tests/fixtures/check_responses/ holds responses recorded from public endpoints, mostly version
+metadata: ClinVar (public domain), CPIC (CC0 1.0), gnomAD (CC0 1.0), the GWAS Catalog and the
+PGS Catalog (EMBL-EBI terms of use), IPD-IMGT/HLA (a version string), ClinGen and GenCC (above),
+and GitHub's release metadata of ExpansionHunter, Yleaf, Haplogrep3, STRchive and PharmCAT.
+
+
+Aldy results and PharmVar allele names
+--------------------------------------
+tests/fixtures/aldy_cyp2d6_na10860.aldy and tests/fixtures/hg002/hg002.aldy.CYP2A6.txt are
+results of Aldy 4.8.3 (https://github.com/0xTCG/aldy; Hari A et al., Genome Research 2023) on
+public samples (GeT-RM NA10860, GIAB HG002), published with this acknowledgement as Aldy's
+licence asks; tests/fixtures/aldy_cyp2b6.aldy is hand-written in its output shape. Their star
+alleles are PharmVar's (https://www.pharmvar.org; Gaedigk A et al., Clin Pharmacol Ther 2018).
+
+
+AlphaMissense sample row (CC BY-NC-SA 4.0)
+------------------------------------------
+tests/test_bootstrap.py carries the header and the first data row of AlphaMissense_hg38.tsv as
+a format sample (Cheng J et al., Science 2023; https://storage.googleapis.com/dm_alphamissense/), licensed
+CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/). The full file is
+fetched by each user and never redistributed.
+
+
+Further cited sources
+---------------------
+- src/genokeeper/resources/ba1_exceptions.tsv: ClinGen SVI's BA1 exception list (Ghosh R et al.,
+  Hum Mutat 2018; CC0 1.0 as ClinGen's curations), the variants located in ClinVar.
+- src/genokeeper/resources/cspec_versions.tsv and the [bs1_by_gene] thresholds in
+  config/grading.toml: ClinGen's Criteria Specification Registry (CC0 1.0).
+- tests/fixtures/litvar_head.jsonl.gz and var_citations_head.txt: the first rows of NCBI's LitVar2
+  and ClinVar citation downloads (public domain).
+- src/genokeeper/resources/pgs/efo_topics.tsv: trait IDs and labels from EFO (Apache-2.0) and
+  MONDO (CC BY 4.0, https://mondo.monarchinitiative.org), as the PGS Catalog assigns them.
+- tests/fixtures/hg002/: the tools' outputs on GIAB's public HG002 reads and truths.
