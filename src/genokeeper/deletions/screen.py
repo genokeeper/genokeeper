@@ -38,6 +38,10 @@ CALLER_NAMES = {
     "insurveyor": "INSurVeyor",
     "scramble": "Scramble",
 }
+# The depth line of a class whose evidence lacks `+depth` (`warnings`): in the long band
+# depth should move and does not; under `long_from` a deletion often moves it too little.
+NO_DEPTH = "read depth does not support it"
+SHORT_DEPTH = "read depth does not show it, which a deletion this short often cannot"
 # Callers that label a call rather than find one (slice 3d: Scramble names a mobile
 # element's family, the plan's "Insertion class features"): beside the screen's callers they
 # change no class; alone they make the `mei` band, evidence the caller.
@@ -147,6 +151,14 @@ class Screen:
         )
 
     @cached_property
+    def _spans(self) -> _Index[tuple[str, int, int]]:
+        return _Index(
+            (t.chrom, t.start, t.end, (gene, t.start, t.end))
+            for gene, ts in self.targets.items()
+            for t in ts
+        )
+
+    @cached_property
     def _mask(self) -> _Index[None]:
         return _Index((c, s, e, None) for v in self.mask.values() for c, s, e in v)
 
@@ -158,14 +170,16 @@ class Screen:
 @dataclass(frozen=True)
 class Shown:
     """A deletion the screen shows: its class, gene -> exon numbers hit (sorted genes), the
-    highest-AF gnomAD-SV record it matches, rare or not, and for a depth event gene -> its
-    kind there (`loss`, `tandem`, `intragenic`, `whole`, `partial`; empty for 3b's)."""
+    highest-AF gnomAD-SV record it matches, rare or not, for a depth event gene -> its
+    kind there (`loss`, `tandem`, `intragenic`, `whole`, `partial`; empty for 3b's), and
+    the genes whose targets it touches only in the margin beside an exon (`flank_only`)."""
 
     deletion: Deletion
     call_class: CallClass
     exons: Mapping[str, tuple[int, ...]]
     population: PopulationSv | None
     kinds: Mapping[str, str] = field(default_factory=dict[str, str])
+    flank: frozenset[str] = frozenset()
 
 
 def key(c: CallClass) -> str:
@@ -187,7 +201,7 @@ def warnings(c: CallClass, callers: tuple[str, str] = ("dysgu", "delly")) -> lis
         if found not in ("both", "delly"):
             lines.append("read depth not measured")
         elif not c.evidence.endswith("+depth"):
-            lines.append("read depth does not support it")
+            lines.append(SHORT_DEPTH if c.band == "short" else NO_DEPTH)
     if c.repeat:
         lines.append("an end in a tandem repeat: may be a repeat-length change")
     if c.masked:
@@ -319,6 +333,19 @@ def exon_hits(d: Deletion, s: Screen) -> dict[str, tuple[int, ...]]:
     return {gene: tuple(sorted(hit[gene])) for gene in sorted(hit)}
 
 
+def flank_only(d: Deletion, s: Screen) -> frozenset[str]:
+    """The genes whose targets the call touches only within `exon_margin` of their ends:
+    a target is its exons widened by the margin and merged where they touch, so its bases
+    past the margin at either end are exon or a gap under twice the margin, shorter than
+    any deletion the screen keeps."""
+    m = s.thresholds.exon_margin
+    hit: dict[str, bool] = {}
+    for gene, start, end in s._spans.hits(d.chrom, d.pos, d.end):
+        core = start + m < d.end and d.pos < end - m
+        hit[gene] = hit.get(gene, False) or core
+    return frozenset(gene for gene, core in hit.items() if not core)
+
+
 def population_match(d: Deletion, s: Screen) -> PopulationSv | None:
     """`common_match` with the screen's own overlap and distance."""
     return common_match(
@@ -373,7 +400,15 @@ def screen_all(
         if reason is not None:
             dropped[reason] += 1
             continue
-        candidates.append(Shown(d, classify(d, s), exons, population_match(d, s)))
+        candidates.append(
+            Shown(
+                d,
+                classify(d, s),
+                exons,
+                population_match(d, s),
+                flank=flank_only(d, s),
+            )
+        )
     shown, same = one_per_position(candidates)
     dropped[SAME_POSITION] += same
     return shown, dropped

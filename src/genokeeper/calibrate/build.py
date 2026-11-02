@@ -83,6 +83,7 @@ from genokeeper.calibrate.classes import measure as measure_classes
 from genokeeper.calibrate.classes import summary as summarise_classes
 from genokeeper.calibrate.deletions import (
     BANDS,
+    OUTSIDE_BENCHMARK,
     DeletionTable,
     band_of,
     class_of,
@@ -90,6 +91,7 @@ from genokeeper.calibrate.deletions import (
     deletions_dir,
     expected_true_carried,
     geometry,
+    outside_benchmark,
     read_population,
     summary,
 )
@@ -829,14 +831,16 @@ def build_deletions(
             )
     assert s is not None
     priors = {band: expected_true_carried(lab, grading, s, band) for band in BANDS}
+    benchmark = read_bed(bench)
     bands, likelihoods = measure_deletions(
-        calls, found, geometry(s.targets, read_bed(bench)), priors, t
+        calls, found, geometry(s.targets, benchmark), priors, t
     )
     table = DeletionTable(
         versions=versions,
         bands=bands,
         likelihoods=likelihoods,
         measured={lib: summary(calls[lib], found[lib], t) for lib in LIBRARIES},
+        extra={OUTSIDE_BENCHMARK: [list(x) for x in outside_benchmark(s, benchmark)]},
     )
 
     def write(staging: Path) -> None:

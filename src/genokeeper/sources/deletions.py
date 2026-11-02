@@ -55,6 +55,10 @@ CONSEQUENCE_WARNING = (
     " assessed"
 )
 
+# A gene's reason line where the call touches only the margin beside its exons
+# (`Shown.flank`): placed as an exon hit, as the margin holds the splice sites.
+FLANK_ONLY = "touches only the bases beside an exon, not the exon itself"
+
 type Rate = tuple[float, float, float]
 # Why a class whose band the table did not measure (`p_wrong` None) is withheld.
 NOT_MEASURED = "not calibrated: no {} calls measured"
@@ -128,7 +132,9 @@ class DeletionSource:
     haploinsufficient genes (`lof_gene_gate`), and per band the truth's rare deletions
     the screen found on HG002 and their number (`DeletionTable.recall`). Then the slice-3d
     hooks the module docstring names, each 3b's behaviour by default; `screen_row` False
-    writes no `*:screen` row (a source that writes its own)."""
+    writes no `*:screen` row (a source that writes its own); `cautions` the lines a call's
+    warnings carry after its class's where its rate is extrapolated
+    (`DeletionTable.cautions`; none by default)."""
 
     shown: Sequence[Shown]
     called: int
@@ -147,6 +153,7 @@ class DeletionSource:
         default_factory=dict[tuple[str, int, int], str]
     )
     screen_claim: Mapping[str, object] = field(default_factory=dict[str, object])
+    cautions: Callable[[Shown], list[str]] = lambda _: []
 
     @property
     def tool(self) -> str:
@@ -236,6 +243,7 @@ class DeletionSource:
             "flags": [],
             "warnings": [
                 *warnings(shown.call_class, self.wording.callers),
+                *self.cautions(shown),
                 *([ZYGOSITY_WARNING] if _dosage(d.gt) == "2" else []),
                 CONSEQUENCE_WARNING,
             ],
@@ -296,6 +304,7 @@ class DeletionSource:
                 [
                     w.likely if likely else w.possible_for(d),
                     *([] if line is None else [line]),
+                    *([FLANK_ONLY] if gene in shown.flank else []),
                     *(
                         []
                         if depth is None

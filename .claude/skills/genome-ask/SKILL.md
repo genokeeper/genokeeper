@@ -953,13 +953,19 @@ track's; a deletion common in gnomAD-SV is not shown.
   present": that chance is far above a small variant's, which the answer says.
 - Its class's warnings (`reliability.warnings`) say what lowers confidence: `found by one
   caller (DELLY)` or `found by one caller (Dysgu)`, `read depth not measured`, `read depth
-  does not support it`, `an end in a tandem repeat: may be a repeat-length change`, `an end
-  in a segmental duplication or low-mappability region`, and on every deletion `its
-  consequence (whole or partial exon, in frame, last exon, decay escape) is not assessed`,
-  plus `both copies called; zygosity is not calibrated` on a two-copy call. Repeat every
-  one in the answer.
-  `claim.exons` names the exons hit (each transcript's own numbering), `claim.length` its
-  size, `claim.callers` which callers found it.
+  does not support it` (1 kb or longer) or `read depth does not show it, which a deletion
+  this short often cannot` (shorter: not evidence against it), `an end in a tandem repeat:
+  may be a repeat-length change`, `an end in a segmental duplication or low-mappability
+  region`; where its chance of being false is extrapolated, `no calibration call of this
+  class: its chance of being false is extrapolated` or `over a target outside the benchmark
+  the chance of being false was measured in`; and on every deletion `its consequence (whole
+  or partial exon, in frame, last exon, decay escape) is not assessed`, plus `both copies
+  called; zygosity is not calibrated` on a two-copy call. Repeat every one in the answer.
+  A gene's `validity.reason` adds `touches only the bases beside an exon, not the exon
+  itself` where the deletion reaches that gene's exons only within the 20 bp margin.
+  `claim.exons` names the exons hit (MANE Select's numbering; an exon only the MANE Plus
+  Clinical transcript has, by that transcript's), `claim.length` its size,
+  `claim.callers` which callers found it.
 - The default view hides them (validity `limited`, reliability `low`): for a question
   about a gene, a deletion or "everything", lower the filters yourself with
   `--min-validity limited --min-reliability low` and say they were lowered.

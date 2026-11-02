@@ -43,9 +43,9 @@ from genokeeper.containers import IMAGES
 from genokeeper.deletions.callers import caller_filter
 from genokeeper.deletions.exons import RESOURCE
 from genokeeper.deletions.files import sv_files
-from genokeeper.deletions.screen import CallClass, PopulationSv, Screen, key
+from genokeeper.deletions.screen import CallClass, Deletion, PopulationSv, Screen, key
 from genokeeper.deletions.truvari import AGAINST_TRUTH, BETWEEN_CALLERS
-from genokeeper.regions import Interval, giab38_dir, merge
+from genokeeper.regions import Interval, giab38_dir, merge, subtract
 from genokeeper.tools import run_tool
 
 # The run's three deletion steps (`pipeline.deletion_steps`): bump when a step's output
@@ -62,6 +62,13 @@ FEATURE_VALUES: dict[str, tuple[str, ...]] = {
     "masked": ("true", "false"),
     "junction": ("true", "false"),  # always false for a deletion
 }
+# `DeletionTable.extra`'s key for the targets' parts outside the benchmark BED, and the two
+# lines `DeletionTable.cautions` adds where a chance of being false is extrapolated.
+OUTSIDE_BENCHMARK = "outside_benchmark"
+UNSEEN = "no calibration call of this class: its chance of being false is extrapolated"
+OUTSIDE = (
+    "over a target outside the benchmark the chance of being false was measured in"
+)
 # What `read_population` keeps of gnomAD-SV besides `AN`: PASS records of the type asked
 # for (design decision 2: deletions).
 _PASS_TYPE = 'FILTER="PASS" && INFO/SVTYPE="{svtype}"'
@@ -74,9 +81,30 @@ def deletions_dir(lab: Path) -> Path:
 
 @dataclass(frozen=True)
 class DeletionTable(ClassTable):
-    """3b's class table: its schema is `FEATURE_VALUES`."""
+    """3b's class table: its schema is `FEATURE_VALUES`; `extra[OUTSIDE_BENCHMARK]` the
+    targets' parts the benchmark BED leaves out (`outside_benchmark`)."""
 
     features: Features = field(default_factory=lambda: dict(FEATURE_VALUES))
+
+    def cautions(self, d: Deletion, c: CallClass) -> list[str]:
+        """`UNSEEN` when no library's calibration calls had the class `c` (`summary`'s
+        `classes`), `OUTSIDE` when `d`'s bases touch a target part outside the benchmark:
+        where `p_wrong` is extrapolated, which it does not say itself."""
+        seen = any(
+            key(c) in m.get(c.band, {}).get("classes", ())
+            for m in self.measured.values()
+        )
+        outside = any(
+            chrom == d.chrom and start < d.end and d.pos < end
+            for chrom, start, end in self.extra.get(OUTSIDE_BENCHMARK, ())
+        )
+        return [*([] if seen else [UNSEEN]), *([OUTSIDE] if outside else [])]
+
+
+def outside_benchmark(s: Screen, benchmark: Iterable[Interval]) -> list[Interval]:
+    """The parts of `s`'s targets the benchmark BED leaves out (merged, sorted)."""
+    spans = [(t.chrom, t.start, t.end) for ts in s.targets.values() for t in ts]
+    return subtract(spans, benchmark)
 
 
 def band_of(length: int, t: DeletionThresholds) -> str | None:

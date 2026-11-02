@@ -28,6 +28,7 @@ from genokeeper.sources.deletions import (
     CONSEQUENCE_WARNING,
     DELETION_WORDING,
     DELETIONS_TOOL,
+    FLANK_ONLY,
     LIKELY_REASON,
     POSSIBLE_REASON,
     SOURCE_LEVEL,
@@ -263,6 +264,31 @@ def test_class_sets_rate_and_warnings(tmp_path: Path) -> None:
         CONSEQUENCE_WARNING,
     ]
     assert str(_gene_rows(collected)[1]["reason"]).startswith(POSSIBLE_REASON)
+
+
+def test_cautions_join_the_class_warnings(tmp_path: Path) -> None:
+    """What the table says of the call itself (`cautions`: a class it never saw, a target
+    outside its benchmark) follows the class's warnings."""
+    source = DeletionSource(
+        [_shown()], 1, {}, None, RATE_005, HAPLOINSUFFICIENT, RECALL,
+        cautions=lambda shown: [f"caution {shown.call_class.band}"],
+    )  # fmt: skip
+    collected = source.collect(run_context(tmp_path))
+    (call,) = [r.call for r in collected.rows if r.call is not None]
+    assert call["warnings"] == ["caution long", CONSEQUENCE_WARNING]
+
+
+def test_flank_only_gene_reason_says_so(tmp_path: Path) -> None:
+    """A deletion that touches one gene's exon and only another's flank says so in the
+    second gene's reason alone; its placement stays the gate's."""
+    shown = replace(
+        _shown(exons={"BRCA1": (2,), "PALB2": (1,)}), flank=frozenset({"PALB2"})
+    )
+    rows = {
+        r["gene"]: str(r["reason"]) for r in _gene_rows(_collect(tmp_path, [shown]))
+    }
+    assert FLANK_ONLY in rows["PALB2"]
+    assert FLANK_ONLY not in rows["BRCA1"]
 
 
 def test_zygosity_and_consequence_warnings(tmp_path: Path) -> None:

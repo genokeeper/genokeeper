@@ -27,6 +27,9 @@ from genokeeper.calibrate.classes import (
 )
 from genokeeper.calibrate.deletions import (
     FEATURE_VALUES,
+    OUTSIDE,
+    OUTSIDE_BENCHMARK,
+    UNSEEN,
     DeletionTable,
     class_of,
     deletion_versions,
@@ -67,6 +70,7 @@ from genokeeper.deletions.screen import key as class_key
 from genokeeper.deletions.truvari import read_union
 from genokeeper.pipeline import RunRefused
 from genokeeper.regions import giab38_dir
+from genokeeper.tools import ToolMissing
 
 T = DeletionThresholds()
 # 4,000 targets of 250 bp, 100 kb apart: a 2 kb call's reach is 4,000 x 2,250 bp.
@@ -281,6 +285,24 @@ def _measured_table(measured: object = None) -> DeletionTable:
     bands, likelihoods = measure({"pcrfree": calls}, {"pcrfree": truth}, G, PRIORS, T)
     return DeletionTable(
         dict(VERSIONS), bands, likelihoods, {"pcrfree": measured or {"calls": 350}}
+    )
+
+
+def test_cautions_name_an_unseen_class_and_a_target_outside_the_benchmark() -> None:
+    """A class no library's calibration call had, and a deletion over a target the
+    benchmark leaves out, each carry their line; p_wrong itself stays as it is."""
+    seen = CallClass("long", "both+depth", False, False)
+    measured = {"pcrfree": {"long": {"classes": [class_key(seen)]}, "short": {}}}
+    table = DeletionTable(
+        {}, {}, {}, measured, extra={OUTSIDE_BENCHMARK: [["chr1", 1000, 1200]]}
+    )
+    inside = Deletion("chr1", 2000, 3000, "N", "0/1", {}, None)
+    over = Deletion("chr1", 1100, 2100, "N", "0/1", {}, None)
+    assert table.cautions(inside, seen) == []
+    assert table.cautions(inside, LONG) == [UNSEEN]
+    assert table.cautions(over, seen) == [OUTSIDE]
+    assert (
+        table.cautions(Deletion("chr2", 1100, 2100, "N", "0/1", {}, None), seen) == []
     )
 
 
@@ -592,6 +614,34 @@ def test_deletion_steps_failure_recorded(
     assert "truvari" not in fake.runs
 
 
+@pytest.mark.parametrize("step", ["deletions_only", "match_callers"])
+@pytest.mark.parametrize(
+    "error",
+    [ToolMissing("bcftools"), OSError(28, "No space left on device"), None],
+    ids=["missing tool", "full disk", "wrote no file"],
+)
+def test_deletion_steps_failure_leaves_the_screen_unassessed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    step: str,
+    error: Exception | None,
+) -> None:
+    """A missing tool, a full disk or a step that wrote no file, in a caller step or the
+    union, is a failed step, not an aborted run (`None`: the step returns an empty folder,
+    writing nothing)."""
+    empty = tmp_path / "empty"
+
+    def fail(*_: object, **__: object) -> Path:
+        if error is not None:
+            raise error
+        empty.mkdir(exist_ok=True)
+        return empty
+
+    monkeypatch.setattr(pipeline, step, fail)
+    results, _ = _steps(tmp_path, monkeypatch, FakeDeletions())
+    assert results.called is None and results.failed
+
+
 def test_deletion_steps_union(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     fake = FakeDeletions()
     results, steps = _steps(tmp_path, monkeypatch, fake)
@@ -706,6 +756,9 @@ def test_calibrate_deletions_writes_a_table_the_run_accepts(
     assert table.bands["long"].recall == share(2, 2)
     assert table.bands["short"].recall == share(2, 2)
     assert set(table.measured) == set(LIBRARIES)
+    # The benchmark is chr20 whole: every target elsewhere lies outside it.
+    outside = {chrom for chrom, _, _ in table.extra[OUTSIDE_BENCHMARK]}
+    assert "chr1" in outside and "chr20" not in outside
     versions = deletion_versions(lab, sha256_file(grch38_fasta(lab)), load_grading())
     assert open_deletions(lab, versions) == (table, None)
 

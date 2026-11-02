@@ -9,7 +9,8 @@ transcript on `chr11_KN196481v1_fix`, so SLC37A4 is not covered);
 `resources/deletions/exons.GRCh38.tsv` (header: `# source:`, `# release:`, `# sha256:`),
 after checking the GTF is the pinned release. `load_exons` reads that resource back. Exon numbers
 are each transcript's own, so a gene with a Select and a Plus Clinical transcript has two
-numberings. `targets` widens each gene's exons by a margin and merges those that touch.
+numberings. `targets` widens each gene's exons by a margin and merges those that touch, and
+numbers each target by its MANE Select exons (by the Plus Clinical ones where it has none).
 
 `cut_spans` takes each gene's MANE Select transcript span on the primary assembly (MANE
 v1.5 also places a C4A transcript on `chr6_GL000254v2_alt`, which must not replace chr6's);
@@ -68,7 +69,8 @@ _TAG = re.compile(r'tag "([^"]*)"')
 
 @dataclass(frozen=True)
 class Exon:
-    """One exon of a MANE transcript; `start` and `end` are 0-based half-open, as BED."""
+    """One exon of a MANE transcript; `start` and `end` are 0-based half-open, as BED;
+    `select` False for a MANE Plus Clinical transcript's."""
 
     gene: str
     transcript: str
@@ -76,6 +78,7 @@ class Exon:
     chrom: str
     start: int
     end: int
+    select: bool = True
 
 
 @dataclass(frozen=True)
@@ -214,9 +217,17 @@ def read_resource(text: str) -> dict[str, list[Exon]]:
         fields = line.split("\t")
         if fields[0] == "gene":
             continue
-        gene, transcript, number, chrom, start, end, _tag = fields
+        gene, transcript, number, chrom, start, end, tag = fields
         exons.setdefault(gene, []).append(
-            Exon(gene, transcript, int(number), chrom, int(start), int(end))
+            Exon(
+                gene,
+                transcript,
+                int(number),
+                chrom,
+                int(start),
+                int(end),
+                select=tag == "MANE_Select",
+            )
         )
     return exons
 
@@ -225,19 +236,29 @@ def targets(
     exons: Mapping[str, Sequence[Exon]], margin: int
 ) -> dict[str, list[Target]]:
     """Per gene, its exons widened by `margin` on each side and merged where they overlap
-    or touch, keeping the exon numbers merged into each."""
+    or touch, keeping the exon numbers merged into each: the MANE Select exons' numbers, or
+    the Plus Clinical ones' where the target holds no Select exon, so one exon the two
+    transcripts number differently reads as one."""
     result: dict[str, list[Target]] = {}
     for gene, gene_exons in exons.items():
-        merged: list[tuple[str, int, int, set[int]]] = []
+        merged: list[tuple[str, int, int, list[Exon]]] = []
         for e in sorted(gene_exons, key=lambda x: (x.chrom, x.start, x.end)):
             start, end = max(e.start - margin, 0), e.end + margin
             if merged and merged[-1][0] == e.chrom and start <= merged[-1][2]:
-                chrom, first, last, numbers = merged[-1]
-                merged[-1] = (chrom, first, max(last, end), numbers | {e.number})
+                chrom, first, last, held = merged[-1]
+                merged[-1] = (chrom, first, max(last, end), [*held, e])
             else:
-                merged.append((e.chrom, start, end, {e.number}))
-        result[gene] = [Target(c, s, e, tuple(sorted(n))) for c, s, e, n in merged]
+                merged.append((e.chrom, start, end, [e]))
+        result[gene] = [
+            Target(c, s, e, tuple(sorted({x.number for x in _numbered(held)})))
+            for c, s, e, held in merged
+        ]
     return result
+
+
+def _numbered(held: Sequence[Exon]) -> list[Exon]:
+    """The exons whose numbers name a target: its MANE Select ones, else all of them."""
+    return [e for e in held if e.select] or list(held)
 
 
 def _pinned(gtf: Path) -> str:

@@ -9,9 +9,11 @@ from genokeeper.config import DeletionThresholds, InsertionThresholds
 from genokeeper.deletions.exons import Exon, Target, targets
 from genokeeper.deletions.screen import (
     COMMON,
+    NO_DEPTH,
     NO_EXON,
     SAME_POSITION,
     SHORT,
+    SHORT_DEPTH,
     CallClass,
     Deletion,
     PopulationSv,
@@ -155,6 +157,32 @@ def test_evidence_classes() -> None:
     assert len({key(c) for c in every}) == len(every)
 
 
+def test_short_band_depth_line_is_not_evidence_against() -> None:
+    """Under `long_from` read depth rarely moves, so a short deletion without depth
+    support is told so, not that depth fails to support it."""
+    assert warnings(CallClass("short", "both", False, False)) == [SHORT_DEPTH]
+    assert warnings(CallClass("short", "delly", False, False)) == [
+        "found by one caller (DELLY)",
+        SHORT_DEPTH,
+    ]
+    assert warnings(CallClass("long", "both", False, False)) == [NO_DEPTH]
+    assert warnings(CallClass("short", "both+depth", False, False)) == []
+
+
+def test_flank_only_overlap_named_per_gene() -> None:
+    """GENEA's exon 2 is [2000, 2100), its target [1980, 2120): a deletion of [1915, 1985)
+    touches the margin only, one of [1915, 2001) the exon's first base."""
+    s = _screen()
+    (flank,), _ = screen_all([_deletion(1915, 1985)], s)
+    (exon,), _ = screen_all([_deletion(1915, 2001)], s)
+    assert flank.flank == frozenset({"GENEA"})
+    assert exon.flank == frozenset()
+    # Over GENEA's exon 3 and only the margin before GENEB's exon 1 at 5000.
+    (both,), _ = screen_all([_deletion(3050, 4985)], s)
+    assert both.exons == {"GENEA": (3,), "GENEB": (1,)}
+    assert both.flank == frozenset({"GENEB"})
+
+
 def test_whole_gene_deletion_shown() -> None:
     assert screen(_deletion(500, 3500), _screen()) == ({"GENEA": (1, 2, 3)}, None)
 
@@ -295,9 +323,7 @@ def test_warnings_per_callers() -> None:
         "found by one caller (CNVpytor)",
         "an end in a segmental duplication or low-mappability region",
     ]
-    assert warnings(CallClass("long", "both", False, False)) == [
-        "read depth does not support it"
-    ]
+    assert warnings(CallClass("long", "both", False, False)) == [NO_DEPTH]
     assert warnings(CallClass("long", "delly", False, False), ("dysgu", "delly")) == [
         "found by one caller (DELLY)",
         "read depth does not support it",

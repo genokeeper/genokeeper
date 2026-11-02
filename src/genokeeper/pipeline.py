@@ -4808,6 +4808,11 @@ def run_genome(
         recall={} if deletion_table is None else deletion_table.recall(),
         placement_overrides=screen_overrides(),
         depth_support=slice3d.joined,
+        cautions=(
+            (lambda _: [])
+            if deletion_table is None
+            else (lambda s: deletion_table.cautions(s.deletion, s.call_class))
+        ),
     )
 
     # Slice 3f: HLA, HHV-6, ROH, blood groups and ancestry, typed only with a current

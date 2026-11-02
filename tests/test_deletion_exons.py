@@ -22,6 +22,7 @@ from genokeeper.deletions.exons import (
     load_exons,
     load_spans,
     locus_span,
+    read_resource,
     targets,
 )
 from genokeeper.genelists import load_gene_lists, load_screen_genes
@@ -134,6 +135,34 @@ def test_targets_merge_close_exons() -> None:
     assert apart == {
         "AAA": [Target("chr1", 980, 1120, (1,)), Target("chr1", 1130, 1220, (2,))]
     }
+
+
+def test_targets_number_by_mane_select() -> None:
+    """One exon the two transcripts number 30 and 31 reads as Select's 30; an exon only
+    the Plus Clinical transcript has keeps its own number; the bases stay the same."""
+    select = Exon("AAA", "ENST1", 30, "chr1", 1000, 1100)
+    plus = Exon("AAA", "ENST2", 31, "chr1", 1000, 1100, select=False)
+    alone = Exon("AAA", "ENST2", 5, "chr1", 3000, 3100, select=False)
+    assert targets({"AAA": [select, plus, alone]}, 20) == {
+        "AAA": [Target("chr1", 980, 1120, (30,)), Target("chr1", 2980, 3120, (5,))]
+    }
+
+
+def test_read_resource_marks_plus_clinical() -> None:
+    text = (
+        "gene\ttranscript\tnumber\tchrom\tstart\tend\ttag\n"
+        "AAA\tENST1\t30\tchr1\t1000\t1100\tMANE_Select\n"
+        "AAA\tENST2\t31\tchr1\t1000\t1100\tMANE_Plus_Clinical\n"
+    )
+    assert [e.select for e in read_resource(text)["AAA"]] == [True, False]
+
+
+def test_packaged_two_transcript_genes_read_one_number_per_exon() -> None:
+    """DYNC2H1 and MYH11 number many exons differently in their two MANE transcripts: none
+    of their targets reads as two exons."""
+    found = targets(load_exons(), 20)
+    for gene in ("DYNC2H1", "MYH11"):
+        assert all(len(t.exons) == 1 for t in found[gene]), gene
 
 
 def test_source_names_release_and_sha() -> None:
