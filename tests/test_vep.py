@@ -294,6 +294,27 @@ def test_vep_records_per_gene(
     assert {(r.gene, r.transcript) for r in records if r.vid == vid} == expected
 
 
+def test_vep_parse_holds_only_rows_it_can_choose() -> None:
+    """VEP writes a row per variant and transcript, millions on a genome: a rank-0 row of a
+    gene outside `keep` is never held, so memory follows the variants with a graded or
+    listed row, and one gene's many transcripts collapse as they stream by into the rows
+    `parse_vep` can choose (its MANE Select, its MANE Plus Clinical and its best row)."""
+    lines = [
+        _choice_row(f"GRCh38:chr1:{pos}:C:T", "GENEZ", "ENST09", "intron_variant")
+        for pos in range(2000, 3000)
+    ]
+    lines += [
+        _choice_row(MANE_MISSENSE, "BRCA1", f"ENST{i:02}", "intron_variant")
+        for i in range(50)
+    ]
+    header = FIELDS.split("\t")
+    held = vep._candidates(
+        (dict(zip(header, line.split("\t"), strict=True)) for line in lines),
+        keep={"BRCA1"},
+    )
+    assert list(held) == [(MANE_MISSENSE, "ENSG-BRCA1")]
+
+
 def test_spliceai_only_listed_genes(fake: FakeContainers, tmp_path: Path) -> None:
     """SpliceAI scores the records of the listed genes only, in its own image behind the
     gate; pext is read for each loss-of-function record (a splice site's at the nearest

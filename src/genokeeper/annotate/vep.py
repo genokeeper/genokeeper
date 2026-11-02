@@ -25,7 +25,7 @@ import gzip
 import re
 import shutil
 import sys
-from collections.abc import Collection, Iterator, Sequence
+from collections.abc import Collection, Iterable, Iterator, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -240,6 +240,41 @@ def _rows(path: Path) -> Iterator[dict[str, str]]:
             yield dict(zip(header, fields, strict=True))
 
 
+type _Row = tuple[
+    int, bool, bool, dict[str, str]
+]  # rank, MANE Select, MANE Plus Clinical
+
+
+def _candidates(
+    rows: Iterable[dict[str, str]], keep: Collection[str]
+) -> dict[tuple[str, str], tuple[_Row | None, _Row | None, _Row]]:
+    """Per (variant, Ensembl gene), the only rows `parse_vep` can choose, kept as VEP's
+    rows stream by: its first MANE Select row of rank above 0, its first MANE Plus Clinical
+    row of the highest rank, and its first row of the highest (rank, MANE Select, MANE Plus
+    Clinical). A rank-0 row of a gene outside `keep` is never chosen and never held, so
+    memory follows the variants with a graded or listed row, not VEP's every row."""
+    found: dict[tuple[str, str], tuple[_Row | None, _Row | None, _Row]] = {}
+    for row in rows:
+        if row["Feature_type"] != "Transcript" or _value(row["SYMBOL"]) is None:
+            continue
+        rank = _rank(frozenset(row["Consequence"].split("&")))
+        if rank == 0 and row["SYMBOL"] not in keep:
+            continue
+        select = _value(row["MANE_SELECT"]) is not None
+        plus = _value(row["MANE_PLUS_CLINICAL"]) is not None
+        new: _Row = (rank, select, plus, row)
+        key = (row["Uploaded_variation"], row["Gene"])
+        first_select, top_plus, best = found.get(key, (None, None, new))
+        if select and rank > 0 and first_select is None:
+            first_select = new
+        if plus and (top_plus is None or rank > top_plus[0]):
+            top_plus = new
+        if new[:3] > best[:3]:
+            best = new
+        found[key] = (first_select, top_plus, best)
+    return found
+
+
 def parse_vep(path: Path, *, keep: Collection[str]) -> list[VepRecord]:
     """The records of VEP's tab output at `path`, per variant (in order of its first row)
     and per Ensembl gene: each gene's MANE Select row when that row's consequence is one the
@@ -250,24 +285,14 @@ def parse_vep(path: Path, *, keep: Collection[str]) -> list[VepRecord]:
     2026-10-28) yet a LoF only on a minor isoform still reaches gate 2, and no row of one
     gene hides another gene's (BR-012, BR-013). A gene with no row of rank above 0 is kept
     only in `keep`, for SpliceAI."""
-    genes: dict[tuple[str, str], list[tuple[int, bool, bool, dict[str, str]]]] = {}
-    for row in _rows(path):
-        if row["Feature_type"] != "Transcript" or _value(row["SYMBOL"]) is None:
-            continue
-        rank = _rank(frozenset(row["Consequence"].split("&")))
-        select = _value(row["MANE_SELECT"]) is not None
-        plus = _value(row["MANE_PLUS_CLINICAL"]) is not None
-        key = (row["Uploaded_variation"], row["Gene"])
-        genes.setdefault(key, []).append((rank, select, plus, row))
     records: list[VepRecord] = []
-    for rows in genes.values():
-        select = [r for r in rows if r[1] and r[0] > 0][:1]
-        floor = select[0][0] if select else 0
-        plus = [r for r in rows if r[2] and r[0] > floor]
-        mane = select + sorted(plus, key=lambda r: -r[0])[:1]
-        best = mane or [max(rows, key=lambda r: r[:3])]
-        if best[0][0] > 0 or rows[0][3]["SYMBOL"] in keep:
-            records += [_record(r[3]) for r in best]
+    for select, plus, best in _candidates(_rows(path), keep).values():
+        floor = select[0] if select else 0
+        mane = [select] if select else []
+        mane += [plus] if plus and plus[0] > floor else []
+        chosen = mane or [best]
+        if chosen[0][0] > 0 or best[3]["SYMBOL"] in keep:
+            records += [_record(r[3]) for r in chosen]
     return records
 
 
