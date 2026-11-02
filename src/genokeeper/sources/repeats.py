@@ -81,6 +81,7 @@ CONFIRM_TEST = {
     Rule.DISTINCT: "PCR sizing",
 }
 NOT_ASSESSED = "not assessed"
+LOW_DEPTH_REASON = "low depth at this locus"
 RFC1_NORMAL = (
     "a biallelic AAGGG or ACAGG expansion is not seen; rarer pathogenic motifs (AAAGG,"
     " CAGGG) are not tested"
@@ -559,7 +560,7 @@ class RepeatSource:
         if call is None or not call.alleles:
             return "no call at this locus"
         if call.low_depth:
-            return "low depth at this locus"
+            return LOW_DEPTH_REASON
         return None
 
     def collect(self, ctx: RunContext) -> Collected:
@@ -746,7 +747,7 @@ class RepeatSource:
         if self.rfc1 is None:
             return "no call at this locus"
         if self.rfc1.low_depth:
-            return "low depth at this locus"
+            return LOW_DEPTH_REASON
         return None
 
     def _rfc1(self, ctx: RunContext) -> tuple[Fields, Fields]:
@@ -811,7 +812,7 @@ class RepeatSource:
         elif tg is None or t is None or not tg.alleles or not t.alleles:
             graded = Graded(Kind.UNASSESSED, "no call at this locus", None)
         elif tg.low_depth or t.low_depth:
-            graded = Graded(Kind.UNASSESSED, "low depth at this locus", None)
+            graded = Graded(Kind.UNASSESSED, LOW_DEPTH_REASON, None)
         elif self.min_spanning is None:
             graded = _unassessed(NOT_SET)
         else:

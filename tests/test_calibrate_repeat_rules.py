@@ -204,6 +204,17 @@ def test_a_locus_no_sample_gave_a_normal_is_withheld() -> None:
     assert _measure(_with(_trio(), (*HG002, FATHER), unread))[0] == {}
 
 
+def test_a_low_depth_normal_validates_nothing() -> None:
+    """A low-depth call is graded as the run grades it, unassessed: a parent's low-depth
+    normal is no validation."""
+    unread = _call(CNBP.variant_id, 5, 7, spanning=1)
+    shallow = replace(_call(CNBP.variant_id, 5, 7), low_depth=True)
+    samples = _with(_with(_trio(), (*HG002, MOTHER), unread), (FATHER,), shallow)
+    withheld, _, measured = _measure(samples)
+    assert withheld == {"CNBP": NOT_VALIDATED}
+    assert measured[FATHER]["repeats"]["CNBP"]["kind"] == "unassessed"
+
+
 def test_x_linked_needs_hg003_and_the_two_x_branch_needs_hg004() -> None:
     fmr1 = FMR1.variant_id
     samples = _with(_trio(), (*HG002, FATHER), _call(fmr1, 30))

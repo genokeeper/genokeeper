@@ -246,6 +246,9 @@ homopolymer = 6
 # many spanning, flanking and in-repeat reads together. Set from the stage 3 calibration of
 # 2026-10-28 (`genokeeper calibrate --stage3`, catalog 57789eab): the fewest reads behind
 # any of HG002's alleles on its two libraries, ATXN7's two on the PCR-free one (4 each).
+# That catalog had STRchive's regions; the packaged one has Illumina's (BR-008), so the value
+# is re-derived from the "fewest reads behind an allele" line of the next stage-3 report
+# (`genokeeper calibrate --only stage3 --report`).
 min_allele_reads = 4
 
 [repeat_loci]

@@ -3,7 +3,7 @@ stage-3 steps, into the table every run grades stage 3 with (spec, slice 3a "Cal
 
 HG002 is healthy, so a repeat call on either library the run would not grade normal (an
 interval reaching past the normal range, `sources.repeats.graded_normal`) is a false call and
-withholds its locus; an allele shorter than the read whose size is off GIAB's HG002
+withholds its locus, as does a call the run would leave unassessed for low depth; an allele shorter than the read whose size is off GIAB's HG002
 v5.0q truth (`truth_repeats`) by more than `MAX_SIZE_ERROR` repeats caps its locus at low; SMN
 is withheld unless both callers give SMN1 = 2 and SMN2 = 2 on both libraries, and the Y
 haplogroup unless both libraries derive L816 with the same predicted haplogroup (`measure`). Each library's C9orf72 flank ratio
@@ -46,10 +46,13 @@ if TYPE_CHECKING:
 STAGE3_IMAGES = ("expansionhunter", "reviewer", "smncaller", "parascopy", "yleaf")
 TABLE = "table.json"
 # 3 (slice 3e, after its final review): no `homozygous_ok`, so a table the false-normal
-# trials wrote (format 2), or slice 3a's (format 1), is not used.
-FORMAT = 3
+# trials wrote (format 2), or slice 3a's (format 1), is not used. 4 (BR-008): a low-depth
+# locus withheld, a flanking SNV no longer voiding a truth, and each allele's interval and
+# reads recorded, so a table measured without them (format 3) is not used.
+FORMAT = 4
 FALSE_CALL = "not covered: false call in calibration"
 NO_CALL = "not covered: no call in calibration"
+LOW_DEPTH = "not covered: low depth in calibration"
 SMN_WITHHELD = "not covered: SMN1 and SMN2 not 2 and 2 from both callers in calibration"
 YLEAF_WITHHELD = (
     "not covered: Yleaf did not give one haplogroup deriving L816 on both libraries"
@@ -157,7 +160,7 @@ def truth_repeats(
     in motif units, in haplotype order. None unless the region lies wholly in the benchmark
     BED `bench`, and when a record there is filtered, uncalled, of another ploidy or an
     unphased heterozygote, or anchored in the flank and not whole motif units: no truth
-    is guessed."""
+    is guessed. A record in the flank that changes no length is skipped first."""
     chrom, start, end = region
     if not _in_benchmark(bench, chrom, start - 1, end):
         return None
@@ -174,6 +177,12 @@ def truth_repeats(
         for rec in f.fetch(chrom, first - 1, end):
             ref = rec.ref or ""
             if rec.pos + len(ref) - 1 < first or rec.pos > end:
+                continue
+            # A record in the slop that ends before the region and changes no length (a
+            # flanking SNV) changes no count, whatever its filter or genotype.
+            if rec.pos + len(ref) - 1 < start and all(
+                len(a) == len(ref) for a in rec.alleles or ()
+            ):
                 continue
             if set(rec.filter.keys()) - {"PASS"}:
                 return None
@@ -220,10 +229,11 @@ def measure(
     loci: Mapping[str, RepeatLocus],
 ) -> tuple[dict[str, str], dict[str, Level], dict[str, Any]]:
     """What the libraries' `results` withhold (key -> reason) and cap (gene -> level), and
-    what was measured on each library: per locus its alleles, their classes, the truth and
-    the size error; both SMN callers' copy numbers; Yleaf's haplogroup and whether it
-    derives L816; the flank ratio. A locus with no call on a library is withheld, and one
-    whose allele count differs from a known truth capped at low."""
+    what was measured on each library: per locus its alleles, their intervals, the reads
+    behind each, their classes, the truth and the size error; both SMN callers' copy
+    numbers; Yleaf's haplogroup and whether it derives L816; the flank ratio. A locus with
+    no call or low depth on a library is withheld, and one whose allele count differs from
+    a known truth capped at low."""
     withheld: dict[str, str] = {}
     caps: dict[str, Level] = {}
     measured: dict[str, Any] = {}
@@ -242,6 +252,8 @@ def measure(
                 continue
             counts = [a.repeats for a in call.alleles]
             classes = [classify(locus, n) for n in counts]
+            if call.low_depth:
+                withheld.setdefault(gene, LOW_DEPTH)
             if not graded_normal(locus, call.alleles):
                 withheld[gene] = FALSE_CALL
             error = _size_error(locus, call, known)
@@ -251,6 +263,8 @@ def measure(
                 caps[gene] = Level.LOW
             repeats[gene] = {
                 "alleles": counts,
+                "ci": [list(a.ci) for a in call.alleles],
+                "reads": [a.spanning + a.flanking + a.inrepeat for a in call.alleles],
                 "classes": [str(c) for c in classes],
                 "truth": None if known is None else list(known),
                 "size_error": error,
@@ -411,11 +425,29 @@ def report(table: Stage3Table) -> str:
         for library in libraries:
             found = table.measured[library]["repeats"][gene]
             error = found.get("size_error")
+            ci = found.get("ci")
+            interval = (
+                "" if ci is None else " CI " + "/".join(f"{a}-{b}" for a, b in ci)
+            )
             cells.append(
-                f"{library} {_shown(found['alleles'])} (truth {_shown(found['truth'])},"
-                f" off {'?' if error is None else error})"
+                f"{library} {_shown(found['alleles'])}{interval}"
+                f" (truth {_shown(found['truth'])}, off {'?' if error is None else error})"
             )
         lines.append(f"  {gene}\t" + "\t".join(cells) + f"\t{verdict(gene)}")
+    # `[repeats] min_allele_reads` is derived from these: the fewest reads behind any of
+    # HG002's alleles.
+    fewest = []
+    for library in libraries:
+        reads = [
+            (n, gene)
+            for gene, found in table.measured[library]["repeats"].items()
+            for n in found.get("reads") or ()
+        ]
+        if reads:
+            n, gene = min(reads)
+            fewest.append(f"{library} {n} ({gene})")
+    if fewest:
+        lines.append(f"  fewest reads behind an allele: {', '.join(fewest)}")
     smn = [
         f"{library} SMNCopyNumberCaller {_shown(table.measured[library]['smn']['smncaller'])},"
         f" Parascopy {_shown(table.measured[library]['smn']['parascopy'])}"

@@ -31,6 +31,7 @@ from typing import Any
 from genokeeper.calibrate.records import RECORDED
 from genokeeper.calibrate.stage3 import (
     FALSE_CALL,
+    LOW_DEPTH,
     NO_CALL,
     SMN_WITHHELD,
     YLEAF_WITHHELD,
@@ -43,6 +44,7 @@ from genokeeper.sources.repeats import (
     CFTR_GENE,
     CFTR_T,
     CFTR_TG,
+    LOW_DEPTH_REASON,
     Graded,
     XDosage,
     cftr_grade,
@@ -81,6 +83,7 @@ NOT_VALIDATED = (
 # One reason per withheld key, the most basic failure first.
 WITHHOLD_ORDER = (
     NO_CALL,
+    LOW_DEPTH,
     FALSE_CALL,
     LIBRARIES_DISAGREE,
     RULE_DID_NOT_HOLD,
@@ -268,6 +271,9 @@ def measure_repeat_rules(
     def graded(key: str, call: RepeatCall | None, locus: RepeatLocus) -> Graded | None:
         if call is None or not call.alleles:
             return None
+        # The run leaves a low-depth call unassessed before any rule (`RepeatSource`).
+        if call.low_depth:
+            return Graded(Kind.UNASSESSED, LOW_DEPTH_REASON, None)
         male = samples[key].sex == "male"
         return grade(
             locus,

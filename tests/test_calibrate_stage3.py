@@ -20,6 +20,7 @@ from genokeeper.calibrate.repeat_rules import RFC1_WITHHELD
 from genokeeper.calibrate.stage3 import (
     FALSE_CALL,
     FORMAT,
+    LOW_DEPTH,
     RULES,
     SMN_KEY,
     SMN_WITHHELD,
@@ -30,6 +31,7 @@ from genokeeper.calibrate.stage3 import (
     hg002_truth,
     measure,
     open_stage3,
+    report,
     stage3_dir,
     stage3_versions,
     truth_repeats,
@@ -130,6 +132,45 @@ def test_measure_caps_a_one_allele_truth_on_its_one_allele() -> None:
     assert capped["AR"] == Level.LOW
 
 
+def test_measure_withholds_a_low_depth_locus() -> None:
+    """A locus the run would leave unassessed for low depth was not measured on that
+    library: withheld, whatever its alleles."""
+    hg002 = _hg002()
+    assert hg002.repeats is not None
+    variant = LOCI["HTT"].variant_id
+    shallow = replace(hg002.repeats[variant], low_depth=True)
+    other = replace(hg002, repeats=dict(hg002.repeats) | {variant: shallow})
+    withheld, _, _ = measure({"pcrfree": hg002, "pcr": other}, _truth(hg002), LOCI)
+    assert withheld["HTT"] == LOW_DEPTH
+    # A false call on the other library still names the false call.
+    false = _sized(other, "HTT", 17, 31)
+    withheld, _, _ = measure({"pcrfree": hg002, "pcr": false}, _truth(hg002), LOCI)
+    assert withheld["HTT"] == FALSE_CALL
+
+
+def test_report_shows_intervals_and_fewest_reads() -> None:
+    """The report shows each allele's interval, which `graded_normal` withholds by, and
+    the fewest reads behind an allele per library, which `[repeats] min_allele_reads` is
+    derived from."""
+    hg002 = _hg002()
+    withheld, caps, measured = measure({"pcrfree": hg002}, _truth(hg002), LOCI)
+    table = Stage3Table(
+        versions={}, withheld=withheld, caps=caps, flank={}, measured=measured
+    )
+    text = report(table)
+    (atxn2,) = [line for line in text.splitlines() if line.startswith("  ATXN2\t")]
+    assert hg002.repeats is not None
+    cis = "/".join(f"{a.ci[0]}-{a.ci[1]}" for a in hg002.repeats["ATXN2"].alleles)
+    assert f"CI {cis} " in atxn2 and atxn2.endswith(f"withheld: {FALSE_CALL}")
+    fewest = min(
+        (a.spanning + a.flanking + a.inrepeat, gene)
+        for gene, locus in LOCI.items()
+        if (call := hg002.repeats.get(locus.variant_id)) is not None
+        for a in call.alleles
+    )
+    assert f"fewest reads behind an allele: pcrfree {fewest[0]} ({fewest[1]})" in text
+
+
 def test_measure_smn_requires_two_two() -> None:
     hg002 = _hg002()
     assert hg002.caller is not None
@@ -225,6 +266,29 @@ def test_truth_repeats_phased(tmp_path: Path) -> None:
     assert truth_repeats(vcf, outside, region=htt, motif="CAG") is None
 
 
+def test_truth_repeats_skips_a_flank_record_that_changes_no_length(
+    tmp_path: Path,
+) -> None:
+    """Inside the one-motif slop before the region, an SNV, filtered or not, changes no
+    count: it is skipped before its filter and genotype are read. A filtered record in the
+    region, or a slop indel that is not whole units, still gives no truth."""
+    htt = region(LOCI["HTT"])
+    bench = tmp_path / "bench.bed"
+    bench.write_text("chr4\t3059966\t3227137\n")
+    insertion = "chr4\t3074876\t.\tC\tCCAG\t30\tPASS\t.\tGT:AD\t1|0:0,1"
+    snv = "chr4\t3074875\t.\tG\tA\t30\tPASS\t.\tGT:AD\t0|1:0,1"
+    filtered = "chr4\t3074874\t.\tC\tT\t30\tLowQual\t.\tGT:AD\t./.:0,0"
+    for records in ([snv, insertion], [filtered, insertion]):
+        vcf = _truth_vcf(tmp_path, records)
+        assert truth_repeats(vcf, bench, region=htt, motif="CAG") == (20, 19)
+    inside = "chr4\t3074900\t.\tC\tT\t30\tLowQual\t.\tGT:AD\t0|1:0,1"
+    vcf = _truth_vcf(tmp_path, [insertion, inside])
+    assert truth_repeats(vcf, bench, region=htt, motif="CAG") is None
+    flank = "chr4\t3074875\t.\tG\tGA\t30\tPASS\t.\tGT:AD\t0|1:0,1"
+    vcf = _truth_vcf(tmp_path, [flank, insertion])
+    assert truth_repeats(vcf, bench, region=htt, motif="CAG") is None
+
+
 def _table(
     versions: dict[str, str], measured: dict[str, Any] | None = None
 ) -> Stage3Table:
@@ -314,14 +378,16 @@ def test_stage3_table_of_an_earlier_format_not_used(tmp_path: Path) -> None:
     table = _table(VERSIONS)
     _put(lab, table)
     document = json.loads((stage3_dir(lab) / TABLE).read_text())
-    assert document["format"] == FORMAT == 3
+    assert document["format"] == FORMAT == 4
     assert "homozygous_ok" not in document
     assert open_stage3(lab, VERSIONS) == (table, None)
-    # A format-2 table (with the false-normal trials' `homozygous_ok`) is not used.
-    document["format"] = 2
-    (stage3_dir(lab) / TABLE).write_text(json.dumps(document))
-    found, reason = open_stage3(lab, VERSIONS)
-    assert found is None and reason is not None and "format 2" in reason
+    # A format-2 table (with the false-normal trials' `homozygous_ok`) is not used, nor a
+    # format-3 one, measured with a low-depth locus kept.
+    for earlier in (2, 3):
+        document["format"] = earlier
+        (stage3_dir(lab) / TABLE).write_text(json.dumps(document))
+        found, reason = open_stage3(lab, VERSIONS)
+        assert found is None and reason is not None and f"format {earlier}" in reason
 
 
 # `build_stage3` on faked steps: the trio's records, the truth files and a FASTA on disk.
