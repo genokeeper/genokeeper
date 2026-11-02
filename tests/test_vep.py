@@ -355,8 +355,9 @@ def test_spliceai_score_of_a_renamed_gene(
 
 
 def test_spliceai_names_are_listed_genes_and_old_names() -> None:
-    """Each renamed entry maps a gene SpliceAI is run on to a name no listed gene bears,
-    so the old name can only be that gene's."""
+    """Each renamed entry maps a gene SpliceAI is run on to a name no listed gene bears, so
+    no listed gene's own entry is read for another; that the old name is its gene's own
+    rests on the derivation `SPLICEAI_NAMES` states."""
     lists = load_gene_lists()
     listed = {gene for name in LISTED for gene in lists[name].genes}
     assert set(vep.SPLICEAI_NAMES) <= listed

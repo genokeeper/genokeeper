@@ -99,7 +99,8 @@ FIELDS = (
 # of the 190 listed genes as VEP 116 does; of the other five, each of these four has every MANE
 # Select CDS exon (coverage/cds.GRCh38.tsv, MANE v1.5) in exactly one annotation gene, and PLP1
 # none. A record takes SpliceAI's entry under its own gene's old name, never another gene's
-# (BR-023). Redo when a gene list changes.
+# (BR-023). The derivation needs the annotation file, which no test reads: redo it by hand
+# when a gene list changes.
 SPLICEAI_NAMES = {"ELP1": "IKBKAP", "G6PC1": "G6PC", "GBA1": "GBA", "MMUT": "MUT"}
 # A pext value is read at the variant's base, else at the nearest base of its gene within
 # this many bases: a ±1/2 splice variant sits in the intron, the base it spoils beside it.
@@ -513,8 +514,8 @@ def annotate(
     """VEP's records (`parse_vep`) for the sites-only VCF `out_dir/VEP_INPUT`
     (`vep_input`), VEP writing its output beside it; each loss-of-function record's
     `pext`; and SpliceAI's score on the records of `genes_for_spliceai`, under the gene's
-    old name where SpliceAI keeps one (`SPLICEAI_NAMES`; SpliceAI is not run when there are
-    none). `out_dir` holds the user's variants: the caller puts it
+    old name where SpliceAI keeps one (`SPLICEAI_NAMES`). SpliceAI is not run when there
+    are no such records. `out_dir` holds the user's variants: the caller puts it
     under the run's work directory."""
     mounts = [
         (out_dir, "/work", False),
