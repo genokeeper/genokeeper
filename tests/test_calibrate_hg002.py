@@ -39,7 +39,9 @@ from genokeeper.calibrate.hg002 import (
 )
 from genokeeper.calibrate.records import (
     ALIGNED,
+    MARGIN_BYTES,
     Record,
+    need_space,
     read_aligned,
     read_called,
     read_record,
@@ -371,10 +373,11 @@ def test_download_md5_mismatch_keeps_the_file(
 
 
 def test_a_test_never_reads_the_hosts_free_disk(tmp_path: Path) -> None:
-    """The download and re-alignment tests reach `need_space`; each sees conftest's stub
-    (`ample_free_disk`), never the free space of the machine running it, which on a small
-    CI runner is under the 20 GB margin."""
-    assert shutil.disk_usage(tmp_path).free == 10**12
+    """The download and re-alignment tests reach `need_space`; it sees conftest's stub
+    (`ample_free_disk`, 1 TB free), never the free space of the machine running it, which on
+    a small CI runner is under the 20 GB margin. A guard that read the disk another way would
+    refuse here on any host with less than 1 TB free."""
+    need_space(tmp_path, 10**12 - MARGIN_BYTES, "a file as large as the stub allows")
 
 
 def test_download_refuses_without_free_space(
