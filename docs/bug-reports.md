@@ -34,7 +34,7 @@ files, not this one. How to file, close and reference an entry:
 | [BR-004](bugs/BR-004.md) | The run and the deletion calibration screen calls through two paths, so the common and size tests can drift apart | `claude/bugs-deletions-b004e0` |
 | [BR-005](bugs/BR-005.md) | Deletion wording: the depth line reads as evidence against short deletions, and a flank-only overlap reads like an exon hit | `claude/bugs-deletions-b004e0` |
 | [BR-008](bugs/BR-008.md) | The stage-3 calibration keeps a low-depth HG002 locus, lets an unrelated record in the slop void a truth, and min_allele_reads predates the Illumina regions | `claude/bugs-repeats-dashboard-2cd3e6` |
-| [BR-010](bugs/BR-010.md) | The dashboard and explain show no stage-3 watch item or non-finding | `claude/bugs-repeats-dashboard-2cd3e6` |
+| [BR-010](bugs/BR-010.md) | The dashboard and explain show no stage-3 watch item or non-finding | `claude/bugs-repeats-dashboard-2cd3e6`, `claude/explain-stage3-watch` |
 | [BR-013](bugs/BR-013.md) | One VEP row per variant: a MANE Select missense outranks a LoF on MANE Plus Clinical or in an overlapping listed gene | `genokeeper/genokeeper#4` |
 | [BR-014](bugs/BR-014.md) | The gate-3 rescue counts ClinVar truncations by genomic span, not in the stop transcript's coding bases | `genokeeper/genokeeper#4` |
 | [BR-015](bugs/BR-015.md) | genokeeper refresh never runs again after a new calibration or FAF table: run_needed reads only the downloaded grading inputs | `genokeeper/genokeeper#6` |

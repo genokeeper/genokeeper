@@ -17,8 +17,8 @@ no crash reporting. The pipeline never uploads your reads, genotypes or findings
 that reads them runs in a container with no network, and a run opens no connection at all.
 Two optional features do send finding data to Anthropic, and only when you use them: the
 `genome-ask` skill, through your own Claude Code session, sends the `genokeeper query`
-answers it reads to answer you; and `genokeeper explain` sends each finding it explains,
-through your own Claude Code login. "Privacy and network" below lists every connection the
+answers it reads to answer you; and `genokeeper explain` sends each finding and each
+stage-3 watch item it explains, through your own Claude Code login. "Privacy and network" below lists every connection the
 tool makes and how to check the claim yourself.
 
 **Supported input (this version):** paired FASTQ (`*_1.fq.gz`, `*_2.fq.gz`) from an original
@@ -223,7 +223,8 @@ uv run genokeeper query       # the findings at the default thresholds
 For the agent skill, start Claude Code in the checkout (`claude`) and ask in plain words: "am
 I a carrier of anything?" ("Asking about the genome"). The skill sends the `genokeeper query`
 answers it reads to Anthropic through your Claude Code session, and the optional `genokeeper
-explain` sends findings to Anthropic; no other step sends your data off the machine ("Privacy
+explain` sends findings and stage-3 watch items to Anthropic; no other step sends your data
+off the machine ("Privacy
 and network").
 
 **11. The daily update check (optional).** It notifies you when a source has a newer release;
@@ -300,8 +301,8 @@ network off: `genokeeper run`, `query`, `show`, `genotype`, `changes` and `dashb
 | the `genome-ask` skill, if you ask questions through Claude Code (opt-in) | Anthropic, through your own Claude Code session | the `genokeeper query`, `show`, `genotype` and `changes` answers the agent reads in order to answer you |
 
 Nothing in the table runs on its own except the daily check, which you install yourself. The
-last two rows are the only ones that send finding data, and only when you ask a question or
-run `explain`.
+last two rows are the only ones that send finding data (findings and, through `explain`,
+stage-3 watch items), and only when you ask a question or run `explain`.
 
 **Without a language model.** Nothing needs one.
 - The dashboard shows every finding with its sources, and leaves the explanation empty until
@@ -739,7 +740,7 @@ other than the latest).
 
 ```bash
 uv run genokeeper explain --dry-run   # each prompt that would be sent, and the call count
-uv run genokeeper explain             # ask Claude for the findings not explained yet
+uv run genokeeper explain             # ask Claude for the findings and watch items not explained yet
 uv run genokeeper dashboard           # write reports/dashboard.html
 ```
 
@@ -751,11 +752,12 @@ classification, id or drug names (what `genokeeper query --text` searches), or w
 explanation, contain the typed text, ignoring case and reading `_` as a space.
 
 `genokeeper explain` writes, per finding, a short Russian "what it means" and a plain
-headline, which leads the finding's row on the page above the source's own words; a stage-3
-watch item (a borderline or intermediate repeat, an SMN1 silent-carrier marker) gets one too,
-asked as a watch item and never as a finding, and shown in the page's stage-3 list. It runs
+headline, which leads the finding's row on the page above the source's own words. A stage-3
+watch item (a borderline or intermediate repeat, an SMN1 silent-carrier marker) is asked for
+too, as a watch item and never as a finding, and the page's stage-3 list shows its "what it
+means" (not the headline) under its call, or nothing until one is written. It runs
 headless Claude Code (`claude -p`, model `claude-opus-5-5`, no tools, no MCP servers, no
-settings). **`explain` and `refresh --explain` are the commands that send finding data off
+settings). **`explain` and `refresh --explain` are the commands that send finding data (findings and stage-3 watch items) off
 the machine**; a `refresh` without the flag sends nothing, and its new findings show without
 an explanation until one of the two runs. Each prompt carries to Anthropic one finding's facts — its id, topic and gene; its marker
 (rsID, GRCh38 position); its genotype (the caller's `gt`, the allele and its dosage); its
@@ -783,7 +785,7 @@ the bootstrap's MedlinePlus file.
 
 ```bash
 uv run genokeeper refresh             # newest releases, a run when one is due, the Changes tab
-uv run genokeeper refresh --explain   # the same, and explain the new findings (sends them)
+uv run genokeeper refresh --explain   # the same, and explain the new findings and watch items (sends them)
 uv run genokeeper changes             # what changed since the previous refresh
 ```
 

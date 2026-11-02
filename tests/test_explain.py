@@ -39,6 +39,7 @@ from genokeeper.explain import (
     parse,
     prompt,
 )
+from genokeeper.lang import LANGUAGES
 from genokeeper.query import HAPLOID_DOSAGE_NOTE, Filters, query
 from genokeeper.store.db import Level, Validity, connect
 
@@ -993,32 +994,47 @@ def test_explain_asks_for_a_stage3_watch_item_as_a_watch_item(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """A stage-3 watch item reaches neither the feed nor `query`'s findings, so `explain`
-    asks for it apart, told it is a watch item, never a finding; a stage-3 non-finding is
-    not asked for (its call and stored reason say it), nor is another source's watch."""
+    asks for it apart, told it is a watch item, never a finding, in either language; a
+    stage-3 non-finding is not asked for (its call and stored reason say it), nor is a
+    watch of another source or one at a variant."""
+    other = {"schema": "genomelab.claim/1", "type": "x"}
     with connect(store) as con:
         seed(con, STAGE3_ROWS)
-        seed(con, [Row("clinvar:3", kind="watch", gene="TTN", pos=1003)])
-        con.execute(
-            "UPDATE statement SET source = 'expansionhunter'"
-            " WHERE statement_id LIKE 'expansionhunter:%'"
-        )
+        seed(
+            con,
+            [
+                Row("clinvar:3", kind="watch", gene="TTN", pos=1003),
+                Row("hhv6:ici", kind="watch", gene="U94", level=None, claim=other),
+                Row("expansionhunter:ATN1", kind="watch", gene="ATN1", pos=1004,
+                    claim=other),
+            ],
+        )  # fmt: skip
+        for prefix in ("expansionhunter", "hhv6"):
+            con.execute(
+                "UPDATE statement SET source = ? WHERE statement_id LIKE ?",
+                [prefix, f"{prefix}:%"],
+            )
     lab = _lab(tmp_path, monkeypatch)
     _medlineplus(lab / "medlineplus" / "20261020" / MEDLINEPLUS_FILE)
-    sent = Recorder()
-    monkeypatch.setattr(explainer, "claude_ask", sent)
-    command = ["explain", "--db", str(store), "--cache", str(tmp_path / "e")]
-    assert main(command) == 0
-    capsys.readouterr()
-    asked = {_document(p)["finding"]["id"]: p for p in sent.prompts}
-    assert set(asked) == {
-        "clinvar:1",
-        "clinvar:2",
-        "pharmcat:CYP2D6",
-        "expansionhunter:HTT",
-    }
-    watch = asked["expansionhunter:HTT"]
-    assert explainer.WATCH_NOTE in watch
-    assert watch.index(explainer.WATCH_NOTE) < watch.index(
-        "The finding and its sources:"
-    )
-    assert all(explainer.WATCH_NOTE not in p for i, p in asked.items() if p != watch)
+    for lang in LANGUAGES:
+        sent = Recorder()
+        monkeypatch.setattr(explainer, "claude_ask", sent)
+        cache = str(tmp_path / f"e-{lang}")
+        command = ["explain", "--db", str(store), "--cache", cache, "--lang", lang]
+        assert main(command) == 0
+        capsys.readouterr()
+        asked = {_document(p)["finding"]["id"]: p for p in sent.prompts}
+        assert set(asked) == {
+            "clinvar:1",
+            "clinvar:2",
+            "pharmcat:CYP2D6",
+            "expansionhunter:HTT",
+        }
+        watch = asked.pop("expansionhunter:HTT")
+        assert watch.index(explainer.WATCH_NOTE) < watch.index(
+            "The finding and its sources:"
+        )
+        assert _document(watch)["finding"]["kind"] == "watch"
+        for text in asked.values():
+            assert explainer.WATCH_NOTE not in text
+            assert "kind" not in _document(text)["finding"]

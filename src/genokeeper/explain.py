@@ -139,10 +139,11 @@ _INSTRUCTIONS: dict[Language, str] = {"en": _ENGLISH, "ru": _RUSSIAN}
 # Both languages' instructions end with this line; a watch item's add `WATCH_NOTE` before it.
 _FACTS_HEAD = "\nThe finding and its sources:\n"
 WATCH_NOTE = """\
-- This one is not a finding but a watch item: a screening result that is neither normal nor
-  a finding and needs confirmation, as its validity reason says. Say what its result may
-  mean and that it is not settled; never word it as a finding, an expansion, carrier status
-  or a diagnosis.
+- This one is not a finding but a watch item (its "kind" is "watch"): a screening result
+  that is neither normal nor a finding and needs confirmation, as its validity reason says.
+  Read every "finding" above as this watch item; the carrier example does not apply. Say
+  what its result may mean and that it is not settled; never word it, in the title or the
+  text, as a finding, an expansion, carrier status or a diagnosis.
 """
 
 type Ask = Callable[[str], str]
@@ -238,15 +239,17 @@ def prompt(
     facts["warnings"] = finding["reliability"]["warnings"]
     contig = (finding["marker"]["grch38"] or "").split(":")[0]
     facts["dosage_note"] = _DOSAGE_NOTES[lang].get(contig)
+    instructions = _INSTRUCTIONS[lang]
+    if finding["kind"] == Kind.WATCH:
+        # Only a watch item's facts name its kind, so a finding's prompt keeps its bytes.
+        facts["kind"] = finding["kind"]
+        instructions = instructions.replace(_FACTS_HEAD, WATCH_NOTE + _FACTS_HEAD)
     document = {
         "finding": facts,
         "sources": [{"id": s.id, "text": s.text} for s in sources],
     }
     # Sorted keys: the order a stored object comes back in never changes the key.
     facts_json = json.dumps(document, ensure_ascii=False, indent=2, sort_keys=True)
-    instructions = _INSTRUCTIONS[lang]
-    if finding["kind"] == Kind.WATCH:
-        instructions = instructions.replace(_FACTS_HEAD, WATCH_NOTE + _FACTS_HEAD)
     return instructions + facts_json + "\n"
 
 
@@ -517,7 +520,8 @@ def register(subparsers: Subparsers) -> None:
     """Add the `explain` sub-command."""
     reports = load_paths().reports
     e = subparsers.add_parser(
-        "explain", help="write a short explanation of each finding with Claude"
+        "explain",
+        help="write a short explanation of each finding and stage-3 watch item with Claude",
     )
     e.add_argument(
         "--db",
