@@ -3,9 +3,9 @@
 `annotate` runs VEP 116 (`containers.IMAGES["vep"]`, Ensembl's own image, its plugins baked
 in) offline on the lab's indexed GRCh38 cache, with MANE Select and MANE Plus Clinical
 flags, HGVS from the lab's FASTA, exon numbers and total lengths, and three plugins on files
-the bootstrap fetched whole: REVEL, AlphaMissense and SpliceVault. It keeps one record per
-variant (`VepRecord`): its MANE Select row where that has a consequence of interest, else
-the row of its most severe one, a MANE transcript first among equals. gnomAD's base-level
+the bootstrap fetched whole: REVEL, AlphaMissense and SpliceVault. It keeps records per
+variant and gene (`VepRecord`, `parse_vep`): its MANE rows of interest, else the row of its
+most severe consequence. gnomAD's base-level
 pext (`PextTable`) is then read for each loss-of-function record. SpliceAI (`containers.IMAGES["spliceai"]`, built from
 docker/spliceai.Dockerfile) runs locally on the records of `genes_for_spliceai` only: its
 precomputed scores need an Illumina account.
@@ -240,34 +240,34 @@ def _rows(path: Path) -> Iterator[dict[str, str]]:
 
 
 def parse_vep(path: Path, *, keep: Collection[str]) -> list[VepRecord]:
-    """One record per variant of VEP's tab output at `path` (in order of the variants'
-    first row): its MANE Select row when that row's consequence is one the grading reads (a
-    loss of function, start-loss or missense; design decision, 2026-10-28: a minor isoform's
-    LoF never hides the MANE missense, and a LoF only on a non-MANE isoform still reaches
-    gate 2); else its row of the highest rank (a loss-of-function consequence, then
-    start-loss, then missense, then anything else), among equals a gene in `keep` first,
-    then MANE Select, then MANE Plus Clinical. A variant with no row of rank above 0 is kept only in a gene of `keep`, for
-    SpliceAI."""
-    best: dict[str, tuple[tuple[bool, int, bool, bool, bool], dict[str, str]]] = {}
+    """The records of VEP's tab output at `path`, per variant (in order of its first row)
+    and per gene: each gene's MANE Select row when that row's consequence is one the
+    grading reads (a loss of function, start-loss or missense), and its MANE Plus Clinical
+    row of a higher rank (a loss of function, then start-loss, then missense); a gene with
+    neither gives its row of the highest rank, MANE Select then MANE Plus Clinical first
+    among equals. So a minor isoform's LoF never hides a MANE missense (design decision,
+    2026-10-28) yet a LoF only on a minor isoform still reaches gate 2, and no row of one
+    gene hides another gene's (BR-012, BR-013). A gene with no row of rank above 0 is kept
+    only in `keep`, for SpliceAI."""
+    genes: dict[tuple[str, str], list[tuple[int, bool, bool, dict[str, str]]]] = {}
     for row in _rows(path):
         if row["Feature_type"] != "Transcript" or _value(row["SYMBOL"]) is None:
             continue
         rank = _rank(frozenset(row["Consequence"].split("&")))
-        listed = row["SYMBOL"] in keep
-        if rank == 0 and not listed:
-            continue
-        mane_select = _value(row["MANE_SELECT"]) is not None
-        key = (
-            mane_select and rank > 0,
-            rank,
-            listed,
-            mane_select,
-            _value(row["MANE_PLUS_CLINICAL"]) is not None,
-        )
-        vid = row["Uploaded_variation"]
-        if vid not in best or key > best[vid][0]:
-            best[vid] = (key, row)
-    return [_record(row) for _, row in best.values()]
+        select = _value(row["MANE_SELECT"]) is not None
+        plus = _value(row["MANE_PLUS_CLINICAL"]) is not None
+        key = (row["Uploaded_variation"], row["SYMBOL"])
+        genes.setdefault(key, []).append((rank, select, plus, row))
+    records: list[VepRecord] = []
+    for (_, gene), rows in genes.items():
+        select = [r for r in rows if r[1] and r[0] > 0]
+        floor = max((r[0] for r in select), default=0)
+        plus = [r for r in rows if r[2] and r[0] > floor]
+        mane = select[:1] + sorted(plus, key=lambda r: -r[0])[:1]
+        best = mane or [max(rows, key=lambda r: r[:3])]
+        if best[0][0] > 0 or gene in keep:
+            records += [_record(r[3]) for r in best]
+    return records
 
 
 def _record(row: dict[str, str]) -> VepRecord:
@@ -478,8 +478,8 @@ def annotate(
 ) -> list[VepRecord]:
     """VEP's records (`parse_vep`) for the sites-only VCF `out_dir/VEP_INPUT`
     (`vep_input`), VEP writing its output beside it; each loss-of-function record's
-    `pext`; and SpliceAI's score on the records of `genes_for_spliceai` (SpliceAI is not
-    run when there are none). `out_dir` holds the user's variants: the caller puts it
+    `pext`; and SpliceAI's score on the records of `genes_for_spliceai`, each variant
+    scored once (SpliceAI is not run when there are none). `out_dir` holds the user's variants: the caller puts it
     under the run's work directory."""
     mounts = [
         (out_dir, "/work", False),
@@ -498,16 +498,24 @@ def annotate(
         replace(r, pext=pext.relative(*locus(r.vid)[:2], r.gene_id)) if r.lof else r
         for r in records
     ]
-    listed = [r.vid for r in records if r.gene in genes_for_spliceai]
+    listed = list(dict.fromkeys(r.vid for r in records if r.gene in genes_for_spliceai))
     if not listed:
         return records
     write_sites(out_dir / SPLICEAI_INPUT, listed, fasta)
     run_spliceai(out_dir, fasta, threads=threads)
     scores = parse_spliceai(out_dir / SPLICEAI_OUTPUT)
+    # SpliceAI names genes as its GENCODE v24 annotation did: a gene renamed since (MMUT,
+    # once MUT) is matched by the variant's only SpliceAI entry (BR-012).
+    entries: dict[str, list[float]] = {}
+    for (vid, _), score in scores.items():
+        entries.setdefault(vid, []).append(score)
+
+    def spliceai(r: VepRecord) -> float | None:
+        only = entries.get(r.vid, [])
+        return scores.get((r.vid, r.gene), only[0] if len(only) == 1 else None)
+
     return [
-        replace(r, spliceai=scores.get((r.vid, r.gene)))
-        if r.gene in genes_for_spliceai
-        else r
+        replace(r, spliceai=spliceai(r)) if r.gene in genes_for_spliceai else r
         for r in records
     ]
 

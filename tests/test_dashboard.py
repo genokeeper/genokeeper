@@ -904,7 +904,7 @@ RESULT_ROWS = [
         },
     ),
     Row(
-        "predicted:GRCh38:chr17:1050:C:T",
+        "predicted:GRCh38:chr17:1050:C:T:ENST1",
         pos=1050,
         claim={
             "type": "predicted_variant",
@@ -945,7 +945,7 @@ def test_rows_show_each_claim_types_result(
     assert f"file://{IMAGE}" in feed["links"]
     search = {sid: item["search"] for sid, item in data["items"].items()}
     assert "r1b-m269" in search["yleaf:haplogroup"]
-    assert "p.arg41ter" in search["predicted:GRCh38:chr17:1050:C:T"]
+    assert "p.arg41ter" in search["predicted:GRCh38:chr17:1050:C:T:ENST1"]
     assert "cag 17/20" in search["repeats:HTT"] and "normal" in search["repeats:HTT"]
 
 

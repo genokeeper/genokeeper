@@ -573,6 +573,28 @@ def test_two_carrier_lofs_are_phased(tmp_path: Path) -> None:
     assert [r.statement["topic"] for r in cis[0].rows] == ["carrier", "carrier"]
 
 
+def test_two_records_of_one_variant_are_two_statements(tmp_path: Path) -> None:
+    """BR-013: a variant with records on two transcripts (a MANE Select missense, a MANE
+    Plus Clinical stop) gives a statement for each, its id naming the transcript; the
+    accounting counts each graded record once and each other variant once, so it
+    balances, and the two records make no compound heterozygote."""
+    stop = _record(gene="CFTR", vid="GRCh38:chr7:1000:C:T", transcript="ENST02.4")
+    missense = _missense(revel=0.95, gene="CFTR", vid=stop.vid, transcript="ENST01.7")
+    source = PredictedSource(
+        sites=[(r, CALLED, RELIABLE, 0) for r in (missense, stop)],
+        input_rows=3,
+        escapes={"ENST02": REGIONS},
+        truncations=[],
+        haploinsufficient=HAPLOINSUFFICIENT,
+    )
+    ctx = _context(tmp_path)
+    collected = source.collect(ctx)
+    ids = [r.statement["statement_id"] for r in collected.rows]
+    assert ids == [f"predicted:{stop.vid}:ENST01", f"predicted:{stop.vid}:ENST02"]
+    assert collected.input_rows == len(ids) + sum(collected.dropped.values()) == 4
+    assert promote.candidate_pairs([collected], LISTS, {}, ctx.haploid) == []
+
+
 def test_one_copy_hets_outside_tier3_reach_the_promotion(tmp_path: Path) -> None:
     """One copy in a recessive gene outside the carrier lists (MUTYH without its Tier 4
     row: a missense, a LoF passing every gate) is stored as a non-finding, no longer

@@ -1097,7 +1097,8 @@ def test_clinvar_classified_allele_is_never_predicted(genome: Genome) -> None:
     ref = genome_bases(genome.lab.fasta, "chr1", CLASSIFIED_LOF_POS)
     classified_lof_vid = f"GRCh38:chr1:{CLASSIFIED_LOF_POS}:{ref}:{_alt(ref)}"
     assert classified_lof_vid in genome.vep.sites
-    assert f"predicted:{classified_lof_vid}" not in _statements(genome, run_id)
+    ids = _statements(genome, run_id)
+    assert not any(i.startswith(f"predicted:{classified_lof_vid}") for i in ids)
     # VEP was given the classified alleles too; grading neither predicts nor counts them.
     with gzip.open(_step(genome, run_id, "clinvar_vids")["path"], "rt") as handle:
         classified = set(handle.read().split())

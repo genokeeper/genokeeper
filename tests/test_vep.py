@@ -29,6 +29,7 @@ FIELDS = (
     "\tam_pathogenicity\tSpliceVault_top_events"
 )
 STOP = "GRCh38:chr1:200:C:T"
+MISSENSE_TERM = "missense_variant"
 MISSENSE = "GRCh38:chr1:300:G:A"
 SPLICE = "GRCh38:chr1:400:G:C"
 INTRONIC = "GRCh38:chr1:500:A:G"
@@ -89,11 +90,12 @@ def _files(lab: Path) -> VepFiles:
 
 class FakeContainers:
     """Stands in for `run_container` in `genokeeper.annotate.vep`: VEP writes `ROWS`,
-    SpliceAI scores each site it is handed 0.3 on BRCA1."""
+    SpliceAI scores each site it is handed 0.3 on each of `spliceai_genes`."""
 
     def __init__(self) -> None:
         self.calls: list[tuple[str, list[str], str | None]] = []
         self.spliceai_sites: list[str] = []
+        self.spliceai_genes = ["BRCA1"]
 
     def __call__(
         self,
@@ -119,7 +121,10 @@ class FakeContainers:
                 continue
             fields = line.split("\t")
             self.spliceai_sites.append(fields[2])
-            info = f"SpliceAI={fields[4]}|BRCA1|0.00|0.30|0.10|0.00|1|2|3|4"
+            info = "SpliceAI=" + ",".join(
+                f"{fields[4]}|{gene}|0.00|0.30|0.10|0.00|1|2|3|4"
+                for gene in self.spliceai_genes
+            )
             out.append("\t".join([*fields[:7], info]))
         (work / Path(written).name).write_text("\n".join(out) + "\n")
 
@@ -217,46 +222,66 @@ def _choice_row(
     )
 
 
-# Each variant's rows, the row that should lose first: a strict `>` keeps the first row of
-# equal key, so each tie-break decides only if it is in the key.
+# Each variant's rows; for each, the (gene, transcript) of every record it should give.
 MANE_MISSENSE = "GRCh38:chr1:700:C:T"
-LISTED_STOP = "GRCh38:chr1:800:C:T"
+TWO_GENES_STOP = "GRCh38:chr1:800:C:T"
 PLUS_STOP = "GRCh38:chr1:900:C:T"
+PLUS_MISSENSE = "GRCh38:chr1:1100:C:T"
+SELECT_AND_PLUS = "GRCh38:chr1:1200:C:T"
+OVERLAP_PLUS_STOP = "GRCh38:chr1:1300:C:T"
+OVERLAP_MANE_STOP = "GRCh38:chr1:1400:C:T"
+SHARED_EXON = "GRCh38:chr1:1500:C:T"
+SELECT, PLUS = {"mane": "NM_007294.4"}, {"plus": "NM_000001.1"}
 CHOICE_ROWS = [
     _choice_row(MANE_MISSENSE, "BRCA1", "ENST05", "splice_donor_variant"),
-    _choice_row(
-        MANE_MISSENSE,
-        "BRCA1",
-        "ENST01",
-        "missense_variant",
-        mane="NM_007294.4",
-        revel="0.95",
-    ),
-    _choice_row(LISTED_STOP, "GENEZ", "ENST09", "stop_gained"),
-    _choice_row(LISTED_STOP, "BRCA1", "ENST06", "stop_gained"),
+    _choice_row(MANE_MISSENSE, "BRCA1", "ENST01", MISSENSE_TERM, **SELECT),
+    _choice_row(TWO_GENES_STOP, "GENEZ", "ENST09", "stop_gained"),
+    _choice_row(TWO_GENES_STOP, "BRCA1", "ENST06", "stop_gained"),
     _choice_row(PLUS_STOP, "BRCA1", "ENST07", "stop_gained"),
-    _choice_row(PLUS_STOP, "BRCA1", "ENST08", "stop_gained", plus="NM_000001.1"),
+    _choice_row(PLUS_STOP, "BRCA1", "ENST08", "stop_gained", **PLUS),
+    _choice_row(PLUS_MISSENSE, "BRCA1", "ENST01", "intron_variant", **SELECT),
+    _choice_row(PLUS_MISSENSE, "BRCA1", "ENST02", MISSENSE_TERM, **PLUS),
+    _choice_row(PLUS_MISSENSE, "BRCA1", "ENST03", "stop_gained"),
+    _choice_row(SELECT_AND_PLUS, "BRCA1", "ENST01", MISSENSE_TERM, **SELECT),
+    _choice_row(SELECT_AND_PLUS, "BRCA1", "ENST02", "stop_gained", **PLUS),
+    _choice_row(OVERLAP_PLUS_STOP, "GENEZ", "ENST09", MISSENSE_TERM, mane="NM_9.1"),
+    _choice_row(OVERLAP_PLUS_STOP, "BRCA1", "ENST02", "stop_gained", **PLUS),
+    _choice_row(OVERLAP_MANE_STOP, "GENEZ", "ENST09", "stop_gained", mane="NM_9.1"),
+    _choice_row(OVERLAP_MANE_STOP, "BRCA1", "ENST01", MISSENSE_TERM, **SELECT),
+    _choice_row(SHARED_EXON, "BRCA1", "ENST02", MISSENSE_TERM, **PLUS),
+    _choice_row(SHARED_EXON, "BRCA1", "ENST01", MISSENSE_TERM, **SELECT),
 ]
 
 
 @pytest.mark.parametrize(
-    ("vid", "transcript"),
+    ("vid", "expected"),
     [
         # MANE Select first (design decision, 2026-10-28): its missense is graded, not a
         # minor isoform's splice donor.
-        (MANE_MISSENSE, "ENST01"),
-        # Equal rank, no MANE row: the listed gene's row.
-        (LISTED_STOP, "ENST06"),
-        # Equal rank and gene, no MANE Select row: MANE Plus Clinical.
-        (PLUS_STOP, "ENST08"),
+        (MANE_MISSENSE, {("BRCA1", "ENST01")}),
+        # No row of one gene hides another gene's (BR-013), listed or not.
+        (TWO_GENES_STOP, {("GENEZ", "ENST09"), ("BRCA1", "ENST06")}),
+        # Equal rank, no MANE Select row: MANE Plus Clinical.
+        (PLUS_STOP, {("BRCA1", "ENST08")}),
+        # BR-012: a minor isoform's stop no longer hides the MANE Plus Clinical missense.
+        (PLUS_MISSENSE, {("BRCA1", "ENST02")}),
+        # BR-013: the MANE Select missense and the MANE Plus Clinical stop are both graded.
+        (SELECT_AND_PLUS, {("BRCA1", "ENST01"), ("BRCA1", "ENST02")}),
+        (OVERLAP_PLUS_STOP, {("GENEZ", "ENST09"), ("BRCA1", "ENST02")}),
+        (OVERLAP_MANE_STOP, {("GENEZ", "ENST09"), ("BRCA1", "ENST01")}),
+        # A MANE Plus Clinical row of no higher rank adds nothing: one record, on Select.
+        (SHARED_EXON, {("BRCA1", "ENST01")}),
     ],
 )
-def test_vep_row_choice(tmp_path: Path, vid: str, transcript: str) -> None:
-    """A MANE Select row with a consequence of interest is graded whatever another row's
-    rank; without one the rank decides, then a listed gene, then MANE Plus Clinical."""
+def test_vep_records_per_gene(
+    tmp_path: Path, vid: str, expected: set[tuple[str, str]]
+) -> None:
+    """Each gene of a variant gives its own records: its MANE Select row with a
+    consequence of interest, and a MANE Plus Clinical row of a higher rank; a gene with
+    neither gives its row of the highest rank, MANE Plus Clinical first among equals."""
     path = _write_vep_output(tmp_path / VEP_OUTPUT, CHOICE_ROWS)
-    records = {r.vid: r for r in parse_vep(path, keep={"BRCA1"})}
-    assert records[vid].transcript == transcript
+    records = parse_vep(path, keep={"BRCA1"})
+    assert {(r.gene, r.transcript) for r in records if r.vid == vid} == expected
 
 
 def test_spliceai_only_listed_genes(fake: FakeContainers, tmp_path: Path) -> None:
@@ -279,6 +304,19 @@ def test_spliceai_only_listed_genes(fake: FakeContainers, tmp_path: Path) -> Non
     unlisted = _annotate(tmp_path / "unlisted", [])
     assert [name for name, _, _ in fake.calls] == ["vep"]
     assert all(r.spliceai is None for r in unlisted)
+
+
+@pytest.mark.parametrize(
+    ("named", "score"), [(["BRCA1-OLD"], 0.3), (["GENEA", "GENEB"], None)]
+)
+def test_spliceai_renamed_gene(
+    fake: FakeContainers, tmp_path: Path, named: list[str], score: float | None
+) -> None:
+    """BR-012: a listed gene SpliceAI knows by its old name takes the variant's only
+    SpliceAI entry; of two entries, neither VEP's gene, it takes none."""
+    fake.spliceai_genes = named
+    records = _annotate(tmp_path, ["BRCA1"])
+    assert {r.spliceai for r in records} == {score}
 
 
 @pytest.mark.parametrize("threads", [vep.SPLICEAI_CORES * 3, 64])

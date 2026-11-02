@@ -334,7 +334,7 @@ def test_contract_list_matches_the_query_and_show_output(tmp_path: Path) -> None
         con,
         [
             Row(
-                "predicted:GRCh38:chr17:1008:C:T",
+                "predicted:GRCh38:chr17:1008:C:T:ENST00000357654",
                 validity="limited",
                 pos=1008,
                 claim={
@@ -369,7 +369,7 @@ def test_contract_list_matches_the_query_and_show_output(tmp_path: Path) -> None
     shown = {"run_id": run, "finding": finding}
     listed = query(con, None, Filters(), list_unassessed=True).to_json()
     assert listed["unassessed_sites"] and listed["unassessed"]["by_gene"]
-    _, predicted = show(con, None, "predicted:GRCh38:chr17:1008:C:T")
+    _, predicted = show(con, None, "predicted:GRCh38:chr17:1008:C:T:ENST00000357654")
     gene = query(con, None, Filters(gene="BRCA1")).to_json()
     found = key_paths(listed) | key_paths(shown) | key_paths(predicted)
     assert found | key_paths(gene) == CONTRACT
@@ -541,7 +541,7 @@ def test_skill_labels_predicted() -> None:
     failed gate, and comes after the ClinVar findings."""
     section = _section_named(SKILL.read_text(), "## Predicted findings")
     for needed in (
-        "`predicted:<vid>`",
+        "`predicted:<vid>:<transcript>`",
         "source `vep`",
         '"predicted, not classified"',
         "confirmation by a clinical lab",

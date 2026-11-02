@@ -413,7 +413,7 @@ Each finding has these keys:
   - `category`: what the evidence is about — `Efficacy`, `Toxicity`, `Metabolism/PK`,
     `Other`, joined by `; ` — or null (a category naming a dose is never kept);
 
-  for a predicted finding (`predicted_variant`, id `predicted:<vid>`, source `vep`, at a
+  for a predicted finding (`predicted_variant`, id `predicted:<vid>:<transcript>`, source `vep`, at a
   marker), a variant ClinVar has not classified, with its `classification` always
   `predicted, not classified` (see Predicted findings):
   - `consequence`: VEP's consequence terms on the transcript, joined by `&`, e.g.
@@ -857,7 +857,7 @@ reason; say so when the user asks why a trait's associations are not there.
 
 ## Predicted findings
 
-A variant ClinVar has not classified can be a predicted finding (`predicted:<vid>`, source
+A variant ClinVar has not classified can be a predicted finding (`predicted:<vid>:<transcript>`, source
 `vep`): VEP 116 on every PASS variant of the user's that no ClinVar record
 classifies germline (whatever the record's shape), with REVEL, AlphaMissense, SpliceVault and
 gnomAD's pext, and SpliceAI in the listed genes. A
