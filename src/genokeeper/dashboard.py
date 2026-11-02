@@ -49,7 +49,12 @@ from typing import TYPE_CHECKING, Any
 import duckdb
 
 from genokeeper import changes, check, history, refresh_log
-from genokeeper.carrier import NOT_COVERED, STAGE3_SOURCES, load_mechanisms
+from genokeeper.carrier import (
+    CFTR_REPEAT_ID,
+    NOT_COVERED,
+    STAGE3_SOURCES,
+    load_mechanisms,
+)
 from genokeeper.config import Paths, load_paths
 from genokeeper.evidence.medlineplus import MEDLINEPLUS_FILE, MedlinePlus
 from genokeeper.explain import LOOSEST, lookup, newest_medlineplus
@@ -307,20 +312,36 @@ def _screened(
 ) -> dict[str, list[dict[str, str | None]]]:
     """The run's stage-3 gene-level watch items (`watch`) and non-findings (`normal`) not
     flagged `exclusion`, each by gene then id: its gene with its gene call's diplotype
-    (`label`), and its stored reason or, without one, its gene call's phenotype."""
+    (`label`) and its stored reason (`wording`, or null). Not a gene call's phenotype, which
+    can say more than `carrier.genotype` answers (SMN1's "not a carrier"), nor CFTR's
+    poly-T/TG, which `carrier` keeps apart: its "no 5T allele" is no cystic-fibrosis test."""
     marks = ", ".join("?" * len(STAGE3_SOURCES))
     rows = con.execute(
-        "SELECT s.statement_id, s.kind, s.gene, g.diplotype,"
-        " coalesce(s.reason, g.phenotype) FROM statement AS s LEFT JOIN gene_call AS g"
+        "SELECT s.statement_id, s.kind, s.gene, g.diplotype, s.reason"
+        " FROM statement AS s LEFT JOIN gene_call AS g"
         " ON g.run_id = s.run_id AND g.gene = s.gene"
         f" AND {OWNS_GENE_CALL.format(s='s')}"
         " WHERE s.run_id = ? AND s.vid IS NULL AND s.kind IN (?, ?) AND NOT s.exclusion"
-        f" AND s.source IN ({marks}) ORDER BY s.gene, s.statement_id",
-        [run_id, str(Kind.WATCH), str(Kind.NON_FINDING), *STAGE3_SOURCES],
+        f" AND s.source IN ({marks}) AND s.statement_id <> ?"
+        " ORDER BY s.gene, s.statement_id",
+        [
+            run_id,
+            str(Kind.WATCH),
+            str(Kind.NON_FINDING),
+            *STAGE3_SOURCES,
+            CFTR_REPEAT_ID,
+        ],
     ).fetchall()
     found: dict[str, list[dict[str, str | None]]] = {"watch": [], "normal": []}
     for sid, kind, gene, diplotype, wording in rows:
-        label = gene if diplotype is None else f"{gene} {diplotype}"
+        # SMN's and a paralog's diplotype names its gene already ("SMN1 2, SMN2 2").
+        label = (
+            gene
+            if diplotype is None
+            else diplotype
+            if diplotype.startswith(gene)
+            else f"{gene} {diplotype}"
+        )
         listed = {"id": sid, "label": label, "wording": wording}
         found["watch" if kind == Kind.WATCH else "normal"].append(listed)
     return found

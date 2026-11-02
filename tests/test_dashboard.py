@@ -1222,10 +1222,11 @@ SCREENED_ROWS = [
         gene="SMN1",
         level=None,
         claim={"type": "smn_copy_number"},
+        gene_call={"diplotype": "SMN1 3, SMN2 2", "phenotype": "not a carrier"},
     ),
     # Not listed: a flagged normal (the "Excluded by screening" block's), a stage-3
-    # finding and unassessed claim (the feed's and its counts'), and a non-finding of
-    # another source.
+    # finding and unassessed claim (the feed's and its counts'), CFTR's poly-T/TG (no
+    # cystic-fibrosis test), and a gene-level non-finding of another source.
     Row(
         "expansionhunter:CNBP",
         kind="non_finding",
@@ -1242,7 +1243,15 @@ SCREENED_ROWS = [
         level=None,
         claim=REPEAT,
     ),
-    Row("clinvar:977", kind="non_finding", gene="TP53"),
+    Row(
+        "expansionhunter:CFTR",
+        kind="non_finding",
+        gene="CFTR",
+        level=None,
+        claim=REPEAT,
+        reason="no 5T allele: T 7/9, TG 11/12",
+    ),
+    Row("hhv6:ici", kind="non_finding", gene="U94", level=None, claim={"type": "x"}),
 ]
 
 
@@ -1253,12 +1262,14 @@ def test_screened_lists_stage3_watch_items_and_non_findings_apart(
     counts: the page lists them in a block of their own, a watch apart from a normal."""
     seed(con, SCREENED_ROWS)
     _flag(con, "expansionhunter:CNBP")
-    for prefix in ("expansionhunter", "smn"):
+    for prefix in ("expansionhunter", "smn", "hhv6"):
         con.execute(
             "UPDATE statement SET source = ? WHERE statement_id LIKE ?",
             [prefix, f"{prefix}:%"],
         )
     data = payload(con, None, NO_CACHE, lang="ru")
+    page = render(data)
+    assert page.index('id="excluded"') < page.index('id="screened"')
     assert data["screened"] == {
         "watch": [
             {
@@ -1268,20 +1279,17 @@ def test_screened_lists_stage3_watch_items_and_non_findings_apart(
             }
         ],
         "normal": [
-            {
-                "id": "expansionhunter:DMPK",
-                "label": "DMPK CAG 5/12",
-                "wording": "normal",
-            },
-            {"id": "smn:SMN1", "label": "SMN1", "wording": None},
+            {"id": "expansionhunter:DMPK", "label": "DMPK CAG 5/12", "wording": None},
+            {"id": "smn:SMN1", "label": "SMN1 3, SMN2 2", "wording": None},
         ],
     }
     shown = _rendered(data, tmp_path)["screened"]["text"]
     assert "Под наблюдением: ни норма, ни находка" in shown
     assert f"HTT CAG 17/25: {SCREENED_ROWS[0].reason}" in shown
-    assert "Скрининг: не находка" in shown and "DMPK CAG 5/12: normal" in shown
+    assert "Скрининг: не находка" in shown and "DMPK CAG 5/12" in shown
+    assert "not a carrier" not in shown
     assert shown.index("HTT") < shown.index("Скрининг") < shown.index("DMPK")
-    for name in ("CNBP", "ATXN1", "ATXN2", "TP53"):
+    for name in ("CNBP", "ATXN1", "ATXN2", "CFTR", "U94"):
         assert name not in shown
     other = connect(tmp_path / "other.duckdb")
     seed(other, ROWS)

@@ -26,6 +26,7 @@ from genokeeper.calibrate.repeat_rules import (
 )
 from genokeeper.calibrate.stage3 import (
     FALSE_CALL,
+    LOW_DEPTH,
     NO_CALL,
     RULES,
     SMN_KEY,
@@ -213,6 +214,23 @@ def test_a_low_depth_normal_validates_nothing() -> None:
     withheld, _, measured = _measure(samples)
     assert withheld == {"CNBP": NOT_VALIDATED}
     assert measured[FATHER]["repeats"]["CNBP"]["kind"] == "unassessed"
+
+
+def test_low_depth_rfc1_and_cftr_validate_nothing() -> None:
+    """RFC1's motif call and CFTR's tracts at low depth are unassessed, as the run leaves
+    them: the parents' low-depth RFC1 normals keep RFC1 withheld, and HG002's low-depth
+    CFTR withholds CFTR for low depth."""
+    shallow = replace(_rfc1("normal", "no expanded allele"), low_depth=True)
+    samples = {
+        key: replace(s, rfc1=shallow) if key in (FATHER, MOTHER) else s
+        for key, s in _trio().items()
+    }
+    withheld, _, measured = _measure(samples)
+    assert withheld == {RFC1_LOCUS: RFC1_WITHHELD}
+    assert measured[FATHER]["rfc1"]["kind"] == "unassessed"
+    tg = replace(_call(CFTR_TG, 11, 12), low_depth=True)
+    withheld, _, measured = _measure(_with(_trio(), HG002, tg))
+    assert withheld == {CFTR_GENE: LOW_DEPTH}
 
 
 def test_x_linked_needs_hg003_and_the_two_x_branch_needs_hg004() -> None:

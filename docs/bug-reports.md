@@ -9,11 +9,12 @@ files, not this one. How to file, close and reference an entry:
 | ID | Sev | Area | Title | Found |
 |---|---|---|---|---|
 
-## Partially fixed (2)
+## Partially fixed (3)
 
 | ID | Sev | Area | Title | Found |
 |---|---|---|---|---|
 | [BR-009](bugs/BR-009.md) | low | sources | A repeat statement's words contradict its grading: a watch's class reads normal, a watch says the expansion is reliable, a finding answers carrier, AR reads GCA | 2026-10-28 |
+| [BR-010](bugs/BR-010.md) | medium | dashboard | The dashboard and explain show no stage-3 watch item or non-finding | 2026-10-28 |
 | [BR-012](bugs/BR-012.md) | medium | annotate | One VEP row per variant lets a non-MANE LoF hide a MANE Plus Clinical missense in a listed gene | 2026-11-02 |
 
 ## Rejected (4)
@@ -25,7 +26,7 @@ files, not this one. How to file, close and reference an entry:
 | [BR-007](bugs/BR-007.md) | low | calibrate | A stage-3 table stays valid after a [repeat_loci] threshold edit: its versions omit the thresholds measure withholds by | 2026-10-28 |
 | [BR-011](bugs/BR-011.md) | medium | sources | A ClinVar-classified and a predicted carrier variant in one recessive gene are never offered for phasing | 2026-11-02 |
 
-## Fixed (13)
+## Fixed (12)
 
 | ID | Title | Fixed in |
 |---|---|---|
@@ -34,7 +35,6 @@ files, not this one. How to file, close and reference an entry:
 | [BR-004](bugs/BR-004.md) | The run and the deletion calibration screen calls through two paths, so the common and size tests can drift apart | `claude/bugs-deletions-b004e0` |
 | [BR-005](bugs/BR-005.md) | Deletion wording: the depth line reads as evidence against short deletions, and a flank-only overlap reads like an exon hit | `claude/bugs-deletions-b004e0` |
 | [BR-008](bugs/BR-008.md) | The stage-3 calibration keeps a low-depth HG002 locus, lets an unrelated record in the slop void a truth, and min_allele_reads predates the Illumina regions | `claude/bugs-repeats-dashboard-2cd3e6` |
-| [BR-010](bugs/BR-010.md) | The dashboard and explain show no stage-3 watch item or non-finding | `claude/bugs-repeats-dashboard-2cd3e6` |
 | [BR-013](bugs/BR-013.md) | One VEP row per variant: a MANE Select missense outranks a LoF on MANE Plus Clinical or in an overlapping listed gene | `genokeeper/genokeeper#4` |
 | [BR-014](bugs/BR-014.md) | The gate-3 rescue counts ClinVar truncations by genomic span, not in the stop transcript's coding bases | `genokeeper/genokeeper#4` |
 | [BR-015](bugs/BR-015.md) | genokeeper refresh never runs again after a new calibration or FAF table: run_needed reads only the downloaded grading inputs | `genokeeper/genokeeper#6` |

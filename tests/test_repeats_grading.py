@@ -163,7 +163,7 @@ def test_normal_is_non_finding(tmp_path: Path) -> None:
 def test_a_watch_never_reads_class_normal(tmp_path: Path) -> None:
     """`class` is the highest class the longest allele's interval reaches, the bound the
     grading reads: a borderline watch whose estimate is normal reads the class its
-    interval reaches, a normal and a finding the class of their estimate."""
+    interval reaches, a normal the class of its estimate."""
     watch = _call(HTT, _allele(17), _allele(25, (23, 29)))
     statement = _statement(_collect(tmp_path, _source(watch)), "HTT")
     assert statement["kind"] == str(Kind.WATCH)

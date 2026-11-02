@@ -592,6 +592,7 @@ def test_skill_reads_a_stage3_finding_as_a_possible_carrier() -> None:
         "`possible_carrier` for a finding, SMN1's one copy or an expanded repeat"
         in text
     )
+    assert "still answers `carrier`" not in text
 
 
 def test_skill_covers_polygenic_breadth() -> None:

@@ -1079,7 +1079,7 @@ How to answer:
   carrier: screening result, needs confirmation by <test>", with the test its
   `validity.reason` names. Any other depth event or insertion answers `needs_confirmation`.
   `gene.possible_carriers`, `gene.copy_number` and `gene.insertions` count them. SMN1's
-  carrier finding (validity `strong`) still answers `carrier`.
+  carrier finding (validity `strong`) answers `possible_carrier` too (see Stage 3a).
 - `genotype --gene` answers an information locus (RHD, AMY1, C4, CYP2A6) or Lp(a)
   `information` (information, not a carrier status; see its reason): give its copies, never
   carrier status.

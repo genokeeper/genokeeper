@@ -83,8 +83,8 @@ NOT_VALIDATED = (
 # One reason per withheld key, the most basic failure first.
 WITHHOLD_ORDER = (
     NO_CALL,
-    LOW_DEPTH,
     FALSE_CALL,
+    LOW_DEPTH,
     LIBRARIES_DISAGREE,
     RULE_DID_NOT_HOLD,
     X_RULE_DID_NOT_HOLD,
@@ -92,6 +92,9 @@ WITHHOLD_ORDER = (
     PARENT_FINDING,
     NOT_VALIDATED,
 )
+# The run leaves a low-depth call unassessed before any rule (`RepeatSource`), RFC1's motif
+# call and CFTR's tracts included; so does every trio grade here.
+_LOW_DEPTH = Graded(Kind.UNASSESSED, LOW_DEPTH_REASON, None)
 # Reasons each its key's only one: RFC1's, and 3a's SMN and Y haplogroup.
 _ONLY = frozenset({RFC1_WITHHELD, SMN_WITHHELD, YLEAF_WITHHELD})
 
@@ -184,6 +187,8 @@ def _cftr_grade(sample: SampleRepeats, min_spanning: int) -> Graded | None:
     tg, t = sample.calls.get(CFTR_TG), sample.calls.get(CFTR_T)
     if tg is None or t is None or not tg.alleles or not t.alleles:
         return None
+    if tg.low_depth or t.low_depth:
+        return _LOW_DEPTH
     return cftr_grade(tg, t, min_spanning=min_spanning)
 
 
@@ -271,9 +276,8 @@ def measure_repeat_rules(
     def graded(key: str, call: RepeatCall | None, locus: RepeatLocus) -> Graded | None:
         if call is None or not call.alleles:
             return None
-        # The run leaves a low-depth call unassessed before any rule (`RepeatSource`).
         if call.low_depth:
-            return Graded(Kind.UNASSESSED, LOW_DEPTH_REASON, None)
+            return _LOW_DEPTH
         male = samples[key].sex == "male"
         return grade(
             locus,
@@ -330,9 +334,14 @@ def measure_repeat_rules(
             measured[key]["repeats"][gene] = entry
 
     rfc1 = {key: samples[key].rfc1 for key in RECORDED}
-    rfc1_grades = {key: None if c is None else rfc1_grade(c) for key, c in rfc1.items()}
+    rfc1_grades = {
+        key: None if c is None else _LOW_DEPTH if c.low_depth else rfc1_grade(c)
+        for key, c in rfc1.items()
+    }
     seen = all(
-        (c := rfc1[key]) is not None and (c.call, c.description) == HG002_RFC1
+        (c := rfc1[key]) is not None
+        and not c.low_depth
+        and (c.call, c.description) == HG002_RFC1
         for key in _HG002
     )
     parents = all(
@@ -359,6 +368,8 @@ def measure_repeat_rules(
     }
     if any(cftr[key] is None for key in _HG002):
         pairs.append((CFTR_GENE, NO_CALL))
+    elif any(cftr[key] is _LOW_DEPTH for key in _HG002):
+        pairs.append((CFTR_GENE, LOW_DEPTH))
     elif any(
         (g := cftr[key]) is not None and g.kind is Kind.UNASSESSED for key in _HG002
     ):

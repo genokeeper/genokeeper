@@ -303,7 +303,9 @@ def test_repeat_carrier_at_strong_possible_carrier(
 
 
 def test_smn1_finding_possible_carrier(con: duckdb.DuckDBPyConnection) -> None:
-    """3a's SMN1 finding (one copy) needs MLPA or qPCR: possible carrier (BR-009)."""
+    """3a's SMN1 finding (one copy) is at validity strong, the gene's link to the disease,
+    not the call's accuracy, and no calibration sample has measured a single SMN1 copy: it
+    answers possible carrier, never carrier (BR-009, the owner's ruling)."""
     seed(con, [Row("smn:SMN1", gene="SMN1", level=None, topic="carrier",
                    claim={"schema": "genomelab.claim/1", "type": "smn"})])  # fmt: skip
     con.execute(f"UPDATE statement SET source = '{SMN_TOOL}'")
