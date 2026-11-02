@@ -581,19 +581,25 @@ Each finding has these keys:
     published method's);
 
   for a trait (`trait`, id `trait:<name>`, one of `trait:lactase`, `trait:ADH1B`,
-  `trait:ACTN3`, `trait:TAS2R38` and `trait:CYP1A2`, topic `traits`, gene-level: no
-  marker), with its `gene` as above:
+  `trait:ACTN3`, `trait:TAS2R38`, `trait:CYP1A2`, `trait:FUT2`, `trait:ABCC11`,
+  `trait:MC1R`, `trait:HERC2`, `trait:AMPD1` and `trait:CCR5`, topic `traits`,
+  gene-level: no marker), with its `gene` as above:
   - `trait`: the trait's name, as in its id;
   - `result`: `likely` or `unlikely` (lactase persistence), the copies of the effect
-    allele, 0–2 (ADH1B, ACTN3, CYP1A2), `PAV/PAV`, `PAV/AVI` or `AVI/AVI` (TAS2R38), or
-    null when unassessed;
+    allele, 0–2 (ADH1B, ACTN3, CYP1A2, FUT2, ABCC11, HERC2, AMPD1, CCR5), `PAV/PAV`,
+    `PAV/AVI` or `AVI/AVI` (TAS2R38), `two strong`, `one strong`, `weak only` or `none`
+    (MC1R: two or more copies over its strong red-hair variants rs1805006, rs11547464,
+    rs1805007, rs1110400, rs1805008 and rs1805009, one, none but a copy of a weak one,
+    rs1805005, rs2228479 or rs885479, or none of either), or null when unassessed;
   - `reliability`: the lowest reliability level over the sites the result reads (the
-    carried sites for `likely`, every site otherwise), null when unassessed; the
-    reliability filter reads it;
+    carried sites for `likely`, the carried strong sites for `two strong`, every strong
+    site for `one strong`, every site otherwise), null when unassessed; the reliability
+    filter reads it;
   - `sites`: each site the trait reads:
     - `rsid`: its dbSNP id;
     - `vid`: its GRCh38 `chr:pos:ref:alt`;
-    - `effect_allele`: the allele the result counts (for ADH1B the reference, T: His48);
+    - `effect_allele`: the allele the result counts (for ADH1B the reference, T: His48;
+      for CCR5 the ALT of the 32-bp deletion, written left-aligned at chr3:46373452);
     - `copies`: the copies of `effect_allele`, or `unknown`;
     - `genotype`: our call's GT there, null without a call;
     - `level`: that call's reliability level, null without a call.
@@ -645,8 +651,8 @@ Each finding has these keys:
     research association), `mitomap` (a MITOMAP Confirmed chrM variant ClinVar does not
     claim), `hhv6` (inherited integrated HHV-6, information), `roh` (runs of homozygosity,
     information), `rbceq2` (a blood group system, information), `ancestry` (the population
-    similarity, admixture proportions or archaic share, information) or `traits` (one of five
-    trait statements, information);
+    similarity, admixture proportions or archaic share, information) or `traits` (one of
+    eleven trait statements, information);
   - `id`: the source's own id, e.g. the variation id, the gene, the annotation id;
   - `version`: the source release, e.g. `20261011`.
 - `dates` — from the run snapshots beside the store (null without them, and always in
@@ -1211,8 +1217,20 @@ unassessed "not calibrated", never normal; a tool that failed leaves it unassess
   this method`. None says where ancestors lived, and none is a health result.
 - **Traits** (traits, information): lactase persistence (any of five enhancer alleles
   carried is likely; every one called absent is unlikely), ADH1B Arg48His, ACTN3 R577X,
-  the TAS2R38 PAV/AVI diplotype (a rare haplotype is unassessed) and CYP1A2 −163C>A. The
-  phenotype is the literature's, not checked here.
+  the TAS2R38 PAV/AVI diplotype (a rare haplotype is unassessed) and CYP1A2 −163C>A; slice
+  3g's six single-gene traits: FUT2 secretor status (rs601338), ABCC11 earwax type
+  (rs17822931), MC1R red-hair variants (six strong, three weak; a strong site unknown
+  leaves the result unassessed unless two strong copies are already known), HERC2 eye
+  colour (rs12913832), AMPD1 Q12X (rs17602729) and CCR5Δ32 (rs333). Each says what is
+  "likely", never what is certain, and its caveat goes with it: FUT2 `the common European
+  and African null allele only; the rule does not hold in East Asian ancestry`; ABCC11
+  `one SNP decides earwax type; odour is only a tendency`; MC1R `hair colour depends on
+  other genes too: in UK Biobank about 15% of people with two MC1R variants are
+  red-haired; melanoma risk is in its polygenic score`; HERC2 `one SNP, for European
+  ancestry; it cannot tell green from hazel`; AMPD1 `a common, mostly harmless variant; it
+  predicts neither sports ability nor muscle disease`; CCR5 `not protection against HIV in
+  general and no substitute for prevention`. The phenotype is the literature's, not
+  checked here.
 - **Pharmacogenomics.** `pharmcat:G6PD-gap` is always unassessed: `not covered: PharmCAT
   does not call the G6PD Mediterranean haplotype or Villeurbanne`, so a normal G6PD result
   does not exclude them. UGT1A1\*28 is read only when the calibration trusts it; otherwise
@@ -1311,8 +1329,8 @@ Stage 3b screening: deletions), and the stage 3d screens for depth losses and ga
 insertions, the paralog loci, GBA1 and Lp(a) (see Stage 3d screening). FMR1 and AFF2 are
 assessed from reads spanning every X allele (stage 3e), otherwise they need a targeted PCR
 test. Slice 3f adds HLA typing and the coeliac screen, MITOMAP's chrM variants, integrated
-HHV-6, runs of homozygosity, blood groups, ancestry, five traits and PharmGKB level 3 (see
-Slice 3f); KIR, the RhD and RHCE antigens (RhD's copies are a stage 3d paralog locus),
+HHV-6, runs of homozygosity, blood groups, ancestry, five traits and PharmGKB level 3, and
+slice 3g six single-gene traits (see Slice 3f); KIR, the RhD and RHCE antigens (RhD's copies are a stage 3d paralog locus),
 MNS, the platelet antigens and chrM indels are not covered, nor is SLC37A4 (its only MANE
 transcript lies off the primary assembly the callers run on), nor are inversions and
 translocations, and each screen can miss one.

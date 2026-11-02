@@ -59,7 +59,7 @@ from genokeeper.sources.mitomap import MitomapSource
 from genokeeper.sources.repeats import RepeatSource
 from genokeeper.sources.roh import RohSource
 from genokeeper.sources.smn import SmnSource
-from genokeeper.sources.traits import TRAIT_ALLELES, TraitSource
+from genokeeper.sources.traits import TRAIT_ALLELES, TraitSource, load_traits
 from genokeeper.sources.yleaf import YleafSource
 from genokeeper.store.db import Kind, Level, RowType, Validity, connect
 from genokeeper.yhaplogroup import YHaplogroup
@@ -465,6 +465,22 @@ def test_frequency_is_claimed_only_for_a_run_that_records_it(tmp_path: Path) -> 
     text = " ".join(SKILL.read_text().split())
     assert "Without a `gnomad_faf` key" in text and "frequency was not checked" in text
     assert "**Population frequency is assessed**" not in text
+
+
+def test_skill_covers_the_traits() -> None:
+    """The trait claim names exactly `load_traits()`'s ids, and the Traits bullet quotes
+    each of slice 3g's six caveats (`Trait.note`) verbatim."""
+    text = SKILL.read_text()
+    _, lines = _section(text)
+    at = next(i for i, line in enumerate(lines) if "(`trait`," in line)
+    end = next(i for i in range(at, len(lines)) if lines[i].endswith(":"))
+    header = " ".join(lines[at : end + 1])
+    traits = {t.name: t for t in load_traits()}
+    assert set(re.findall(r"`(trait:\w+)`", header)) == {f"trait:{n}" for n in traits}
+    section = _section_named(text, "## Slice 3f: typing, mitochondria and what remains")
+    bullet = section.split("- **Traits**")[1].split("- **")[0]
+    for name in ("FUT2", "ABCC11", "MC1R", "HERC2", "AMPD1", "CCR5"):
+        assert f"`{traits[name].note}`" in bullet, name
 
 
 def _section_named(text: str, heading: str) -> str:

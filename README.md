@@ -592,8 +592,9 @@ and HHV-6B for inherited integrated HHV-6; bcftools roh reports runs of homozygo
 RBCeq2 2.4.4 types every blood group system but RhD and RHCE, MNS and the platelet antigens
 (its GRCh38 table holds GRCh37 positions for them), and a system with a no-call at any of
 its positions is unassessed; pgsc_calc's similarity, fastmixture's supervised admixture
-and hmmix's Neanderthal share describe ancestry; and five traits (lactase persistence,
-ADH1B, ACTN3, TAS2R38, CYP1A2) are read from our genotypes. The ancestry statements, the
+and hmmix's Neanderthal share describe ancestry; and eleven traits (lactase persistence,
+ADH1B, ACTN3, TAS2R38, CYP1A2, and slice 3g's six single-gene traits: FUT2, ABCC11, MC1R,
+HERC2, AMPD1 and CCR5Δ32) are read from our genotypes. The ancestry statements, the
 blood group phenotypes, the HHV-6 band and the traits are information, not calibrated.
 PharmCAT gains read-backed phase sets and UGT1A1\*28 when the table trusts them, and the G6PD
 haplotypes it does not call are named; PharmGKB's level 3 and the HLA disease associations

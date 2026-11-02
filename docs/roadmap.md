@@ -14,14 +14,15 @@ run-time checks), 3d (depth copy number, insertions, paralog loci, GBA1, Lp(a), 
 carrier list), 3e (thirteen more repeat loci, RFC1, CFTR's poly-T/TG) and 3f (HLA typing, chrM,
 HHV-6, ancestry, blood groups, traits) is delivered; their calibrations on the PCR, HG003 and
 HG004 libraries follow in their own pull requests, and until then each of their rows reads "not
-calibrated". Slice 3g added 34 polygenic scores and named 24 conditions not covered.
+calibrated". Slice 3g added 34 polygenic scores, named 24 conditions not covered and added six
+single-gene traits.
 
 ## Next
 
-The calibrations of 3c–3f, then the six single-gene traits of 3g. A third CYP2D6 caller,
-StellarPGx, so two of three callers agreeing on the activity score gives a high-reliability call
-where BCyrius and Aldy disagree. No open short-read caller was found for HBA1/HBA2, CYP21A2 or
-the F8 inversions; they stay named not covered.
+The calibrations of 3c–3f. A third CYP2D6 caller, StellarPGx, so two of three callers agreeing
+on the activity score gives a high-reliability call where BCyrius and Aldy disagree. No open
+short-read caller was found for HBA1/HBA2, CYP21A2 or the F8 inversions; they stay named not
+covered.
 
 Delivered before stage 3: the findings track (stages 1 and 2, slices 1a–1e) and stage 4, the
 monthly knowledge-base refresh and change feed.
