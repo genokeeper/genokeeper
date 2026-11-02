@@ -586,8 +586,10 @@ def test_skill_names_the_annotation_limits() -> None:
         "SLC37A4 is the exception to the gate-failure rule above",
         "GRC fix patch",
         "passes gate 1 always fails LoF gate 2",
-        "that gate alone is no reason to call it doubtful",
-        "ENST00000545985",
+        (
+            "that gate alone is no reason to call it doubtful: say the prediction cannot be"
+            " judged on the primary assembly and a clinical lab can assess it"
+        ),
         "PCDH15's last coding exon",
         "no SpliceAI score",
         "still graded as a loss of function",

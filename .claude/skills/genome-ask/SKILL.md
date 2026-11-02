@@ -892,12 +892,10 @@ splice change at SpliceAI 0.2 or above. Each one is `limited`, so add
 - SLC37A4 is the exception to the gate-failure rule above. Its only MANE transcript lies on
   a GRC fix patch, off the primary assembly the callers run on, so none of its chr11
   transcripts is MANE: a predicted loss of function there that passes gate 1 always fails
-  LoF gate 2, and that gate alone is no reason to call it doubtful. Read the transcript in
-  `validity.source_level`: on ENST00000545985 (the chr11 copy of MANE's NM_001164277.2) it
-  truncates the main transcript, so say a clinical lab can assess it; on another transcript
-  it is doubtful as any off-MANE one. With no MANE row, a variant's most severe consequence
-  on any SLC37A4 transcript is the one graded, so a missense on the main transcript can sit
-  behind another transcript's loss of function.
+  LoF gate 2, and that gate alone is no reason to call it doubtful: say the prediction
+  cannot be judged on the primary assembly and a clinical lab can assess it. With no MANE
+  row, a variant's most severe consequence on any SLC37A4 transcript is the one graded, so a
+  missense on the main transcript can sit behind another transcript's loss of function.
 - SpliceAI's 2016 annotation lacks PCDH15's last coding exon (MANE exon 38) and its splice
   acceptor: a splice change there gets no SpliceAI score. A change at the acceptor's ±1/2
   bases is still graded as a loss of function.
@@ -1382,8 +1380,8 @@ slice 3g six single-gene traits (see Slice 3f); KIR, the RhD and RHCE antigens (
 MNS, the platelet antigens and chrM indels are not covered, nor are SLC37A4's coverage,
 deletions, insertions and copy number (its only MANE transcript lies on a GRC fix patch, off
 the primary assembly the callers run on; its variants and ClinVar claims are called and graded
-against the primary sequence, which differs from MANE's at one coding base, see Predicted
-findings), nor are inversions and translocations, and each screen can miss one.
+against the primary sequence, which differs from MANE's at one coding base, c.528, where a
+call is relative to the primary base; see Predicted findings), nor are inversions and translocations, and each screen can miss one.
 **Population frequency is assessed only for a run whose `versions` has a `gnomad_faf` key**:
 there, a pathogenic-class claim whose gnomAD v4.1 filtering allele frequency (grpmax FAF95)
 is above ACMG BA1, or above its gene's BS1, is `conflicting`, and `validity.reason` names
