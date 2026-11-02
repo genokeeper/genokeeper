@@ -14,10 +14,11 @@ from typing import Any
 import duckdb
 import pytest
 from fixtures.medlineplus_mini import condition, gene, write_medlineplus
-from fixtures.store_mini import Row, seed
+from fixtures.store_mini import RUN, Row, seed
 
 from genokeeper import explain as explainer
 from genokeeper.cli import main
+from genokeeper.config import load_grading
 from genokeeper.evidence.medlineplus import (
     MEDLINEPLUS_FILE,
     MedlinePlus,
@@ -41,7 +42,9 @@ from genokeeper.explain import (
 )
 from genokeeper.lang import LANGUAGES
 from genokeeper.query import HAPLOID_DOSAGE_NOTE, Filters, query
-from genokeeper.store.db import Level, Validity, connect
+from genokeeper.repeats.loci import Allele, RepeatCall
+from genokeeper.sources.repeats import grade
+from genokeeper.store.db import Kind, Level, Validity, connect
 
 GENE_CALL = {
     "diplotype": "*1/*2",
@@ -1038,3 +1041,51 @@ def test_explain_asks_for_a_stage3_watch_item_as_a_watch_item(
         for text in asked.values():
             assert explainer.WATCH_NOTE not in text
             assert "kind" not in _document(text)["finding"]
+
+
+@pytest.mark.parametrize(
+    ("gene", "count", "ci", "reads", "says"),
+    [
+        ("HTT", 45, (42, 48), 3, "expanded"),  # an expanded size on too few reads
+        ("HTT", 37, (37, 37), 20, "reduced penetrance"),
+        ("FXN", 60, (58, 62), 2, "expanded"),  # under carrier, class pathogenic
+    ],
+)
+def test_the_watch_note_never_contradicts_a_watch_items_reason(
+    tmp_path: Path,
+    gene: str,
+    count: int,
+    ci: tuple[int, int],
+    reads: int,
+    says: str,
+) -> None:
+    """A watch item is worded from its stored reason, which can say "expanded" or "reduced
+    penetrance" (or SMN1's "possible silent carrier"): the note bans only settled wording,
+    so the prompt never forbids what its own facts say."""
+    locus = load_grading().repeats.loci[gene]
+    call = RepeatCall(
+        locus.variant_id,
+        (Allele(17, (17, 17), 20, 0, 0), Allele(count, ci, reads, 0, 0)),
+        30.0,
+        False,
+        150,
+    )
+    graded = grade(locus, call, male=True, x_dosage=None, min_allele_reads=4,
+                   min_spanning=3)  # fmt: skip
+    assert graded.kind is Kind.WATCH and graded.reason is not None
+    assert says in graded.reason
+    claim = {"schema": "genomelab.claim/1", "type": "repeat_expansion"}
+    with connect(tmp_path / "store.duckdb") as con:
+        seed(con, [Row(f"expansionhunter:{gene}", kind="watch", gene=gene, level=None,
+                       claim=claim, reason=graded.reason)])  # fmt: skip
+        con.execute("UPDATE statement SET source = 'expansionhunter'")
+        (watch,) = explainer.watch_items(con, RUN)
+    text = prompt(watch, grounding(watch, None))
+    assert _document(text)["finding"]["validity"]["reason"] == graded.reason
+    note = explainer.WATCH_NOTE
+    assert "from its validity reason" in note
+    # Whatever the note forbids, it forbids as settled, never the reason's own words.
+    ban = " ".join(note[note.index("never") :].split())
+    assert ban.startswith("never word it as settled")
+    for term in ("expan", "carrier", "penetrance"):
+        assert term not in ban.split("settled", 1)[0]

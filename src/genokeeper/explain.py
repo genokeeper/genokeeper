@@ -140,10 +140,13 @@ _INSTRUCTIONS: dict[Language, str] = {"en": _ENGLISH, "ru": _RUSSIAN}
 _FACTS_HEAD = "\nThe finding and its sources:\n"
 WATCH_NOTE = """\
 - This one is not a finding but a watch item (its "kind" is "watch"): a screening result
-  that is neither normal nor a finding and needs confirmation, as its validity reason says.
-  Read every "finding" above as this watch item; the carrier example does not apply. Say
-  what its result may mean and that it is not settled; never word it, in the title or the
-  text, as a finding, an expansion, carrier status or a diagnosis.
+  that is neither normal nor a finding and needs confirmation. Read every "finding" above as
+  this watch item; the carrier example does not apply. Word it from its validity reason,
+  which says what it is (borderline, intermediate, reduced penetrance, an expanded size on
+  too few reads, a possible silent carrier), as an unconfirmed screening result: say what
+  that may mean and that it is not settled, e.g. "may be expanded, too few reads to say";
+  never word it as settled: as a finding, a confirmed expansion or carrier status, or a
+  diagnosis, in the title or the text.
 """
 
 type Ask = Callable[[str], str]
