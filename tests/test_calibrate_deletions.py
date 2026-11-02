@@ -808,10 +808,12 @@ def test_calibrate_deletions_writes_a_table_the_run_accepts(
     assert table.bands["long"].recall == share(2, 2)
     assert table.bands["short"].recall == share(2, 2)
     assert set(table.measured) == set(LIBRARIES)
-    # The benchmark is chr20 whole: every target elsewhere lies outside it.
-    assert set(table.extra[OUTSIDE_BENCHMARK]) == {"long", "short"}
-    outside = {chrom for chrom, _, _ in table.extra[OUTSIDE_BENCHMARK]["long"]}
-    assert "chr1" in outside and "chr20" not in outside
+    # The benchmark is chr20 whole: in both bands, every target elsewhere lies outside it.
+    outside = table.extra[OUTSIDE_BENCHMARK]
+    assert set(outside) == {"long", "short"}
+    for band in ("long", "short"):
+        chroms = {chrom for chrom, _, _ in outside[band]}
+        assert "chr1" in chroms and "chr20" not in chroms, band
     versions = deletion_versions(lab, sha256_file(grch38_fasta(lab)), load_grading())
     assert open_deletions(lab, versions) == (table, None)
 

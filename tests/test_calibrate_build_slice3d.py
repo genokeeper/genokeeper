@@ -490,5 +490,18 @@ def test_scramble_meis_judged_by_position(lab: Lab) -> None:
         assert (mei["calls"], mei["false"], mei["truth"], mei["found"]) == (2, 1, 1, 1)
         assert mei["classes"] == ["mei:scramble:norepeat:unmasked:nojunction"]
     assert table.bands["mei"].calls == 4
-    assert set(table.extra[OUTSIDE_BENCHMARK]) == {"short", "long", "mei"}
+    # Every band was measured inside the benchmark (chr20 to BENCH_END, chrX to the 100th
+    # exon): its target parts outside it lie off those spans and include chr1's. `mei`'s
+    # region, the benchmark within 500 bp of a target, holds every target base of the
+    # benchmark, so its parts are the other bands'.
+    outside = table.extra[OUTSIDE_BENCHMARK]
+    assert set(outside) == {"short", "long", "mei"}
+    for band, parts in outside.items():
+        assert any(chrom == "chr1" for chrom, _, _ in parts), band
+        assert not any(
+            (chrom == "chr20" and start < BENCH_END)
+            or (chrom == "chrX" and start < starts[99])
+            for chrom, start, _ in parts
+        ), band
+    assert outside["mei"] == outside["short"] == outside["long"]
     assert versions["extra"] == OUTSIDE_VERSION
