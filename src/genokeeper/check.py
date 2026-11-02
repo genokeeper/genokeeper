@@ -560,7 +560,8 @@ _NOTICE: dict[Language, dict[str, str]] = {
     },
 }
 # Recorded, never news: MedlinePlus is rebuilt daily and is no grading input; the PGS
-# Catalog's release is catalog-wide and weekly, while the scoring files are sha-pinned.
+# Catalog's release is catalog-wide and weekly, while each scoring file is checked against
+# the publisher's own `.md5`.
 QUIET = frozenset({"medlineplus", "pgs_catalog"})
 
 

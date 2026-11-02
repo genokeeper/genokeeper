@@ -144,7 +144,7 @@ case "$mode" in
     grep_id
     grep_samples ;;
   --staged)
-    git diff --cached --name-only --diff-filter=ACMR -z > "$paths" ||
+    git diff --cached --name-only --diff-filter=ACMRT -z > "$paths" ||
       die "listing the staged files failed"
     check_rev "" ;;
   --range)
@@ -153,9 +153,9 @@ case "$mode" in
     commits=$(git rev-list "${@:2}") || die "listing the commits of ${*:2} failed"
     for c in $commits; do
       if git rev-parse -q --verify "$c^1" > /dev/null; then
-        git diff-tree -r -z --name-only --diff-filter=ACMR "$c^1" "$c" > "$paths"
+        git diff-tree -r -z --name-only --diff-filter=ACMRT "$c^1" "$c" > "$paths"
       else
-        git diff-tree -r -z --name-only --no-commit-id --root --diff-filter=ACMR "$c" > "$paths"
+        git diff-tree -r -z --name-only --no-commit-id --root --diff-filter=ACMRT "$c" > "$paths"
       fi || die "listing the files of commit $c failed"
       check_rev "$c"
     done ;;

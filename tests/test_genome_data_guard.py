@@ -134,6 +134,27 @@ def test_the_kit_id_in_a_binary_file_is_refused(tmp_path: Path) -> None:
     }
 
 
+def test_a_symlink_replaced_by_a_file_is_checked(tmp_path: Path) -> None:
+    """A tracked symlink turned into a regular file is a type change (`T`), not a modify."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _init(repo)
+    link = repo / "tests" / "fixtures" / "notes.txt"
+    link.parent.mkdir(parents=True)
+    link.symlink_to("elsewhere")
+    _git(repo, "add", "-f", "--", "tests/fixtures/notes.txt")
+    _git(repo, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "link")
+    link.unlink()
+    link.write_text(f"kit {KIT_ID}\n")
+    _git(repo, "add", "-f", "--", "tests/fixtures/notes.txt")
+    staged = subprocess.run(
+        ["bash", str(SCRIPT), "--staged"], cwd=repo, capture_output=True, check=False
+    )
+    assert staged.returncode == 1
+    _git(repo, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "file")
+    assert _range(repo, "HEAD~1..HEAD") == 1
+
+
 def _range(repo: Path, spec: str) -> int:
     return subprocess.run(
         ["bash", str(SCRIPT), "--range", spec],
