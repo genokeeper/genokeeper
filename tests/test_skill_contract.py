@@ -573,6 +573,17 @@ def test_skill_covers_stage3a() -> None:
     assert "the Y-chromosome haplogroup" not in text
 
 
+def test_skill_reads_a_repeat_class_from_its_interval() -> None:
+    """A repeat claim's `class` is the class its interval's upper bound reaches (BR-009),
+    so a watch item's may lie above its estimate's."""
+    text = " ".join(SKILL.read_text().split())
+    assert (
+        "`class`: the class the longest allele's interval reaches at its upper bound"
+        in text
+    )
+    assert "`class`: the longest allele's class" not in text
+
+
 def test_skill_covers_polygenic_breadth() -> None:
     """Every score is found through `--text pgsc_calc` (slice 3g), a weak one's weakness is
     said before its percentile, and a condition no score covers is answered by its stored

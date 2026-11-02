@@ -132,9 +132,10 @@ NOT_COVERED_LEVEL = "not covered"
 TWO_ALLELES_ON_X = "two alleles on a male X"
 PCR_LIKE_WARNING = "library looks PCR-amplified; a miss is possible"
 NO_SPANNING = "an allele without a spanning read"
+# True on every kind (BR-009): beside a watch on too few reads, "detected reliably" was not.
 BEYOND_FRAGMENT = (
-    "allele longer than the fragment: the expansion is detected reliably, its exact size"
-    " is not; a lab test (PCR or Southern blot) gives the size"
+    "allele longer than the fragment: its exact size is not measured; a lab test (PCR or"
+    " Southern blot) gives the size"
 )
 
 # What a gene's repeat expansion causes, so `--text <disease>` finds its statement.
@@ -621,7 +622,9 @@ class RepeatSource:
             "locus_id": locus.locus_id,
             "motif": locus.motif,
             "alleles": _allele_fields(alleles),
-            "class": str(classify(locus, _worst(locus, alleles).repeats))
+            # The class the grading reads (BR-009): the longest allele's interval's upper
+            # bound, so a watch never reads normal.
+            "class": str(classify(locus, _worst(locus, alleles).ci[1]))
             if assessed
             else None,
             "thresholds": {

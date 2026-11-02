@@ -435,9 +435,10 @@ Each finding has these keys:
     - `spanning`: reads that span the whole repeat;
     - `flanking`: reads that start in the flank and end in the repeat;
     - `inrepeat`: reads wholly inside the repeat;
-  - `class`: the longest allele's class: `normal`, `intermediate`, `reduced penetrance`,
-    `pathogenic` or `gap` (between two ranges); null when unassessed, and null for RFC1
-    and CFTR;
+  - `class`: the class the longest allele's interval reaches at its upper bound, the bound
+    the grading reads: `normal`, `intermediate`, `reduced penetrance`, `pathogenic` or `gap`
+    (between two ranges); a watch item's class may lie above its estimate's, so quote the
+    repeats and the interval with it; null when unassessed, and null for RFC1 and CFTR;
   - `thresholds`: the locus's ranges from STRchive, in repeats (null for RFC1 and CFTR):
     - `normal_max`: the largest normal count;
     - `intermediate`: `[low, high]`, or null;

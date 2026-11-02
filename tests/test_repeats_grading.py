@@ -160,6 +160,32 @@ def test_normal_is_non_finding(tmp_path: Path) -> None:
     assert _statement(_collect(tmp_path, _source(upper)), "HTT")["kind"] == "watch"
 
 
+def test_a_watch_never_reads_class_normal(tmp_path: Path) -> None:
+    """`class` is the highest class the longest allele's interval reaches, the bound the
+    grading reads: a borderline watch whose estimate is normal reads the class its
+    interval reaches, a normal and a finding the class of their estimate."""
+    watch = _call(HTT, _allele(17), _allele(25, (23, 29)))
+    statement = _statement(_collect(tmp_path, _source(watch)), "HTT")
+    assert statement["kind"] == str(Kind.WATCH)
+    assert json.loads(statement["claim"])["class"] == "intermediate"
+    normal = _call(HTT, _allele(17, (16, 18)), _allele(20, (19, 21)))
+    claim = json.loads(_statement(_collect(tmp_path, _source(normal)), "HTT")["claim"])
+    assert claim["class"] == "normal"
+
+
+def test_a_watch_beyond_the_fragment_claims_no_reliable_expansion(
+    tmp_path: Path,
+) -> None:
+    """An allele past the fragment on too few reads is a watch: its warning says the size
+    is not measured, never that the expansion is detected reliably."""
+    few = _call(HTT, _allele(18), _allele(150, (120, 160), spanning=0, flanking=2))
+    collected = _collect(tmp_path, _source(few))
+    assert _statement(collected, "HTT")["kind"] == str(Kind.WATCH)
+    warnings = _gene_call(collected, "HTT")["warnings"]
+    assert BEYOND_FRAGMENT in warnings
+    assert not any("reliabl" in w for w in warnings)
+
+
 def test_intermediate_is_watch_with_the_note(tmp_path: Path) -> None:
     call = _call(HTT, _allele(18), _allele(30))
     statement = _statement(_collect(tmp_path, _source(call)), "HTT")
