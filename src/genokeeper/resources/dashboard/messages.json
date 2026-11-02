@@ -37,8 +37,8 @@
     "ru": {"lactase": "сохранение лактазы у взрослых", "ADH1B": "Arg48His, скорость распада алкоголя", "ACTN3": "R577X, белок быстрых мышечных волокон", "TAS2R38": "восприятие горького вкуса", "CYP1A2": "−163C>A, скорость распада кофеина", "FUT2": "статус секретора", "ABCC11": "тип ушной серы", "MC1R": "варианты рыжих волос", "HERC2": "цвет глаз", "AMPD1": "Q12X, мышечный фермент AMPD1", "CCR5": "Δ32, корецептор ВИЧ-1"}
   },
   "trait_results": {
-    "en": {"likely": "likely", "unlikely": "unlikely", "two strong": "two strong variants", "one strong": "one strong variant", "weak only": "weak variants only", "none": "no red-hair variant found"},
-    "ru": {"likely": "вероятно", "unlikely": "маловероятно", "two strong": "два сильных варианта", "one strong": "один сильный вариант", "weak only": "только слабые варианты", "none": "вариантов рыжих волос не найдено"}
+    "en": {"likely": "likely", "unlikely": "unlikely", "two strong": "two copies with a strong variant", "one strong": "one strong variant", "weak only": "weak variants only", "none": "no red-hair variant found"},
+    "ru": {"likely": "вероятно", "unlikely": "маловероятно", "two strong": "две копии с сильным вариантом", "one strong": "один сильный вариант", "weak only": "только слабые варианты", "none": "вариантов рыжих волос не найдено"}
   },
   "unknown_m": {"en": "not determined", "ru": "не определён"},
   "unknown_f": {"en": "not determined", "ru": "не определена"},

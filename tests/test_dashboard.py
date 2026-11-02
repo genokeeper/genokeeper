@@ -1361,6 +1361,14 @@ def test_headline_for_every_3f_claim_type(
         assert f": {row.claim['type']}\n" not in feed, row.id
 
 
+def test_mc1r_two_strong_names_copies() -> None:
+    """MC1R's "two strong" counts copies (one strong variant on both is two), so its label
+    names copies, not variants, in each language."""
+    en, ru = dashboard.messages("en"), dashboard.messages("ru")
+    assert en["trait_results"]["two strong"] == "two copies with a strong variant"
+    assert ru["trait_results"]["two strong"] == "две копии с сильным вариантом"
+
+
 # --- the page's language --------------------------------------------------------------------
 
 
