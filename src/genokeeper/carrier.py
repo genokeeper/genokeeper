@@ -50,6 +50,7 @@ from typing import TYPE_CHECKING, Any
 
 import duckdb
 
+from genokeeper.deletions.screen import DELETION_SCREEN_LIMITS
 from genokeeper.evidence.clinvar import parse_clnsig
 from genokeeper.evidence.predicted import NOT_HAPLOINSUFFICIENT
 from genokeeper.genotype.sites import risk_copies
@@ -389,6 +390,7 @@ def _gene_summary(
         "dominant_mechanism_not_assessed": None
         if mechanism_assessed
         else load_mechanisms().get(gene.upper()),
+        "deletion_screen_limit": DELETION_SCREEN_LIMITS.get(gene.upper()),
         "coverage": coverage,
     }
 
@@ -480,6 +482,8 @@ def _gene_lines(gene: str, summary: dict[str, Any]) -> list[str]:
             "  main mechanism not assessed: "
             + summary["dominant_mechanism_not_assessed"]
         )
+    if summary["deletion_screen_limit"] is not None:
+        lines.append(f"  deletion screen limit: {summary['deletion_screen_limit']}")
     if summary["deletions"]:
         lines.append(
             f"  deletions of 50 bp or more: {summary['deletions']}, each needing"

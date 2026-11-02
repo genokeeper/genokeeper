@@ -236,6 +236,11 @@ Each finding has these keys:
     SNV calling cannot see (e.g. SMN1's exon 7 deletion, F8's intron 22 inversion), from
     GeneReviews. When set, the counts say nothing about that mechanism: lead with it. Null
     when the run's own stage-3 statement assessed the gene (SMN1's copy number);
+  - `deletion_screen_limit`: null, or what the deletion screen cannot see in this gene
+    (CBS: a deletion over gnomAD-SV's common depth-only records there is dropped as
+    common). It is not the gene's main mechanism: say it after the counts, as "the deletion
+    screen can miss a deletion in <gene>" with its reason, never as a doubt on the gene's
+    other answers;
   - `coverage`: the gene's coverage, as `query --gene` prints it:
     - `bases`: as above;
     - `callable`: as above;

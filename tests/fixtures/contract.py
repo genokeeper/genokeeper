@@ -134,6 +134,7 @@ GENOTYPE_CONTRACT = {
     *("answer", "classification", "condition", "not_a_finding_because"),
     *("gene.pathogenic_sites", "gene.carried", "gene.by_answer", "gene.by_level"),
     *("gene.deletions", "gene.not_covered", "gene.dominant_mechanism_not_assessed"),
+    "gene.deletion_screen_limit",
     *(f"gene.{path}" for path in COVERAGE_CONTRACT),
     *("gene.possible_carriers", "gene.copy_number", "gene.insertions"),
 }

@@ -22,6 +22,7 @@ from genokeeper.carrier import (
     possible_carrier,
 )
 from genokeeper.cli import main
+from genokeeper.deletions.screen import DELETION_SCREEN_LIMITS
 from genokeeper.evidence.predicted import NOT_HAPLOINSUFFICIENT
 from genokeeper.insertions import INSERTIONS_TOOL
 from genokeeper.paralogs import LOCI, GauchianCall, PsCall
@@ -547,6 +548,7 @@ def test_gene_summary_has_no_gene_level_answer(
         "insertions": 0,
         "not_covered": list(NOT_COVERED),
         "dominant_mechanism_not_assessed": None,
+        "deletion_screen_limit": None,
         "coverage": summary["coverage"],
     }
     assert summary["coverage"]["note"] == "not measured"
@@ -572,6 +574,22 @@ def test_smn1_flagged(con: duckdb.DuckDBPyConnection) -> None:
     assert empty["assessed"] is False
     assert empty["gene"]["pathogenic_sites"] == 0
     assert "inversion" in empty["gene"]["dominant_mechanism_not_assessed"]
+
+
+def test_cbs_names_its_deletion_screen_limit(con: duckdb.DuckDBPyConnection) -> None:
+    """CBS's two common depth-only gnomAD-SV records would drop a true deletion over them as
+    common: `genotype --gene CBS` says so, in its JSON and its text, and in no other gene.
+    It is not the main mechanism, which the run does assess."""
+    seed(con, [Row("clinvar:30", gene="CBS", kind="non_finding", dosage="0")])
+    summary = genotype(con, None, gene="cbs").to_json()["gene"]
+    assert summary["deletion_screen_limit"] == DELETION_SCREEN_LIMITS["CBS"]
+    assert "depth-only" in summary["deletion_screen_limit"]
+    assert summary["dominant_mechanism_not_assessed"] is None
+    lines = _gene_lines("CBS", summary)
+    assert f"  deletion screen limit: {DELETION_SCREEN_LIMITS['CBS']}" in lines
+    other = genotype(con, None, gene="BRCA1").to_json()["gene"]
+    assert other["deletion_screen_limit"] is None
+    assert not [x for x in _gene_lines("BRCA1", other) if "deletion screen limit" in x]
 
 
 def test_every_mechanism_row_names_its_source() -> None:

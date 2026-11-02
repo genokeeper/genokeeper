@@ -46,6 +46,19 @@ SHORT_DEPTH = "read depth does not show it, which a deletion this short often ca
 # nor an assembled part): no table measures it, so the run withholds its rate rather than
 # band it by `end - pos` as one base long.
 UNSIZED = "unsized"
+# What the screen cannot see in a gene, by gene, for `genotype --gene` to say. CBS: gnomAD-SV
+# v4.1's two common depth-only deletions over its targets, gnomAD-SV_v3_DEL_chr21_ff594b43
+# (18 kb, AF 0.215) and gnomAD-SV_v3_DEL_chr21_67ca8d99 (126 kb, AF 0.468), lie over the real
+# copy of a region GRCh38 also holds a false copy of (chr21:5.0-7.9 Mb, masked for this
+# pipeline's alignment, not gnomAD's): most likely artefacts of that duplication, as no
+# homocystinuria allele is that common. A true deletion overlapping either by half is `COMMON`.
+DELETION_SCREEN_LIMITS = {
+    "CBS": (
+        "a deletion that overlaps gnomAD-SV's common depth-only deletions over CBS by half"
+        " or more (likely artefacts of GRCh38's false duplication of the region) is dropped"
+        " as common, so the screen can miss a deletion there"
+    ),
+}
 # Callers that label a call rather than find one (slice 3d: Scramble names a mobile
 # element's family, the plan's "Insertion class features"): beside the screen's callers they
 # change no class; alone they make the `mei` band, evidence the caller.
