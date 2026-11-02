@@ -581,7 +581,7 @@ def genome(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Genome:
     3's and the deletion screen's), its ClinVar release, slice 1b's inputs, the `sv` step's
     files, and the containers faked."""
     monkeypatch.setattr(tools, "GATE", tmp_path / "no-gate")
-    # The mini contigs are short: a trait site past one's end is left out (read unknown).
+    # Trait sites off the mini contigs or past their ends are left out (read unknown).
     monkeypatch.setattr(
         pipeline,
         "TRAIT_ALLELES",
@@ -2767,7 +2767,7 @@ def test_run_exports_its_snapshot_and_query_carries_the_contract(
     # score covers; slice 3d's genes not covered (`sources.paralogs.NOT_COVERED`); and
     # slice 3f's 78 without a slice 3f table: 15 HLA (its three disease associations are
     # a research layer), HHV-6, ROH, 48 blood groups, the two gated ancestry statements
-    # and the eleven traits (no contig of theirs here).
+    # and the eleven traits (no site of theirs on the mini contigs).
     uncovered = len(load_not_covered()) + len(PARALOG_NOT_COVERED)
     assert result["unassessed"]["total"] == 37 + 78 + uncovered
     # No source gives an absolute effect.

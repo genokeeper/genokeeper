@@ -593,8 +593,8 @@ Each finding has these keys:
     rs1805005, rs2228479 or rs885479, or none of either), or null when unassessed;
   - `reliability`: the lowest reliability level over the sites the result reads (the
     carried sites for `likely`, the carried strong sites for `two strong`, every strong
-    site for `one strong`, every site otherwise), null when unassessed; the reliability
-    filter reads it;
+    site for `one strong`, every strong and each carried weak site for `weak only`, every
+    site otherwise), null when unassessed; the reliability filter reads it;
   - `sites`: each site the trait reads:
     - `rsid`: its dbSNP id;
     - `vid`: its GRCh38 `chr:pos:ref:alt`;
@@ -1135,7 +1135,7 @@ actionable and none of the new ones is a watch item (TCF4's intermediate and PAB
 ## Slice 3f: typing, mitochondria and what remains
 
 Slice 3f adds HLA typing (`hla`), MITOMAP's chrM variants (`mitomap`), integrated HHV-6
-(`hhv6`), runs of homozygosity (`roh`), blood groups (`rbceq2`), ancestry (`ancestry`), five
+(`hhv6`), runs of homozygosity (`roh`), blood groups (`rbceq2`), ancestry (`ancestry`), eleven
 traits (`traits`) and PharmGKB level 3 (`pharmgkb_research`); their claim keys are in The
 JSON contract. None is actionable and none is a watch item. Ask with `--gene HLA-B`,
 `--topic traits`, `--topic ancestry` or `show <id> --json`; most are at validity `limited`,
@@ -1221,9 +1221,10 @@ unassessed "not calibrated", never normal; a tool that failed leaves it unassess
   3g's six single-gene traits: FUT2 secretor status (rs601338), ABCC11 earwax type
   (rs17822931), MC1R red-hair variants (six strong, three weak; a strong site unknown
   leaves the result unassessed unless two strong copies are already known), HERC2 eye
-  colour (rs12913832), AMPD1 Q12X (rs17602729) and CCR5Δ32 (rs333). Each says what is
-  "likely", never what is certain, and its caveat goes with it: FUT2 `the common European
-  and African null allele only; the rule does not hold in East Asian ancestry`; ABCC11
+  colour (rs12913832), AMPD1 Q12X (rs17602729) and CCR5Δ32 (rs333). Each is the
+  literature's expectation for the genotype, not a certainty or a diagnosis; quote its
+  stored wording and caveat as they are: FUT2 `the common European and African null allele
+  only; the rule does not hold in East Asian ancestry`; ABCC11
   `one SNP decides earwax type; odour is only a tendency`; MC1R `hair colour depends on
   other genes too: in UK Biobank about 15% of people with two MC1R variants are
   red-haired; melanoma risk is in its polygenic score`; HERC2 `one SNP, for European

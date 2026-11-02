@@ -363,8 +363,8 @@ def test_ampd1_three_genotypes(tmp_path: Path) -> None:
 
 
 def test_ccr5_delta32_left_aligned(tmp_path: Path) -> None:
-    """The run's genotypes step reads the deletion in bcftools' left-aligned form, so the
-    trait's allele must be that form, its effect allele the ALT (the deletion)."""
+    """The deletion is left-aligned, as DeepVariant emits it (dbSNP writes it right-shifted
+    at 46373453); its effect allele is the ALT, the deletion."""
     assert CCR5 in TRAIT_ALLELES
     resistant = (
         "two copies of CCR5Δ32: strongly resistant to HIV-1 strains that use CCR5,"
@@ -396,7 +396,7 @@ def test_mc1r_two_strong_alleles(tmp_path: Path) -> None:
 
 def test_mc1r_reliability_reads_the_sites_its_result_reads(tmp_path: Path) -> None:
     """ "two strong" reads the carried strong sites, "one strong" every strong site,
-    "weak only" and "none" every site."""
+    "weak only" every strong site and the carried weak ones, "none" every site."""
     low = Reliability(p_wrong=0.1, level=Level.LOW, flags=(), warnings=())
     for dosages, lowered, reliability in (
         ({R151C: "2"}, V60L, "high"),
@@ -404,6 +404,8 @@ def test_mc1r_reliability_reads_the_sites_its_result_reads(tmp_path: Path) -> No
         ({R151C: "2"}, D84E, "high"),
         ({R151C: "1"}, D84E, "low"),
         ({R151C: "1"}, V60L, "high"),
+        ({V92M: "1"}, V60L, "high"),
+        ({V92M: "1"}, D84E, "low"),
         ({}, V60L, "low"),
     ):
         graded = _graded(dosages)
@@ -432,6 +434,10 @@ def test_mc1r_unknown_strong_site(tmp_path: Path) -> None:
     assert _shown(tmp_path, {V92M: "1", V60L: "unknown"}, "MC1R") == (
         "weak only",
         MC1R_WEAK_ONLY,
+    )
+    assert _shown(tmp_path, {V92M: "1", R160W: "unknown"}, "MC1R") == (
+        None,
+        "genotype unknown at rs1805008",
     )
     assert _shown(tmp_path, {R151C: "1", V60L: "unknown"}, "MC1R") == (
         "one strong",

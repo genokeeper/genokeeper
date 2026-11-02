@@ -197,7 +197,8 @@ def _reads(
     trait: Trait, result: object, copies: Sequence[int | str | None]
 ) -> list[bool]:
     """The sites a result reads: "likely" the carried ones, "two strong" the carried strong
-    ones, "one strong" every strong one, every other result them all."""
+    ones, "one strong" every strong one, "weak only" every strong one and the carried weak
+    ones, every other result them all."""
     carried = [isinstance(c, int) and c > 0 for c in copies]
     if result == LIKELY:
         return carried
@@ -205,6 +206,8 @@ def _reads(
         return [k and c == STRONG for k, c in zip(carried, trait.classes, strict=True)]
     if result == "one strong":
         return [c == STRONG for c in trait.classes]
+    if result == "weak only":
+        return [k or c == STRONG for k, c in zip(carried, trait.classes, strict=True)]
     return [True] * len(copies)
 
 

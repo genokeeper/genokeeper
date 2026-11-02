@@ -10,7 +10,7 @@
 # al. 2016 (each row's `source`).
 # Slice 3g's six single-gene traits (2026-10-30): positions checked against dbSNP and Ensembl
 # (GRCh38, 10/2026), gnomAD v4 frequencies in slice 3g's research note R9. CCR5's rs333 is the
-# 32-bp deletion in its left-aligned form at 46373452, as bcftools norm writes it (dbSNP writes
+# 32-bp deletion in its left-aligned form at 46373452, as DeepVariant emits it (dbSNP writes
 # it right-shifted at 46373453); its effect allele is the ALT, the deletion. MC1R's `class`
 # column (`strong` R or `weak` r, empty on every other trait's rows) feeds the `mc1r` rule:
 # two strong copies over its sites, one, weak copies only (a wording kept in code beside

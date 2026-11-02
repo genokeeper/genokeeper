@@ -37,8 +37,8 @@ documents it links to.
   dosage, an allele-fraction guard). Calibration pending: until the PCR, HG003 and HG004
   libraries are re-aligned and `genokeeper calibrate` runs, the checks show "not calibrated".
 - Slice 3g (2026-10-30): 34 more polygenic scores by 1d's rule read strictly, 24 conditions
-  named not covered, a weak-power wording, and six single-gene traits (FUT2, ABCC11, MC1R,
-  HERC2, AMPD1, CCR5Δ32).
+  named not covered, a weak-power wording; six single-gene traits (2026-11-02: FUT2, ABCC11,
+  MC1R, HERC2, AMPD1, CCR5Δ32).
 - Stage 3, slice 3d code delivered (2026-11-01): depth copy number (DELLY cnv, CNVpytor),
   insertions (INSurVeyor, Dysgu, Scramble), paralog loci (Parascopy, Gauchian for GBA1, KILDA for
   Lp(a)) and the Tier 4 carrier list. Its calibration (`genokeeper calibrate --only paralogs`,
