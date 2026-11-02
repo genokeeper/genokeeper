@@ -13,17 +13,24 @@ from genokeeper.calibrate import tables
 from genokeeper.calibrate.classes import (
     FORMAT,
     FORMAT_KEY,
+    OUTSIDE,
+    OUTSIDE_BENCHMARK,
     TABLE,
+    UNSEEN,
     ClassTable,
     Geometry,
     Likelihoods,
     Share,
     measure,
+    outside_benchmark,
     read_class_table,
     write_class_table,
 )
 from genokeeper.calibrate.deletions import open_deletions
 from genokeeper.calibrate.tables import Current, open_table
+from genokeeper.deletions.exons import Target
+from genokeeper.deletions.screen import CallClass, Deletion
+from genokeeper.deletions.screen import key as class_key
 
 
 @dataclass(frozen=True)
@@ -147,6 +154,43 @@ def _table() -> ClassTable:
         features=WITH_JUNCTION,
         extra={"cnvpytor": "kept", "large": {"HG002": {"loss_large": 1}}},
     )
+
+
+def test_cautions_read_each_bands_own_region() -> None:
+    """Any class table names a class its calibration never saw, and a call over a target
+    part outside the region its band was measured in: a loss band measured on the
+    benchmark has such parts, a gain band measured genome-wide none."""
+    loss = CallClass("loss_5kb+", "both", False, False)
+    gain = CallClass("gain_5kb+", "both", False, False, True)
+    measured = {
+        "hg002": {
+            b: {"classes": [class_key(c)]}
+            for b, c in (("loss_5kb+", loss), ("gain_5kb+", gain))
+        }
+    }
+    outside = {"loss_5kb+": [["chr1", 1000, 1200]], "gain_5kb+": []}
+    table = ClassTable({}, {}, {}, measured, {}, extra={OUTSIDE_BENCHMARK: outside})
+    over = Deletion("chr1", 1100, 9000, "N", "0/1", {}, None)
+    away = Deletion("chr1", 2000, 9000, "N", "0/1", {}, None)
+    assert table.cautions(over, loss) == [OUTSIDE]
+    assert table.cautions(over, gain) == []
+    assert table.cautions(away, loss) == []
+    assert table.cautions(away, CallClass("loss_5kb+", "dellycnv", False, False)) == [
+        UNSEEN
+    ]
+
+
+def test_outside_benchmark_per_band() -> None:
+    """Each band's targets minus the region it was measured in, as JSON stores them."""
+    targets = {"G": [Target("chr1", 100, 300, (1,)), Target("chr2", 100, 200, (2,))]}
+    regions = {
+        "loss": [("chr1", 0, 200)],
+        "gain": [("chr1", 0, 10**6), ("chr2", 0, 10**6)],
+    }
+    assert outside_benchmark(targets, regions) == {
+        "loss": [["chr1", 200, 300], ["chr2", 100, 200]],
+        "gain": [],
+    }
 
 
 def test_class_table_roundtrip(tmp_path: Path) -> None:

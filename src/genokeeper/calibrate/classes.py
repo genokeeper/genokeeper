@@ -28,13 +28,24 @@ from typing import Any, Protocol
 from genokeeper.calibrate.table import jeffreys
 from genokeeper.calibrate.tables import REPORT, RUN, Current, open_table, write_table
 from genokeeper.deletions.exons import Target
-from genokeeper.regions import Interval, merge
+from genokeeper.deletions.screen import CallClass, Deletion, key
+from genokeeper.regions import Interval, merge, subtract
 
 TABLE = "table.json"
 FORMAT = 2
 # The versions key naming the table format a run reads: a table of another format is stale.
 FORMAT_KEY = "table_format"
 type Features = Mapping[str, tuple[str, ...]]
+# `ClassTable.extra`'s key for each band's target parts outside the region the band was
+# measured in (`outside_benchmark`), the versions value a table holding it is measured under
+# (a table without it is stale, not read as all inside), and the two lines
+# `ClassTable.cautions` adds where a chance of being false is extrapolated.
+OUTSIDE_BENCHMARK = "outside_benchmark"
+OUTSIDE_VERSION = "outside_benchmark per band"
+UNSEEN = "no calibration call of this class: its chance of being false is extrapolated"
+OUTSIDE = (
+    "over a target outside the benchmark the chance of being false was measured in"
+)
 
 
 class Banded(Protocol):
@@ -146,6 +157,23 @@ class ClassTable:
         f_hi, t_hi = self.expected(c, "hi")
         return point, _ratio(f_lo, t_hi, 0.0), _ratio(f_hi, t_lo, 1.0)
 
+    def cautions(self, d: Deletion, c: CallClass) -> list[str]:
+        """`UNSEEN` when no library's calibration calls had the class `c` (`summary`'s
+        `classes`), `OUTSIDE` when `d`'s bases touch a target part outside the region `c`'s
+        band was measured in (`extra[OUTSIDE_BENCHMARK]`): where `p_wrong` is
+        extrapolated, which it does not say itself."""
+        seen = any(
+            key(c) in m.get(c.band, {}).get("classes", ())
+            for m in self.measured.values()
+        )
+        outside = any(
+            chrom == d.chrom and start < d.end and d.pos < end
+            for chrom, start, end in self.extra.get(OUTSIDE_BENCHMARK, {}).get(
+                c.band, ()
+            )
+        )
+        return [*([] if seen else [UNSEEN]), *([OUTSIDE] if outside else [])]
+
 
 @dataclass(frozen=True)
 class Geometry:
@@ -179,6 +207,18 @@ def geometry(
         targets=tuple(merged),
         region_bp=sum(e - s for _, s, e in merge(region)),
     )
+
+
+def outside_benchmark(
+    targets: Mapping[str, Sequence[Target]], regions: Mapping[str, Iterable[Interval]]
+) -> dict[str, list[list[str | int]]]:
+    """Per band, the targets' parts outside the region it was measured in (`regions`, the
+    same its geometry reads), merged and sorted, as a table's `extra` stores them."""
+    spans = [(t.chrom, t.start, t.end) for ts in targets.values() for t in ts]
+    return {
+        band: [list(x) for x in subtract(spans, region)]
+        for band, region in regions.items()
+    }
 
 
 def measure(

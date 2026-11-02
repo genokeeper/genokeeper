@@ -25,7 +25,7 @@ files, not this one. How to file, close and reference an entry:
 | [BR-007](bugs/BR-007.md) | low | calibrate | A stage-3 table stays valid after a [repeat_loci] threshold edit: its versions omit the thresholds measure withholds by | 2026-10-28 |
 | [BR-011](bugs/BR-011.md) | medium | sources | A ClinVar-classified and a predicted carrier variant in one recessive gene are never offered for phasing | 2026-11-02 |
 
-## Fixed (17)
+## Fixed (18)
 
 | ID | Title | Fixed in |
 |---|---|---|
@@ -42,6 +42,7 @@ files, not this one. How to file, close and reference an entry:
 | [BR-017](bugs/BR-017.md) | bootstrap --with-hg002 or --with-hg004 before the first run stops before step_gnomad_faf and tells the owner to rerun, which fails the same way | `genokeeper/genokeeper#6` |
 | [BR-018](bugs/BR-018.md) | Step keys: the repeats key hashes each repeat locus whole, so a note or threshold edit re-runs ExpansionHunter; native samtools and repeated parts were suspected too | `genokeeper/genokeeper#6` |
 | [BR-019](bugs/BR-019.md) | A comment-only edit to a built image's lock file moves its tag and re-runs every step keyed on it | `genokeeper/genokeeper#6` |
+| [BR-022](bugs/BR-022.md) | Insertion and depth calls show their table's extrapolated chance of being false without the cautions 3b's deletions carry, and a depth event never names a flank-only gene | `claude/deletions-followups` |
 | [BR-023](bugs/BR-023.md) | SpliceAI's scores miss the listed genes renamed since its 2016 annotation | `genokeeper/genokeeper#8` |
 | [BR-024](bugs/BR-024.md) | Tests that download or re-align read the host's real free disk, so the suite fails on a machine with less than 20 GB free | `genokeeper/genokeeper#11` |
 | [BR-025](bugs/BR-025.md) | `genokeeper explain` writes no explanation of a stage-3 watch item, which the dashboard now lists | `claude/explain-stage3-watch` |

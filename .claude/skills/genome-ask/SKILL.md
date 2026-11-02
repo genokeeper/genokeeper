@@ -1048,7 +1048,11 @@ carrier gate. The statements:
   under risks only in a triplosensitive gene, else a non-finding `no known effect of an
   extra copy`; a gain seen only in depth is a finding under research, `possible extra copy,
   effect unknown`. An insertion's reason names Scramble's family where it gave one
-  ("possible Alu insertion").
+  ("possible Alu insertion"). Their calls carry 3b's extrapolation warnings where their
+  own table's chance of being false is extrapolated (`no calibration call of this class…`,
+  `over a target outside the benchmark…`; a gain was measured genome-wide, so never the
+  second), and a gene's reason the flank line (`touches only the bases beside an exon, not
+  the exon itself`) where the event reaches that gene's exons only in the margin.
 - `cnv:large:<chrom>:<pos>-<end>`: an event of 500 kb or more over a region or gene ClinGen
   scores dosage-sensitive, under risks with no gene. Say it is "shown, not
   calibrated: needs a chromosomal microarray", its chance of being false "not measured".

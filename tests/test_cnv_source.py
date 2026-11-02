@@ -68,6 +68,7 @@ def _source(
     overrides: Mapping[str, tuple[str, str]] | None = None,
     large_withheld: Mapping[str, str] | None = None,
     cautions: Callable[[Shown], list[str]] = lambda _: [],
+    depth_cautions: Callable[[Shown], list[str]] = lambda _: [],
 ) -> CnvSource:
     dropped = dict(dropped or {})
     return CnvSource(
@@ -84,6 +85,7 @@ def _source(
         segdup_exons={"GENEA": (4,)},
         large_withheld=large_withheld or {},
         deletion_cautions=cautions,
+        cautions=depth_cautions,
     )
 
 
@@ -336,6 +338,33 @@ def test_named_3b_deletion_carries_the_deletion_tables_cautions(tmp_path: Path) 
     )
     (call,) = [r.call for r in loss.rows if r.call is not None]
     assert not any(w.startswith("caution") for w in cast(list[str], call["warnings"]))
+
+
+def test_depth_events_carry_the_cnv_tables_cautions(tmp_path: Path) -> None:
+    """A shown depth event and a named depth loss, rated by the cnv table, carry its
+    cautions; a large event, shown with no rate, carries none."""
+    (gjb6,) = load_named()
+    depth = Deletion("chr13", 20_210_000, 20_520_000, "N", "0/1", BOTH, None)
+
+    def caution(shown: Shown) -> list[str]:
+        return [f"caution {shown.call_class.band}"]
+
+    source = _source(
+        [_shown("CFTR", "loss")],
+        large=[_large()],
+        named=[(gjb6, Shown(depth, LOSS, {}, None))],
+        depth_cautions=caution,
+    )
+    calls = [r.call for r in _collect(source, tmp_path).rows if r.call is not None]
+    warned = [
+        [w for w in cast(list[str], c["warnings"]) if w.startswith("caution")]
+        for c in calls
+    ]
+    assert sorted(map(tuple, warned)) == [
+        (),
+        ("caution loss_5kb+",),
+        ("caution loss_5kb+",),
+    ]
 
 
 def test_cnv_accounting_balanced(tmp_path: Path) -> None:

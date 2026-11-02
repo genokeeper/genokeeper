@@ -18,6 +18,10 @@ from genokeeper import pipeline
 from genokeeper.calibrate import build, hg002, tables
 from genokeeper.calibrate.build import build_deletions, judge_library
 from genokeeper.calibrate.classes import (
+    OUTSIDE,
+    OUTSIDE_BENCHMARK,
+    OUTSIDE_VERSION,
+    UNSEEN,
     BandTerms,
     Geometry,
     Likelihoods,
@@ -27,9 +31,6 @@ from genokeeper.calibrate.classes import (
 )
 from genokeeper.calibrate.deletions import (
     FEATURE_VALUES,
-    OUTSIDE,
-    OUTSIDE_BENCHMARK,
-    UNSEEN,
     DeletionTable,
     class_of,
     deletion_versions,
@@ -294,7 +295,11 @@ def test_cautions_name_an_unseen_class_and_a_target_outside_the_benchmark() -> N
     seen = CallClass("long", "both+depth", False, False)
     measured = {"pcrfree": {"long": {"classes": [class_key(seen)]}, "short": {}}}
     table = DeletionTable(
-        {}, {}, {}, measured, extra={OUTSIDE_BENCHMARK: [["chr1", 1000, 1200]]}
+        {},
+        {},
+        {},
+        measured,
+        extra={OUTSIDE_BENCHMARK: {"long": [["chr1", 1000, 1200]], "short": []}},
     )
     inside = Deletion("chr1", 2000, 3000, "N", "0/1", {}, None)
     over = Deletion("chr1", 1100, 2100, "N", "0/1", {}, None)
@@ -804,7 +809,8 @@ def test_calibrate_deletions_writes_a_table_the_run_accepts(
     assert table.bands["short"].recall == share(2, 2)
     assert set(table.measured) == set(LIBRARIES)
     # The benchmark is chr20 whole: every target elsewhere lies outside it.
-    outside = {chrom for chrom, _, _ in table.extra[OUTSIDE_BENCHMARK]}
+    assert set(table.extra[OUTSIDE_BENCHMARK]) == {"long", "short"}
+    outside = {chrom for chrom, _, _ in table.extra[OUTSIDE_BENCHMARK]["long"]}
     assert "chr1" in outside and "chr20" not in outside
     versions = deletion_versions(lab, sha256_file(grch38_fasta(lab)), load_grading())
     assert open_deletions(lab, versions) == (table, None)
@@ -823,7 +829,7 @@ def test_versions_leave_out_the_wording_rule(
     assert deletion_versions(lab, fasta, wording) == versions
     assert "likely_below" not in versions["deletions"]
     # A table measured before `cautions` read `extra` is stale, not read as all inside.
-    assert versions["extra"] == OUTSIDE_BENCHMARK
+    assert versions["extra"] == OUTSIDE_VERSION
     assert (versions["delly_filter"], versions["dysgu_filter"]) == (
         caller_filter("delly", d.min_length),
         caller_filter("dysgu", d.min_length),

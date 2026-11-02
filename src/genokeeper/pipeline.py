@@ -3041,6 +3041,14 @@ def open_slice3d_tables(lab: Path, fasta_sha: str, grading: Grading) -> Slice3dT
     )
 
 
+def table_cautions(table: ClassTable | None) -> Callable[[Shown], list[str]]:
+    """A shown call's cautions from the class table that rates it (`ClassTable.cautions`),
+    none without a table."""
+    if table is None:
+        return lambda _: []
+    return lambda shown: table.cautions(shown.deletion, shown.call_class)
+
+
 @dataclass(frozen=True)
 class ScreenedDeletions:
     """3b's screen as slice 3d reads it: the callers' union, the shown deletions, the screen
@@ -3258,6 +3266,7 @@ def slice3d_steps(
         haploinsufficient=dosage.haploinsufficient,
         triplosensitive=dosage.triplosensitive,
         deletion_cautions=deletions.cautions,
+        cautions=table_cautions(cnv_table),
         placement_overrides=screen_overrides(),
         segdup_exons=segdups,
         large_withheld=withheld,
@@ -3313,6 +3322,7 @@ def slice3d_steps(
         haploinsufficient=dosage.haploinsufficient,
         recall={} if ins_table is None else ins_table.recall(),
         wording=INSERTION_WORDING,
+        cautions=table_cautions(ins_table),
         placement_overrides=screen_overrides(),
         screen_claim={"not_covered": [MEI_SCOPE]},
     )
@@ -4793,11 +4803,7 @@ def run_genome(
     deletion_p_wrong = (
         deletion_table.p_wrong if deletion_table is not None else lambda _: None
     )
-
-    def deletion_cautions(shown: Shown) -> list[str]:
-        if deletion_table is None:
-            return []
-        return deletion_table.cautions(shown.deletion, shown.call_class)
+    deletion_cautions = table_cautions(deletion_table)
 
     # Slice 3d: copy number from read depth, insertions, the paralog loci and Lp(a), each
     # run only with its table current; 3b's deletions are read, never waited on.

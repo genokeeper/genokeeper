@@ -78,12 +78,16 @@ from genokeeper.calibrate import (
     rtg_path,
     table_dir,
 )
-from genokeeper.calibrate.classes import ClassTable, write_class_table
+from genokeeper.calibrate.classes import (
+    OUTSIDE_BENCHMARK,
+    ClassTable,
+    outside_benchmark,
+    write_class_table,
+)
 from genokeeper.calibrate.classes import measure as measure_classes
 from genokeeper.calibrate.classes import summary as summarise_classes
 from genokeeper.calibrate.deletions import (
     BANDS,
-    OUTSIDE_BENCHMARK,
     DeletionTable,
     band_of,
     class_of,
@@ -91,7 +95,6 @@ from genokeeper.calibrate.deletions import (
     deletions_dir,
     expected_true_carried,
     geometry,
-    outside_benchmark,
     read_population,
     summary,
 )
@@ -840,7 +843,11 @@ def build_deletions(
         bands=bands,
         likelihoods=likelihoods,
         measured={lib: summary(calls[lib], found[lib], t) for lib in LIBRARIES},
-        extra={OUTSIDE_BENCHMARK: [list(x) for x in outside_benchmark(s, benchmark)]},
+        extra={
+            OUTSIDE_BENCHMARK: outside_benchmark(
+                s.targets, dict.fromkeys(BANDS, benchmark)
+            )
+        },
     )
 
     def write(staging: Path) -> None:
@@ -1255,11 +1262,9 @@ def build_cnv(lab: Path, threads: int) -> None:
     pooled = pool_large(large, min_overlap=MATCH_OVERLAP)
     if not kept:
         calls, recall, _ = judge(False)
-    on_bench = geometry(s.targets, read_bed(bench))
-    everywhere = geometry(s.targets, [(c, 0, n) for c, n in contigs.items()])
-    geometries = {
-        b: on_bench if b.startswith("loss") else everywhere for b in CNV_BANDS
-    }
+    benchmark, genome = read_bed(bench), [(c, 0, n) for c, n in contigs.items()]
+    measured_in = {b: benchmark if b.startswith("loss") else genome for b in CNV_BANDS}
+    geometries = {b: geometry(s.targets, region) for b, region in measured_in.items()}
     priors = {
         b: expected_true_carried(
             lab, grading, s, b, svtype=_svtype(b), band_of=_depth_band(_svtype(b), t)
@@ -1288,6 +1293,7 @@ def build_cnv(lab: Path, threads: int) -> None:
         extra={
             "cnvpytor": decision,
             "large": {"calls": pooled, "withheld": large_withheld(pooled)},
+            OUTSIDE_BENCHMARK: outside_benchmark(s.targets, measured_in),
         },
     )
     path = write_class_table(
@@ -1430,11 +1436,8 @@ def build_insertions(lab: Path, threads: int) -> None:
         )
         for b in INSERTION_BANDS
     }
-    on_bench = geometry(s.targets, benchmark)
-    geometries = {
-        b: geometry(s.targets, scanned) if b == "mei" else on_bench
-        for b in INSERTION_BANDS
-    }
+    regions = {b: scanned if b == "mei" else benchmark for b in INSERTION_BANDS}
+    geometries = {b: geometry(s.targets, region) for b, region in regions.items()}
     bands, likelihoods = measure_classes(
         calls, found, geometries, priors, INSERTION_FEATURES, band=_class_band
     )
@@ -1454,6 +1457,7 @@ def build_insertions(lab: Path, threads: int) -> None:
             for lib in LIBRARIES
         },
         features=INSERTION_FEATURES,
+        extra={OUTSIDE_BENCHMARK: outside_benchmark(s.targets, regions)},
     )
     path = write_class_table(
         lab, "insertions", table, report=slice3d_report(None, table, None)

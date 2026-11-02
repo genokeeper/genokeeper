@@ -105,6 +105,7 @@ from genokeeper.calibrate import (
 )
 from genokeeper.calibrate import build as calibrate_build
 from genokeeper.calibrate import foundation as calibrate_foundation
+from genokeeper.calibrate.classes import ClassTable
 from genokeeper.calibrate.deletions import DeletionTable, deletions_dir
 from genokeeper.calibrate.hg002_cells import (
     HAPLOID,
@@ -2150,6 +2151,9 @@ def test_calibrated_slice3d_statements(
     finding is hidden by `query`'s defaults and listed at the loosest filters, and the run
     records 3d's tools."""
     monkeypatch.setattr(pipeline, "load_exons", lambda: EXONS_3D)
+    # The run hands each table's own cautions to its calls: the cnv table's to depth
+    # events, the insertion table's to insertions.
+    monkeypatch.setattr(ClassTable, "cautions", lambda _, d, c: [f"caution {c.band}"])
     genome.slice3d.dellycnv += [
         _cnv_record("chr20", 55000000, 55003000, 1, "CNV_CFTR"),
         _cnv_record("chr20", 56000000, 56003000, 1, "CNV_DPYD"),
@@ -2178,6 +2182,16 @@ def test_calibrated_slice3d_statements(
     assert DPYD_NOTE in dpyd["reason"]
     assert named["gene"] == "GJB2"
     assert labelled["reason"].startswith("possible Alu insertion")
+    with connect(genome.store) as con:
+        for statement in (depth, labelled, named):
+            row = con.execute(
+                "SELECT warnings FROM call WHERE run_id = ? AND vid = ?",
+                [run_id, statement["vid"]],
+            ).fetchone()
+            assert row is not None
+            (warned,) = row
+            band = json.loads(statement["claim"])["class"]["band"]
+            assert f"caution {band}" in warned
     assert json.loads(alone["claim"])["class"]["band"] == "mei"
     assert not any("2014856" in i for i in statements)
     brca1 = _deletion_rows(genome, run_id)[0]["deletions:BRCA1:chr20:2014856-2016886"]

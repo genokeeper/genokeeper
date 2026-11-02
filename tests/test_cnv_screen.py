@@ -130,6 +130,16 @@ def test_depth_loss_names_plus_clinical_exons_apart() -> None:
     assert (shown.exons, shown.plus_clinical) == ({"GENEA": ()}, {"GENEA": (3,)})
 
 
+def test_depth_event_over_a_flank_only_named() -> None:
+    """A depth loss that reaches GENEA's exon 2 target only in its margin (the target is
+    [10,000, 10,500), the exon [10,020, 10,480)) names the gene in `flank`, as a 3b
+    deletion does; one over the exon does not."""
+    (flank,) = _run([_event(8_000, 10_010)]).shown
+    assert (flank.exons, flank.flank) == ({"GENEA": (2,)}, frozenset({"GENEA"}))
+    (exon,) = _run([_event(8_000, 10_030)]).shown
+    assert exon.flank == frozenset()
+
+
 def test_depth_loss_over_deletion_joins_it() -> None:
     """Review Focus 1: a depth loss over a shown 3b deletion (reciprocal overlap 0.81, its
     ends a few hundred bp off, so another exon set) is that deletion's: dropped `JOINED`,

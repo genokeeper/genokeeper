@@ -37,6 +37,7 @@ from genokeeper.deletions.screen import (
     _Index,
     classify,
     exon_hits,
+    flank_only,
     is_common,
     one_per_position,
     population_match,
@@ -441,6 +442,7 @@ def screen_cnv(
                 exons,
                 population_match(d, s),
                 kinds=kinds,
+                flank=flank_only(d, s),
                 plus_clinical=exon_hits(d, s, plus_clinical=True),
             )
         )

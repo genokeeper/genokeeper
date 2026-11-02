@@ -36,7 +36,11 @@ from genokeeper.calibrate.build import (
     build_insertions,
     build_paralogs,
 )
-from genokeeper.calibrate.classes import open_class_table
+from genokeeper.calibrate.classes import (
+    OUTSIDE_BENCHMARK,
+    OUTSIDE_VERSION,
+    open_class_table,
+)
 from genokeeper.calibrate.records import (
     RECORDED,
     Record,
@@ -398,6 +402,16 @@ def test_large_withheld_recorded(lab: Lab, monkeypatch: pytest.MonkeyPatch) -> N
     }
     reason = "not covered: large loss calls on 2 of 3 calibration genomes"
     assert table.extra["large"]["withheld"] == {"loss_large": reason}
+    # Losses were measured on the benchmark, gains on every contig of the FASTA: a gain
+    # band's parts outside lie only on chromosomes the mini FASTA lacks.
+    outside = table.extra[OUTSIDE_BENCHMARK]
+    fai = Path(f"{lab.fasta}.fai").read_text().splitlines()
+    contigs = {line.split("\t")[0] for line in fai}
+    assert all(outside[b] for b in outside if b.startswith("loss"))
+    gained = {c for b in outside if b.startswith("gain") for c, _, _ in outside[b]}
+    lost = {c for b in outside if b.startswith("loss") for c, _, _ in outside[b]}
+    assert not gained & contigs and lost & contigs
+    assert versions["extra"] == OUTSIDE_VERSION
     assert table.extra["cnvpytor"]["decision"] in ("kept", "dropped")
     report = (folder(lab.lab, "cnv") / REPORT).read_text()
     assert f"loss_large: {reason}" in report
@@ -476,3 +490,5 @@ def test_scramble_meis_judged_by_position(lab: Lab) -> None:
         assert (mei["calls"], mei["false"], mei["truth"], mei["found"]) == (2, 1, 1, 1)
         assert mei["classes"] == ["mei:scramble:norepeat:unmasked:nojunction"]
     assert table.bands["mei"].calls == 4
+    assert set(table.extra[OUTSIDE_BENCHMARK]) == {"short", "long", "mei"}
+    assert versions["extra"] == OUTSIDE_VERSION

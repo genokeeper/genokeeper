@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import Any
 
 from genokeeper.calibrate import classes, spikein
-from genokeeper.calibrate.classes import FORMAT, FORMAT_KEY, ClassTable
+from genokeeper.calibrate.classes import FORMAT, FORMAT_KEY, OUTSIDE_VERSION, ClassTable
 from genokeeper.calibrate.deletions import (
     DYSGU_STEP_VERSION,
     FEATURE_VALUES,
@@ -517,8 +517,9 @@ def cnv_versions(lab: Path, fasta_sha: str, grading: Grading) -> dict[str, str]:
     mask's two BEDs', 3c's masked intervals' and gnomAD-SV's, Parascopy's data md5s and the
     models whose regions the screen leaves to their callers, `[cnv]`, `[deletions]` (its
     margin, gnomAD-SV rule and overlap) and `[par]` (a male's loss or gain) as JSON, the
-    spike-in rule's constants, the step versions, the FASTA's sha256 and the table format.
-    `FileNotFoundError` when a file is absent."""
+    spike-in rule's constants, the step versions, the FASTA's sha256, the table format and
+    the form of its `extra` `ClassTable.cautions` reads. `FileNotFoundError` when a file is
+    absent."""
     return {
         **{name: IMAGES[name] for name in CNV_IMAGES},
         "exons": _resource_sha256("deletions", RESOURCE),
@@ -541,14 +542,16 @@ def cnv_versions(lab: Path, fasta_sha: str, grading: Grading) -> dict[str, str]:
         "dysgu_ins_dup_step": DYSGU_INS_DUP_STEP_VERSION,
         "fasta": fasta_sha,
         FORMAT_KEY: str(FORMAT),
+        "extra": OUTSIDE_VERSION,
     }
 
 
 def insertion_versions(lab: Path, fasta_sha: str, grading: Grading) -> dict[str, str]:
     """The versions the `insertions` table is measured under: the four images, the exon
     resource's sha256, the mask's two BEDs', the repeats' and gnomAD-SV's, `[insertions]` as
-    JSON, Scramble's exon margin, both Truvari option sets, the step versions, the FASTA's sha256 and the table
-    format. `FileNotFoundError` when a file is absent."""
+    JSON, Scramble's exon margin, both Truvari option sets, the step versions, the FASTA's
+    sha256, the table format and the form of its `extra` `ClassTable.cautions` reads.
+    `FileNotFoundError` when a file is absent."""
     giab = giab38_dir(lab)
     return {
         **{name: IMAGES[name] for name in INSERTION_IMAGES},
@@ -567,6 +570,7 @@ def insertion_versions(lab: Path, fasta_sha: str, grading: Grading) -> dict[str,
         "insertions_union_step": INSERTIONS_UNION_STEP_VERSION,
         "fasta": fasta_sha,
         FORMAT_KEY: str(FORMAT),
+        "extra": OUTSIDE_VERSION,
     }
 
 
