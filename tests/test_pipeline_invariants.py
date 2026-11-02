@@ -118,6 +118,7 @@ from genokeeper.calibrate.hg002_cells import (
 )
 from genokeeper.calibrate.records import Record, reference_sha256, write_record
 from genokeeper.calibrate.repeat_rules import X_RULE_DID_NOT_HOLD
+from genokeeper.calibrate.slice3d import CNV_FEATURES, INSERTION_FEATURES
 from genokeeper.calibrate.stage3 import (
     FALSE_CALL,
     YLEAF_KEY,
@@ -157,6 +158,7 @@ from genokeeper.deletions.screen import (
     SAME_POSITION,
     SHORT,
     CallClass,
+    Deletion,
     warnings,
 )
 from genokeeper.evidence.clingen import DOSAGE_FILE
@@ -2151,9 +2153,21 @@ def test_calibrated_slice3d_statements(
     finding is hidden by `query`'s defaults and listed at the loosest filters, and the run
     records 3d's tools."""
     monkeypatch.setattr(pipeline, "load_exons", lambda: EXONS_3D)
+
     # The run hands each table's own cautions to its calls: the cnv table's to depth
     # events, the insertion table's to insertions.
-    monkeypatch.setattr(ClassTable, "cautions", lambda _, d, c: [f"caution {c.band}"])
+    def by_table(table: ClassTable, d: Deletion, c: CallClass) -> list[str]:
+        features = dict(table.features)
+        kind = (
+            "insertions"
+            if features == INSERTION_FEATURES
+            else "cnv"
+            if features == CNV_FEATURES
+            else "deletions"
+        )
+        return [f"caution {kind} {c.band}"]
+
+    monkeypatch.setattr(ClassTable, "cautions", by_table)
     genome.slice3d.dellycnv += [
         _cnv_record("chr20", 55000000, 55003000, 1, "CNV_CFTR"),
         _cnv_record("chr20", 56000000, 56003000, 1, "CNV_DPYD"),
@@ -2183,7 +2197,11 @@ def test_calibrated_slice3d_statements(
     assert named["gene"] == "GJB2"
     assert labelled["reason"].startswith("possible Alu insertion")
     with connect(genome.store) as con:
-        for statement in (depth, labelled, named):
+        for statement, kind in (
+            (depth, "cnv"),
+            (labelled, "insertions"),
+            (named, "cnv"),
+        ):
             row = con.execute(
                 "SELECT warnings FROM call WHERE run_id = ? AND vid = ?",
                 [run_id, statement["vid"]],
@@ -2191,7 +2209,7 @@ def test_calibrated_slice3d_statements(
             assert row is not None
             (warned,) = row
             band = json.loads(statement["claim"])["class"]["band"]
-            assert f"caution {band}" in warned
+            assert f"caution {kind} {band}" in warned
     assert json.loads(alone["claim"])["class"]["band"] == "mei"
     assert not any("2014856" in i for i in statements)
     brca1 = _deletion_rows(genome, run_id)[0]["deletions:BRCA1:chr20:2014856-2016886"]

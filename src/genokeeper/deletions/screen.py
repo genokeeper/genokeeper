@@ -42,21 +42,19 @@ CALLER_NAMES = {
 # depth should move and does not; under `long_from` a deletion often moves it too little.
 NO_DEPTH = "read depth does not support it"
 SHORT_DEPTH = "read depth does not show it, which a deletion this short often cannot"
-# The band of an insertion whose length is unknown (an INSurVeyor record with neither `SVLEN`
-# nor an assembled part): no table measures it, so the run withholds its rate rather than
-# band it by `end - pos` as one base long.
-UNSIZED = "unsized"
 # What the screen cannot see in a gene, by gene, for `genotype --gene` to say. CBS: gnomAD-SV
 # v4.1's two common depth-only deletions over its targets, gnomAD-SV_v3_DEL_chr21_ff594b43
 # (18 kb, AF 0.215) and gnomAD-SV_v3_DEL_chr21_67ca8d99 (126 kb, AF 0.468), lie over the real
 # copy of a region GRCh38 also holds a false copy of (chr21:5.0-7.9 Mb, masked for this
 # pipeline's alignment, not gnomAD's): most likely artefacts of that duplication, as no
-# homocystinuria allele is that common. A true deletion overlapping either by half is `COMMON`.
+# homocystinuria allele is that common. A true deletion or depth loss sharing half of both
+# its length and either record's (reciprocal overlap, `min_reciprocal_overlap`) is `COMMON`.
 DELETION_SCREEN_LIMITS = {
     "CBS": (
-        "a deletion that overlaps gnomAD-SV's common depth-only deletions over CBS by half"
-        " or more (likely artefacts of GRCh38's false duplication of the region) is dropped"
-        " as common, so the screen can miss a deletion there"
+        "a deletion or depth loss of about 9 kb or more that shares half or more of both its"
+        " length and that of one of gnomAD-SV's two common depth-only deletions over CBS (18"
+        " kb and 126 kb; likely artefacts of GRCh38's false duplication of the region) is"
+        " dropped as common, so the screens can miss a large deletion there"
     ),
 }
 # Callers that label a call rather than find one (slice 3d: Scramble names a mobile
@@ -233,7 +231,7 @@ def classify(d: Deletion, s: Screen) -> CallClass:
     """The deletion's class; an end base is its first deleted base or its last. Its
     evidence is `both` when both of `s.callers` called it, else the one caller's name, and
     `+depth` where DELLY called it and its depth ratio supports it; `LABELS` callers count
-    only alone (band `mei`, evidence that caller); a call of unknown length is `UNSIZED`."""
+    only alone (band `mei`, evidence that caller)."""
     t = s.thresholds
     ends = (d.pos, d.end - 1)
     masked = any(s._mask.covers(d.chrom, b) for b in ends)
@@ -242,8 +240,6 @@ def classify(d: Deletion, s: Screen) -> CallClass:
     if not callers and len(named) == 1:
         return CallClass(band="mei", evidence=named.pop(), repeat=False, masked=masked)
     band = "long" if d.length >= t.long_from else "short"
-    if d.svlen is None and d.lower_bound:
-        band = UNSIZED
     if callers == pair:
         evidence = "both"
     elif len(callers) == 1 and callers <= pair:

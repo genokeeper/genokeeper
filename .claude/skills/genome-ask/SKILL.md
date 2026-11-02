@@ -236,11 +236,11 @@ Each finding has these keys:
     SNV calling cannot see (e.g. SMN1's exon 7 deletion, F8's intron 22 inversion), from
     GeneReviews. When set, the counts say nothing about that mechanism: lead with it. Null
     when the run's own stage-3 statement assessed the gene (SMN1's copy number);
-  - `deletion_screen_limit`: null, or what the deletion screen cannot see in this gene
-    (CBS: a deletion over gnomAD-SV's common depth-only records there is dropped as
-    common). It is not the gene's main mechanism: say it after the counts, as "the deletion
-    screen can miss a deletion in <gene>" with its reason, never as a doubt on the gene's
-    other answers;
+  - `deletion_screen_limit`: null, or what the deletion screens cannot see in this gene
+    (CBS: a deletion or depth loss of about 9 kb or more over gnomAD-SV's common depth-only
+    records there is dropped as common). It is not the gene's main mechanism: say it after
+    the counts, as "the screens can miss a large deletion in <gene>" with its reason, never
+    as a doubt on the gene's other answers or on a smaller deletion;
   - `coverage`: the gene's coverage, as `query --gene` prints it:
     - `bases`: as above;
     - `callable`: as above;
@@ -1053,9 +1053,7 @@ carrier gate. The statements:
   under risks only in a triplosensitive gene, else a non-finding `no known effect of an
   extra copy`; a gain seen only in depth is a finding under research, `possible extra copy,
   effect unknown`. An insertion's reason names Scramble's family where it gave one
-  ("possible Alu insertion"). An insertion whose length INSurVeyor could not assemble is in
-  band `unsized`, which no calibration measures: unassessed, `not calibrated: no unsized
-  calls measured`; say it was found but its chance of being false is unknown. Their calls carry 3b's extrapolation warnings where their
+  ("possible Alu insertion"). Their calls carry 3b's extrapolation warnings where their
   own table's chance of being false is extrapolated (`no calibration call of this class…`,
   `over a target outside the benchmark…`; a gain was measured genome-wide, so never the
   second), and a gene's reason the flank line (`touches only the bases beside an exon, not

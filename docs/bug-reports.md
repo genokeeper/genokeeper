@@ -16,7 +16,7 @@ files, not this one. How to file, close and reference an entry:
 | [BR-009](bugs/BR-009.md) | low | sources | A repeat statement's words contradict its grading: a watch's class reads normal, a watch says the expansion is reliable, a finding answers carrier, AR reads GCA | 2026-10-28 |
 | [BR-012](bugs/BR-012.md) | medium | annotate | One VEP row per variant lets a non-MANE LoF hide a MANE Plus Clinical missense in a listed gene | 2026-11-02 |
 
-## Rejected (4)
+## Rejected (5)
 
 | ID | Sev | Area | Title | Found |
 |---|---|---|---|---|
@@ -24,8 +24,9 @@ files, not this one. How to file, close and reference an entry:
 | [BR-006](bugs/BR-006.md) | low | pipeline | A missing tool, a step that wrote no file or a full disk in the deletion steps aborts the whole run instead of leaving the screen unassessed | 2026-11-02 |
 | [BR-007](bugs/BR-007.md) | low | calibrate | A stage-3 table stays valid after a [repeat_loci] threshold edit: its versions omit the thresholds measure withholds by | 2026-10-28 |
 | [BR-011](bugs/BR-011.md) | medium | sources | A ClinVar-classified and a predicted carrier variant in one recessive gene are never offered for phasing | 2026-11-02 |
+| [BR-020](bugs/BR-020.md) | low | calibrate | An INSurVeyor insertion of unknown length might take the short band's chance of being false, though the insertion calibration never measures such a call | 2026-11-02 |
 
-## Fixed (20)
+## Fixed (19)
 
 | ID | Title | Fixed in |
 |---|---|---|
@@ -42,7 +43,6 @@ files, not this one. How to file, close and reference an entry:
 | [BR-017](bugs/BR-017.md) | bootstrap --with-hg002 or --with-hg004 before the first run stops before step_gnomad_faf and tells the owner to rerun, which fails the same way | `genokeeper/genokeeper#6` |
 | [BR-018](bugs/BR-018.md) | Step keys: the repeats key hashes each repeat locus whole, so a note or threshold edit re-runs ExpansionHunter; native samtools and repeated parts were suspected too | `genokeeper/genokeeper#6` |
 | [BR-019](bugs/BR-019.md) | A comment-only edit to a built image's lock file moves its tag and re-runs every step keyed on it | `genokeeper/genokeeper#6` |
-| [BR-020](bugs/BR-020.md) | An INSurVeyor insertion of unknown length takes the short band's chance of being false, though the insertion calibration never measures such a call | `claude/deletions-followups` |
 | [BR-021](bugs/BR-021.md) | A true deletion over CBS that overlaps one of gnomAD-SV's two common depth-only records there is dropped as common, and nothing tells the owner | `claude/deletions-followups` |
 | [BR-022](bugs/BR-022.md) | Insertion and depth calls show their table's extrapolated chance of being false without the cautions 3b's deletions carry, and a depth event never names a flank-only gene | `claude/deletions-followups` |
 | [BR-023](bugs/BR-023.md) | SpliceAI's scores miss the listed genes renamed since its 2016 annotation | `genokeeper/genokeeper#8` |

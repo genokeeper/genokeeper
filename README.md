@@ -712,7 +712,9 @@ confirmation, every stage-3 finding among them; `needs_confirmation` for another
 depth event or insertion; `information` for a copy number or Lp(a); "not assessed" when the
 store holds no site), and for a
 gene counts, what was not looked at, and the gene's main mechanism when SNV calls cannot
-see it (SMN1, HBA1/HBA2, CYP21A2, GBA1, F8, DMD, FMR1); for SMN1 and the repeat genes
+see it (SMN1, HBA1/HBA2, CYP21A2, GBA1, F8, DMD, FMR1), and what the deletion screens
+cannot see in it (CBS: a large deletion over gnomAD-SV's common depth-only records there,
+`gene.deletion_screen_limit`); for SMN1 and the repeat genes
 the gene's stage-3 statement leads the sites with its own answer (the copy number or the
 repeat count against its thresholds), and the mechanism flag is cleared when that statement
 is assessed. CFTR's poly-T/TG (stage 3e) is printed as its own line, never as

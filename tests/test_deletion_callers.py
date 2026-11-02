@@ -469,6 +469,38 @@ def _ins_length(cols: list[str], info: dict[str, str]) -> int:
     return len(info["SVINSSEQ"])
 
 
+def test_insurveyor_insertion_of_unknown_length_never_kept(tmp_path: Path) -> None:
+    """An incomplete INSurVeyor assembly is kept only with an assembled part of
+    `min_length` or more, its length's lower bound: one with neither `SVLEN` nor a part is
+    cut here, so the screen never sees an insertion of unknown length from a caller."""
+    path = tmp_path / "insurveyor.vcf"
+    path.write_text(
+        "##fileformat=VCFv4.2\n"
+        "##contig=<ID=chr1,length=100000>\n"
+        '##INFO=<ID=SVTYPE,Number=1,Type=String,Description="t">\n'
+        '##INFO=<ID=END,Number=1,Type=Integer,Description="e">\n'
+        '##INFO=<ID=SVLEN,Number=1,Type=Integer,Description="l">\n'
+        '##INFO=<ID=SVINSSEQ,Number=1,Type=String,Description="s">\n'
+        '##INFO=<ID=INCOMPLETE_ASSEMBLY,Number=0,Type=Flag,Description="i">\n'
+        '##FORMAT=<ID=GT,Number=1,Type=String,Description="g">\n'
+        "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tHG002\n"
+        + "".join(
+            f"chr1\t{pos}\t{name}\tC\t<INS>\t.\tPASS\tEND={pos};SVTYPE=INS{extra}"
+            ";INCOMPLETE_ASSEMBLY\tGT\t1\n"
+            for pos, name, extra in (
+                (100, "none", ""),
+                (200, "dot", ";SVINSSEQ=."),
+                (300, "part", ";SVINSSEQ=" + "ACGT" * 15),
+            )
+        )
+    )
+    out = deletions_only(
+        path, tmp_path / "out.vcf.gz", caller="insurveyor", min_length=50, svtype="INS"
+    )
+    (kept,) = read_deletions(out, caller="insurveyor", svtype="INS")
+    assert (kept.pos, kept.svlen, kept.lower_bound) == (300, 60, True)
+
+
 @pytest.mark.parametrize(
     ("caller", "svtype", "fixture"),
     [
