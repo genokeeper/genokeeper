@@ -27,7 +27,7 @@ from genokeeper.cli import main
 from genokeeper.config import Paths
 from genokeeper.dashboard import payload, render
 from genokeeper.evidence.medlineplus import MEDLINEPLUS_FILE, load_medlineplus
-from genokeeper.explain import MODEL, explain, lookup
+from genokeeper.explain import MODEL, explain, lookup, watch_items
 from genokeeper.history import Change, diff, kind_of, states, trusted_ids
 from genokeeper.lang import LANGUAGES
 from genokeeper.query import Filters, open_store, query
@@ -1276,6 +1276,7 @@ def test_screened_lists_stage3_watch_items_and_non_findings_apart(
                 "id": "expansionhunter:HTT",
                 "label": "HTT CAG 17/25",
                 "wording": SCREENED_ROWS[0].reason,
+                "explanation": None,
             }
         ],
         "normal": [
@@ -1296,6 +1297,34 @@ def test_screened_lists_stage3_watch_items_and_non_findings_apart(
     empty = payload(other, None, NO_CACHE)
     assert empty["screened"] == {"watch": [], "normal": []}
     assert _rendered(empty, tmp_path)["screened"]["text"].count("none in this run") == 2
+
+
+def test_a_watch_items_cached_explanation_shown(
+    con: duckdb.DuckDBPyConnection, tmp_path: Path
+) -> None:
+    """A stage-3 watch item `explain` wrote an explanation for (BR-025) shows it in the
+    stage-3 block; a non-finding has none."""
+    seed(con, SCREENED_ROWS)
+    con.execute(
+        "UPDATE statement SET source = 'expansionhunter'"
+        " WHERE statement_id LIKE 'expansionhunter:%'"
+    )
+    (watch,) = watch_items(con, RUN)
+    cache = tmp_path / "explanations"
+
+    def ask(prompt: str) -> str:
+        answer = {"title": "Пограничный размер.", "text": "Не норма и не находка.",
+                  "cites": [watch["id"]]}  # fmt: skip
+        return json.dumps(answer, ensure_ascii=False)
+
+    assert explain([watch], None, cache, ask, lang="ru")["written"] == 1
+    data = payload(con, None, cache, None, lang="ru")
+    (listed,) = data["screened"]["watch"]
+    assert listed["explanation"]["text"] == "Не норма и не находка."
+    assert all("explanation" not in x for x in data["screened"]["normal"])
+    shown = _rendered(data, tmp_path)["screened"]["text"]
+    assert "Не норма и не находка." in shown
+    assert payload(con, None, NO_CACHE)["screened"]["watch"][0]["explanation"] is None
 
 
 def test_excluded_empty_run(con: duckdb.DuckDBPyConnection, tmp_path: Path) -> None:

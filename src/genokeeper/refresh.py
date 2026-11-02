@@ -58,11 +58,11 @@ from genokeeper.evidence.publications import (
     litvar_pmids,
 )
 from genokeeper.explain import (
-    LOOSEST,
     ExplainError,
     claude_ask,
     explain,
     newest_medlineplus,
+    to_explain,
 )
 from genokeeper.history import Snapshot
 from genokeeper.identity import analyser_identity
@@ -78,7 +78,7 @@ from genokeeper.pipeline import (
     open_faf_table,
     run_genome,
 )
-from genokeeper.query import Filters, open_store, query
+from genokeeper.query import Filters, open_store
 from genokeeper.refresh_log import RefreshRecord, SourceOutcome, SourceStatus
 from genokeeper.store.db import Kind
 
@@ -652,10 +652,10 @@ def _command(args: argparse.Namespace) -> int:
             raise
 
     def explain_run(run_id: str) -> None:
-        # As `genokeeper explain` does: only findings without a cached answer are asked, in
-        # the language `$GENOKEEPER_LANG` chooses.
+        # As `genokeeper explain` does: only findings and stage-3 watch items without a
+        # cached answer are asked, in the language `$GENOKEEPER_LANG` chooses.
         with open_store(paths.reports / STORE_NAME) as con:
-            findings = query(con, run_id, LOOSEST).findings
+            findings = to_explain(con, run_id)
         medlineplus = newest_medlineplus(paths.lab)
         if medlineplus is None:
             raise FileNotFoundError(

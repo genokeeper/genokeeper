@@ -19,7 +19,6 @@ from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -939,7 +938,10 @@ def test_a_failed_explain_call_fails_the_explain_step(
     monkeypatch.setattr(refresh, "refresh", fake)
     monkeypatch.setattr(refresh, "load_paths", lambda: lab.paths)
     monkeypatch.setattr(refresh, "open_store", store)
-    monkeypatch.setattr(refresh, "query", lambda *_: SimpleNamespace(findings=[]))
+    # The step asks for what `genokeeper explain` asks for (`to_explain`: the findings and
+    # the stage-3 watch items, BR-025).
+    runs: list[str] = []
+    monkeypatch.setattr(refresh, "to_explain", lambda _con, run: runs.append(run) or [])
     monkeypatch.setattr(refresh, "newest_medlineplus", lambda _: object())
     langs: list[str] = []
 
@@ -957,6 +959,7 @@ def test_a_failed_explain_call_fails_the_explain_step(
     with pytest.raises(ExplainError):
         seen["explain"]("run-1")
     assert langs == ["en", "ru"]
+    assert runs == ["run-1", "run-1"]
 
 
 def test_command_announces_each_fetch_and_a_refused_run(

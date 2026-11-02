@@ -963,3 +963,62 @@ def test_parse_drops_one_json_fence() -> None:
     answer = {"title": "Заголовок", "text": "Текст.", "cites": ["clinvar:1"]}
     fenced = f"```json\n{json.dumps(answer, ensure_ascii=False)}\n```\n"
     assert parse(fenced, ALLOWED) == Explanation(model=MODEL, **answer)
+
+
+WATCH_REASON = "screening result, needs confirmation: borderline, indeterminate"
+STAGE3_ROWS = [
+    Row(
+        "expansionhunter:HTT",
+        kind="watch",
+        gene="HTT",
+        level=None,
+        claim={"schema": "genomelab.claim/1", "type": "repeat_expansion"},
+        reason=WATCH_REASON,
+        gene_call={"diplotype": "CAG 17/25", "phenotype": "borderline"},
+    ),
+    Row(
+        "expansionhunter:DMPK",
+        kind="non_finding",
+        gene="DMPK",
+        level=None,
+        claim={"schema": "genomelab.claim/1", "type": "repeat_expansion"},
+    ),
+]
+
+
+def test_explain_asks_for_a_stage3_watch_item_as_a_watch_item(
+    store: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A stage-3 watch item reaches neither the feed nor `query`'s findings, so `explain`
+    asks for it apart, told it is a watch item, never a finding; a stage-3 non-finding is
+    not asked for (its call and stored reason say it), nor is another source's watch."""
+    with connect(store) as con:
+        seed(con, STAGE3_ROWS)
+        seed(con, [Row("clinvar:3", kind="watch", gene="TTN", pos=1003)])
+        con.execute(
+            "UPDATE statement SET source = 'expansionhunter'"
+            " WHERE statement_id LIKE 'expansionhunter:%'"
+        )
+    lab = _lab(tmp_path, monkeypatch)
+    _medlineplus(lab / "medlineplus" / "20261020" / MEDLINEPLUS_FILE)
+    sent = Recorder()
+    monkeypatch.setattr(explainer, "claude_ask", sent)
+    command = ["explain", "--db", str(store), "--cache", str(tmp_path / "e")]
+    assert main(command) == 0
+    capsys.readouterr()
+    asked = {_document(p)["finding"]["id"]: p for p in sent.prompts}
+    assert set(asked) == {
+        "clinvar:1",
+        "clinvar:2",
+        "pharmcat:CYP2D6",
+        "expansionhunter:HTT",
+    }
+    watch = asked["expansionhunter:HTT"]
+    assert explainer.WATCH_NOTE in watch
+    assert watch.index(explainer.WATCH_NOTE) < watch.index(
+        "The finding and its sources:"
+    )
+    assert all(explainer.WATCH_NOTE not in p for i, p in asked.items() if p != watch)

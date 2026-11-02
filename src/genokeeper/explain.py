@@ -19,6 +19,11 @@ stdin after the process started, so no text in it can change the argv or the env
 `parse` keeps an answer only when it is the JSON object asked for and cites at least one
 id, each among the prompt's sources: it stops an answer citing nothing or an id it was not
 given, not an ungrounded one, as the finding's own id is always among them.
+
+A stage-3 watch item (`watch_items`: a borderline or intermediate repeat, an SMN1
+silent-carrier marker) is no finding, so `query` never returns it; it is asked for apart,
+its instructions carrying `WATCH_NOTE` (BR-025), which a finding's never do, so no finding's
+key moves. A stage-3 non-finding is not explained: its call and stored reason say it.
 """
 
 import argparse
@@ -35,6 +40,9 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import duckdb
+
+from genokeeper.carrier import STAGE3_SOURCES
 from genokeeper.config import load_paths
 from genokeeper.evidence.medlineplus import (
     MEDLINEPLUS_FILE,
@@ -47,10 +55,12 @@ from genokeeper.query import (
     HAPLOID_DOSAGE_NOTE,
     Filters,
     RunNotFound,
+    _finding,
+    _select,
     open_store,
     query,
 )
-from genokeeper.store.db import Level, Validity
+from genokeeper.store.db import Kind, Level, Validity
 
 if TYPE_CHECKING:
     from genokeeper.cli import Subparsers
@@ -126,6 +136,14 @@ The finding and its sources:
 """
 
 _INSTRUCTIONS: dict[Language, str] = {"en": _ENGLISH, "ru": _RUSSIAN}
+# Both languages' instructions end with this line; a watch item's add `WATCH_NOTE` before it.
+_FACTS_HEAD = "\nThe finding and its sources:\n"
+WATCH_NOTE = """\
+- This one is not a finding but a watch item: a screening result that is neither normal nor
+  a finding and needs confirmation, as its validity reason says. Say what its result may
+  mean and that it is not settled; never word it as a finding, an expansion, carrier status
+  or a diagnosis.
+"""
 
 type Ask = Callable[[str], str]
 
@@ -226,7 +244,31 @@ def prompt(
     }
     # Sorted keys: the order a stored object comes back in never changes the key.
     facts_json = json.dumps(document, ensure_ascii=False, indent=2, sort_keys=True)
-    return _INSTRUCTIONS[lang] + facts_json + "\n"
+    instructions = _INSTRUCTIONS[lang]
+    if finding["kind"] == Kind.WATCH:
+        instructions = instructions.replace(_FACTS_HEAD, WATCH_NOTE + _FACTS_HEAD)
+    return instructions + facts_json + "\n"
+
+
+def watch_items(con: duckdb.DuckDBPyConnection, run_id: str) -> list[dict[str, Any]]:
+    """The run's stage-3 gene-level watch items (`carrier.STAGE3_SOURCES`), in `query`'s
+    finding shape, by gene then id."""
+    marks = ", ".join("?" * len(STAGE3_SOURCES))
+    rows = con.execute(
+        f"{_select([Kind.WATCH])} WHERE f.run_id = ? AND f.vid IS NULL"
+        f" AND f.source IN ({marks}) ORDER BY f.gene, f.statement_id",
+        [run_id, *STAGE3_SOURCES],
+    ).fetchall()
+    return [_finding(row) for row in rows]
+
+
+def to_explain(
+    con: duckdb.DuckDBPyConnection, run_id: str | None
+) -> list[dict[str, Any]]:
+    """What `explain` asks for in `run_id` (None: the latest run): every finding at the
+    loosest filters, then the stage-3 watch items (`watch_items`). Raises `RunNotFound`."""
+    result = query(con, run_id, LOOSEST)
+    return result.findings + watch_items(con, result.run_id)
 
 
 def cache_key(prompt: str) -> str:
@@ -432,7 +474,7 @@ def _refuse(message: str) -> int:
 def _explain_command(args: argparse.Namespace) -> int:
     try:
         with open_store(args.db) as con:
-            findings = query(con, args.run, LOOSEST).findings
+            findings = to_explain(con, args.run)
     except RunNotFound as e:
         return _refuse(str(e))
     lab = load_paths().lab

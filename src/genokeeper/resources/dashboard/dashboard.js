@@ -322,7 +322,13 @@ function renderScreened() {
   box.replaceChildren();
   for (const [kind, heading] of [["watch", "screened_watch"], ["normal", "screened_normal"]]) {
     const list = el("ul");
-    for (const x of data.screened[kind]) list.append(el("li", "", x.wording === null ? x.label : t("screened_item", x)));
+    for (const x of data.screened[kind]) {
+      const item = el("li", "", x.wording === null ? x.label : t("screened_item", x));
+      // A watch item's explanation, written as one (`genokeeper.explain.WATCH_NOTE`).
+      const e = x.explanation;
+      if (e) item.append(el("div", "", e.text), el("span", "note", t("written_by", { model: e.model, cites: e.cites.join(", ") })));
+      list.append(item);
+    }
     if (!data.screened[kind].length) list.append(el("li", "", t("none_in_run")));
     box.append(el("b", "", t(heading)), list);
   }

@@ -57,7 +57,7 @@ from genokeeper.carrier import (
 )
 from genokeeper.config import Paths, load_paths
 from genokeeper.evidence.medlineplus import MEDLINEPLUS_FILE, MedlinePlus
-from genokeeper.explain import LOOSEST, lookup, newest_medlineplus
+from genokeeper.explain import LOOSEST, lookup, newest_medlineplus, watch_items
 from genokeeper.history import Change, ChangeKind, Dates, Snapshot
 from genokeeper.lang import LANGUAGES, Language, language
 from genokeeper.query import (
@@ -309,7 +309,7 @@ def _excluded(con: duckdb.DuckDBPyConnection, run_id: str) -> list[dict[str, str
 
 def _screened(
     con: duckdb.DuckDBPyConnection, run_id: str
-) -> dict[str, list[dict[str, str | None]]]:
+) -> dict[str, list[dict[str, Any]]]:
     """The run's stage-3 gene-level watch items (`watch`) and non-findings (`normal`) not
     flagged `exclusion`, each by gene then id: its gene with its gene call's diplotype
     (`label`) and its stored reason (`wording`, or null). Not a gene call's phenotype, which
@@ -332,7 +332,7 @@ def _screened(
             CFTR_REPEAT_ID,
         ],
     ).fetchall()
-    found: dict[str, list[dict[str, str | None]]] = {"watch": [], "normal": []}
+    found: dict[str, list[dict[str, Any]]] = {"watch": [], "normal": []}
     for sid, kind, gene, diplotype, wording in rows:
         # SMN's and a paralog's diplotype names its gene already ("SMN1 2, SMN2 2").
         label = (
@@ -363,7 +363,7 @@ def payload(
     reliability, validity and topic (or none) combination;
     and `changes`, the Changes tab's, from `reports/snapshots` and the refresh log in
     `lab` (without `reports`, no comparison); `excluded`, the run's exclusions; `screened`,
-    its other stage-3 watch items and non-findings."""
+    its other stage-3 watch items, each with its explanation or null, and non-findings."""
     dates = history.dates(reports / "snapshots", run_id) if reports is not None else {}
     loosest = query(con, run_id, LOOSEST, dates=dates if reports is not None else None)
 
@@ -394,6 +394,12 @@ def payload(
         }
     text = messages(lang)
     listed, mechanisms = text.pop("carrier_not_covered"), text.pop("carrier_mechanisms")
+    # A watch item carries the explanation `explain` wrote for it (BR-025), or null.
+    screened = _screened(con, loosest.run_id)
+    watch = {w["id"]: w for w in watch_items(con, loosest.run_id)}
+    for item in screened["watch"]:
+        found = lookup(watch[item["id"]], medlineplus, cache_dir, lang=lang)
+        item["explanation"] = None if found is None else asdict(found)
     return {
         "lang": lang,
         "messages": text,
@@ -405,7 +411,7 @@ def payload(
         "changes": _changes(reports, lab, loosest.run_id, dates),
         "not_covered": _not_covered(con, loosest.run_id, listed, mechanisms),
         "excluded": _excluded(con, loosest.run_id),
-        "screened": _screened(con, loosest.run_id),
+        "screened": screened,
     }
 
 

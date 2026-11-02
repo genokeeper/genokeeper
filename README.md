@@ -296,7 +296,7 @@ network off: `genokeeper run`, `query`, `show`, `genotype`, `changes` and `dashb
 | `bash scripts/bootstrap.sh` | the download hosts of the tools and references ("Building the store") | requests for public files, each checked by its checksum; Homebrew runs with `HOMEBREW_NO_ANALYTICS=1`, and rtg-tools runs with crash reports and usage logging off |
 | `genokeeper refresh` | the same public release hosts | requests for public files |
 | `genokeeper check-updates`, and the daily check if you install it (`genokeeper schedule install`) | the release endpoints of ClinVar, ClinGen, GenCC, ClinPGx, the GWAS Catalog, MedlinePlus, LitVar, CGD, the PGS Catalog, gnomAD and CSpec, and GitHub's release API | version requests, with no sample, run or user identifier |
-| `genokeeper explain` or `genokeeper refresh --explain` (opt-in) | Anthropic, through your own Claude Code login | for each finding not yet explained: its gene, variant, your genotype and the claim ("Dashboard and explanations"; `--dry-run` prints every prompt first) |
+| `genokeeper explain` or `genokeeper refresh --explain` (opt-in) | Anthropic, through your own Claude Code login | for each finding, and each stage-3 watch item, not yet explained: its gene, variant, your genotype and the claim ("Dashboard and explanations"; `--dry-run` prints every prompt first) |
 | the `genome-ask` skill, if you ask questions through Claude Code (opt-in) | Anthropic, through your own Claude Code session | the `genokeeper query`, `show`, `genotype` and `changes` answers the agent reads in order to answer you |
 
 Nothing in the table runs on its own except the daily check, which you install yourself. The
@@ -751,7 +751,9 @@ classification, id or drug names (what `genokeeper query --text` searches), or w
 explanation, contain the typed text, ignoring case and reading `_` as a space.
 
 `genokeeper explain` writes, per finding, a short Russian "what it means" and a plain
-headline, which leads the finding's row on the page above the source's own words, with
+headline, which leads the finding's row on the page above the source's own words; a stage-3
+watch item (a borderline or intermediate repeat, an SMN1 silent-carrier marker) gets one too,
+asked as a watch item and never as a finding, and shown in the page's stage-3 list. It runs
 headless Claude Code (`claude -p`, model `claude-opus-5-5`, no tools, no MCP servers, no
 settings). **`explain` and `refresh --explain` are the commands that send finding data off
 the machine**; a `refresh` without the flag sends nothing, and its new findings show without
