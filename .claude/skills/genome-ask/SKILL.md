@@ -1258,10 +1258,11 @@ unassessed "not calibrated", never normal; a tool that failed leaves it unassess
   (`bloodgroup:HPA`, `not covered: RBCeq2 2.4.4's platelet-antigen positions are GRCh37
   coordinates in its GRCh38 table`). Never give a phenotype for a system not covered. A FUT2
   typed with a phenotype (secretor status) adds `the secretor-status trait reads rs601338
-  alone; where they differ, this blood group is the fuller reading`. FUT1's Se part and
-  FUT3's Lewis type come from FUT2's typing (RBCeq2 builds them from FUT2's alleles), and
-  FUT2's genotype carries FUT1's alleles: a no-call at a FUT2 position leaves FUT1, FUT2 and
-  FUT3 unassessed, one at a FUT1 position FUT1 and FUT2, the reason naming the other system.
+  alone; where they differ, this blood group is the fuller reading`. FUT1's Se part and an
+  active FUT3's Lewis type come from FUT2's typing (RBCeq2 builds them from FUT2's alleles),
+  and FUT2's genotype carries FUT1's alleles: when FUT2 is unknown (a no-call at one of its
+  positions, withheld, or not called) FUT1 and FUT3 are unassessed too, even a null FUT3,
+  and when FUT1 is unknown so is FUT2, each reason naming the other system.
 - **Ancestry** (ancestry, validity limited, information). `ancestry:similarity` is
   `similarity to the HGDP+1kGP populations, not ancestry proportions`;
   `ancestry:admixture` is proportions against the panel's superpopulations (country-level

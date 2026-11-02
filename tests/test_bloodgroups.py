@@ -578,3 +578,41 @@ def test_calibration_reads_the_same_dependencies(tmp_path: Path) -> None:
     fut1_hole = build._systems(calls, {"FUT1": (FUT1_POS,)})
     assert [fut1_hole[s] for s in ("FUT1", "FUT2")] == [None, None]
     assert fut1_hole["FUT3"] == calls["FUT3"]
+
+
+def test_a_system_read_through_an_unknown_one_is_unassessed(tmp_path: Path) -> None:
+    """BR-029: a system is unassessed whenever a system RBCeq2 builds it from is unknown for
+    any reason: withheld by the calibration, or not called by RBCeq2 (no-calls above),
+    the reason naming that system; FUT3 reads no FUT1."""
+    calls = read_rbceq2(_hg002_out(tmp_path))
+    withheld = _statements(
+        tmp_path,
+        BloodGroupSource(
+            calls=calls, not_run=None, withheld={"FUT2": "not covered: x"}, uncovered={}
+        ),
+    )
+    for system in ("FUT1", "FUT3"):
+        s = withheld[f"bloodgroup:{system}"]
+        assert (s["kind"], s["reason"]) == (
+            "unassessed",
+            f"not covered: x (FUT2, which RBCeq2 reads for {system})",
+        )
+    fut1_withheld = _statements(
+        tmp_path,
+        BloodGroupSource(
+            calls=calls, not_run=None, withheld={"FUT1": "not covered: y"}, uncovered={}
+        ),
+    )
+    assert fut1_withheld["bloodgroup:FUT2"]["reason"] == (
+        "not covered: y (FUT1, which RBCeq2 reads for FUT2)"
+    )
+    assert fut1_withheld["bloodgroup:FUT3"]["kind"] == "finding"
+    uncalled = {**calls, "FUT2": SystemCall(None, None)}
+    s = _statements(
+        tmp_path,
+        BloodGroupSource(calls=uncalled, not_run=None, withheld={}, uncovered={}),
+    )["bloodgroup:FUT3"]
+    assert (s["kind"], s["reason"]) == (
+        "unassessed",
+        "RBCeq2 made no call (FUT2, which RBCeq2 reads for FUT3)",
+    )

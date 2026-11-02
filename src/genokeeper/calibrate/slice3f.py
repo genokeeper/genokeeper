@@ -78,7 +78,7 @@ SLICE3F_IMAGES = (
     "truvari",
 )
 # Bump when a measure's arithmetic changes: a table measured by other code is stale.
-MEASURE_VERSION = "1"
+MEASURE_VERSION = "2"
 NAME = "slice3f"
 TABLE = "table.json"
 FORMAT = 1

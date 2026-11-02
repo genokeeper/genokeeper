@@ -484,13 +484,17 @@ def test_skill_covers_the_traits() -> None:
 
 
 def test_skill_says_fut1_and_fut3_come_from_fut2() -> None:
-    """BR-029: the Blood groups bullet says FUT1's Se part and FUT3's Lewis type come from
-    FUT2's typing, for each system `bloodgroups.DEPENDS` couples."""
+    """BR-029: the Blood groups bullet says FUT1's Se part and an active FUT3's Lewis type
+    come from FUT2's typing, for each system `bloodgroups.DEPENDS` couples."""
     section = _section_named(
         SKILL.read_text(), "## Slice 3f: typing, mitochondria and what remains"
     )
     blood = section.split("- **Blood groups**")[1].split("- **")[0]
-    assert "FUT1's Se part and FUT3's Lewis type come from FUT2's typing" in blood
+    assert (
+        "FUT1's Se part and an active FUT3's Lewis type come from FUT2's typing"
+        in blood
+    )
+    assert "FUT1 and FUT3 are unassessed too" in blood
     assert "FUT2's genotype carries FUT1's alleles" in blood
     assert set(DEPENDS) == {"FUT1", "FUT2", "FUT3"}
 

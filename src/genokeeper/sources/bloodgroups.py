@@ -9,7 +9,8 @@ one statement `bloodgroup:<system>` per system of the packaged positions
 - `not_run` (no table, a failed step), `withheld[system]` (the calibration's reason) and `uncovered[system]` (R10: a no-call among its written positions, which RBCeq2
   would read as the reference; with BR-029, also among the positions of a system RBCeq2
   builds it from, `bloodgroups.holes`, named in the reason) make a system unassessed, as
-  does no call from RBCeq2.
+  does no call from RBCeq2, and so does a system it is built from (`bloodgroups.DEPENDS`)
+  that is withheld or not called, named in the reason.
 - A FUT2 typed with a phenotype adds `SECRETOR_TRAIT` (BR-026): the secretor-status trait
   (`trait:FUT2`) reads one of its alleles, and where the two differ this typing is the
   fuller reading; an unassessed FUT2, or one with no phenotype, does not say it.
@@ -27,6 +28,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 from genokeeper.bloodgroups import (
+    DEPENDS,
     MNS_GENES,
     SOURCE_VERSION,
     SystemCall,
@@ -108,6 +110,13 @@ class BloodGroupSource:
         call = self.calls.get(system)
         if call is None or call.genotype is None:
             return Kind.UNASSESSED, NO_CALL, None
+        for other in DEPENDS.get(system, ()):
+            if (why := self._unknown(other)) is not None:
+                return (
+                    Kind.UNASSESSED,
+                    f"{why} ({other}, which RBCeq2 reads for {system})",
+                    None,
+                )
         typed = system == "FUT2" and call.phenotype is not None
         secretor = [SECRETOR_TRAIT] if typed else []
         return (
@@ -115,6 +124,14 @@ class BloodGroupSource:
             "; ".join([NOT_CLINICAL, INFORMATION_NOTE, *secretor]),
             call,
         )
+
+    def _unknown(self, system: str) -> str | None:
+        """Why `system`'s own call is unknown to a system read through it (BR-029): withheld,
+        or not called by RBCeq2; its no-calls are `holes`'."""
+        if system in self.withheld:
+            return self.withheld[system]
+        call = (self.calls or {}).get(system)
+        return NO_CALL if call is None or call.genotype is None else None
 
     def _noted(self, system: str) -> tuple[Kind, str, SystemCall | None]:
         kind, reason, call = self._kind(system)
