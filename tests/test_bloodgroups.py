@@ -6,6 +6,7 @@ ABO `ABO*O.01.01/ABO*O.01.01`. Their index header `UUID: <uuid>` changes per run
 
 import json
 import shutil
+from dataclasses import replace
 from pathlib import Path
 
 import pysam
@@ -23,9 +24,11 @@ from genokeeper.bloodgroups import (
     read_rbceq2,
     uncovered,
 )
-from genokeeper.genotype.gvcf import NOCALL_REASON, Called, calls_at
+from genokeeper.genotype.gvcf import NOCALL_REASON, Allele, Called, calls_at
+from genokeeper.genotype.reliability import Reliability
 from genokeeper.pgx.pharmcat import write_pharmcat_vcf
-from genokeeper.sources import INFORMATION_NOTE
+from genokeeper.query import Filters, query
+from genokeeper.sources import INFORMATION_NOTE, write_collected
 from genokeeper.sources.bloodgroups import (
     BLOODGROUP_TOOL,
     HPA_REASON,
@@ -34,12 +37,15 @@ from genokeeper.sources.bloodgroups import (
     RH_REASON,
     BloodGroupSource,
 )
-from genokeeper.store.db import Level, RowType
+from genokeeper.sources.traits import TraitSource
+from genokeeper.store.db import Level, RowType, connect, start_run, transaction
+from genokeeper.store.writer import StoreWriter
 
 HG002 = Path(__file__).parent / "fixtures" / "hg002"
 # ABO c.261delG: the GRCh38 reference holds the O allele's deletion, so A and B alleles are
 # the insertion at chr9:133257521 (db.tsv `133257521_T_TC`); ABO*O.01.01 is `133257521_ref`.
 ABO_261 = ("chr9", 133257521, "T", "TC")
+FUT2: Allele = ("chr19", 48703417, "G", "A")  # rs601338, the secretor trait's site
 
 
 def _called(dosage: str, *, haploid: bool = False) -> Called:
@@ -438,3 +444,61 @@ def test_reference_only_positions_through_the_call_layer(tmp_path: Path) -> None
         ("45", "A", ".", "./."),
     ]
     assert uncovered(vcf, positions) == {"KEL": (45,)}
+
+
+def test_fut2_finding_names_the_secretor_trait(tmp_path: Path) -> None:
+    """BR-026: a typed FUT2 says, in words, that the secretor-status trait reads rs601338
+    alone and that this typing is the fuller reading; no other system says it, and an
+    unassessed FUT2 keeps its reason alone, so it never reads as overriding."""
+    calls = read_rbceq2(_hg002_out(tmp_path))
+    typed = _statements(
+        tmp_path, BloodGroupSource(calls=calls, not_run=None, withheld={}, uncovered={})
+    )
+    assert typed["bloodgroup:FUT2"]["reason"] == (
+        f"{NOT_CLINICAL}; {INFORMATION_NOTE}; the secretor-status trait reads rs601338"
+        " alone; where they differ, this blood group is the fuller reading"
+    )
+    assert all(
+        "secretor" not in str(s["reason"])
+        for sid, s in typed.items()
+        if sid != "bloodgroup:FUT2"
+    )
+    for source in (
+        BloodGroupSource(
+            calls=None, not_run="not calibrated", withheld={}, uncovered={}
+        ),
+        BloodGroupSource(
+            calls=calls, not_run=None, withheld={}, uncovered={"FUT2": (48703417,)}
+        ),
+    ):
+        unassessed = _statements(tmp_path, source)["bloodgroup:FUT2"]
+        assert unassessed["kind"] == "unassessed"
+        assert "secretor" not in str(unassessed["reason"])
+
+
+def test_default_view_shows_the_secretor_trait_alone(tmp_path: Path) -> None:
+    """BR-026: the default query (the dashboard's default view) shows the FUT2 trait and
+    never the FUT2 blood group (validity limited), typed or not calibrated."""
+    reliable = Reliability(p_wrong=1e-6, level=Level.HIGH, flags=(), warnings=())
+    het = Called("0/1", "1", RowType.PASS, 40, 30, None, None, ())
+    traits = TraitSource(graded={FUT2: (het, reliable)})
+    calls = read_rbceq2(_hg002_out(tmp_path))
+    for n, blood in enumerate(
+        (
+            BloodGroupSource(calls=calls, not_run=None, withheld={}, uncovered={}),
+            BloodGroupSource(
+                calls=None, not_run="not calibrated", withheld={}, uncovered={}
+            ),
+        )
+    ):
+        con = connect(tmp_path / f"s{n}.duckdb")
+        run_id = start_run(con, {}, {})
+        ctx = replace(run_context(tmp_path), run_id=run_id)
+        with transaction(con):
+            writer = StoreWriter(con, tmp_path / f"w{n}")
+            write_collected(
+                writer, con, run_id, [traits.collect(ctx), blood.collect(ctx)]
+            )
+        shown = {f["id"] for f in query(con, run_id, Filters()).to_json()["findings"]}
+        assert "trait:FUT2" in shown
+        assert not any(sid.startswith("bloodgroup:") for sid in shown)

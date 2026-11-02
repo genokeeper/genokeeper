@@ -66,7 +66,9 @@ MC1R_WEAK = (V60L, V92M, R163Q)
 NEW_TRAITS = ("FUT2", "ABCC11", "MC1R", "HERC2", "AMPD1", "CCR5")
 CAVEATS = {
     "FUT2": "the common European and African null allele only; the rule does not hold in"
-    " East Asian ancestry",
+    " East Asian ancestry; the FUT2 blood group reads more FUT2 alleles: when it gives a"
+    " phenotype (not when it reads unassessed or not calibrated) and the two differ, it is"
+    " the fuller reading",
     "ABCC11": "one SNP decides earwax type; odour is only a tendency",
     "MC1R": "hair colour depends on other genes too; many people with two variants are"
     " blond or light brown; melanoma risk is in its polygenic score",

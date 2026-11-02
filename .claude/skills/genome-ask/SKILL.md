@@ -1226,7 +1226,9 @@ unassessed "not calibrated", never normal; a tool that failed leaves it unassess
   Not covered, each its own unassessed statement: RhD and RHCE (`bloodgroup:RH`, copy
   number), MNS (`bloodgroup:MNS`, GYPA/GYPB hybrid genes) and the platelet antigens
   (`bloodgroup:HPA`, `not covered: RBCeq2 2.4.4's platelet-antigen positions are GRCh37
-  coordinates in its GRCh38 table`). Never give a phenotype for a system not covered.
+  coordinates in its GRCh38 table`). Never give a phenotype for a system not covered. A
+  typed FUT2 (secretor status) adds `the secretor-status trait reads rs601338 alone; where
+  they differ, this blood group is the fuller reading`.
 - **Ancestry** (ancestry, validity limited, information). `ancestry:similarity` is
   `similarity to the HGDP+1kGP populations, not ancestry proportions`;
   `ancestry:admixture` is proportions against the panel's superpopulations (country-level
@@ -1242,14 +1244,18 @@ unassessed "not calibrated", never normal; a tool that failed leaves it unassess
   colour (rs12913832), AMPD1 Q12X (rs17602729) and CCR5Δ32 (rs333). Each is the
   literature's expectation for the genotype, not a certainty or a diagnosis; quote its
   stored wording and caveat as they are: FUT2 `the common European and African null allele
-  only; the rule does not hold in East Asian ancestry`; ABCC11
+  only; the rule does not hold in East Asian ancestry; the FUT2 blood group reads more FUT2
+  alleles: when it gives a phenotype (not when it reads unassessed or not calibrated) and
+  the two differ, it is the fuller reading`; ABCC11
   `one SNP decides earwax type; odour is only a tendency`; MC1R `hair colour depends on
   other genes too; many people with two variants are blond or light brown; melanoma risk
   is in its polygenic score`; HERC2 `one SNP, for European
   ancestry; it cannot tell green from hazel`; AMPD1 `a common, mostly harmless variant; it
   predicts neither sports ability nor muscle disease`; CCR5 `not protection against HIV in
   general and no substitute for prevention`. The phenotype is the literature's, not
-  checked here.
+  checked here. BR-026: answer secretor status from
+  `bloodgroup:FUT2` when it is a finding, otherwise from `trait:FUT2`, and say which one
+  answered; when both are findings and differ, give the blood group's and name the trait's.
 - **Pharmacogenomics.** `pharmcat:G6PD-gap` is always unassessed: `not covered: PharmCAT
   does not call the G6PD Mediterranean haplotype or Villeurbanne`, so a normal G6PD result
   does not exclude them. UGT1A1\*28 is read only when the calibration trusts it; otherwise

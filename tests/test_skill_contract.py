@@ -50,7 +50,7 @@ from genokeeper.roh import RohSummary, Run
 from genokeeper.sex import Dosage
 from genokeeper.smn import ParascopyCall, SmnCaller
 from genokeeper.sources.ancestry import AncestrySource
-from genokeeper.sources.bloodgroups import BloodGroupSource
+from genokeeper.sources.bloodgroups import SECRETOR_TRAIT, BloodGroupSource
 from genokeeper.sources.dosage import STATEMENT_ID as DOSAGE_STATEMENT
 from genokeeper.sources.dosage import DosageSource
 from genokeeper.sources.hhv6 import Hhv6Source
@@ -481,6 +481,21 @@ def test_skill_covers_the_traits() -> None:
     bullet = section.split("- **Traits**")[1].split("- **")[0]
     for name in ("FUT2", "ABCC11", "MC1R", "HERC2", "AMPD1", "CCR5"):
         assert f"`{traits[name].note}`" in bullet, name
+
+
+def test_skill_answers_secretor_status_from_one_statement() -> None:
+    """BR-026: secretor status is answered from `bloodgroup:FUT2` when it is a finding,
+    otherwise from `trait:FUT2`; the Blood groups bullet quotes FUT2's stored note."""
+    section = _section_named(
+        SKILL.read_text(), "## Slice 3f: typing, mitochondria and what remains"
+    )
+    blood = section.split("- **Blood groups**")[1].split("- **")[0]
+    assert f"`{SECRETOR_TRAIT}`" in blood
+    traits = section.split("- **Traits**")[1].split("- **")[0]
+    assert (
+        "answer secretor status from `bloodgroup:FUT2` when it is a finding, otherwise"
+        " from `trait:FUT2`"
+    ) in traits
 
 
 def _section_named(text: str, heading: str) -> str:
