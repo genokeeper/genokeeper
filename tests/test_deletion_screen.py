@@ -3,6 +3,7 @@ on targets, regions and deletions built by hand."""
 
 import random
 from collections.abc import Mapping, Sequence
+from dataclasses import replace
 
 import pytest
 
@@ -15,6 +16,7 @@ from genokeeper.deletions.screen import (
     SAME_POSITION,
     SHORT,
     SHORT_DEPTH,
+    UNSIZED,
     CallClass,
     Deletion,
     PopulationSv,
@@ -388,6 +390,25 @@ def test_warnings_per_callers() -> None:
         "found by one caller (DELLY)",
         "read depth does not support it",
     ]
+
+
+def test_unsized_insertion_has_a_band_of_its_own() -> None:
+    """An INSurVeyor insertion whose length is unknown (no `SVLEN`, no assembled part) is
+    not banded by `end - pos`: it takes `unsized`, a band the insertion calibration never
+    measures (its union keeps calls of `min_length` or more), so the run withholds its rate.
+    A Dysgu insertion whose length is a bound keeps its length's band, as the calibration
+    measures it."""
+    s = _ins_screen()
+    unsized = Deletion(
+        "chr17", 1000, 1001, "A", "0/1", {"insurveyor": "A_INS_1 QUAL ."}, None,
+        svtype="INS", lower_bound=True,
+    )  # fmt: skip
+    assert screen(unsized, s) == ({"GENEA": (1,)}, None)
+    assert classify(unsized, s).band == UNSIZED
+    labelled = replace(unsized, callers={**unsized.callers, "scramble": "alu"})
+    assert classify(labelled, s).band == UNSIZED
+    bound = replace(unsized, callers={"dysgu": "1 QUAL 9"}, svlen=300)
+    assert classify(bound, s).band == "short"
 
 
 def test_classify_generic_callers() -> None:

@@ -42,6 +42,10 @@ CALLER_NAMES = {
 # depth should move and does not; under `long_from` a deletion often moves it too little.
 NO_DEPTH = "read depth does not support it"
 SHORT_DEPTH = "read depth does not show it, which a deletion this short often cannot"
+# The band of an insertion whose length is unknown (an INSurVeyor record with neither `SVLEN`
+# nor an assembled part): no table measures it, so the run withholds its rate rather than
+# band it by `end - pos` as one base long.
+UNSIZED = "unsized"
 # Callers that label a call rather than find one (slice 3d: Scramble names a mobile
 # element's family, the plan's "Insertion class features"): beside the screen's callers they
 # change no class; alone they make the `mei` band, evidence the caller.
@@ -216,7 +220,7 @@ def classify(d: Deletion, s: Screen) -> CallClass:
     """The deletion's class; an end base is its first deleted base or its last. Its
     evidence is `both` when both of `s.callers` called it, else the one caller's name, and
     `+depth` where DELLY called it and its depth ratio supports it; `LABELS` callers count
-    only alone (band `mei`, evidence that caller)."""
+    only alone (band `mei`, evidence that caller); a call of unknown length is `UNSIZED`."""
     t = s.thresholds
     ends = (d.pos, d.end - 1)
     masked = any(s._mask.covers(d.chrom, b) for b in ends)
@@ -225,6 +229,8 @@ def classify(d: Deletion, s: Screen) -> CallClass:
     if not callers and len(named) == 1:
         return CallClass(band="mei", evidence=named.pop(), repeat=False, masked=masked)
     band = "long" if d.length >= t.long_from else "short"
+    if d.svlen is None and d.lower_bound:
+        band = UNSIZED
     if callers == pair:
         evidence = "both"
     elif len(callers) == 1 and callers <= pair:

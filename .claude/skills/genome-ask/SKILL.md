@@ -1048,7 +1048,9 @@ carrier gate. The statements:
   under risks only in a triplosensitive gene, else a non-finding `no known effect of an
   extra copy`; a gain seen only in depth is a finding under research, `possible extra copy,
   effect unknown`. An insertion's reason names Scramble's family where it gave one
-  ("possible Alu insertion"). Their calls carry 3b's extrapolation warnings where their
+  ("possible Alu insertion"). An insertion whose length INSurVeyor could not assemble is in
+  band `unsized`, which no calibration measures: unassessed, `not calibrated: no unsized
+  calls measured`; say it was found but its chance of being false is unknown. Their calls carry 3b's extrapolation warnings where their
   own table's chance of being false is extrapolated (`no calibration call of this class…`,
   `over a target outside the benchmark…`; a gain was measured genome-wide, so never the
   second), and a gene's reason the flank line (`touches only the bases beside an exon, not
