@@ -703,7 +703,7 @@ def register(subparsers: Subparsers) -> None:
     r.add_argument(
         "--explain",
         action="store_true",
-        help="also explain new findings: sends their data to Anthropic, as `genokeeper"
-        " explain` does",
+        help="also explain new findings and stage-3 watch items: sends their data to"
+        " Anthropic, as `genokeeper explain` does",
     )
     r.set_defaults(handler=_command)

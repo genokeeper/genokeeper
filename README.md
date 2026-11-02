@@ -763,8 +763,9 @@ an explanation until one of the two runs. Each prompt carries to Anthropic one f
 (rsID, GRCh38 position); its genotype (the caller's `gt`, the allele and its dosage); its
 validity (level, the source's own level, the reason); whether it is actionable; its effect; a
 gene call's diplotype, phenotype, activity score, callers, level and warnings; the genotype
-call's reliability warnings (not `p_wrong`, GQ or flags); and on chrX, chrY and chrM a note on
-what the dosage means — and its sources, each as its id and text, with no version (the claim
+call's reliability warnings (not `p_wrong`, GQ or flags); on chrX, chrY and chrM a note on
+what the dosage means; and for a stage-3 watch item its kind (`watch`), with a note in the
+instructions that it is not a finding — and its sources, each as its id and text, with no version (the claim
 itself, from which any absolute file path is left out, and the MedlinePlus Genetics summaries
 of its gene and conditions). Nothing leaves with `explain --dry-run`, which prints those
 prompts instead. An answer is kept only when it is the JSON object asked

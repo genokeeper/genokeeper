@@ -22,8 +22,8 @@ given, not an ungrounded one, as the finding's own id is always among them.
 
 A stage-3 watch item (`watch_items`: a borderline or intermediate repeat, an SMN1
 silent-carrier marker) is no finding, so `query` never returns it; it is asked for apart,
-its instructions carrying `WATCH_NOTE` (BR-025), which a finding's never do, so no finding's
-key moves. A stage-3 non-finding is not explained: its call and stored reason say it.
+its instructions carrying `WATCH_NOTE` and its facts its `kind` (BR-025), which a finding's
+never do, so no finding's key moves. A stage-3 non-finding is not explained: its call and stored reason say it.
 """
 
 import argparse
@@ -206,7 +206,8 @@ def prompt(
 ) -> str:
     """The instructions in `lang`, then the finding's facts and the sources (each its id and
     text, not its version) as JSON. The facts keep the call's or gene call's warnings and
-    what dosage means on chrX, chrY and chrM, not `p_wrong`."""
+    what dosage means on chrX, chrY and chrM, not `p_wrong`; a watch item's add its `kind`,
+    and its instructions `WATCH_NOTE`."""
     facts = {
         key: finding[key]
         for key in (
