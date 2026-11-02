@@ -151,8 +151,10 @@ class Screen:
         )
 
     @cached_property
-    def _population(self) -> _Index[PopulationSv]:
-        return _Index((p.chrom, p.pos, p.end, p) for p in self.population)
+    def _population(self) -> _Index[tuple[int, PopulationSv]]:
+        return _Index(
+            (p.chrom, p.pos, p.end, (i, p)) for i, p in enumerate(self.population)
+        )
 
     @cached_property
     def _mask(self) -> _Index[None]:
@@ -319,8 +321,8 @@ def exon_hits(d: Deletion, s: Screen) -> dict[str, tuple[int, ...]]:
 def flank_only(d: Deletion, s: Screen) -> frozenset[str]:
     """The genes whose targets the call touches only within `exon_margin` of their ends:
     a target is its exons widened by the margin and merged where they touch, so its bases
-    past the margin at either end are exon or a gap under twice the margin, shorter than
-    any deletion the screen keeps."""
+    past the margin at either end are exon or an intron of at most twice the margin (40 bp
+    by default), shorter than any deletion the screen keeps (50 bp)."""
     m = s.thresholds.exon_margin
     hit: dict[str, bool] = {}
     for gene, t in s._targets.hits(d.chrom, d.pos, d.end):
@@ -331,7 +333,8 @@ def flank_only(d: Deletion, s: Screen) -> frozenset[str]:
 
 def population_match(d: Deletion, s: Screen) -> PopulationSv | None:
     """`common_match` with the screen's own overlap and distance, over only the records
-    that overlap the call (an insertion's, those within `max_distance`, as
+    (in the screen's order, so a tie in AF picks as the whole list would) that overlap the
+    call (an insertion's, those within `max_distance`, as
     `population_spans` pads it): the same answer as over the whole list, as
     `min_reciprocal_overlap` is above 0 (`config.load_grading` refuses another), in
     O(overlapping records) per call, for the calibration's genome-wide call sets."""
@@ -339,7 +342,7 @@ def population_match(d: Deletion, s: Screen) -> PopulationSv | None:
     ((chrom, start, end),) = population_spans([d], pad=distance)
     return common_match(
         d,
-        s._population.hits(chrom, start, end),
+        [p for _, p in sorted(s._population.hits(chrom, start, end))],
         min_overlap=s.thresholds.min_reciprocal_overlap,
         distance=distance,
     )

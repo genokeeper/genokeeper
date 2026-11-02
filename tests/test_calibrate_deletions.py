@@ -614,21 +614,29 @@ def test_deletion_steps_failure_recorded(
     assert "truvari" not in fake.runs
 
 
-@pytest.mark.parametrize("step", ["deletions_only", "match_callers"])
 @pytest.mark.parametrize(
-    "error",
-    [ToolMissing("bcftools"), OSError(28, "No space left on device"), None],
+    ("step", "tool"), [("deletions_only", "delly"), ("match_callers", "truvari")]
+)
+@pytest.mark.parametrize(
+    ("error", "said"),
+    [
+        (ToolMissing("bcftools"), "bcftools is not on PATH"),
+        (OSError(28, "No space left on device"), "No space left on device"),
+        (None, "wrote no"),
+    ],
     ids=["missing tool", "full disk", "wrote no file"],
 )
 def test_deletion_steps_failure_leaves_the_screen_unassessed(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     step: str,
+    tool: str,
     error: Exception | None,
+    said: str,
 ) -> None:
     """A missing tool, a full disk or a step that wrote no file, in a caller step or the
-    union, is a failed step, not an aborted run (`None`: the step returns an empty folder,
-    writing nothing)."""
+    union, is a failed step with its reason, not an aborted run (`None`: the step returns,
+    writing nothing, and the union's reader finds no calls)."""
     empty = tmp_path / "empty"
 
     def fail(*_: object, **__: object) -> Path:
@@ -638,8 +646,10 @@ def test_deletion_steps_failure_leaves_the_screen_unassessed(
         return empty
 
     monkeypatch.setattr(pipeline, step, fail)
+    monkeypatch.setattr(pipeline, "read_union", lambda _: [])
     results, _ = _steps(tmp_path, monkeypatch, FakeDeletions())
-    assert results.called is None and results.failed
+    assert results.called is None
+    assert said in results.failed[tool]
 
 
 def test_calibration_judges_what_the_run_does_not_drop_as_common(
@@ -812,6 +822,8 @@ def test_versions_leave_out_the_wording_rule(
     wording = replace(grading, deletions=replace(d, likely_below=0.4))
     assert deletion_versions(lab, fasta, wording) == versions
     assert "likely_below" not in versions["deletions"]
+    # A table measured before `cautions` read `extra` is stale, not read as all inside.
+    assert versions["extra"] == OUTSIDE_BENCHMARK
     assert (versions["delly_filter"], versions["dysgu_filter"]) == (
         caller_filter("delly", d.min_length),
         caller_filter("dysgu", d.min_length),

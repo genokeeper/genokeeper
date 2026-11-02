@@ -253,9 +253,10 @@ def deletion_versions(lab: Path, fasta_sha: str, grading: Grading) -> dict[str, 
     exon resource, of the mask's two BEDs, the repeats' BED and gnomAD-SV, `[deletions]` as
     JSON without `likely_below` (a wording rule the table never reads), both Truvari option
     sets, `deletions_only`'s per-caller filters (`caller_filter`, as the run's step keys
-    hold them), the three step versions, the FASTA's sha256 and the class table's format
-    (`classes.FORMAT_KEY`: a table of another format is stale); not HG002's truth, which
-    the run never reads. `FileNotFoundError` when a file is absent."""
+    hold them), the three step versions, the FASTA's sha256, the class table's format
+    (`classes.FORMAT_KEY`: a table of another format is stale) and the `extra` key
+    `cautions` reads; not HG002's truth, which the run never reads. `FileNotFoundError`
+    when a file is absent."""
     giab, t = giab38_dir(lab), grading.deletions
     return {
         **{name: IMAGES[name] for name in DELETION_IMAGES},
@@ -276,6 +277,8 @@ def deletion_versions(lab: Path, fasta_sha: str, grading: Grading) -> dict[str, 
         "deletions_union_step": DELETIONS_UNION_STEP_VERSION,
         "fasta": fasta_sha,
         FORMAT_KEY: str(FORMAT),
+        # A table without the key would read every target as inside the benchmark.
+        "extra": OUTSIDE_BENCHMARK,
     }
 
 

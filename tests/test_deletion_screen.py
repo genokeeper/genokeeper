@@ -1,6 +1,7 @@
 """The deletion screen (`deletions.screen`): its three drop reasons and the call classes,
 on targets, regions and deletions built by hand."""
 
+import random
 from collections.abc import Mapping, Sequence
 
 import pytest
@@ -19,8 +20,10 @@ from genokeeper.deletions.screen import (
     PopulationSv,
     Screen,
     classify,
+    common_match,
     is_common,
     key,
+    max_distance,
     population_match,
     population_spans,
     rare,
@@ -222,6 +225,37 @@ def test_population_index_finds_every_overlapping_record() -> None:
     assert rare(deletions, s) == [kept]
     match = population_match(_deletion(10000, 29000), s)
     assert match is not None and match.id == "d"
+
+
+def test_population_index_matches_the_whole_list() -> None:
+    """Over random deletions, duplications and insertions and records of every type,
+    many tied in AF, `population_match` through the index picks what `common_match` over
+    the whole list picks."""
+    rng = random.Random(7)
+
+    def record(i: int) -> PopulationSv:
+        svtype = rng.choice(("DEL", "DUP", "INS"))
+        pos = rng.randrange(0, 20_000)
+        end = pos + 1 if svtype == "INS" else pos + rng.randrange(50, 8000)
+        af = rng.choice((0.005, 0.02, 0.5))
+        return PopulationSv(f"r{i}", rng.choice(("chr17", "chr2")), pos, end, af,
+                            svtype=svtype, svlen=rng.randrange(50, 3000))  # fmt: skip
+
+    population = [record(i) for i in range(300)]
+    for thresholds, svtype in ((T, "DEL"), (T, "DUP"), (INS_T, "INS")):
+        s = Screen(EXON, {}, {}, population, thresholds)
+        for _ in range(300):
+            pos = rng.randrange(0, 20_000)
+            end = pos + 1 if svtype == "INS" else pos + rng.randrange(50, 8000)
+            d = Deletion(rng.choice(("chr17", "chr2")), pos, end, "A", "0/1", BOTH, None,
+                         svtype=svtype, svlen=rng.randrange(50, 3000) if svtype == "INS" else None)  # fmt: skip
+            whole = common_match(
+                d,
+                population,
+                min_overlap=thresholds.min_reciprocal_overlap,
+                distance=max_distance(d, thresholds),
+            )
+            assert population_match(d, s) == whole
 
 
 def test_two_genes() -> None:

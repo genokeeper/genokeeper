@@ -640,6 +640,7 @@ def test_skill_covers_deletions() -> None:
         "`read depth not measured`",
         "`read depth does not show it, which a deletion this short often cannot`",
         "`no calibration call of this class: its chance of being false is extrapolated`",
+        "`over a target outside the benchmark the chance of being false was measured in`",
         "`touches only the bases beside an exon, not the exon itself`",
         "`an end in a tandem repeat: may be a repeat-length change`",
         "`an end in a segmental duplication or low-mappability region`",

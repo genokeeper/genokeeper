@@ -1799,6 +1799,10 @@ def test_calibrated_deletions_statements(
     false from the table and its warnings, hidden by `query`'s defaults; the rest dropped
     by reason; the screen's own statement a non-finding; the accounting balanced."""
     monkeypatch.setattr(pipeline, "load_exons", lambda: EXONS)
+    # The run hands the table's own cautions (BR-002) to each call's warnings.
+    monkeypatch.setattr(
+        DeletionTable, "cautions", lambda _, d, c: [f"caution {c.band}"]
+    )
     run_id = _run_genome(genome)
     statements, calls, inputs = _deletion_rows(genome, run_id)
     brca1 = statements["deletions:BRCA1:chr20:2014856-2016886"]
@@ -1838,7 +1842,11 @@ def test_calibrated_deletions_statements(
             call["p_wrong_lo"],
             call["p_wrong_hi"],
         ) == pytest.approx(rate)
-        assert call["warnings"] == [*warnings(call_class), CONSEQUENCE_WARNING]
+        assert call["warnings"] == [
+            *warnings(call_class),
+            f"caution {call_class.band}",
+            CONSEQUENCE_WARNING,
+        ]
         assert call["level"] == "low"
     assert set(calls) == {brca1["vid"], cftr["vid"]}
     screen = statements["deletions:screen"]

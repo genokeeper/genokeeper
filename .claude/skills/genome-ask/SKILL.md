@@ -957,14 +957,15 @@ track's; a deletion common in gnomAD-SV is not shown.
   this short often cannot` (shorter: not evidence against it), `an end in a tandem repeat:
   may be a repeat-length change`, `an end in a segmental duplication or low-mappability
   region`; where its chance of being false is extrapolated, `no calibration call of this
-  class: its chance of being false is extrapolated` or `over a target outside the benchmark
-  the chance of being false was measured in`; and on every deletion `its consequence (whole
+  class: its chance of being false is extrapolated`, `over a target outside the benchmark
+  the chance of being false was measured in`, or both; and on every deletion `its consequence (whole
   or partial exon, in frame, last exon, decay escape) is not assessed`, plus `both copies
   called; zygosity is not calibrated` on a two-copy call. Repeat every one in the answer.
   A gene's `validity.reason` adds `touches only the bases beside an exon, not the exon
   itself` where the deletion reaches that gene's exons only within the 20 bp margin.
-  `claim.exons` names the exons hit (MANE Select's numbering; an exon only the MANE Plus
-  Clinical transcript has, by that transcript's), `claim.length` its size,
+  `claim.exons` names the exons whose targets it touches (MANE Select's numbering; an exon
+  only the MANE Plus Clinical transcript has, by that transcript's): where the reason says
+  it touches only the bases beside an exon, that exon is not removed. `claim.length` its size,
   `claim.callers` which callers found it.
 - The default view hides them (validity `limited`, reliability `low`): for a question
   about a gene, a deletion or "everything", lower the filters yourself with
