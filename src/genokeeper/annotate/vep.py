@@ -93,6 +93,14 @@ FIELDS = (
     "am_pathogenicity",
     "SpliceVault_top_events",
 )
+# The old names SpliceAI 1.3.1 gives genes it is run on (`genes_for_spliceai`: ACMG SF v3.3 and
+# carrier Tier 3) that HGNC has renamed since: its bundled annotation (annotations/grch38.txt,
+# GENCODE v24, sha256 565c0ea83f66b2210182364c3d626fef526229e3d02f444bab247329b6695f2c) names 185
+# of the 190 listed genes as VEP 116 does; of the other five, each of these four has every MANE
+# Select CDS exon (coverage/cds.GRCh38.tsv, MANE v1.5) in exactly one annotation gene, and PLP1
+# none. A record takes SpliceAI's entry under its own gene's old name, never another gene's
+# (BR-023). Redo when a gene list changes.
+SPLICEAI_NAMES = {"ELP1": "IKBKAP", "G6PC1": "G6PC", "GBA1": "GBA", "MMUT": "MUT"}
 # A pext value is read at the variant's base, else at the nearest base of its gene within
 # this many bases: a ±1/2 splice variant sits in the intron, the base it spoils beside it.
 PEXT_WINDOW = 3
@@ -504,8 +512,9 @@ def annotate(
 ) -> list[VepRecord]:
     """VEP's records (`parse_vep`) for the sites-only VCF `out_dir/VEP_INPUT`
     (`vep_input`), VEP writing its output beside it; each loss-of-function record's
-    `pext`; and SpliceAI's score on the records of `genes_for_spliceai` (SpliceAI is not
-    run when there are none). `out_dir` holds the user's variants: the caller puts it
+    `pext`; and SpliceAI's score on the records of `genes_for_spliceai`, under the gene's
+    old name where SpliceAI keeps one (`SPLICEAI_NAMES`; SpliceAI is not run when there are
+    none). `out_dir` holds the user's variants: the caller puts it
     under the run's work directory."""
     mounts = [
         (out_dir, "/work", False),
@@ -531,7 +540,7 @@ def annotate(
     run_spliceai(out_dir, fasta, threads=threads)
     scores = parse_spliceai(out_dir / SPLICEAI_OUTPUT)
     return [
-        replace(r, spliceai=scores.get((r.vid, r.gene)))
+        replace(r, spliceai=scores.get((r.vid, SPLICEAI_NAMES.get(r.gene, r.gene))))
         if r.gene in genes_for_spliceai
         else r
         for r in records

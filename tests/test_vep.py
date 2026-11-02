@@ -22,6 +22,7 @@ from genokeeper.annotate.vep import (
     vep_files,
 )
 from genokeeper.containers import IMAGES, PLATFORM
+from genokeeper.genelists import LISTED, load_gene_lists
 
 FIELDS = (
     "Uploaded_variation\tGene\tSYMBOL\tFeature\tFeature_type\tConsequence\tMANE_SELECT"
@@ -89,12 +90,13 @@ def _files(lab: Path) -> VepFiles:
 
 
 class FakeContainers:
-    """Stands in for `run_container` in `genokeeper.annotate.vep`: VEP writes `ROWS`,
-    SpliceAI scores each site it is handed 0.3 on BRCA1."""
+    """Stands in for `run_container` in `genokeeper.annotate.vep`: VEP writes `ROWS`, BRCA1
+    named `gene`, SpliceAI scores each site it is handed 0.3 on `spliceai_gene`."""
 
     def __init__(self) -> None:
         self.calls: list[tuple[str, list[str], str | None]] = []
         self.spliceai_sites: list[str] = []
+        self.gene = self.spliceai_gene = "BRCA1"
 
     def __call__(
         self,
@@ -108,7 +110,8 @@ class FakeContainers:
         self.calls.append((name, list(args), label))
         work = next(host for host, target, _ in mounts if target == "/work")
         if name == "vep":
-            _write_vep_output(work / VEP_OUTPUT)
+            named = [row.replace("\tBRCA1\t", f"\t{self.gene}\t") for row in ROWS]
+            _write_vep_output(work / VEP_OUTPUT, named)
             return
         assert name == "spliceai"
         given, written = (args[args.index(flag) + 1] for flag in ("-I", "-O"))
@@ -120,7 +123,9 @@ class FakeContainers:
                 continue
             fields = line.split("\t")
             self.spliceai_sites.append(fields[2])
-            info = f"SpliceAI={fields[4]}|BRCA1|0.00|0.30|0.10|0.00|1|2|3|4"
+            info = (
+                f"SpliceAI={fields[4]}|{self.spliceai_gene}|0.00|0.30|0.10|0.00|1|2|3|4"
+            )
             out.append("\t".join([*fields[:7], info]))
         (work / Path(written).name).write_text("\n".join(out) + "\n")
 
@@ -335,6 +340,27 @@ def test_spliceai_only_listed_genes(fake: FakeContainers, tmp_path: Path) -> Non
     unlisted = _annotate(tmp_path / "unlisted", [])
     assert [name for name, _, _ in fake.calls] == ["vep"]
     assert all(r.spliceai is None for r in unlisted)
+
+
+@pytest.mark.parametrize(("named", "score"), [("MUT", 0.3), ("GENEZ", None)])
+def test_spliceai_score_of_a_renamed_gene(
+    fake: FakeContainers, tmp_path: Path, named: str, score: float | None
+) -> None:
+    """BR-023: MMUT, which SpliceAI's GENCODE v24 annotation still names MUT, takes
+    SpliceAI's MUT entry; another gene's entry at the variant is never taken."""
+    fake.gene, fake.spliceai_gene = "MMUT", named
+    records = _annotate(tmp_path, ["MMUT"])
+    assert {r.gene for r in records} == {"MMUT"}
+    assert {r.spliceai for r in records} == {score}
+
+
+def test_spliceai_names_are_listed_genes_and_old_names() -> None:
+    """Each renamed entry maps a gene SpliceAI is run on to a name no listed gene bears,
+    so the old name can only be that gene's."""
+    lists = load_gene_lists()
+    listed = {gene for name in LISTED for gene in lists[name].genes}
+    assert set(vep.SPLICEAI_NAMES) <= listed
+    assert not set(vep.SPLICEAI_NAMES.values()) & listed
 
 
 @pytest.mark.parametrize("threads", [vep.SPLICEAI_CORES * 3, 64])
