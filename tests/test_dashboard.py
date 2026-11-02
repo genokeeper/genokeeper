@@ -1044,9 +1044,19 @@ def test_carrier_topic_lists_what_is_not_covered(
 
 
 def test_russian_not_covered_lists_match_the_carrier_ones() -> None:
+    """Each Russian line keeps its English line's gene symbols and numbers, so an English
+    line that changes without its translation fails here (3d's copy-number line once did)."""
     ru = dashboard.messages("ru")
     assert len(ru["carrier_not_covered"]) == len(NOT_COVERED)
     assert set(ru["carrier_mechanisms"]) == set(load_mechanisms())
+    mechanisms = load_mechanisms()
+    pairs = [*zip(NOT_COVERED, ru["carrier_not_covered"])]
+    pairs += [
+        (mechanisms[gene], text) for gene, text in ru["carrier_mechanisms"].items()
+    ]
+    for en, translated in pairs:
+        tokens = set(re.findall(r"[A-Z][A-Z0-9]{2,}|\b\d+\b", en))
+        assert tokens <= set(re.findall(r"[A-Z][A-Z0-9]{2,}|\b\d+\b", translated)), en
 
 
 def test_english_not_covered_lists_are_the_carrier_ones(
