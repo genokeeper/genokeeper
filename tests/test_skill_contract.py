@@ -575,10 +575,15 @@ def test_skill_covers_stage3a() -> None:
 
 def test_skill_reads_a_repeat_class_from_its_interval() -> None:
     """A repeat claim's `class` is the class its interval's upper bound reaches (BR-009),
-    so a watch item's may lie above its estimate's."""
+    so a watch item's may lie above its estimate's, even `pathogenic` on a borderline one:
+    it is worded as the class the interval may reach, never as the allele's."""
     text = " ".join(SKILL.read_text().split())
     assert (
         "`class`: the class the longest allele's interval reaches at its upper bound"
+        in text
+    )
+    assert (
+        "word it as the class the interval may reach, never as the allele's class"
         in text
     )
     assert "`class`: the longest allele's class" not in text

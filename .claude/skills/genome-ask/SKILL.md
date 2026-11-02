@@ -437,8 +437,10 @@ Each finding has these keys:
     - `inrepeat`: reads wholly inside the repeat;
   - `class`: the class the longest allele's interval reaches at its upper bound, the bound
     the grading reads: `normal`, `intermediate`, `reduced penetrance`, `pathogenic` or `gap`
-    (between two ranges); a watch item's class may lie above its estimate's, so quote the
-    repeats and the interval with it; null when unassessed, and null for RFC1 and CFTR;
+    (between two ranges); a watch item's class may lie above its estimate's, `pathogenic`
+    included on a borderline one: word it as the class the interval may reach, never as the
+    allele's class (a borderline watch is not an expansion), and quote the repeats and the
+    interval with it; null when unassessed, and null for RFC1 and CFTR;
   - `thresholds`: the locus's ranges from STRchive, in repeats (null for RFC1 and CFTR):
     - `normal_max`: the largest normal count;
     - `intermediate`: `[low, high]`, or null;

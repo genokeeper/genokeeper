@@ -706,7 +706,10 @@ and sources, plus what the filters hid. A claim at a site whose genotype is unkn
 finding: the query counts these `unassessed` claims per gene, with why the genotype is
 unknown, and lists them on request. Carrier and "do I have" questions go through `genokeeper
 genotype`: an answer per site from its dosage and reliability (`carrier`, `not_a_carrier`,
-`probably_not_a_carrier`, `unknown`; "not assessed" when the store holds no site), and for a
+`probably_not_a_carrier`, `unknown`; `possible_carrier` for a screening result that needs
+confirmation, every stage-3 finding among them; `needs_confirmation` for another deletion,
+depth event or insertion; `information` for a copy number or Lp(a); "not assessed" when the
+store holds no site), and for a
 gene counts, what was not looked at, and the gene's main mechanism when SNV calls cannot
 see it (SMN1, HBA1/HBA2, CYP21A2, GBA1, F8, DMD, FMR1); for SMN1 and the repeat genes
 the gene's stage-3 statement leads the sites with its own answer (the copy number or the
