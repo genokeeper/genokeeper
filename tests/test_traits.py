@@ -405,6 +405,7 @@ def test_mc1r_reliability_reads_the_sites_its_result_reads(tmp_path: Path) -> No
         ({R151C: "1"}, D84E, "low"),
         ({R151C: "1"}, V60L, "high"),
         ({V92M: "1"}, V60L, "high"),
+        ({V92M: "1"}, V92M, "low"),
         ({V92M: "1"}, D84E, "low"),
         ({}, V60L, "low"),
     ):
