@@ -345,6 +345,34 @@ def test_rescue_counts_only_the_stop_transcripts_coding_bases() -> None:
     assert truncations_3prime(stop, minus, "BRCA1", downstream) == 2
 
 
+@pytest.mark.parametrize(
+    ("truncations", "topic"),
+    [
+        ([("BRCA1", "chr17", 16000), ("BRCA1", "chr17", 20001)], Topic.RISKS),
+        ([("BRCA1", "chr17", 16001), ("BRCA1", "chr17", 18000)], Topic.RESEARCH),
+    ],
+)
+def test_collect_rescues_on_the_stop_transcripts_regions(
+    tmp_path: Path, truncations: list[tuple[str, str, int]], topic: Topic
+) -> None:
+    """BR-014 through `collect`: a stop near the last junction is rescued by two ClinVar
+    truncations in its own transcript's escape regions, not by two in the last intron,
+    though another transcript's regions cover them."""
+    record = _record(**STOP_NEAR_JUNCTION)
+    source = PredictedSource(
+        sites=[(record, CALLED, RELIABLE, 0)],
+        input_rows=1,
+        escapes={
+            "ENST01": REGIONS,
+            "ENST99": [EscapeRegion("chr17", 15000, 21000, "+")],
+        },
+        truncations=truncations,
+        haploinsufficient=HAPLOINSUFFICIENT,
+    )
+    (row,) = source.collect(_context(tmp_path)).rows
+    assert row.statement["topic"] == topic
+
+
 def test_escape_regions_read_in_the_track_layout(tmp_path: Path) -> None:
     """UCSC's nmdEscMane rows as bigBedToBed writes them (BRCA1's, read 2026-10-23 through
     the pinned image): the rule in the mouseover column, one versioned transcript in the
