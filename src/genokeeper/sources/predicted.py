@@ -97,7 +97,7 @@ class PredictedSource:
                 escape=found,
                 truncations_3prime=0
                 if found is None
-                else truncations_3prime(found, record.gene, self.truncations),
+                else truncations_3prime(found, regions, record.gene, self.truncations),
             )
             grade = grade_predicted(
                 site,

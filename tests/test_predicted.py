@@ -291,11 +291,7 @@ def test_escaping_stop_rescued_by_two_downstream_clinvar_truncations() -> None:
     record = _record(**STOP_IN_LAST_EXON)
     found = escape(record, REGIONS)
     assert found is not None
-    assert (found.rule, found.stop, found.cds_end) == (
-        TRACK,
-        ("chr17", 20248),
-        ("chr17", 20400),
-    )
+    assert (found.rule, found.stop) == (TRACK, ("chr17", 20248))
     truncations = [
         ("BRCA1", "chr17", 20300),
         ("BRCA1", "chr17", 20350),
@@ -303,7 +299,7 @@ def test_escaping_stop_rescued_by_two_downstream_clinvar_truncations() -> None:
         ("BRCA1", "chr17", 20500),  # past the CDS end
         ("BRCA2", "chr17", 20310),  # another gene
     ]
-    count = truncations_3prime(found, "BRCA1", truncations)
+    count = truncations_3prime(found, REGIONS, "BRCA1", truncations)
     assert count == 2
     grade = _grade(_site(record, truncations_3prime=count))
     assert (grade.kind, grade.topic) == (Kind.FINDING, Topic.RISKS)
@@ -312,7 +308,7 @@ def test_escaping_stop_rescued_by_two_downstream_clinvar_truncations() -> None:
     found = escape(gjb2, SINGLE_EXON)
     assert found is not None and found.rule == TRACK
     downstream = [("GJB2", "chr17", 11400), ("GJB2", "chr17", 11450)]
-    count = truncations_3prime(found, "GJB2", downstream)
+    count = truncations_3prime(found, SINGLE_EXON, "GJB2", downstream)
     grade = _grade(_site(gjb2, SINGLE_EXON, truncations_3prime=count))
     assert (count, grade.kind, grade.topic) == (2, Kind.FINDING, Topic.CARRIER)
     frameshift = _record(
@@ -324,7 +320,29 @@ def test_escaping_stop_rescued_by_two_downstream_clinvar_truncations() -> None:
     assert stop is not None and stop.stop == ("chr17", 20400 - 297)
     # The cross-check: a stop-gain whose CDS length VEP does not give, in a track region.
     inside = escape(_record(vid="GRCh38:chr17:20100:C:T", cds_length=None), REGIONS)
-    assert inside == Escape(TRACK, ("chr17", 20100), ("chr17", 20400))
+    assert inside == Escape(TRACK, ("chr17", 20100))
+
+
+def test_rescue_counts_only_the_stop_transcripts_coding_bases() -> None:
+    """BR-014: a stop near the last junction counts only ClinVar truncations in its
+    transcript's coding bases 3' of it, the track's regions: two in the last intron (on an
+    exon only another transcript has) rescue nothing, two in the regions do, on either
+    strand."""
+    record = _record(**STOP_NEAR_JUNCTION)
+    found = escape(record, REGIONS)
+    assert found is not None and found.stop == ("chr17", 15963)
+    intron = [("BRCA1", "chr17", 16001), ("BRCA1", "chr17", 18000)]
+    count = truncations_3prime(found, REGIONS, "BRCA1", intron)
+    grade = _grade(_site(record, truncations_3prime=count))
+    assert (count, grade.topic) == (0, Topic.RESEARCH)
+    exonic = [("BRCA1", "chr17", 16000), ("BRCA1", "chr17", 20001)]
+    assert truncations_3prime(found, REGIONS, "BRCA1", exonic) == 2
+    minus = [replace(r, strand="-") for r in REGIONS]
+    stop = escape(_record(**STOP_IN_LAST_EXON), minus)
+    assert stop is not None and stop.stop == ("chr17", 20103)
+    downstream = [("BRCA1", "chr17", 20050), ("BRCA1", "chr17", 18000)]
+    downstream.append(("BRCA1", "chr17", 15990))
+    assert truncations_3prime(stop, minus, "BRCA1", downstream) == 2
 
 
 def test_escape_regions_read_in_the_track_layout(tmp_path: Path) -> None:

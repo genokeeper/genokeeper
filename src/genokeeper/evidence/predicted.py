@@ -161,12 +161,11 @@ def _genomic(regions: Sequence[EscapeRegion], offset: int) -> tuple[str, int] | 
 @dataclass(frozen=True)
 class Escape:
     """Where a new stop escapes nonsense-mediated decay (`TRACK`, `LAST_EXON`,
-    `START_PROXIMAL` or `NO_NMD_DATA`), the stop's genomic position and the transcript's
-    3' end of coding sequence (None where neither the track nor VEP places it)."""
+    `START_PROXIMAL` or `NO_NMD_DATA`) and the stop's genomic position (None where neither
+    the track nor VEP places it)."""
 
     rule: str
     stop: tuple[str, int] | None
-    cds_end: tuple[str, int] | None
 
 
 def escape(record: VepRecord, regions: Sequence[EscapeRegion]) -> Escape | None:
@@ -177,39 +176,45 @@ def escape(record: VepRecord, regions: Sequence[EscapeRegion]) -> Escape | None:
     genome; a stop-gain's own position falling in a region is an escape too (the
     cross-check of the two)."""
     if not regions:
-        return Escape(NO_NMD_DATA, None, None)
+        return Escape(NO_NMD_DATA, None)
     stop, length = new_stop(record), record.cds_length
     if stop is not None and stop <= START_BASES:
         # First, whatever else matches: a stop near the start is never rescued.
-        return Escape(START_PROXIMAL, None, None)
+        return Escape(START_PROXIMAL, None)
     tail = sum(r.end - r.start for r in regions)
-    end = _genomic(regions, tail - 1)
     if stop is not None and length is not None and stop > length - tail:
-        return Escape(TRACK, _genomic(regions, stop - (length - tail) - 1), end)
+        return Escape(TRACK, _genomic(regions, stop - (length - tail) - 1))
     chrom, pos, _, _ = locus(record.vid)
     at = (chrom, pos) if "stop_gained" in record.terms else None
     if at and any(r.chrom == chrom and r.start < pos <= r.end for r in regions):
-        return Escape(TRACK, at, end)
+        return Escape(TRACK, at)
     exon, _, exons = (record.exon or "").partition("/")
     if exon and exon == exons:
-        return Escape(LAST_EXON, at, end)
+        return Escape(LAST_EXON, at)
     return None
 
 
 def truncations_3prime(
-    found: Escape, gene: str, truncations: Iterable[tuple[str, str, int]]
+    found: Escape,
+    regions: Sequence[EscapeRegion],
+    gene: str,
+    truncations: Iterable[tuple[str, str, int]],
 ) -> int:
     """How many of ClinVar's P/LP truncating variants (gene, chrom, pos) in `gene` lie 3'
-    of the escaping stop and before the transcript's CDS end."""
-    if found.stop is None or found.cds_end is None:
+    of the escaping stop in the coding bases of its transcript: in one of the track's
+    `regions` for it (its CDS's last bases, the stop's own region among them), so one in
+    the last intron, on an exon only another transcript has, is not counted (BR-014)."""
+    if found.stop is None or not regions:
         return 0
     chrom, stop = found.stop
-    _, end = found.cds_end
-    low, high = sorted((stop, end))
+    forward = regions[0].strand != "-"
     return sum(
         1
         for g, c, pos in truncations
-        if g == gene and c == chrom and low <= pos <= high and pos != stop
+        if g == gene
+        and c == chrom
+        and (pos > stop if forward else pos < stop)
+        and any(r.chrom == c and r.start < pos <= r.end for r in regions)
     )
 
 
