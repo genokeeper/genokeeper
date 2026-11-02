@@ -1530,6 +1530,33 @@ def test_run_passes_min_spanning(
     assert rows["expansionhunter:CFTR"]["reason"] == CFTR_UNREAD
 
 
+def test_repeats_step_keyed_on_what_its_build_reads(genome: Genome) -> None:
+    """A [repeat_loci] edit that changes no call (a note, the evidence, a disease
+    threshold) reuses the repeats step; one its build reads (`normal_max` picks the loci
+    REViewer draws) runs it again."""
+    _run_genome(genome)
+    loci = _grading().repeats.loci
+    htt = loci["HTT"]
+    worded = replace(htt, note="reworded", evidence="other", pathogenic_min=41)
+    graded = replace(
+        _grading(), repeats=replace(_grading().repeats, loci={**loci, "HTT": worded})
+    )
+    write_stage3(genome.lab, grading=graded)  # the stage-3 table measures the thresholds
+    run_id = _run_genome(genome, grading=graded)
+    with connect(genome.store) as con:
+        reused = _inputs_json(con, run_id)
+    assert reused["steps"]["repeats"]["reused"]
+    drawn = replace(htt, normal_max=htt.normal_max + 1)
+    redrawn = replace(
+        _grading(), repeats=replace(_grading().repeats, loci={**loci, "HTT": drawn})
+    )
+    write_stage3(genome.lab, grading=redrawn)  # the stage-3 table measures the thresholds
+    run_id = _run_genome(genome, grading=redrawn)
+    with connect(genome.store) as con:
+        again = _inputs_json(con, run_id)
+    assert not again["steps"]["repeats"]["reused"]
+
+
 def test_expanded_allele_drawn_by_reviewer(genome: Genome, tmp_path: Path) -> None:
     """An HTT allele of 45 CAG (HG002's 24 grown past the full-penetrance threshold) is a
     finding, screening only, with the image REViewer drew of that locus alone."""

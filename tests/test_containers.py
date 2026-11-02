@@ -244,6 +244,26 @@ def test_a_build_from_other_inputs_is_refused(
     assert [call[0] for call in _calls(docker)] == ["build"]  # no second build
 
 
+@pytest.mark.parametrize("name", ["spliceai", "hmmix"])
+def test_a_comment_only_lock_edit_keeps_the_image(
+    docker: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, name: str
+) -> None:
+    """A lock file's comment lines and blank lines install nothing: editing them builds the
+    pinned image as it is, so no step keyed on its name runs again; a pin edit is refused."""
+    inputs = tmp_path / "docker"
+    for file in BUILT[name]:
+        _executable(inputs / file, (DOCKER_DIR / file).read_text())
+    monkeypatch.setattr(containers, "DOCKER_DIR", inputs)
+    lock = inputs / BUILT[name][-1]
+    pins = lock.read_text()
+    lock.write_text(f"# reworded header\n\n{pins.replace('# ', '#  ')}")
+    assert containers.main(["build", name]) == 0
+    assert [call[0] for call in _calls(docker)] == ["build"]
+    pin = next(line for line in pins.splitlines() if "==" in line and "#" not in line)
+    lock.write_text(pins.replace(pin, pin.replace("==", "==9")))
+    assert containers.main(["build", name]) == 1
+
+
 def _lock_lines(lock: str, package: str) -> list[str]:
     """The lines of docker/`lock` for the conda package named `package` (name-version-build)."""
     return [
