@@ -583,7 +583,13 @@ def test_skill_names_the_annotation_limits() -> None:
     section = _section_named(text, "## Predicted findings")
     flat = " ".join(section.split())
     for needed in (
-        "SLC37A4 is the exception to the gate-failure rule above",
+        "SLC37A4 is the exception to the gate-failure rule above, for a loss of function",
+        "never paired with a second variant in the gene",
+        "A start-loss there fails gate 2 too, but is never a finding anywhere",
+        "GRCh38:chr11:119027725:AC:A",
+        "it restores MANE's sequence",
+        "never graded as a missense",
+        "TNNT2's intron 1",
         "GRC fix patch",
         "passes gate 1 always fails LoF gate 2",
         (

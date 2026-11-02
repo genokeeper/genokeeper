@@ -26,7 +26,7 @@ files, not this one. How to file, close and reference an entry:
 | [BR-007](bugs/BR-007.md) | low | calibrate | A stage-3 table stays valid after a [repeat_loci] threshold edit: its versions omit the thresholds measure withholds by | 2026-10-28 |
 | [BR-011](bugs/BR-011.md) | medium | sources | A ClinVar-classified and a predicted carrier variant in one recessive gene are never offered for phasing | 2026-11-02 |
 | [BR-020](bugs/BR-020.md) | low | calibrate | An INSurVeyor insertion of unknown length might take the short band's chance of being false, though the insertion calibration never measures such a call | 2026-11-02 |
-| [BR-028](bugs/BR-028.md) | low | annotate | SpliceAI's annotation lacks PCDH15's last coding exon, so a splice change there gets no score | 2026-11-02 |
+| [BR-028](bugs/BR-028.md) | low | annotate | SpliceAI's annotation lacks PCDH15's last coding exon and TNNT2's intron 1, so a splice change there gets no score | 2026-11-02 |
 
 ## Fixed (19)
 
