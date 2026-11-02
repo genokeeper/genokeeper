@@ -9,10 +9,11 @@ files, not this one. How to file, close and reference an entry:
 | ID | Sev | Area | Title | Found |
 |---|---|---|---|---|
 
-## Partially fixed (0)
+## Partially fixed (1)
 
 | ID | Sev | Area | Title | Found |
 |---|---|---|---|---|
+| [BR-012](bugs/BR-012.md) | medium | annotate | One VEP row per variant lets a non-MANE LoF hide a MANE Plus Clinical missense in a listed gene | 2026-11-02 |
 
 ## Rejected (1)
 
@@ -20,11 +21,10 @@ files, not this one. How to file, close and reference an entry:
 |---|---|---|---|---|
 | [BR-011](bugs/BR-011.md) | medium | sources | A ClinVar-classified and a predicted carrier variant in one recessive gene are never offered for phasing | 2026-11-02 |
 
-## Fixed (3)
+## Fixed (2)
 
 | ID | Title | Fixed in |
 |---|---|---|
-| [BR-012](bugs/BR-012.md) | One VEP row per variant lets a non-MANE LoF hide a MANE Plus Clinical missense in a listed gene | `genokeeper/genokeeper#4` |
 | [BR-013](bugs/BR-013.md) | One VEP row per variant: a MANE Select missense outranks a LoF on MANE Plus Clinical or in an overlapping listed gene | `genokeeper/genokeeper#4` |
 | [BR-014](bugs/BR-014.md) | The gate-3 rescue counts ClinVar truncations by genomic span, not in the stop transcript's coding bases | `genokeeper/genokeeper#4` |
 

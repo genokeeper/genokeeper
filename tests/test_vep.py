@@ -1,6 +1,6 @@
 """Ensembl VEP and SpliceAI (`genokeeper.annotate.vep`), their containers faked: VEP's
-command, its tab output read into one record per variant, and SpliceAI on the listed genes'
-variants only."""
+command, its tab output read into records per variant and gene, and SpliceAI on the listed
+genes' variants only."""
 
 import gzip
 from collections.abc import Sequence
@@ -90,12 +90,11 @@ def _files(lab: Path) -> VepFiles:
 
 class FakeContainers:
     """Stands in for `run_container` in `genokeeper.annotate.vep`: VEP writes `ROWS`,
-    SpliceAI scores each site it is handed 0.3 on each of `spliceai_genes`."""
+    SpliceAI scores each site it is handed 0.3 on BRCA1."""
 
     def __init__(self) -> None:
         self.calls: list[tuple[str, list[str], str | None]] = []
         self.spliceai_sites: list[str] = []
-        self.spliceai_genes = ["BRCA1"]
 
     def __call__(
         self,
@@ -121,10 +120,7 @@ class FakeContainers:
                 continue
             fields = line.split("\t")
             self.spliceai_sites.append(fields[2])
-            info = "SpliceAI=" + ",".join(
-                f"{fields[4]}|{gene}|0.00|0.30|0.10|0.00|1|2|3|4"
-                for gene in self.spliceai_genes
-            )
+            info = f"SpliceAI={fields[4]}|BRCA1|0.00|0.30|0.10|0.00|1|2|3|4"
             out.append("\t".join([*fields[:7], info]))
         (work / Path(written).name).write_text("\n".join(out) + "\n")
 
@@ -187,8 +183,8 @@ def test_vep_args_offline_mane(fake: FakeContainers, tmp_path: Path) -> None:
 
 
 def test_vep_output_parsed(tmp_path: Path) -> None:
-    """One record per variant: its most severe consequence of interest, MANE first among
-    equals; a variant of no interest only in a kept gene."""
+    """One gene's record per variant: its most severe consequence of interest, MANE first
+    among equals; a variant of no interest only in a kept gene."""
     path = _write_vep_output(tmp_path / VEP_OUTPUT)
     records = {r.vid: r for r in parse_vep(path, keep={"BRCA1"})}
     assert list(records) == [STOP, MISSENSE, SPLICE, INTRONIC]
@@ -217,7 +213,16 @@ def _choice_row(
     """One VEP row with only the columns the row choice reads set."""
     mane, plus, revel = kw.get("mane", _), kw.get("plus", _), kw.get("revel", _)
     return "\t".join(
-        (vid, f"ENSG-{gene}", gene, transcript, "Transcript", consequence, mane, plus)
+        (
+            vid,
+            kw.get("gene_id", f"ENSG-{gene}"),
+            gene,
+            transcript,
+            "Transcript",
+            consequence,
+            mane,
+            plus,
+        )
         + (_, _, _, _, revel, _, _)
     )
 
@@ -231,6 +236,7 @@ SELECT_AND_PLUS = "GRCh38:chr1:1200:C:T"
 OVERLAP_PLUS_STOP = "GRCh38:chr1:1300:C:T"
 OVERLAP_MANE_STOP = "GRCh38:chr1:1400:C:T"
 SHARED_EXON = "GRCh38:chr1:1500:C:T"
+SHARED_SYMBOL = "GRCh38:chr1:1600:C:T"
 SELECT, PLUS = {"mane": "NM_007294.4"}, {"plus": "NM_000001.1"}
 CHOICE_ROWS = [
     _choice_row(MANE_MISSENSE, "BRCA1", "ENST05", "splice_donor_variant"),
@@ -250,6 +256,8 @@ CHOICE_ROWS = [
     _choice_row(OVERLAP_MANE_STOP, "BRCA1", "ENST01", MISSENSE_TERM, **SELECT),
     _choice_row(SHARED_EXON, "BRCA1", "ENST02", MISSENSE_TERM, **PLUS),
     _choice_row(SHARED_EXON, "BRCA1", "ENST01", MISSENSE_TERM, **SELECT),
+    _choice_row(SHARED_SYMBOL, "BRCA1", "ENST01", MISSENSE_TERM, **SELECT),
+    _choice_row(SHARED_SYMBOL, "BRCA1", "ENST31", "stop_gained", gene_id="ENSG-B"),
 ]
 
 
@@ -271,6 +279,8 @@ CHOICE_ROWS = [
         (OVERLAP_MANE_STOP, {("GENEZ", "ENST09"), ("BRCA1", "ENST01")}),
         # A MANE Plus Clinical row of no higher rank adds nothing: one record, on Select.
         (SHARED_EXON, {("BRCA1", "ENST01")}),
+        # Two Ensembl genes under one symbol are two genes.
+        (SHARED_SYMBOL, {("BRCA1", "ENST01"), ("BRCA1", "ENST31")}),
     ],
 )
 def test_vep_records_per_gene(
@@ -304,19 +314,6 @@ def test_spliceai_only_listed_genes(fake: FakeContainers, tmp_path: Path) -> Non
     unlisted = _annotate(tmp_path / "unlisted", [])
     assert [name for name, _, _ in fake.calls] == ["vep"]
     assert all(r.spliceai is None for r in unlisted)
-
-
-@pytest.mark.parametrize(
-    ("named", "score"), [(["BRCA1-OLD"], 0.3), (["GENEA", "GENEB"], None)]
-)
-def test_spliceai_renamed_gene(
-    fake: FakeContainers, tmp_path: Path, named: list[str], score: float | None
-) -> None:
-    """BR-012: a listed gene SpliceAI knows by its old name takes the variant's only
-    SpliceAI entry; of two entries, neither VEP's gene, it takes none."""
-    fake.spliceai_genes = named
-    records = _annotate(tmp_path, ["BRCA1"])
-    assert {r.spliceai for r in records} == {score}
 
 
 @pytest.mark.parametrize("threads", [vep.SPLICEAI_CORES * 3, 64])
