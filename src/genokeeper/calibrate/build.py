@@ -61,6 +61,7 @@ from typing import TYPE_CHECKING, Any
 
 import pysam
 
+from genokeeper.bloodgroups import DEPENDS as BLOODGROUP_DEPENDS
 from genokeeper.bloodgroups import (
     POSITIONS_FILE,
     SystemCall,
@@ -69,6 +70,7 @@ from genokeeper.bloodgroups import (
     run_rbceq2,
     uncovered,
 )
+from genokeeper.bloodgroups import holes as bloodgroup_holes
 from genokeeper.bloodgroups import systems as bloodgroup_systems
 from genokeeper.calibrate import (
     BENCH_BED,
@@ -1717,10 +1719,12 @@ def _read_mito(path: Path) -> tuple[list[MitoCall], Haplocheck]:
 def _systems(
     calls: Mapping[str, SystemCall] | None, holes: Mapping[str, tuple[int, ...]]
 ) -> dict[str, SystemCall | None]:
-    """Each packaged system's RBCeq2 call, None where a written position was a no-call
-    (R10) or RBCeq2 gave nothing."""
+    """Each packaged system's RBCeq2 call, None where a position it reads was a no-call (R10,
+    and BR-029's `bloodgroups.DEPENDS`) or RBCeq2 gave nothing."""
     return {
-        s: None if calls is None or s in holes else calls.get(s, SystemCall(None, None))
+        s: None
+        if calls is None or bloodgroup_holes(holes, s)
+        else calls.get(s, SystemCall(None, None))
         for s in bloodgroup_systems()
     }
 
@@ -1868,7 +1872,11 @@ def _measure_library(
                 "slice3f_truth_rbceq2",
                 SLICE3F_STEP_VERSION,
                 [IMAGES["rbceq2"], *truth_shas, sha256_file(POSITIONS_FILE)]
-                + [fasta_sha, str(male)],
+                + [
+                    fasta_sha,
+                    str(male),
+                    json.dumps(BLOODGROUP_DEPENDS, sort_keys=True),
+                ],
                 "truth_bloodgroups.json",
                 build_truth_blood,
             )

@@ -24,6 +24,7 @@ from genokeeper.bloodgroups import (
     read_rbceq2,
     uncovered,
 )
+from genokeeper.calibrate import build
 from genokeeper.genotype.gvcf import NOCALL_REASON, Allele, Called, calls_at
 from genokeeper.genotype.reliability import Reliability
 from genokeeper.pgx.pharmcat import write_pharmcat_vcf
@@ -513,3 +514,67 @@ def test_default_view_shows_the_secretor_trait_alone(tmp_path: Path) -> None:
         shown = {f["id"] for f in query(con, run_id, Filters()).to_json()["findings"]}
         assert "trait:FUT2" in shown
         assert not any(sid.startswith("bloodgroup:") for sid in shown)
+
+
+FUT1_POS, FUT2_POS = 48750231, 48703417  # a FUT1 position; rs601338, a FUT2 one
+
+
+def test_fut2_nocall_leaves_fut1_and_fut3_unassessed(tmp_path: Path) -> None:
+    """BR-029: RBCeq2 builds FUT1's phenotype (its Se part) and FUT3's Lewis type from
+    FUT2's alleles, so a no-call at a FUT2 position leaves them unassessed too, the reason
+    naming FUT2 in words; FUT2 keeps its own reason and an unrelated system stays shown."""
+    calls = read_rbceq2(_hg002_out(tmp_path))
+    statements = _statements(
+        tmp_path,
+        BloodGroupSource(
+            calls=calls, not_run=None, withheld={}, uncovered={"FUT2": (FUT2_POS,)}
+        ),
+    )
+    for system in ("FUT1", "FUT3"):
+        s = statements[f"bloodgroup:{system}"]
+        assert (s["kind"], s["reason"]) == (
+            "unassessed",
+            (
+                f"genotype unknown at {FUT2_POS} (a FUT2 position RBCeq2 reads for"
+                f" {system}): RBCeq2 would read a no-call as the reference"
+            ),
+        )
+    assert statements["bloodgroup:FUT2"]["reason"] == (
+        f"genotype unknown at {FUT2_POS}: RBCeq2 would read a no-call as the reference"
+    )
+    assert statements["bloodgroup:ABO"]["kind"] == "finding"
+
+
+def test_fut1_nocall_leaves_fut2_unassessed(tmp_path: Path) -> None:
+    """BR-029: RBCeq2 writes FUT1's alleles into FUT2's genotype, so a no-call at a FUT1
+    position leaves FUT2 unassessed, naming FUT1; FUT3 reads no FUT1 position."""
+    calls = read_rbceq2(_hg002_out(tmp_path))
+    statements = _statements(
+        tmp_path,
+        BloodGroupSource(
+            calls=calls, not_run=None, withheld={}, uncovered={"FUT1": (FUT1_POS,)}
+        ),
+    )
+    fut2 = statements["bloodgroup:FUT2"]
+    assert (fut2["kind"], fut2["reason"]) == (
+        "unassessed",
+        (
+            f"genotype unknown at {FUT1_POS} (a FUT1 position RBCeq2 reads for FUT2): RBCeq2"
+            " would read a no-call as the reference"
+        ),
+    )
+    assert statements["bloodgroup:FUT1"]["kind"] == "unassessed"
+    assert statements["bloodgroup:FUT3"]["kind"] == "finding"
+
+
+def test_calibration_reads_the_same_dependencies(tmp_path: Path) -> None:
+    """BR-029: the calibration's per-library systems (`build._systems`, ours and the
+    truth's) leave a system unmeasured at a no-call it reads through another system, in
+    both directions."""
+    calls = read_rbceq2(_hg002_out(tmp_path))
+    fut2_hole = build._systems(calls, {"FUT2": (FUT2_POS,)})
+    assert [fut2_hole[s] for s in ("FUT1", "FUT2", "FUT3")] == [None, None, None]
+    assert fut2_hole["ABO"] == calls["ABO"]
+    fut1_hole = build._systems(calls, {"FUT1": (FUT1_POS,)})
+    assert [fut1_hole[s] for s in ("FUT1", "FUT2")] == [None, None]
+    assert fut1_hole["FUT3"] == calls["FUT3"]

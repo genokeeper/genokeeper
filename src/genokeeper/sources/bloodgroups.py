@@ -7,7 +7,9 @@ one statement `bloodgroup:<system>` per system of the packaged positions
   claim, `NOT_CLINICAL` and `INFORMATION_NOTE` in the reasons (only our genotypes'
   agreement with the truth is measured, not RBCeq2's typing).
 - `not_run` (no table, a failed step), `withheld[system]` (the calibration's reason) and `uncovered[system]` (R10: a no-call among its written positions, which RBCeq2
-  would read as the reference) make a system unassessed, as does no call from RBCeq2.
+  would read as the reference; with BR-029, also among the positions of a system RBCeq2
+  builds it from, `bloodgroups.holes`, named in the reason) make a system unassessed, as
+  does no call from RBCeq2.
 - A FUT2 typed with a phenotype adds `SECRETOR_TRAIT` (BR-026): the secretor-status trait
   (`trait:FUT2`) reads one of its alleles, and where the two differ this typing is the
   fuller reading; an unassessed FUT2, or one with no phenotype, does not say it.
@@ -24,7 +26,13 @@ import json
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 
-from genokeeper.bloodgroups import MNS_GENES, SOURCE_VERSION, SystemCall, systems
+from genokeeper.bloodgroups import (
+    MNS_GENES,
+    SOURCE_VERSION,
+    SystemCall,
+    holes,
+    systems,
+)
 from genokeeper.sources import INFORMATION_NOTE, Collected, Fields, Row, RunContext
 from genokeeper.sources.panel import CLAIM_SCHEMA
 from genokeeper.store.db import Kind, Topic, Validity
@@ -62,6 +70,15 @@ NO_POSITION = "no_packaged_position"
 _FIXED = {"RH": RH_REASON, "MNS": MNS_REASON, "HPA": HPA_REASON}
 
 
+def _where(system: str, owner: str, positions: tuple[int, ...]) -> str:
+    """`positions`, naming `owner` when it is another system RBCeq2 reads for `system`."""
+    at = ", ".join(str(p) for p in positions)
+    if owner == system:
+        return at
+    what = f"a {owner} position" if len(positions) == 1 else f"{owner} positions"
+    return f"{at} ({what} RBCeq2 reads for {system})"
+
+
 @dataclass(frozen=True)
 class BloodGroupSource:
     """RBCeq2's calls (`bloodgroups.read_rbceq2`; None when it has none), why it was not
@@ -83,8 +100,8 @@ class BloodGroupSource:
             return Kind.UNASSESSED, self.not_run, None
         if system in self.withheld:
             return Kind.UNASSESSED, self.withheld[system], None
-        if system in self.uncovered:
-            where = ", ".join(str(p) for p in self.uncovered[system])
+        if found := holes(self.uncovered, system):
+            where = "; ".join(_where(system, o, p) for o, p in found.items())
             return Kind.UNASSESSED, UNCOVERED.format(positions=where), None
         if self.calls is None:
             return Kind.UNASSESSED, NOT_RUN, None

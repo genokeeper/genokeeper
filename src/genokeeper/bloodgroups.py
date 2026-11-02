@@ -24,6 +24,8 @@ Two rulings decide what a system's call is worth before RBCeq2 is read:
 - R10: RBCeq2 reads an explicit `./.` as the reference and makes a confident call from it
   (`./.` at ABO c.261delG gave A1/A1), so a system with any no-call among its written
   positions is unassessed whatever RBCeq2 says (`uncovered`, read from the VCF as written).
+  A system RBCeq2 builds from another system's alleles too (`DEPENDS`, BR-029) is unassessed
+  at that system's no-calls as well (`holes`, applied where `uncovered` is read).
 
 `run_rbceq2` runs it offline in its image, behind the core gate as `dna:bloodgroups`;
 `read_rbceq2` reads its genotype and alphanumeric phenotype tables (one row per sample, an
@@ -59,6 +61,15 @@ PHENO_SUFFIX = "_pheno_alphanumeric.tsv"
 UNDETERMINED = "Undetermined/Undetermined"
 # MNS's genes, never reported (see the module docstring).
 MNS_GENES = frozenset({"GYPA", "GYPB", "GYP"})
+# The systems RBCeq2 2.4.4 builds from another system's alleles too: its `main` writes
+# FUT1's and FUT2's genotype pairs into each other's genotype, `choose_pheno.FUT1` joins
+# FUT2's phenotype (Se) to FUT1's, and `choose_pheno.FUT3` takes an active FUT3's Lewis
+# type from FUT2's secretor status (BR-029).
+DEPENDS: Mapping[str, tuple[str, ...]] = {
+    "FUT1": ("FUT2",),
+    "FUT2": ("FUT1",),
+    "FUT3": ("FUT2",),
+}
 
 
 @dataclass(frozen=True)
@@ -174,6 +185,16 @@ def uncovered(vcf: Path, positions: Rbceq2Positions) -> dict[str, tuple[int, ...
             for system in positions.systems.get((chrom, pos), ()):
                 found[system].add(pos)
     return {system: tuple(sorted(found[system])) for system in sorted(found)}
+
+
+def holes(
+    uncovered: Mapping[str, tuple[int, ...]], system: str
+) -> dict[str, tuple[int, ...]]:
+    """The no-call positions `system`'s call reads, by the system that owns them: its own
+    (R10) and those of each system RBCeq2 builds it from (`DEPENDS`)."""
+    return {
+        s: uncovered[s] for s in (system, *DEPENDS.get(system, ())) if s in uncovered
+    }
 
 
 @dataclass(frozen=True)
