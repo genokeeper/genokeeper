@@ -7,8 +7,9 @@ In this order, under `<work>/.refresh.lock` and umask 077:
    latest snapshot's (or that snapshot records none).
 2. Each refreshed source fetched by `scripts/bootstrap.sh --refresh STEP`, recorded new,
    unchanged or failed.
-3. A run when a grading input's newest file on disk differs (by sha256) from what the
-   latest snapshot recorded, or the analyser still differs.
+3. A run when a grading input's newest file on disk, the gnomAD FAF manifest or a
+   calibration table's `versions.json` differs (by sha256) from what the latest snapshot
+   recorded, or the analyser still differs.
 4. The publications of the trusted findings and the watch-list VUS, the explanations (only
    with `--explain`), the dashboard and the retention of dated folders.
 5. One record in `<lab>/refresh/log.jsonl`.

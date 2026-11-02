@@ -37,6 +37,7 @@ from fixtures.pharmgkb_mini import Ann, zip_bytes
 
 from genokeeper.annotate.vep import vep_files
 from genokeeper.calibrate import BENCH_BED, TRUTH_VCF, layout, rtg_path
+from genokeeper.calibrate.hg002 import NOT_YET
 from genokeeper.config import grch38_fasta, load_grading, unmasked_fasta
 from genokeeper.containers import BUILT, IMAGES, PLATFORM, PLATFORMS, build_command
 from genokeeper.deletions.files import sv_files
@@ -2270,7 +2271,7 @@ def test_hg002_step_reads_only_hg002_rows(slice3a: Slice3a, tmp_path: Path) -> N
 def test_a_library_fetch_before_a_run_lets_the_bootstrap_go_on(
     lab: dict[str, str], tmp_path: Path, step: str
 ) -> None:
-    """Before `genokeeper run` recorded the bases, `fetch` exits 3: the step says the
+    """Before `genokeeper run` recorded the bases, `fetch` exits `NOT_YET`: the step says the
     libraries wait for that run and returns, so the steps after it (the FAF table, which the
     run needs) still run; any other failure still stops the bootstrap."""
     gone = tmp_path / "nothing"
@@ -2289,7 +2290,7 @@ def test_a_library_fetch_before_a_run_lets_the_bootstrap_go_on(
         ' *" layout"*) printf \'%s\\n\' "$LAYOUT" ;; *) exit 9 ;; esac; }'
     )
     flags = "with_hg002=1; with_hg004=1"
-    waited = _run(env | {"CODE": "3"}, f"{fake}; {flags}; {step}; echo after")
+    waited = _run(env | {"CODE": str(NOT_YET)}, f"{fake}; {flags}; {step}; echo after")
     assert waited.returncode == 0, waited.stderr
     assert waited.stdout.splitlines() == ["after"]
     assert "genokeeper run" in waited.stderr.splitlines()[-1]

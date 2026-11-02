@@ -17,9 +17,10 @@ Four controls, each with its anchor:
   byte-reproducible across Docker versions, and its digest would stop no adversary the input
   pins do not (the 2a review's ruling).
 - The name of a built image, against running an image built from other inputs: its anchor
-  comes from the sha256 of those inputs written in its tag here, which an edited Dockerfile
-  or list cannot keep because `main` recomputes it from the files before every build and
-  refuses a mismatch (and `tests/test_containers.py` from the committed files).
+  comes from the sha256 of those inputs written in its tag here (a lock file's without its
+  comment lines and blank lines, which install nothing), which an edited Dockerfile or pin
+  cannot keep because `main` recomputes it from the files before every build and refuses a
+  mismatch (and `tests/test_containers.py` from the committed files).
 - `--network none`, against a tool's own network call carrying genotype-derived data: its
   anchor comes from our `docker run` command line, which the tool inside the container cannot
   change because the network namespace is set before its process starts; the tool's
@@ -41,7 +42,8 @@ PLATFORM = "linux/amd64"
 # Image name -> `repo@sha256:<digest>`. The built images keep the `genomelab/` namespace and
 # docker/ its `genomelab.containers` comments from before the rename to genokeeper: the
 # namespace is in the step keys and calibration versions that name an image, and the files'
-# bytes in each tag, so renaming either would rebuild every image and re-run its steps.
+# digest in each tag (`build_inputs_digest`), so renaming either would rebuild every image
+# and re-run its steps.
 IMAGES: dict[str, str] = {
     # DeepVariant 1.10.0, Google's own image: the digest Docker Hub's API gives for tag
     # 1.10.0 (hub.docker.com/v2/repositories/google/deepvariant/tags/1.10.0, read

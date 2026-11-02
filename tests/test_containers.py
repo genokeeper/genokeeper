@@ -186,8 +186,8 @@ def test_a_mount_source_docker_would_misread_is_refused(docker: Path) -> None:
 
 def test_built_images_named_by_their_inputs() -> None:
     """An image built here (no BioContainers image for its pinned version) is named by the
-    sha256 of its Dockerfile and the lists it copies: an edited input names another image,
-    which the bootstrap builds. Every file under docker/ is such an input, and every base
+    sha256 of its Dockerfile and the lists it copies (a list's comment lines aside): an
+    edited Dockerfile or pin names another image, which the bootstrap builds. Every file under docker/ is such an input, and every base
     image is pinned by digest."""
     inputs: set[str] = set()
     for name, files in BUILT.items():
@@ -216,7 +216,7 @@ def test_built_images_named_by_their_inputs() -> None:
     ]
 
 
-def test_inputs_digest_moves_with_any_input(
+def test_inputs_digest_moves_with_any_installed_input(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     for name in BUILT["bcyrius"]:
@@ -239,7 +239,7 @@ def test_inputs_digest_moves_with_any_input(
 def test_a_build_from_other_inputs_is_refused(
     docker: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """An edited input would build another image under the pinned name, which
+    """An edited pin would build another image under the pinned name, which
     `image_pinned` then trusts after the file is reverted."""
     inputs = tmp_path / "docker"
     for name in BUILT["bcyrius"]:

@@ -1,7 +1,7 @@
 # Weekly updates, grouped so each ecosystem opens at most one pull request a week.
 #
 # The tool images under docker/ never move through Dependabot. Their pins are compiled lock files
-# (`docker/*.requirements.txt`); an image's name is the digest of those files
+# (`docker/*.requirements.txt`); an image's name is the digest of those files, comment lines aside
 # (src/genokeeper/containers.py, checked by tests/test_containers.py), and that name is part of
 # the pipeline's step cache keys, so a bump re-runs steps and invalidates the calibration measured
 # with the old tools. They move by hand, in a reviewed pull request that re-measures what changed.
