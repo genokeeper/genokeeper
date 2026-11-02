@@ -173,8 +173,10 @@
 #               whole over 24 connections into a hidden file (resumed from a journal of
 #               finished chunks after a kill), md5-checked, downsampled, then deleted (300 GB
 #               read, about 170 GB kept; one raw file, about 150 GB, on disk at a time), a
-#               library skipped when its downsampled pair exists or it was aligned. No
-#               manifest row for the libraries: a file under its final name was verified.
+#               library skipped when its downsampled pair exists or it was aligned, and every
+#               library left for a rerun before a `genokeeper run` recorded the bases (the
+#               bootstrap goes on). No manifest row for the libraries: a file under its final
+#               name was verified.
 #   hg002_sv    slice 3b's truth: GIAB's HG002 v5.0q GRCh38 structural-variant VCF, .tbi and
 #               benchmark BED (50 MB, sha256-pinned, moved from prefetch/3b/ or downloaded)
 #               into the same giab/HG002-v5.0q-GRCh38/, recorded under its own step
@@ -185,7 +187,8 @@
 #               prefetch/3c/ or downloaded) in giab/HG004-v4.2.1-GRCh38/, recorded as
 #               hg004_truth, then HG004's PCR-free library through
 #               `python -m genokeeper.calibrate.hg002 fetch hg004` (144 GB from CNGB) unless its
-#               downsampled pair or its record is there.
+#               downsampled pair or its record is there (left for a rerun, as HG002's, before
+#               a `genokeeper run` recorded the bases).
 #
 # brew runs with HOMEBREW_NO_ANALYTICS=1. Sourcing the script defines its functions without
 # running any step.
@@ -1483,6 +1486,20 @@ step_parascopy() {
   say "Parascopy data -> $dir"
 }
 
+# `genokeeper.calibrate.hg002 fetch KEY` for the reference library NAME; status 1 when the
+# fetch exits 3 (no `genokeeper run` has recorded the bases it downsamples to yet), which
+# leaves the library for a rerun after that run and lets the bootstrap go on to the steps
+# the run needs; any other failure stops the bootstrap.
+fetch_library() {
+  local code=0
+  genokeeper_python -m genokeeper.calibrate.hg002 fetch "$2" >&2 || code=$?
+  case $code in
+    0) return 0 ;;
+    3) say "$1 waits for your first genokeeper run, which records the bases it is downsampled to; rerun with this flag after it"; return 1 ;;
+    *) die "fetching $1 failed; rerun to continue with the files not yet downsampled" ;;
+  esac
+}
+
 # Stage 3's HG002 inputs (see the header); only with --with-hg002. The libraries come from
 # `genokeeper.calibrate.hg002 fetch`, which skips a downsampled file already there; of its
 # layout only HG002's rows are this step's (HG003 and HG004 have their own steps).
@@ -1524,8 +1541,7 @@ step_hg002() {
   fi
   for lib in ${libs[@]+"${libs[@]}"}; do
     say "downloading and downsampling HG002 $lib (one raw FASTQ at a time; a rerun resumes)"
-    genokeeper_python -m genokeeper.calibrate.hg002 fetch "$lib" >&2 ||
-      die "fetching HG002 $lib failed; rerun to continue with the files not yet downsampled"
+    fetch_library "HG002 $lib" "$lib" || return 0
   done
 }
 
@@ -2006,8 +2022,7 @@ step_hg004() {
   fi
   if [ "$pair_ok" = 0 ]; then
     say "downloading and downsampling HG004 (one raw FASTQ at a time; a rerun resumes)"
-    genokeeper_python -m genokeeper.calibrate.hg002 fetch hg004 >&2 ||
-      die "fetching HG004 failed; rerun to continue with the files not yet downsampled"
+    fetch_library HG004 hg004 || return 0
   fi
 }
 

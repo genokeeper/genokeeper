@@ -366,7 +366,11 @@ def run_container(
     except ToolFailed as e:
         if e.returncode != DOCKER_RUN_FAILED:
             raise
-        said = next((s for s in (e.stderr or "").splitlines() if s.strip()), "")
+        # Docker's own error line, which a gate's notice may precede; else the first line.
+        lines = [s for s in (e.stderr or "").splitlines() if s.strip()]
+        said = next(
+            (s for s in lines if s.startswith("docker:")), lines[0] if lines else ""
+        )
         raise DockerUnavailable(
             f"Docker could not start {IMAGES[name]} ({said.strip()}):"
             " run scripts/bootstrap.sh"

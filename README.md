@@ -157,7 +157,7 @@ bash scripts/bootstrap.sh --with-gnomad --with-vep --with-masked-reference --wit
 ```
 
 Leave out `--with-hg002` and `--with-hg004` for now: they downsample to your run's bases, so
-before step 6 they stop the bootstrap with "no recorded bases for your run".
+before step 6 their libraries only wait for that run (the bootstrap says so and goes on).
 
 **6. First run: alignment and QC.** It checks the reads come from a T7, aligns them with bwa
 to the masked GRCh38 (about 5 to 6 hours), refuses a sample that fails the QC gate, and
@@ -411,7 +411,7 @@ precomputed data (52 MB, Zenodo record 15019940, md5-checked). `--with-hg002` fe
 HG002 v5.0q GRCh38 truth and the two public HG002 libraries (ENA, PRJNA1465120): each FASTQ is
 downloaded whole and resumably over parallel range requests (one raw file, about 150 GB, on
 disk at a time), md5-checked, downsampled to the bases of your own run (which a first
-`genokeeper run` records; before one, the step stops) and deleted, so about 170 GB of
+`genokeeper run` records; before one, the libraries wait and the bootstrap goes on) and deleted, so about 170 GB of
 downsampled FASTQ stay under `calibration/`. `uv run genokeeper calibrate` (or `--only
 stage3`) runs both libraries through the run's own align, QC gate and the three tools and
 writes the stage-3 calibration table under `calibration/`; a run refuses a table made with

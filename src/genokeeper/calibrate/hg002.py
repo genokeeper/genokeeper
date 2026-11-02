@@ -91,6 +91,9 @@ __all__ = [
 
 CHUNK_BYTES = 64 * 2**20
 BGZIP_THREADS = 4
+# `fetch`'s exit status before `genokeeper run` recorded the bases a library is downsampled
+# to: the bootstrap goes on to its later steps rather than stopping (its step_hg002, step_hg004).
+NOT_YET = 3
 _CURL = ["curl", "-fsS", "--retry", "5", "--retry-all-errors"]
 # A connection that stalls for two minutes is cut and retried.
 _STALL = ["--connect-timeout", "30", "--speed-limit", "10000", "--speed-time", "120"]
@@ -562,7 +565,12 @@ def _fetch_command(args: argparse.Namespace) -> int:
         return 0
     target = recorded_bases(paths.reports)
     if target is None:
-        raise RunRefused("no recorded bases for your run: run genokeeper run first")
+        print(
+            f"hg002 fetch: no recorded bases for your run to downsample {label(args.library)}"
+            " to: run genokeeper run, then rerun scripts/bootstrap.sh with this flag",
+            file=sys.stderr,
+        )
+        return NOT_YET
     fetch(
         paths.lab,
         SAMPLE_LIBRARIES[args.library],

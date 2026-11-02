@@ -157,6 +157,28 @@ def test_one_gate_wraps_the_container(
     assert [call[0] for call in _calls(docker)] == ["info", "run"]
 
 
+def test_docker_s_own_error_is_quoted_behind_a_gate(
+    docker: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A gate's notice comes first on stderr; the message quotes Docker's `docker:` line,
+    not the notice and not Docker's closing `--help` hint."""
+    gate = _executable(
+        tmp_path / "coreslot-gate",
+        "#!/usr/bin/env bash\n"
+        "echo 'label dna:qc is not in the weight file' >&2\n"
+        "echo 'docker: Error response from daemon: No such image: x' >&2\n"
+        "echo >&2\n"
+        "echo \"Run 'docker run --help' for more information\" >&2\n"
+        "exit 125\n",
+    )
+    monkeypatch.setattr(tools, "GATE", gate)
+    with pytest.raises(DockerUnavailable) as refused:
+        run_container("verifybamid2", ["true"], mounts=[], label="dna:qc")
+    assert "(docker: Error response from daemon: No such image: x)" in str(
+        refused.value
+    )
+
+
 def test_a_mount_source_docker_would_misread_is_refused(docker: Path) -> None:
     with pytest.raises(ValueError, match="comma"):
         run_container("verifybamid2", ["true"], mounts=[(Path("/a,b"), "/x", True)])

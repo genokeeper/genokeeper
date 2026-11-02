@@ -2266,6 +2266,37 @@ def test_hg002_step_reads_only_hg002_rows(slice3a: Slice3a, tmp_path: Path) -> N
     assert s.fetch_calls() == ["pcrfree", "pcr"]
 
 
+@pytest.mark.parametrize("step", ["step_hg002", "step_hg004"])
+def test_a_library_fetch_before_a_run_lets_the_bootstrap_go_on(
+    lab: dict[str, str], tmp_path: Path, step: str
+) -> None:
+    """Before `genokeeper run` recorded the bases, `fetch` exits 3: the step says the
+    libraries wait for that run and returns, so the steps after it (the FAF table, which the
+    run needs) still run; any other failure still stops the bootstrap."""
+    gone = tmp_path / "nothing"
+    rows = "\n".join(
+        [
+            f"pcrfree\tHG002\t{gone}/a.json\t{gone}/p1\t{gone}/p2",
+            f"hg004\tHG004\t{gone}/d.json\t{gone}/r1\t{gone}/r2",
+            f"hg004_truth\t{gone}/truth",
+        ]
+    )
+    env = {**lab, "LAYOUT": rows}
+    # The truth files count as recorded: only the library fetch is under test.
+    fake = (
+        "step_done() { return 0; }; "
+        "genokeeper_python() { case \"$*\" in *' fetch '*) echo refused >&2; return $CODE ;;"
+        ' *" layout"*) printf \'%s\\n\' "$LAYOUT" ;; *) exit 9 ;; esac; }'
+    )
+    flags = "with_hg002=1; with_hg004=1"
+    waited = _run(env | {"CODE": "3"}, f"{fake}; {flags}; {step}; echo after")
+    assert waited.returncode == 0, waited.stderr
+    assert waited.stdout.splitlines() == ["after"]
+    assert "genokeeper run" in waited.stderr.splitlines()[-1]
+    failed = _run(env | {"CODE": "2"}, f"{fake}; {flags}; {step}; echo after")
+    assert failed.returncode != 0 and "after" not in failed.stdout
+
+
 # --- stage 4: --refresh STEP, LitVar2 and ClinVar citations ---------------------------------
 
 REFRESH_STEPS = (

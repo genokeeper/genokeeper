@@ -766,6 +766,18 @@ def test_fetch_skips_a_recorded_library(
     assert not first.exists() and not second.exists()
 
 
+def test_fetch_before_a_run_says_not_yet(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Before `genokeeper run` recorded the bases, `fetch` exits `NOT_YET` (the bootstrap
+    goes on to its later steps) and names the order that works, not a bare rerun."""
+    monkeypatch.setenv("GENOKEEPER_HOME", str(tmp_path / "lab"))
+    monkeypatch.setattr(hg002, "recorded_bases", lambda _reports: None)
+    assert hg002.main(["fetch", "pcrfree"]) == hg002.NOT_YET
+    said = capsys.readouterr().err
+    assert "run genokeeper run, then rerun scripts/bootstrap.sh" in said
+
+
 class _Stop(Exception):
     """Raised by a fake after the per-library loop: the calls before it are the test."""
 
