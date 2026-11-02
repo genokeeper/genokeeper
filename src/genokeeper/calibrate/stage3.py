@@ -33,7 +33,7 @@ from genokeeper.calibrate.tables import RUN, Current, folder, open_table
 from genokeeper.config import Grading
 from genokeeper.containers import IMAGES
 from genokeeper.repeats.expansionhunter import catalog_sha256
-from genokeeper.repeats.loci import RepeatCall, RepeatLocus, classify
+from genokeeper.repeats.loci import RepeatCall, RepeatLocus, Rule, classify
 from genokeeper.repeats.rfc1 import RFC1_LOCUS
 from genokeeper.smn import parascopy_md5s
 from genokeeper.sources.repeats import CFTR_GENE, graded_normal
@@ -230,7 +230,7 @@ def measure(
 ) -> tuple[dict[str, str], dict[str, Level], dict[str, Any]]:
     """What the libraries' `results` withhold (key -> reason) and cap (gene -> level), and
     what was measured on each library: per locus its alleles, their intervals, the reads
-    behind each, their classes, the truth and the size error; both SMN callers' copy
+    behind each (at a standard-rule locus), their classes, the truth and the size error; both SMN callers' copy
     numbers; Yleaf's haplogroup and whether it derives L816; the flank ratio. A locus with
     no call or low depth on a library is withheld, and one whose allele count differs from
     a known truth capped at low."""
@@ -264,7 +264,10 @@ def measure(
             repeats[gene] = {
                 "alleles": counts,
                 "ci": [list(a.ci) for a in call.alleles],
-                "reads": [a.spanning + a.flanking + a.inrepeat for a in call.alleles],
+                # Only where `min_allele_reads` was derived: the standard rule's loci.
+                "reads": [a.spanning + a.flanking + a.inrepeat for a in call.alleles]
+                if locus.rule is Rule.STANDARD
+                else None,
                 "classes": [str(c) for c in classes],
                 "truth": None if known is None else list(known),
                 "size_error": error,
@@ -435,12 +438,14 @@ def report(table: Stage3Table) -> str:
             )
         lines.append(f"  {gene}\t" + "\t".join(cells) + f"\t{verdict(gene)}")
     # `[repeats] min_allele_reads` is derived from these: the fewest reads behind any of
-    # HG002's alleles.
+    # HG002's alleles at a standard-rule locus the table keeps (a withheld one is graded
+    # by no run).
     fewest = []
     for library in libraries:
         reads = [
             (n, gene)
             for gene, found in table.measured[library]["repeats"].items()
+            if gene not in table.withheld
             for n in found.get("reads") or ()
         ]
         if reads:

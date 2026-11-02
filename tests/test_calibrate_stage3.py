@@ -42,7 +42,7 @@ from genokeeper.checksum import sha256_file
 from genokeeper.config import Paths, grch38_fasta, load_grading
 from genokeeper.pipeline import RunRefused, Stage3Results
 from genokeeper.repeats.expansionhunter import read_calls, region
-from genokeeper.repeats.loci import RepeatCall
+from genokeeper.repeats.loci import RepeatCall, Rule
 from genokeeper.repeats.rfc1 import RFC1_LOCUS, read_rfc1
 from genokeeper.smn import ParascopyCall, read_parascopy, read_smn_caller
 from genokeeper.store.db import Level, Topic, Validity
@@ -151,8 +151,16 @@ def test_measure_withholds_a_low_depth_locus() -> None:
 def test_report_shows_intervals_and_fewest_reads() -> None:
     """The report shows each allele's interval, which `graded_normal` withholds by, and
     the fewest reads behind an allele per library, which `[repeats] min_allele_reads` is
-    derived from."""
+    derived from: over the loci the run grades by the standard rule, the one it was
+    derived on, and that the table keeps; a withheld locus's reads say nothing."""
     hg002 = _hg002()
+    assert hg002.repeats is not None
+    # HTT at low depth with one read behind an allele: withheld, so not the fewest.
+    variant = LOCI["HTT"].variant_id
+    call = hg002.repeats[variant]
+    one = replace(call.alleles[0], spanning=1, flanking=0, inrepeat=0)
+    shallow = replace(call, alleles=(one, *call.alleles[1:]), low_depth=True)
+    hg002 = replace(hg002, repeats=dict(hg002.repeats) | {variant: shallow})
     withheld, caps, measured = measure({"pcrfree": hg002}, _truth(hg002), LOCI)
     table = Stage3Table(
         versions={}, withheld=withheld, caps=caps, flank={}, measured=measured
@@ -165,9 +173,11 @@ def test_report_shows_intervals_and_fewest_reads() -> None:
     fewest = min(
         (a.spanning + a.flanking + a.inrepeat, gene)
         for gene, locus in LOCI.items()
-        if (call := hg002.repeats.get(locus.variant_id)) is not None
-        for a in call.alleles
+        if locus.rule is Rule.STANDARD and gene not in withheld
+        if (found := hg002.repeats.get(locus.variant_id)) is not None
+        for a in found.alleles
     )
+    assert fewest[1] != "HTT"
     assert f"fewest reads behind an allele: pcrfree {fewest[0]} ({fewest[1]})" in text
 
 
