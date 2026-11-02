@@ -2029,7 +2029,9 @@ def repeat_steps(
     """The cached `repeats` step on `cram` (its align step's key `cram_key`):
     ExpansionHunter, REViewer on every locus with an allele above its normal range, and
     C9orf72's flank ratio over `mean_depth`; its key holds `cram_key`, both images, the
-    catalog's and the FASTA's sha256, the sex, the mean depth and [repeat_loci]. Then RFC1's
+    catalog's and the FASTA's sha256, the sex, the mean depth and of each [repeat_loci] row
+    the fields the build reads (`locus_id`, `variant_id`, `normal_max`; a note or a disease
+    threshold changes no call). Then RFC1's
     motif call from its JSON (`read_rfc1`; None for a no-call), whose failure (the analysis
     missing) is `failed["rfc1"]` and keeps the step. The run and the stage-3 calibration (all four trio samples) run through here.
 
@@ -2070,7 +2072,12 @@ def repeat_steps(
         REPEATS_STEP_VERSION,
         [cram_key, catalog_sha256(), fasta_sha, str(sex)]
         + [IMAGES["expansionhunter"], IMAGES["reviewer"], str(mean_depth)]
-        + [json.dumps({g: asdict(locus) for g, locus in loci.items()}, sort_keys=True)],
+        + [
+            json.dumps(
+                {g: [x.locus_id, x.variant_id, x.normal_max] for g, x in loci.items()},
+                sort_keys=True,
+            )
+        ],
         EH_VCF,
         build_repeats,
         tool=REPEATS_TOOL,

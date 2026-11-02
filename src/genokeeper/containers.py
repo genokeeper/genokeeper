@@ -82,9 +82,9 @@ IMAGES: dict[str, str] = {
     # Aldy 4.8.3 and BCyrius 2.2.0: no BioContainers or upstream image, so built here from
     # docker/ (`BUILT`) for the host's platform, each named `<version>-<inputs' sha256>`.
     "aldy": "genomelab/aldy:4.8.3-"
-    "33c0c6c4f4b2df3c50a771852c0e8d6eade956e3f7b8a1ced137e118bc21b3c1",
+    "61121bdf3ef0411eaf135a9de48b7129035dd73036cb6c8e54641e85b7572aab",
     "bcyrius": "genomelab/bcyrius:2.2.0-"
-    "f886e3af760c247a881454cb79d55b4043abfdcdafac1176c814410f415bd62e",
+    "e7d4c07589c8e635c7724c68574a08b8949de7b72a26c7e9cc007862e42a0b3e",
     # Haplogrep3 3.3.2: upstream publishes a release tarball, no image, and BioContainers
     # builds 3.2.2 at newest (quay.io, read 2026-10-21); built here, with its tree baked in
     # (docker/haplogrep3.Dockerfile).
@@ -125,7 +125,7 @@ IMAGES: dict[str, str] = {
     # SpliceAI 1.3.1: Illumina publishes PyPI files and no image; built here from docker/
     # (`BUILT`) for linux/arm64 (`PLATFORMS`).
     "spliceai": "genomelab/spliceai:1.3.1-"
-    "e929b03bc8a5a1b4ba0b8b893f0effbfe0fa012392330dc49e0a5ad0ccef544d",
+    "ea4699ff4fe9c239bd2fc38150926403d9d3871c6a4f76917f5159de5d0fc676",
     # SMNCopyNumberCaller 1.1.2 and Parascopy 1.19.0: BioContainers builds both for
     # linux/amd64 only, so built here from docker/ (`BUILT`) for linux/arm64 (`PLATFORMS`),
     # each from an explicit conda lockfile; two images because their htslib pins differ.
@@ -193,18 +193,18 @@ IMAGES: dict[str, str] = {
     # BioContainers, so built here from docker/ (`BUILT`) for linux/arm64 (`PLATFORMS`), from
     # a hashed wheel list; the image carries its ISBT allele table (LABEL rbceq2.db).
     "rbceq2": "genomelab/rbceq2:2.4.4-"
-    "8ad13236d966098761175bc770d55ae69509000b3223d2af7cf80c95d63361f6",
+    "44e37c5bbfb52fb91e0f3745c071c3cb9b8dbe2fc6f29c2caf07e12448427885",
     # fastmixture 1.3.0 (github.com/Rosemeis/fastmixture tag v1.3.0; GPL-3.0: run, never
     # redistributed): no image upstream or at BioContainers, so built here from docker/
     # (`BUILT`) for linux/arm64 (`PLATFORMS`), from its PyPI sdist by sha256.
     "fastmixture": "genomelab/fastmixture:1.3.0-"
-    "8f099f89bca8e32212b08be5ab228e4057f29f51ae57873e64ca2da1711aa119",
+    "9a20b1dc54ca0cfd604d4bf1da63b917573da7f7a5e124b128b450429e8b8f02",
     # hmmix 0.9.2 (github.com/LauritsSkov/Introgression-detection; no tags): no image
     # upstream or at BioContainers, so built here from docker/ (`BUILT`) for linux/arm64
     # (`PLATFORMS`), from an explicit conda lockfile (Python 3.10, bcftools, vcftools) and a
     # hashed wheel list.
     "hmmix": "genomelab/hmmix:0.9.2-"
-    "10a7775df8a47ebdf16e137701a6443af48c8bcdd982e7f3b145bbc15f597d73",
+    "ffe9a70f04f2f1a3d400ae2686dd8911c15cf2d6ccec98bdb162f407dc85b363",
 }
 # Images built here, not pulled: name -> the files under docker/ the build reads, its
 # Dockerfile first.
@@ -377,12 +377,25 @@ def run_container(
         ) from e
 
 
+def _installed(file: str, data: bytes) -> bytes:
+    """`data` as it decides what the build installs: a lock file (`.txt`, `.lock`) without
+    its comment lines and blank lines, which install nothing; any other file whole (a
+    Dockerfile's `# syntax=` line matters, a copied configuration file is installed as it
+    is). A `#` inside a line stays: a conda lock carries each package's md5 after one."""
+    if not file.endswith((".txt", ".lock")):
+        return data
+    lines = data.splitlines(keepends=True)
+    return b"".join(x for x in lines if x.strip() and not x.lstrip().startswith(b"#"))
+
+
 def build_inputs_digest(name: str) -> str:
-    """The sha256 over a `BUILT` image's input files, each file's name and bytes in order."""
+    """The sha256 over a `BUILT` image's input files, each file's name and its bytes in
+    order (a lock file's without comment lines, `_installed`), so an edit to what the build
+    installs names another image and an edit to a lock file's comments does not."""
     digest = hashlib.sha256()
     for file in BUILT[name]:
         digest.update(file.encode() + b"\0")
-        digest.update((DOCKER_DIR / file).read_bytes() + b"\0")
+        digest.update(_installed(file, (DOCKER_DIR / file).read_bytes()) + b"\0")
     return digest.hexdigest()
 
 

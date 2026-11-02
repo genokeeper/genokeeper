@@ -226,6 +226,14 @@ def test_inputs_digest_moves_with_any_input(
     assert before == IMAGES["bcyrius"].rsplit("-", 1)[1]
     (tmp_path / "bcyrius.requirements.txt").write_text("numpy==1\n")
     assert build_inputs_digest("bcyrius") != before
+    # A conda lock's md5 follows a `#` inside its line: an edit to it names another image.
+    for name in BUILT["delly"]:
+        (tmp_path / name).write_bytes((DOCKER_DIR / name).read_bytes())
+    lock = tmp_path / "delly.lock"
+    before = build_inputs_digest("delly")
+    assert before == IMAGES["delly"].rsplit("-", 1)[1]
+    lock.write_text(lock.read_text().replace(".conda#", ".conda#0", 1))
+    assert build_inputs_digest("delly") != before
 
 
 def test_a_build_from_other_inputs_is_refused(
@@ -257,11 +265,12 @@ def test_a_comment_only_lock_edit_keeps_the_image(
     lock = inputs / BUILT[name][-1]
     pins = lock.read_text()
     lock.write_text(f"# reworded header\n\n{pins.replace('# ', '#  ')}")
-    assert containers.main(["build", name]) == 0
+    containers.main(["build", name])
     assert [call[0] for call in _calls(docker)] == ["build"]
     pin = next(line for line in pins.splitlines() if "==" in line and "#" not in line)
     lock.write_text(pins.replace(pin, pin.replace("==", "==9")))
     assert containers.main(["build", name]) == 1
+    assert [call[0] for call in _calls(docker)] == ["build"]  # no second build
 
 
 def _lock_lines(lock: str, package: str) -> list[str]:

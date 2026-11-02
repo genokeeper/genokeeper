@@ -1541,7 +1541,9 @@ def test_repeats_step_keyed_on_what_its_build_reads(genome: Genome) -> None:
     graded = replace(
         _grading(), repeats=replace(_grading().repeats, loci={**loci, "HTT": worded})
     )
-    write_stage3(genome.lab, grading=graded)  # the stage-3 table measures the thresholds
+    write_stage3(
+        genome.lab, grading=graded
+    )  # the stage-3 table measures the thresholds
     run_id = _run_genome(genome, grading=graded)
     with connect(genome.store) as con:
         reused = _inputs_json(con, run_id)
@@ -1550,7 +1552,9 @@ def test_repeats_step_keyed_on_what_its_build_reads(genome: Genome) -> None:
     redrawn = replace(
         _grading(), repeats=replace(_grading().repeats, loci={**loci, "HTT": drawn})
     )
-    write_stage3(genome.lab, grading=redrawn)  # the stage-3 table measures the thresholds
+    write_stage3(
+        genome.lab, grading=redrawn
+    )  # the stage-3 table measures the thresholds
     run_id = _run_genome(genome, grading=redrawn)
     with connect(genome.store) as con:
         again = _inputs_json(con, run_id)
