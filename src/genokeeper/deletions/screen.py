@@ -143,17 +143,9 @@ class Screen:
     callers: tuple[str, str] = ("dysgu", "delly")
 
     @cached_property
-    def _targets(self) -> _Index[tuple[str, tuple[int, ...]]]:
+    def _targets(self) -> _Index[tuple[str, Target]]:
         return _Index(
-            (t.chrom, t.start, t.end, (gene, t.exons))
-            for gene, ts in self.targets.items()
-            for t in ts
-        )
-
-    @cached_property
-    def _spans(self) -> _Index[tuple[str, int, int]]:
-        return _Index(
-            (t.chrom, t.start, t.end, (gene, t.start, t.end))
+            (t.chrom, t.start, t.end, (gene, t))
             for gene, ts in self.targets.items()
             for t in ts
         )
@@ -319,8 +311,8 @@ def reciprocal(a: Interval, b: Interval) -> float:
 def exon_hits(d: Deletion, s: Screen) -> dict[str, tuple[int, ...]]:
     """The genes whose targets the call touches, with the exon numbers it hits (sorted)."""
     hit: dict[str, set[int]] = {}
-    for gene, numbers in s._targets.hits(d.chrom, d.pos, d.end):
-        hit.setdefault(gene, set()).update(numbers)
+    for gene, t in s._targets.hits(d.chrom, d.pos, d.end):
+        hit.setdefault(gene, set()).update(t.exons)
     return {gene: tuple(sorted(hit[gene])) for gene in sorted(hit)}
 
 
@@ -331,8 +323,8 @@ def flank_only(d: Deletion, s: Screen) -> frozenset[str]:
     any deletion the screen keeps."""
     m = s.thresholds.exon_margin
     hit: dict[str, bool] = {}
-    for gene, start, end in s._spans.hits(d.chrom, d.pos, d.end):
-        core = start + m < d.end and d.pos < end - m
+    for gene, t in s._targets.hits(d.chrom, d.pos, d.end):
+        core = t.start + m < d.end and d.pos < t.end - m
         hit[gene] = hit.get(gene, False) or core
     return frozenset(gene for gene, core in hit.items() if not core)
 
