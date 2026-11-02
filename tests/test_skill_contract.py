@@ -577,19 +577,24 @@ def test_skill_labels_predicted() -> None:
 def test_skill_names_the_annotation_limits() -> None:
     """BR-027, BR-028: the predicted findings name the two genes the annotation cannot grade
     in full: SLC37A4, whose only MANE transcript is on a GRC fix patch (its LoF always fails
-    gate 2, which says nothing of the variant), and PCDH15, whose last coding exon SpliceAI's
-    annotation lacks; Coverage no longer calls SLC37A4 uncovered as a whole."""
+    gate 2 past gate 1, no reason alone to call it doubtful), and PCDH15, whose last coding
+    exon SpliceAI's annotation lacks; Coverage names what SLC37A4 lacks."""
     text = SKILL.read_text()
     section = _section_named(text, "## Predicted findings")
+    flat = " ".join(section.split())
     for needed in (
-        "SLC37A4",
+        "SLC37A4 is the exception to the gate-failure rule above",
         "GRC fix patch",
-        "always fails LoF gate 2",
+        "passes gate 1 always fails LoF gate 2",
+        "that gate alone is no reason to call it doubtful",
+        "ENST00000545985",
         "PCDH15's last coding exon",
         "no SpliceAI score",
+        "still graded as a loss of function",
     ):
-        assert needed in section, needed
-    assert "nor is SLC37A4" not in _section_named(text, "## Coverage")
+        assert needed in flat, needed
+    coverage = " ".join(_section_named(text, "## Coverage").split())
+    assert "SLC37A4's coverage, deletions, insertions and copy number" in coverage
 
 
 def test_skill_covers_stage3a() -> None:

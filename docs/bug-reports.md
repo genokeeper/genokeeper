@@ -15,7 +15,7 @@ files, not this one. How to file, close and reference an entry:
 |---|---|---|---|---|
 | [BR-009](bugs/BR-009.md) | low | sources | A repeat statement's words contradict its grading: a watch's class reads normal, a watch says the expansion is reliable, a finding answers carrier, AR reads GCA | 2026-10-28 |
 | [BR-012](bugs/BR-012.md) | medium | annotate | One VEP row per variant lets a non-MANE LoF hide a MANE Plus Clinical missense in a listed gene | 2026-11-02 |
-| [BR-027](bugs/BR-027.md) | medium | evidence | SLC37A4 has no MANE model on the primary assembly, so its predicted LoFs always fail gate 2 and read as doubtful | 2026-11-02 |
+| [BR-027](bugs/BR-027.md) | medium | evidence | SLC37A4 has no MANE model on the primary assembly, so its predicted LoFs fail gate 2 and read as doubtful | 2026-11-02 |
 
 ## Rejected (6)
 
