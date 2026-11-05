@@ -10,6 +10,7 @@ import pysam
 import pytest
 from fixtures.gvcf_mini import write_fasta
 
+from genokeeper import pipeline
 from genokeeper.annotate import vep
 from genokeeper.annotate.vep import (
     VEP_INPUT,
@@ -410,3 +411,30 @@ def test_nmd_track_converted_offline_in_its_image(
         )
     ]
     assert "@sha256:" in IMAGES["ucsc_bigbedtobed"]
+
+
+def test_vep_step_key_holds_the_spliceai_names(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The vep step's cache key holds `SPLICEAI_NAMES`: an edit to the map runs VEP and
+    SpliceAI again without a step-version bump, and the same map reuses the cached step."""
+    monkeypatch.setattr(pipeline, "vep_input", lambda *_, **__: [])
+    monkeypatch.setattr(pipeline, "annotate", lambda *_, **__: [])
+
+    def step() -> pipeline._Step:
+        return pipeline.vep_step(
+            tmp_path / "work",
+            vcf=tmp_path / "calls.vcf.gz",
+            fasta=tmp_path / "ref.fa",
+            files=vep_files(tmp_path),
+            listed=["MMUT"],
+            threads=1,
+            parts=["call", "images"],
+        )
+
+    first = step()
+    again = step()
+    monkeypatch.setitem(vep.SPLICEAI_NAMES, "PLP1", "PLP")
+    renamed = step()
+    assert (again.key, again.reused) == (first.key, True)
+    assert renamed.key != first.key

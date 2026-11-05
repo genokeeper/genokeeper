@@ -49,7 +49,7 @@ FUT2: Allele = ("chr19", 48703417, "G", "A")  # rs601338, effect A (W154X)
 ABCC11: Allele = ("chr16", 48224287, "C", "T")  # rs17822931, effect T (dry earwax)
 HERC2: Allele = ("chr15", 28120472, "A", "G")  # rs12913832, effect G (blue)
 AMPD1: Allele = ("chr1", 114693436, "G", "A")  # rs17602729, effect A (Q12X)
-# rs333, the 32-bp deletion left-aligned (dbSNP writes it right-shifted at 46373453).
+# rs333, the 32-bp deletion left-aligned (HGVS shifts it right, to 46373456).
 CCR5: Allele = ("chr3", 46373452, "TACAGTCAGTATCAATTCTGGAAGAATTTCCAG", "T")
 # MC1R's strong (R) sites, then its weak (r) ones; every effect allele is the ALT.
 D84E: Allele = ("chr16", 89919510, "C", "A")  # rs1805006
@@ -66,12 +66,14 @@ MC1R_WEAK = (V60L, V92M, R163Q)
 NEW_TRAITS = ("FUT2", "ABCC11", "MC1R", "HERC2", "AMPD1", "CCR5")
 CAVEATS = {
     "FUT2": "the common European and African null allele only; the rule does not hold in"
-    " East Asian ancestry; the FUT2 blood group reads more FUT2 alleles: when it gives a"
-    " phenotype (not when it reads unassessed or not calibrated) and the two differ, it is"
-    " the fuller reading",
-    "ABCC11": "one SNP decides earwax type; odour is only a tendency",
-    "MC1R": "hair colour depends on other genes too; many people with two variants are"
-    " blond or light brown; melanoma risk is in its polygenic score",
+    " East Asian ancestry; the FUT2 blood group (validity limited, so not in the default"
+    " view) reads more FUT2 alleles: when it gives a phenotype (not when it reads"
+    " unassessed or not calibrated) and the two differ, it is the fuller reading",
+    "ABCC11": "one SNP decides earwax type, apart from a rare ABCC11 deletion (Δ27) not"
+    " read here; odour is only a tendency",
+    "MC1R": "only nine common variants are read, not rarer MC1R ones; hair colour depends"
+    " on other genes too; many people with two variants are blond or light brown;"
+    " melanoma risk is in its polygenic score",
     "HERC2": "one SNP, for European ancestry; it cannot tell green from hazel",
     "AMPD1": "a common, mostly harmless variant; it predicts neither sports ability nor"
     " muscle disease",
@@ -365,8 +367,8 @@ def test_ampd1_three_genotypes(tmp_path: Path) -> None:
 
 
 def test_ccr5_delta32_left_aligned(tmp_path: Path) -> None:
-    """The deletion is left-aligned, as DeepVariant emits it (dbSNP writes it right-shifted
-    at 46373453); its effect allele is the ALT, the deletion."""
+    """The deletion is left-aligned, as DeepVariant emits it (HGVS shifts it right, to
+    46373456); its effect allele is the ALT, the deletion."""
     assert CCR5 in TRAIT_ALLELES
     resistant = (
         "two copies of CCR5Δ32: strongly resistant to HIV-1 strains that use CCR5,"

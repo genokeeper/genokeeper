@@ -44,7 +44,8 @@ OUTSIDE_BENCHMARK = "outside_benchmark"
 OUTSIDE_VERSION = "outside_benchmark per band"
 UNSEEN = "no calibration call of this class: its chance of being false is extrapolated"
 OUTSIDE = (
-    "over a target outside the benchmark the chance of being false was measured in"
+    "touches a target part outside the benchmark region where its chance of being false"
+    " was measured"
 )
 
 

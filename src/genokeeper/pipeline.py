@@ -138,6 +138,7 @@ from genokeeper.ancestry.archaic import (
 )
 from genokeeper.annotate.vep import CACHE_VERSION as VEP_CACHE_VERSION
 from genokeeper.annotate.vep import (
+    SPLICEAI_NAMES,
     VEP_INPUT,
     VEP_VERSION,
     VepFiles,
@@ -1949,7 +1950,8 @@ def vep_step(
 ) -> _Step:
     """VEP's records (`annotate.vep.annotate`, SpliceAI on the `listed` genes) for every
     PASS allele of our VCF (`vep_input`), with the vids VEP was given; cached by `parts`,
-    which hold no ClinVar release: the run's grading filters the classified alleles.
+    which hold no ClinVar release (the run's grading filters the classified alleles), and
+    by `SPLICEAI_NAMES`, which chooses each listed gene's SpliceAI entry.
     Docker not running, an image missing or VEP or SpliceAI failing refuses the run."""
 
     def build(out: Path) -> None:
@@ -1966,7 +1968,8 @@ def vep_step(
             json.dump(document, handle)
 
     try:
-        return _cached(work, "vep", VEP_STEP_VERSION, parts, ANNOTATED, build)
+        names = json.dumps(SPLICEAI_NAMES, sort_keys=True)
+        return _cached(work, "vep", VEP_STEP_VERSION, [*parts, names], ANNOTATED, build)
     except (DockerUnavailable, ToolFailed) as e:
         raise RunRefused(f"VEP: {_one_line(e)}") from e
 

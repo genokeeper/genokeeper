@@ -989,10 +989,11 @@ track's; a deletion common in gnomAD-SV is not shown.
   this short often cannot` (shorter: not evidence against it), `an end in a tandem repeat:
   may be a repeat-length change`, `an end in a segmental duplication or low-mappability
   region`; where its chance of being false is extrapolated, `no calibration call of this
-  class: its chance of being false is extrapolated`, `over a target outside the benchmark
-  the chance of being false was measured in`, or both; and on every deletion `its consequence (whole
-  or partial exon, in frame, last exon, decay escape) is not assessed`, plus `both copies
-  called; zygosity is not calibrated` on a two-copy call. Repeat every one in the answer.
+  class: its chance of being false is extrapolated`, `touches a target part outside the
+  benchmark region where its chance of being false was measured`, or both; and on every
+  deletion `its consequence (whole or partial exon, in frame, last exon, decay escape) is
+  not assessed`, plus `both copies called; zygosity is not calibrated` on a two-copy call.
+  Repeat every one in the answer.
   A gene's `validity.reason` adds `touches only the bases beside an exon, not the exon
   itself` where the deletion reaches that gene's exons only within the 20 bp margin.
   `claim.exons` names the exons whose targets it touches, in MANE Select's numbering;
@@ -1075,9 +1076,10 @@ carrier gate. The statements:
   effect unknown`. An insertion's reason names Scramble's family where it gave one
   ("possible Alu insertion"). Their calls carry 3b's extrapolation warnings where their
   own table's chance of being false is extrapolated (`no calibration call of this class…`,
-  `over a target outside the benchmark…`; a gain was measured genome-wide, so never the
-  second), and a gene's reason the flank line (`touches only the bases beside an exon, not
-  the exon itself`) where the event reaches that gene's exons only in the margin.
+  `touches a target part outside the benchmark region…`; a gain was measured genome-wide,
+  so never the second), and a gene's reason the flank line (`touches only the bases beside
+  an exon, not the exon itself`) where the event reaches that gene's exons only in the
+  margin.
 - `cnv:large:<chrom>:<pos>-<end>`: an event of 500 kb or more over a region or gene ClinGen
   scores dosage-sensitive, under risks with no gene. Say it is "shown, not
   calibrated: needs a chromosomal microarray", its chance of being false "not measured".
@@ -1278,19 +1280,20 @@ unassessed "not calibrated", never normal; a tool that failed leaves it unassess
   colour (rs12913832), AMPD1 Q12X (rs17602729) and CCR5Δ32 (rs333). Each is the
   literature's expectation for the genotype, not a certainty or a diagnosis; quote its
   stored wording and caveat as they are: FUT2 `the common European and African null allele
-  only; the rule does not hold in East Asian ancestry; the FUT2 blood group reads more FUT2
-  alleles: when it gives a phenotype (not when it reads unassessed or not calibrated) and
-  the two differ, it is the fuller reading`; ABCC11
-  `one SNP decides earwax type; odour is only a tendency`; MC1R `hair colour depends on
-  other genes too; many people with two variants are blond or light brown; melanoma risk
-  is in its polygenic score`; HERC2 `one SNP, for European
-  ancestry; it cannot tell green from hazel`; AMPD1 `a common, mostly harmless variant; it
-  predicts neither sports ability nor muscle disease`; CCR5 `not protection against HIV in
-  general and no substitute for prevention`. The phenotype is the literature's, not
-  checked here. Read both FUT2 statements by id (routing table), then answer secretor status
-  from `bloodgroup:FUT2` when it is a finding with a phenotype, otherwise from `trait:FUT2`,
-  and say which one answered; when both answer and differ, give the blood group's and name
-  the trait's.
+  only; the rule does not hold in East Asian ancestry; the FUT2 blood group (validity
+  limited, so not in the default view) reads more FUT2 alleles: when it gives a phenotype
+  (not when it reads unassessed or not calibrated) and the two differ, it is the fuller
+  reading`; ABCC11 `one SNP decides earwax type, apart from a rare ABCC11 deletion (Δ27) not
+  read here; odour is only a tendency`; MC1R `only nine common variants are read, not rarer
+  MC1R ones; hair colour depends on other genes too; many people with two variants are
+  blond or light brown; melanoma risk is in its polygenic score`; HERC2 `one SNP, for
+  European ancestry; it cannot tell green from hazel`; AMPD1 `a common, mostly harmless
+  variant; it predicts neither sports ability nor muscle disease`; CCR5 `not protection
+  against HIV in general and no substitute for prevention`. The phenotype is the
+  literature's, not checked here. Read both FUT2 statements by id (routing table), then
+  answer secretor status from `bloodgroup:FUT2` when it is a finding with a phenotype,
+  otherwise from `trait:FUT2`, and say which one answered; when both answer and differ,
+  give the blood group's and name the trait's.
 - **Pharmacogenomics.** `pharmcat:G6PD-gap` is always unassessed: `not covered: PharmCAT
   does not call the G6PD Mediterranean haplotype or Villeurbanne`, so a normal G6PD result
   does not exclude them. UGT1A1\*28 is read only when the calibration trusts it; otherwise
