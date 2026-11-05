@@ -863,8 +863,8 @@ def test_calibrations_take_each_library_sex(
 def test_accept_hg004_at_f1(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """`accept hg004` scores HG004's gVCF against its truth over its BED minus the mask:
-    below 0.99 the record says not accepted and the command exits 2 naming ENA's label;
+    """`accept hg004` scores HG004's gVCF against its truth over its BED minus the mask and
+    the correct copies: below 0.99 the record says not accepted and the command exits 2 naming ENA's label;
     at 0.996 it is accepted and `read_aligned` returns it."""
     lab = tmp_path / "lab"
     monkeypatch.setenv("GENOKEEPER_HOME", str(lab))
@@ -876,7 +876,7 @@ def test_accept_hg004_at_f1(
     bench.parent.mkdir(parents=True)
     for p in (vcf, Path(f"{vcf}.tbi")):
         p.write_bytes(b"")
-    bench.write_text("chr1\t0\t1000\nchr2\t0\t50\n")
+    bench.write_text("chr1\t0\t1000\nchr2\t0\t50\nchr21\t44100000\t44300000\n")
     layout(lab)["sdf"].mkdir(parents=True)
     monkeypatch.setattr(hg002, "load_mask", lambda: [("chr1", 100, 200)])
     scored: list[list[tuple[str, int, int]]] = []
@@ -895,7 +895,18 @@ def test_accept_hg004_at_f1(
     record = read_record(lab, "hg004")
     assert record is not None
     assert (record.accepted, record.snp_f1) == (False, 0.71)
-    assert scored == [[("chr1", 0, 100), ("chr1", 200, 1000), ("chr2", 0, 50)]]
+    assert scored == [
+        [
+            ("chr1", 0, 100),
+            ("chr1", 200, 1000),
+            ("chr2", 0, 50),
+            (
+                "chr21",
+                44_253_497,
+                44_300_000,
+            ),  # 44,095,806-44,253,497 is a correct copy
+        ]
+    ]
     with pytest.raises(RunRefused, match="0.71"):
         read_aligned(lab, "hg004")
     snp[0] = 0.996

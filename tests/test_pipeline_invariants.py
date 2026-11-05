@@ -82,6 +82,7 @@ from genokeeper import (
     haplocheck,
     haplogroup,
     insertions,
+    masking,
     mito,
     paralogs,
     phasing,
@@ -174,6 +175,7 @@ from genokeeper.genotype.clonal import Span
 from genokeeper.genotype.reliability import AF_CLONAL
 from genokeeper.history import dates, snapshots
 from genokeeper.identity import analyser_identity
+from genokeeper.masking import CORRECT_COPY_RESOURCE
 from genokeeper.paralogs import LOCI
 from genokeeper.pgx import cyp2d6, hla, pharmcat
 from genokeeper.pgx.hla import t1k_index
@@ -185,6 +187,7 @@ from genokeeper.pipeline import pgx_inputs as read_pgx_inputs
 from genokeeper.prs import pgsc
 from genokeeper.prs.scores import load_not_covered, load_scores
 from genokeeper.query import Filters, query, show
+from genokeeper.regions import SEX_REGIONS, giab38_dir, read_bed
 from genokeeper.repeats import expansionhunter
 from genokeeper.repeats.expansionhunter import EH_VERSION
 from genokeeper.repeats.loci import Rule
@@ -987,7 +990,7 @@ def test_run_genome_end_to_end(genome: Genome) -> None:
     assert tools_json["gnomad_faf"] == (
         f"{inputs['faf']['release']}, floor {inputs['faf']['floor']}"
     )
-    # The run records the six versions the table is checked against, and the table.
+    # The run records the seven versions the table is checked against, and the table.
     assert {key: tools_json[key] for key in VERSION_KEYS} == genome.table.versions
     folder = table_dir(genome.lab.paths.lab)
     bench = layout(genome.lab.paths.lab)["truth"] / BENCH_BED
@@ -2954,8 +2957,8 @@ def _refused_before_any_step(genome: Genome, match: str) -> None:
 @pytest.mark.parametrize("key", VERSION_KEYS)
 def test_table_from_other_versions_refused(genome: Genome, key: str) -> None:
     """A table measured under another pipeline (another bwa, samtools, image, checkpoint,
-    make_examples flags or reference) is refused, naming what differs and the command
-    that measures it again."""
+    make_examples flags, reference or correct copies) is refused, naming what differs and
+    the command that measures it again."""
     folder = table_dir(genome.lab.paths.lab)
     table = CalibrationTable.read(folder)
     replace_versions = {**table.versions, key: f"other-{key}"}
@@ -3065,6 +3068,33 @@ def test_hg002_cells_stale_when_their_regions_change(
         )
 
 
+def test_small_variant_tables_stale_when_the_correct_copies_change(
+    genome: Genome, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The three small-variant tables are scored without the correct copies: another
+    resource stales each."""
+    lab = genome.lab.paths.lab
+    vcf, v5 = calibrate_build.hg002_truth(lab)
+    vcf.parent.mkdir(parents=True, exist_ok=True)
+    for path in (vcf, v5):
+        path.write_text("chr1\t0\t10\n")
+    regions = giab38_dir(lab) / SEX_REGIONS
+    regions.parent.mkdir(parents=True, exist_ok=True)
+    regions.touch()
+    names = ("small_variants", "hg002_cells", "foundation")
+    for name in names:
+        versions = tables.TABLES[name].versions(lab)
+        write_calibration_table(lab, name, lambda _: None, versions)
+        assert isinstance(tables.open_table(lab, name), tables.Current)
+    other = tmp_path / "other.tsv"
+    other.write_text("chrom\tstart\tend\n")
+    monkeypatch.setattr(masking, "CORRECT_COPY_RESOURCE", other)
+    for name in names:
+        assert tables.open_table(lab, name) == tables.Stale(
+            "stale: correct_copies changed; run `genokeeper calibrate`"
+        )
+
+
 def test_calibrate_refuses_hg002_cells_without_pcrfree_calls(
     genome: Genome,
     monkeypatch: pytest.MonkeyPatch,
@@ -3091,7 +3121,7 @@ def test_calibrate_refuses_hg002_cells_without_pcrfree_calls(
 
 
 def test_calibration_versions_come_from_the_pipeline(genome: Genome) -> None:
-    """Each of the six versions is read from what the run runs: the tools on PATH, the
+    """Each of the seven versions is read from what the run runs: the tools on PATH, the
     image digest and DeepVariant flags in the code, and the checkpoint's and reference's
     files on disk. The shard count is not among the flags: it follows the machine."""
     lab = genome.lab.paths.lab
@@ -3113,6 +3143,7 @@ def test_calibration_versions_come_from_the_pipeline(genome: Genome) -> None:
         ),
         "make_examples_flags": " ".join(CALLING_FLAGS),
         "reference_md5": md5(genome.lab.fasta),
+        "correct_copies": sha256_file(CORRECT_COPY_RESOURCE),
     }
     for shards in (1, 8):
         args = deepvariant_args(
@@ -3148,12 +3179,16 @@ def test_calibrate_writes_a_table_the_run_accepts(
         Path(shutil.copy(fastq, where["fastq"] / fastq.name))
         for fastq in (genome.lab.fastq1, genome.lab.fastq2)
     ]
+    bench = where["truth"] / BENCH_BED
+    bench.write_text(bench.read_text() + "chr21\t44100000\t44300000\n")
     scored: list[Path] = []
+    benches: list[list[tuple[str, int, int]]] = []
     targets: list[int] = []
     cell = CellKey("variant", "snv", "easy", 50)
 
-    def count_cells(gvcf: Path, *_args: object, **_kwargs: object) -> object:
+    def count_cells(gvcf: Path, _truth: Path, bed: Path, **_kwargs: object) -> object:
         scored.append(gvcf)
+        benches.append(read_bed(bed))
         return {"chr1": {("genotype", cell): Counts(2, 1000, 3e4)}}, {"snp": 0.9971}
 
     def downsample(*pair: Path, target_bases: int) -> tuple[Path, ...]:
@@ -3206,6 +3241,10 @@ def test_calibrate_writes_a_table_the_run_accepts(
     (gvcf,) = scored
     assert gvcf.is_relative_to(lab / "calibration" / "hg003")
     assert genome.deepvariant.calls == 1
+    # Its benchmark loses the correct copy (chr21:44,095,806-44,253,497), not just the mask.
+    assert [i for i in benches[0] if i[0] == "chr21"] == [
+        ("chr21", 44_253_497, 44_300_000)
+    ]
     table = CalibrationTable.read(table_dir(lab))
     assert table.rate_for(cell).rate == 2 / 1000
     run_id = _run_genome(genome)

@@ -1,19 +1,25 @@
 """The GRC false-duplication mask, read from two FASTAs that differ only where the masked
 one holds N; the region files every slice adds, none of which may lie in a masked block."""
 
+import hashlib
 import json
 from pathlib import Path
 
 import pytest
 
 from genokeeper import masking
+from genokeeper.config import grch38_fasta
 from genokeeper.masking import (
     WINDOWS,
+    load_correct_copies,
     load_mask,
+    masked_bed,
     masked_intervals,
     overlaps,
     region_resources,
+    without_false_duplications,
 )
+from genokeeper.regions import read_bed
 from genokeeper.repeats.expansionhunter import REGION_EXTENSION
 
 
@@ -129,3 +135,33 @@ def test_no_region_resource_touches_the_mask() -> None:
     assert all(regions.values())  # a scan that read nothing fails
     touched = {name: hit for name, hit in overlaps(mask, regions).items() if hit}
     assert touched == {}
+
+
+def test_correct_copies_are_giabs_file() -> None:
+    """The committed rows are GIAB's BED as SOURCE.md pins it: one interval for each masked
+    block, none in a masked block, and chr21's measured FP clusters inside one."""
+    copies = load_correct_copies()
+    published = "".join(f"{c}\t{s}\t{e}\n" for c, s, e in copies)
+    assert (
+        hashlib.sha256(published.encode()).hexdigest()
+        == "e77d1572ecb059e1f6fa3684ce60e4b9235740749618969ea7a27370e90240eb"
+    )
+    assert len(copies) == len(load_mask())
+    assert overlaps(load_mask(), {"copies": copies}) == {"copies": []}
+    assert ("chr21", 44_095_806, 44_253_497) in copies
+
+
+def test_without_false_duplications_drops_both_copies(tmp_path: Path) -> None:
+    """A small-variant benchmark loses the lab's mask and the correct copies."""
+    lab = tmp_path / "lab"
+    grch38_fasta(lab).parent.mkdir(parents=True)
+    masked_bed(lab).write_text("chr21\t5010000\t5166246\n")
+    bed = tmp_path / "bench.bed"
+    bed.write_text("chr21\t5000000\t5200000\nchr21\t44000000\t44300000\n")
+    out = without_false_duplications(lab, bed, tmp_path / "out.bed")
+    assert read_bed(out) == [
+        ("chr21", 5_000_000, 5_010_000),
+        ("chr21", 5_166_246, 5_200_000),
+        ("chr21", 44_000_000, 44_095_806),
+        ("chr21", 44_253_497, 44_300_000),
+    ]

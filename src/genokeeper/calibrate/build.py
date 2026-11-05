@@ -255,7 +255,7 @@ from genokeeper.genotype.gvcf import Allele, Called, calls_at
 from genokeeper.genotype.reliability import StrataIndex, on_haploid_contig
 from genokeeper.haplocheck import Haplocheck, run_haplocheck
 from genokeeper.insertions import INSERTION_CALLERS, SCRAMBLE_MARGIN, scramble_regions
-from genokeeper.masking import masked_bed, without_mask
+from genokeeper.masking import masked_bed, without_false_duplications
 from genokeeper.mito import VCF_FILE, MitoCall, call_chrm
 from genokeeper.paralogs import LOCI, GauchianCall
 from genokeeper.pgx.hla_typing import DQ25_TAG, TAG_ALLELES, TAG_RSIDS, load_hg002_truth
@@ -528,8 +528,9 @@ def build_table(
     versions = calibration_versions(
         lab, tools=genome_tool_versions(), identities=hg003_dir(lab) / IDENTITIES
     )
-    # HG003 is scored on the masked reference: its benchmark loses the masked blocks.
-    bench = without_mask(
+    # HG003 is scored on the masked reference: its benchmark loses the masked blocks and
+    # their correct copies, where the truth, made on the unmasked reference, is not valid.
+    bench = without_false_duplications(
         lab, where["truth"] / BENCH_BED, hg003_dir(lab) / "benchmark.masked.bed"
     )
     by_chrom, f1 = count_cells(
@@ -2262,14 +2263,14 @@ def build_slice3f(
 
 
 def small_variants_versions(lab: Path) -> dict[str, str]:
-    """The small-variant table's versions: this machine's pipeline's six."""
+    """The small-variant table's versions: this machine's pipeline's seven."""
     return calibration_versions(
         lab, tools=genome_tool_versions(), identities=hg003_dir(lab) / IDENTITIES
     )
 
 
 def hg002_cells_versions(lab: Path) -> dict[str, str]:
-    """HG002's cells' versions: this machine's pipeline's six, the key of HG002
+    """HG002's cells' versions: this machine's pipeline's seven, the key of HG002
     PCR-free's alignment (the gVCF they score), and what cuts and scores their regions
     (`lab_regions`): `[par]`, HG003's benchmark BED and v5.0q's truth VCF and BED."""
     record = read_record(lab, "pcrfree")

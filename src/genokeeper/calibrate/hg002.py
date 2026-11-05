@@ -68,7 +68,7 @@ from genokeeper.calibrate.sample import (
 )
 from genokeeper.config import Paths, load_paths, unmasked_fasta
 from genokeeper.genotype.reliability import StrataIndex
-from genokeeper.masking import load_mask
+from genokeeper.masking import load_correct_copies, load_mask
 from genokeeper.pipeline import RunRefused, calling_inputs, recorded_bases
 from genokeeper.regions import read_bed, subtract
 from genokeeper.sex import Sex
@@ -745,15 +745,17 @@ def _clean_command(args: argparse.Namespace) -> int:
     return 0
 
 
-# Where `hg004_snp_f1` writes the benchmark it scores over: HG004's BED minus the mask.
+# Where `hg004_snp_f1` writes the benchmark it scores over: HG004's BED minus the mask and
+# the correct copies.
 HG004_SCORED_BED = "hg004_benchmark_unmasked.bed"
 
 
 def hg004_snp_f1(lab: Path, gvcf: Path) -> float:
     """The genotype-exact SNP F1 of HG004's gVCF against GIAB's HG004 v4.2.1 truth
     (`count_cells`, on `layout(lab)["sdf"]`), over its benchmark BED minus the masked
-    intervals (`load_mask()`), written under HG004's record folder. The strata do not enter
-    the F1, so none are read. `RunRefused` naming the bootstrap on a missing input."""
+    intervals (`load_mask()`) and their correct copies (`load_correct_copies()`), written
+    under HG004's record folder. The strata do not enter the F1, so none are read.
+    `RunRefused` naming the bootstrap on a missing input."""
     vcf, bench = hg004_truth(lab)
     sdf = layout(lab)["sdf"]
     for what, path, flag in (
@@ -768,11 +770,8 @@ def hg004_snp_f1(lab: Path, gvcf: Path) -> float:
             )
     scored = library_dir(lab, "hg004") / HG004_SCORED_BED
     tmp = scored.with_name(f".{scored.name}.{secrets.token_hex(4)}")
-    tmp.write_text(
-        "".join(
-            f"{c}\t{s}\t{e}\n" for c, s, e in subtract(read_bed(bench), load_mask())
-        )
-    )
+    left = subtract(read_bed(bench), [*load_mask(), *load_correct_copies()])
+    tmp.write_text("".join(f"{c}\t{s}\t{e}\n" for c, s, e in left))
     os.replace(tmp, scored)
     _, f1 = count_cells(
         gvcf, vcf, scored, sdf=sdf, strata=StrataIndex({}), rtg=rtg_path(lab)

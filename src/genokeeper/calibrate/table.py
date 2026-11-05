@@ -17,13 +17,13 @@ divided by their between-chromosome dispersion (`dispersion`), so a rate that va
 between chromosomes more than sampling explains is held less precise; the rate is not
 changed by it. A cell with no units is absent: `rate_for` raises `KeyError`.
 
-The table is a folder: `cells.tsv` and `manifest.json`, which records the six versions that
+The table is a folder: `cells.tsv` and `manifest.json`, which records the seven versions that
 invalidate it (`VERSION_KEYS`), the sample's SNP and INDEL F1 (`f1`, which Task 21's stop
 rule reads), and the cells file's sha256. A table whose manifest lacks a
 version, or whose cells file does not hash to the manifest's sha256, is refused on read.
 The versions' anchor comes from the manifest the measurement writes beside its cells, which
 a table measured without them (by older code, or assembled by hand) cannot pass for a
-complete one because the constructor, and so `read`, refuses any of the six missing; the
+complete one because the constructor, and so `read`, refuses any of the seven missing; the
 run compares them with its own (stage 2b, Task 20).
 """
 
@@ -49,6 +49,7 @@ VERSION_KEYS = (
     "checkpoint_md5",
     "make_examples_flags",
     "reference_md5",
+    "correct_copies",
 )
 FORMAT = 1
 CELLS = "cells.tsv"
@@ -273,7 +274,7 @@ def _pooled(cells: list[tuple[int, Counts]]) -> list[tuple[int, int, list[int]]]
 
 @dataclass(frozen=True)
 class CalibrationTable:
-    """Each error kind's cells (`GENOTYPE`, `ALLELE`) and the six versions measured on."""
+    """Each error kind's cells (`GENOTYPE`, `ALLELE`) and the seven versions measured on."""
 
     cells: dict[str, dict[CellKey, CellRate]]
     versions: dict[str, str] = field(default_factory=dict)

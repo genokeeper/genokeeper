@@ -4,9 +4,10 @@ The four controls (`CONTROLS`: HG002's two libraries, HG003 and HG004, each alig
 masked reference) give their X and Y depth ratios (`sex.measure_ratios`) and, where called,
 their chrX heterozygous share (`sex.x_het_share`, from the VCF beside the gVCF; HG002's PCR
 library is aligned only). HG002 PCR-free's true heterozygous SNVs (`measure.true_het_vafs`,
-over v5.0q's benchmark minus the mask) give the allele fractions a germline heterozygote
-shows. From them `propose_dosage` and `propose_af_bound` propose the bounds; the table holds
-the numbers (`report.json`) and the report (`report.txt`) with the TOML lines Task 15 writes
+over v5.0q's benchmark minus the mask and the correct copies) give the allele fractions a
+germline heterozygote shows. From them `propose_dosage` and `propose_af_bound` propose the
+bounds; the table holds the numbers (`report.json`) and the report (`report.txt`) with the
+TOML lines Task 15 writes
 into `config/grading.toml` in a commit citing it. Nothing here edits the config: the bounds
 are config, set from the report (3a's pattern).
 
@@ -44,7 +45,11 @@ from genokeeper.calibrate.stage3 import hg002_truth
 from genokeeper.calibrate.tables import REPORT, folder, write_table
 from genokeeper.checksum import sha256_file
 from genokeeper.config import load_grading
-from genokeeper.masking import masked_bed, without_mask
+from genokeeper.masking import (
+    correct_copies_sha256,
+    masked_bed,
+    without_false_duplications,
+)
 from genokeeper.pipeline import GENOME_SAMPLE, RunRefused, genome_tool_versions
 from genokeeper.regions import SEX_REGIONS, giab38_dir, read_named
 from genokeeper.sex import Dosage, SexRefused, measure_ratios, x_het_share
@@ -134,7 +139,8 @@ def share_below(vafs: Sequence[float], bound: float) -> float:
 def foundation_versions(lab: Path) -> dict[str, str]:
     """The versions the foundation table is measured under: the FASTA's sha256, each
     control record's key, the sex regions BED's sha256, `[sex] mapq`, the `[dosage]`
-    values the measurement reads, mosdepth's and rtg's versions."""
+    values the measurement reads, mosdepth's and rtg's versions, and the correct copies'
+    sha256 (the true heterozygotes are read without them)."""
     grading = load_grading()
     d = grading.dosage
     keys = {}
@@ -157,6 +163,7 @@ def foundation_versions(lab: Path) -> dict[str, str]:
         ),
         "mosdepth": genome_tool_versions()["mosdepth"],
         "rtg": RTG_VERSION,
+        "correct_copies": correct_copies_sha256(),
     }
 
 
@@ -241,7 +248,7 @@ def build_foundation(lab: Path, threads: int) -> None:
         vafs = true_het_vafs(
             gvcf,
             truth,
-            without_mask(lab, bench, work / "v5.0q.masked.bed"),
+            without_false_duplications(lab, bench, work / "v5.0q.masked.bed"),
             sdf=where["sdf"],
             rtg=rtg_path(lab),
             threads=threads,

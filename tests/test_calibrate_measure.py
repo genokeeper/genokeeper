@@ -380,7 +380,7 @@ def test_table_round_trips_with_versions(tmp_path: Path) -> None:
     # Written again over itself: replaced whole.
     table.write(folder)
     assert CalibrationTable.read(folder) == table
-    # Each of the six versions is required.
+    # Each of the seven versions is required.
     for key in VERSION_KEYS:
         with pytest.raises(ValueError, match=key):
             CalibrationTable.from_counts(

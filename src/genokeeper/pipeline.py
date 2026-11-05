@@ -366,7 +366,7 @@ from genokeeper.insertions import (
     run_scramble,
     scramble_regions,
 )
-from genokeeper.masking import masked_bed
+from genokeeper.masking import correct_copies_sha256, masked_bed
 from genokeeper.mito import (
     CALLS_FILE,
     VCF_FILE,
@@ -972,13 +972,14 @@ def calling_inputs(lab: Path) -> tuple[Path, Path]:
 def calibration_versions(
     lab: Path, *, tools: Mapping[str, str], identities: Path
 ) -> dict[str, str]:
-    """The six versions a calibration table is measured under (`VERSION_KEYS`), as this
+    """The seven versions a calibration table is measured under (`VERSION_KEYS`), as this
     machine's pipeline has them: bwa's and samtools' from `tools` (`genome_tool_versions`),
     the DeepVariant image digest written in the code, each T7 checkpoint file's md5, the
     DeepVariant arguments that decide the calls (`CALLING_FLAGS`; the shard count follows
-    the machine and is not one), and the GRCh38 FASTA's md5. The digests are cached in
-    `identities` (`md5_cached`). `genokeeper calibrate` writes these into the table it
-    measures; `genokeeper run` computes its own and compares them (`open_calibration`)."""
+    the machine and is not one), the GRCh38 FASTA's md5, and the sha256 of the correct
+    copies its benchmark leaves out. The digests are cached in `identities` (`md5_cached`).
+    `genokeeper calibrate` writes these into the table it measures; `genokeeper run` computes
+    its own and compares them (`open_calibration`)."""
     fasta, checkpoint = calling_inputs(lab)
     return {
         "bwa": tools["bwa"],
@@ -990,6 +991,7 @@ def calibration_versions(
         ),
         "make_examples_flags": " ".join(CALLING_FLAGS),
         "reference_md5": md5_cached(fasta, identities),
+        "correct_copies": correct_copies_sha256(),
     }
 
 
@@ -5182,7 +5184,7 @@ def run_genome(
             if PARALOGS in slice3d.ran
             else {}
         ),
-        # The six versions the calibration table was checked against (bwa, samtools and
+        # The seven versions the calibration table was checked against (bwa, samtools and
         # the DeepVariant image among the keys above, with the same values).
         **calibrated,
         **{name: gl.version for name, gl in lists.items()},

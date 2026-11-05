@@ -14,6 +14,11 @@ check reads is the one in git.
 `resources/` (whatever slice adds it) or a stage-3 window (`WINDOWS`) inside a masked block
 would read zero depth, so the CI test refuses one.
 
+The correct copies of those false duplications (`CORRECT_COPY_RESOURCE`, GIAB's BED) are read
+well on the masked reference, but GIAB's small-variant truths, made on the unmasked one, can
+lack what is there. `without_false_duplications` leaves both copies out for the small-variant
+scorers alone; the structural tables read the mask (`masked_bed`) and keep the correct copies.
+
     python -m genokeeper.masking verify UNMASKED MASKED OUT   # the BED, refused unless committed
     python -m genokeeper.masking derive UNMASKED MASKED       # writes MASK_RESOURCE
     python -m genokeeper.masking index FASTA                  # bwa index beside FASTA
@@ -30,6 +35,7 @@ from pathlib import Path
 
 import pysam
 
+from genokeeper.checksum import sha256_file
 from genokeeper.config import grch38_fasta
 from genokeeper.pgx.hla import MHC_REGION
 from genokeeper.regions import Interval, merge, read_bed, subtract
@@ -47,6 +53,9 @@ _PACKAGE = Path(__file__).resolve().parent
 _REPO = _PACKAGE.parents[1]
 RESOURCES = _PACKAGE / "resources"
 MASK_RESOURCE = RESOURCES / "reference" / "masked_intervals.GRCh38.tsv"
+CORRECT_COPY_RESOURCE = (
+    RESOURCES / "reference" / "false_duplications_correct_copy.GRCh38.tsv"
+)
 WINDOW = 1_000_000  # bases compared at a time
 BWA_EXTS = ("amb", "ann", "bwt", "pac", "sa")
 # Stage 3's windows: SMN1 and SMN2 with Parascopy's model and SMNCopyNumberCaller's sites,
@@ -65,10 +74,12 @@ def masked_bed(lab: Path) -> Path:
     return grch38_fasta(lab).with_name(MASKED_BED)
 
 
-def without_mask(lab: Path, bed: Path, out: Path) -> Path:
-    """`bed`'s intervals minus the lab's mask (`masked_bed`), written whole to `out`: a
-    benchmark read on the masked reference, where a masked block has no reads."""
-    _write(out, _bed(subtract(read_bed(bed), read_bed(masked_bed(lab)))))
+def without_false_duplications(lab: Path, bed: Path, out: Path) -> Path:
+    """`bed`'s intervals minus the lab's mask (`masked_bed`) and the correct copies, written
+    whole to `out`: a small-variant benchmark read on the masked reference, where a masked
+    block has no reads and the truth is not valid on a correct copy."""
+    remove = [*read_bed(masked_bed(lab)), *load_correct_copies()]
+    _write(out, _bed(subtract(read_bed(bed), remove)))
     return out
 
 
@@ -134,6 +145,18 @@ def _read_intervals(text: str) -> list[Interval]:
 def load_mask() -> list[Interval]:
     """The committed mask, `MASK_RESOURCE`: 0-based half-open intervals."""
     return _read_intervals(MASK_RESOURCE.read_text())
+
+
+def load_correct_copies() -> list[Interval]:
+    """The correct copies of the masked blocks, `CORRECT_COPY_RESOURCE`: 0-based half-open
+    intervals."""
+    return _read_intervals(CORRECT_COPY_RESOURCE.read_text())
+
+
+def correct_copies_sha256() -> str:
+    """`CORRECT_COPY_RESOURCE`'s sha256: the version of what the small-variant tables leave
+    out."""
+    return sha256_file(CORRECT_COPY_RESOURCE)
 
 
 def _write(path: Path, text: str) -> None:

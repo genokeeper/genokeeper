@@ -34,3 +34,27 @@ every check reads is the one in git. `tests/test_masking.py`'s
 `test_no_region_resource_touches_the_mask` checks that no `*.GRCh38.json` or `*.GRCh38.tsv`
 region file under `resources/`, and no stage-3 window (`genokeeper.masking.WINDOWS`), lies in
 a masked block, where it would read zero depth.
+
+# false_duplications_correct_copy.GRCh38.tsv
+
+The copies GRCh38 keeps of the same GRC false duplications: the correct copy of each masked
+block. GIAB's v4.2.1 and v5.0q truths were made on the unmasked reference, where a read of such
+a haplotype could go to the false copy, so they can lack a real variant on the correct copy; on
+the masked reference every read lands there and the caller reports what the truth lacks. So
+the three small-variant scorers (HG003's `small_variants`, HG004's SNP F1, HG002's cells and
+true heterozygotes) leave these intervals out as well as the mask
+(`genokeeper.masking.load_correct_copies`); nothing else reads them.
+
+- URL: https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/genome-stratifications/v3.6/GRCh38@all/OtherDifficult/GRCh38_false_duplications_correct_copy.bed.gz
+- Release: GIAB genome stratifications v3.6, retrieved 2026-11-05, 201 bytes
+- sha256 of the .gz: 44d07f373f6841a99fb85bd712e535e3e1364a033fd37cfd42e9e17988277717
+  (computed on that copy; GIAB's md5 list was not fetched)
+- sha256 of the decompressed BED: e77d1572ecb059e1f6fa3684ce60e4b9235740749618969ea7a27370e90240eb
+- Rebuild: decompress the .gz above under the three `#` lines and the `chrom start end` header
+  this file has; its rows are the BED's, unchanged. The file's sha256 is the `correct_copies`
+  version of the `small_variants`, `hg002_cells` and `foundation` tables, so an edit stales them.
+
+Checked 2026-11-05 against `GRCh38_no_alt.fa`: 12 intervals, 1,237,625 bp, none overlapping
+the mask. Each of the mask's 12 blocks has one, the interval holding 86-100% of the block's
+31-mers on one strand (the next best holds at most 1.3%); chrX's block has its copy on chr8 and
+chr13's first on chr16, so `chrX` has none.

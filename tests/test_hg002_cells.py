@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from genokeeper.calibrate import BENCH_BED, layout
 from genokeeper.calibrate.build import build_hg002_cells
 from genokeeper.calibrate.hg002_cells import (
     HAPLOID,
@@ -13,8 +14,10 @@ from genokeeper.calibrate.hg002_cells import (
     SHARED,
     cell_regions,
     cells_dir,
+    lab_regions,
     training_overlap,
 )
+from genokeeper.calibrate.stage3 import hg002_truth
 from genokeeper.calibrate.table import (
     GENOTYPE,
     VERSION_KEYS,
@@ -22,6 +25,8 @@ from genokeeper.calibrate.table import (
     CellKey,
     Counts,
 )
+from genokeeper.config import grch38_fasta
+from genokeeper.masking import masked_bed
 from genokeeper.pipeline import RunRefused
 
 VERSIONS = {key: f"{key}-value" for key in VERSION_KEYS}
@@ -42,6 +47,26 @@ def test_cell_regions() -> None:
         ONLY: [("chr1", 50, 90), ("chr1", 95, 100), ("chrX", 10000, 2781479)],
         SHARED: [("chr1", 0, 50)],
     }
+
+
+def test_lab_regions_leave_out_the_correct_copies(tmp_path: Path) -> None:
+    """The only and shared parts lose the correct copies as well as the lab's mask."""
+    lab = tmp_path / "lab"
+    grch38_fasta(lab).parent.mkdir(parents=True)
+    masked_bed(lab).write_text("chr21\t5010000\t5166246\n")
+    _, v5 = hg002_truth(lab)
+    v5.parent.mkdir(parents=True)
+    v5.write_text("chr21\t5000000\t5200000\nchr21\t44000000\t44300000\n")
+    hg003 = layout(lab)["truth"] / BENCH_BED
+    hg003.parent.mkdir(parents=True)
+    hg003.write_text("chr21\t44000000\t44100000\n")
+    regions = lab_regions(lab)
+    assert regions[ONLY] == [
+        ("chr21", 5_000_000, 5_010_000),
+        ("chr21", 5_166_246, 5_200_000),
+        ("chr21", 44_253_497, 44_300_000),
+    ]
+    assert regions[SHARED] == [("chr21", 44_000_000, 44_095_806)]
 
 
 def _one_cell(errors: int, total: int) -> CalibrationTable:

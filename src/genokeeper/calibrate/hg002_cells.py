@@ -3,7 +3,8 @@
 HG003's v4.2.1 truth covers chr1-22 and leaves out much of the genome GIAB's HG002 v5.0q
 benchmark now holds. HG002 PCR-free's own gVCF (`read_called(lab, "pcrfree")`, called by the
 run's pipeline) is scored as HG003's is (`measure.count_cells`) in three parts
-(`cell_regions`), each the v5.0q benchmark minus the masked GRC false duplications:
+(`cell_regions`), each the v5.0q benchmark minus the masked GRC false duplications and their
+correct copies:
 
 - `haploid`: chrX and chrY outside the PARs, where a male's calls are haploid;
 - `only`: the rest outside HG003's benchmark (a male's PARs among it, diploid);
@@ -32,7 +33,7 @@ from genokeeper.calibrate.stage3 import hg002_truth
 from genokeeper.calibrate.table import GENOTYPE, MANIFEST, CalibrationTable, CellKey
 from genokeeper.config import load_grading
 from genokeeper.genotype.reliability import ExtraCells, StrataIndex
-from genokeeper.masking import masked_bed
+from genokeeper.masking import load_correct_copies, masked_bed
 from genokeeper.regions import Interval, merge, read_bed, subtract
 
 HAPLOID = "haploid"
@@ -92,12 +93,12 @@ def training_overlap(
 
 
 def lab_regions(lab: Path) -> dict[str, list[Interval]]:
-    """The three parts' regions from the lab's v5.0q benchmark, HG003's and the mask."""
+    """The three parts' regions from the lab's v5.0q benchmark, HG003's, the mask and the
+    correct copies."""
     _, v5 = hg002_truth(lab)
     hg003 = layout(lab)["truth"] / BENCH_BED
-    return cell_regions(
-        read_bed(v5), read_bed(hg003), read_bed(masked_bed(lab)), load_grading().par
-    )
+    masked = [*read_bed(masked_bed(lab)), *load_correct_copies()]
+    return cell_regions(read_bed(v5), read_bed(hg003), masked, load_grading().par)
 
 
 def _write_bed(path: Path, intervals: Sequence[Interval]) -> Path:
