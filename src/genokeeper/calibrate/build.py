@@ -255,7 +255,11 @@ from genokeeper.genotype.gvcf import Allele, Called, calls_at
 from genokeeper.genotype.reliability import StrataIndex, on_haploid_contig
 from genokeeper.haplocheck import Haplocheck, run_haplocheck
 from genokeeper.insertions import INSERTION_CALLERS, SCRAMBLE_MARGIN, scramble_regions
-from genokeeper.masking import masked_bed, without_false_duplications
+from genokeeper.masking import (
+    correct_copies_sha256,
+    masked_bed,
+    without_false_duplications,
+)
 from genokeeper.mito import VCF_FILE, MitoCall, call_chrm
 from genokeeper.paralogs import LOCI, GauchianCall
 from genokeeper.pgx.hla_typing import DQ25_TAG, TAG_ALLELES, TAG_RSIDS, load_hg002_truth
@@ -529,7 +533,8 @@ def build_table(
         lab, tools=genome_tool_versions(), identities=hg003_dir(lab) / IDENTITIES
     )
     # HG003 is scored on the masked reference: its benchmark loses the masked blocks and
-    # their correct copies, where the truth, made on the unmasked reference, is not valid.
+    # their correct copies, where the truth, made on the unmasked reference, can lack real
+    # variants (BR-030).
     bench = without_false_duplications(
         lab, where["truth"] / BENCH_BED, hg003_dir(lab) / "benchmark.masked.bed"
     )
@@ -1789,7 +1794,10 @@ def _measure_library(
     def build_roh(out: Path) -> None:
         sites = steps["roh_sites"].path
         bed = out / "benchmark.bed"
-        shutil.copy(bench, bed)
+        if key == "pcrfree":
+            shutil.copy(bench, bed)
+        else:  # v4.2.1, which can lack real variants on the correct copies (BR-030)
+            without_false_duplications(lab, bench, bed)
         given = {
             "ours": sites,
             "truth": truth_sites_vcf(truth_vcf, bed, af, out / "truth.vcf.gz"),
@@ -1864,7 +1872,8 @@ def _measure_library(
                 "slice3f_roh",
                 SLICE3F_STEP_VERSION,
                 [steps["roh_sites"].key, IMAGES["truvari"], sha256_file(af)]
-                + [*truth_shas, json.dumps(SPIKE)],
+                + [*truth_shas, json.dumps(SPIKE)]
+                + ([] if key == "pcrfree" else [correct_copies_sha256()]),
                 "spiked.txt",
                 build_roh,
             )

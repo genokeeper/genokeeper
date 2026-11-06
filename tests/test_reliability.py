@@ -1,5 +1,5 @@
 """Genotype reliability's shared parts: GIAB strata, per-chromosome depth medians, the
-depth range, and haploid loci; and `p_wrong`, the error rate measured on HG003 for the
+depth range, and haploid loci; and `p_wrong`, the error rate measured on a GIAB sample for the
 call's cell. `grade_called` on the gVCF call layer's own calls is tested with that layer
 (tests/test_gvcf.py)."""
 

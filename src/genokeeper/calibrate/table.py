@@ -1,5 +1,5 @@
-"""The calibration table: genotype error per cell, measured on HG003, with the versions of the
-pipeline it was measured on.
+"""The calibration table: genotype error per cell, measured on a GIAB sample, with the
+versions of the pipeline it was measured on.
 
 A cell is a row type (a variant record, a RefCall, a reference block) x the claim's allele
 class (SNV, indel) x region (easy, or difficult: any GIAB v3.6 stratum the grading flags)

@@ -277,9 +277,9 @@ Each finding has these keys:
   gene-level finding and for an unassessed claim with no call row:
   - `level`: `high`, `medium` or `low`, judged on `p_wrong` (on DeepVariant's own GQ
     estimate where `p_wrong` is null);
-  - `p_wrong`: the probability the call is wrong, measured on HG003 (DNBSEQ-T7) — the
-    genotype error rate of GIAB's HG003 sample sequenced on the same platform and called
-    through the user's own pipeline, for calls like this one (same row type, SNV or indel,
+  - `p_wrong`: the probability the call is wrong, measured on GIAB reference samples (DNBSEQ-T7) — the
+    genotype error rate of GIAB's HG003 sample, or of HG002 where HG003's truth does not reach,
+    sequenced on the same platform and called through the user's own pipeline, for calls like this one (same row type, SNV or indel,
     difficult region or not, GQ band). Always give the number beside the level, with its
     interval. For a deletion (source `deletions`), a depth loss or gain (`cnv`) or an
     insertion (`insertions`) it is instead its class's chance of being false, measured on
@@ -296,8 +296,10 @@ Each finding has these keys:
     there cannot be read), `genotype unknown: inside a multi-base record` or `genotype
     unknown: mutserve calls no indels on chrM`. `het on a haploid contig` marks a
     heterozygous call where the user has one copy. `outside calibrated regions` marks a
-    call where no error rate was measured (outside HG003's benchmark regions, which cover
-    chr1–22 only, so every chrX and chrY call): its `p_wrong` is null and its `level` rests
+    call where no error rate was measured: outside HG003's benchmark regions (chr1–22,
+    without the correct copies of GRCh38's false duplications) and outside HG002's cells
+    (v5.0q's benchmark, which holds none of some copies, such as chr22:18.8–18.9 Mb; with
+    HG002's cells not current, every call outside HG003's regions): its `p_wrong` is null and its `level` rests
     on DeepVariant's own estimate; say so. Two warnings mark a reference inferred rather
     than called: `another allele called at this position` (`dosage` `0` because a
     different ALT was called there) and `indel site in a reference block; reference
@@ -1319,7 +1321,7 @@ unassessed "not calibrated", never normal; a tool that failed leaves it unassess
 2. **Per claim**, for each finding the answer rests on:
    - gene, marker (rsid and position) and genotype;
    - genotype reliability: `level` and `p_wrong` with its interval (`p_wrong_ci`), as
-     measured on HG003 (DNBSEQ-T7), with any `flags` and `warnings`;
+     measured on GIAB reference samples (DNBSEQ-T7), with any `flags` and `warnings`;
    - clinical validity: `level` and the source's own `source_level`, with the `reason`;
    - effect, where present (relative with CI; absolute with baseline and population);
    - actionable (yes/no);

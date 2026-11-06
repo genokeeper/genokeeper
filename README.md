@@ -550,9 +550,12 @@ feed. The store keeps no dosing text; PharmCAT's HTML report, whose path the run
 stays under `reports/work/pharmcat/` for you. `--sex male|female` overrides the sex
 inferred from the X copy count (chrX non-PAR depth over the autosomes: one X male, two female);
 `--threads` defaults to this machine's CPUs. Each slow step is cached under `reports/work/`
-and reused while its inputs are unchanged. Each call's `p_wrong` is the error rate the
-calibration table measured for its cell, with its interval; a call outside HG003's benchmark
-regions (chrX and chrY among them) is marked "outside calibrated regions". The run refuses
+and reused while its inputs are unchanged. Each call's `p_wrong` is the error rate measured
+for its cell, with its interval, on GIAB reference samples: HG003 inside its benchmark regions,
+and elsewhere HG002's cells, which may have been in DeepVariant's training, inside v5.0q's
+benchmark and at the locus's ploidy, once they are current. They hold a male's chrX and chrY
+outside the PARs and the correct copies of the false duplications. Any other call, a non-PAR
+chrX call with two X chromosomes among them, is marked "outside calibrated regions". The run refuses
 to start without a complete FAF table (naming `--with-gnomad`), with a calibration table
 measured under other pipeline versions (naming `genokeeper calibrate`), or without any other
 input the bootstrap supplies (naming `scripts/bootstrap.sh`); with no calibration table it

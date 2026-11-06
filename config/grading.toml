@@ -2,7 +2,7 @@
 # Read by genokeeper.config.load_grading; an unknown section or key is an error.
 
 [reliability]
-# Display level from p_wrong, the error rate measured on HG003 for the call's cell (stage 2b;
+# Display level from p_wrong, the error rate measured on a GIAB sample for the call's cell (stage 2b;
 # DeepVariant's own 10^(-GQ/10) outside the calibrated regions): high when p_wrong <= p_high
 # and no difficult-region flag; low when p_wrong > p_low, on a haploid-contig het or on a
 # NoCall; medium otherwise.

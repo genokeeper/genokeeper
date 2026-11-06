@@ -8,7 +8,9 @@ run's pipeline) is scored as HG003's is (`measure.count_cells`) in three parts
 - `haploid`: chrX and chrY outside the PARs, where a male's calls are haploid;
 - `only`: the rest outside HG003's benchmark (a male's PARs among it, diploid). Here HG003's
   benchmark leaves out the correct copies of those duplications (`without_correct_copies`),
-  where its truth is not valid and v5.0q's is, so they are rated from this part;
+  where its truth can lack real variants, so what v5.0q's benchmark holds of them, about 72%,
+  is rated from this part. v5.0q showed no excess of errors there on one sample, 0 of 789 at
+  GQ 40+, which does not establish that it is correct (BR-030);
 - `shared`: inside HG003's benchmark, never used to grade, only to compare: a cell where
   HG002 scores better than HG003's interval allows may be one where HG002 was in
   DeepVariant's training (`training_overlap`), which the report names.

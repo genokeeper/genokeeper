@@ -43,7 +43,9 @@ could go to the false copy, so they can lack a real variant on the correct copy;
 reference every read lands there and the caller reports what the truth lacks. So HG003's
 `small_variants` and HG004's SNP F1 leave these intervals out as well as the mask. A run reads
 HG003's benchmark without them too, so HG002's cells rate a site there inside v5.0q's benchmark
-and any other is uncalibrated; v5.0q was held valid on them by a measurement (BR-030).
+and any other is uncalibrated. On one sample v5.0q showed no excess of errors on them, 0 of 789
+at GQ 40+, which does not establish that it is correct, and it holds about 72% of their bases
+(BR-030).
 
 - URL: https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/genome-stratifications/v3.6/GRCh38@all/OtherDifficult/GRCh38_false_duplications_correct_copy.bed.gz
 - Release: GIAB genome stratifications v3.6, retrieved 2026-11-05, 201 bytes

@@ -27,7 +27,8 @@ table, and a rebuilt table changes the next run's grades without rebuilding a st
 
 Genotype error comes from the calibration table (`<lab>/calibration/small_variants/`,
 written by `genokeeper calibrate`, `genokeeper.calibrate.tables`): each call's `p_wrong` is the
-rate measured on HG003 for its cell, inside HG003's benchmark regions. Every run requires the
+rate measured on HG003 for its cell inside HG003's benchmark regions, on HG002 outside them
+where its cells are current. Every run requires the
 table and refuses, before any step, one measured under other pipeline versions than its own
 (`calibration_versions`, `open_calibration`); like the FAF table, it is in no step's key.
 

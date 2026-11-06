@@ -442,8 +442,8 @@ def test_a_key_under_a_plain_bullet_is_not_rooted() -> None:
     assert bullets(_contract(body)) == {}
 
 
-def test_p_wrong_is_documented_as_measured_on_hg003(tmp_path: Path) -> None:
-    """`p_wrong` is the error rate measured on HG003 (DNBSEQ-T7) with its interval, never
+def test_p_wrong_is_documented_as_measured_on_giab_samples(tmp_path: Path) -> None:
+    """`p_wrong` is the error rate measured on GIAB samples (DNBSEQ-T7) with its interval, never
     the caller's own estimate; null outside the calibrated regions."""
     con = connect(tmp_path / "genomelab.duckdb")
     seed(con, [Row("clinvar:1")])
@@ -452,7 +452,8 @@ def test_p_wrong_is_documented_as_measured_on_hg003(tmp_path: Path) -> None:
     assert finding["reliability"]["p_wrong_ci"] == [5e-5, 2e-4]
     lines = SKILL.read_text().splitlines()
     documented = bullets(SKILL.read_text())
-    assert "measured on HG003 (DNBSEQ-T7)" in lines[documented["reliability.p_wrong"]]
+    line = lines[documented["reliability.p_wrong"]]
+    assert "measured on GIAB reference samples (DNBSEQ-T7)" in line
     text = " ".join(SKILL.read_text().split())
     assert "caller's own estimate" not in text
     assert "`outside calibrated regions`" in text

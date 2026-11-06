@@ -99,8 +99,8 @@
   "no_genotype": {"en": "none (a gene-level finding)", "ru": "нет (находка на уровне гена)"},
   "not_measured": {"en": "not measured", "ru": "не измерено"},
   "p_wrong_measured": {
-    "en": "{p}{ci} (measured on HG003, DNBSEQ-T7)",
-    "ru": "{p}{ci} (измерено на HG003, DNBSEQ-T7)"
+    "en": "{p}{ci} (measured on GIAB reference samples, DNBSEQ-T7)",
+    "ru": "{p}{ci} (измерено на эталонных образцах GIAB, DNBSEQ-T7)"
   },
   "p_wrong": {"en": "chance of error {p}", "ru": "вероятность ошибки {p}"},
   "flags": {"en": "flags: {flags}", "ru": "флаги: {flags}"},

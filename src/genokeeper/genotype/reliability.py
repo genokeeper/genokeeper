@@ -1,9 +1,9 @@
 """Genotype reliability: the chance a call is wrong, its display level, flags and warnings.
 
 A call from our own GRCh38 gVCF (`grade_called`, reference blocks among them) carries
-`p_wrong`, the genotype error rate measured on HG003 sequenced on the DNBSEQ-T7 for the
-call's cell of the calibration table (`genokeeper.calibrate.table`), with its Jeffreys 95%
-interval (`p_wrong_ci`). Outside HG003's benchmark regions (chrX and chrY among them: the
+`p_wrong`, the genotype error rate measured on a GIAB reference sample sequenced on the
+DNBSEQ-T7 for the call's cell of the calibration table (`genokeeper.calibrate.table`), with
+its Jeffreys 95% interval (`p_wrong_ci`). Outside HG003's benchmark regions (chrX and chrY among them: the
 truth covers chr1-22), or in a cell nothing was measured in, there is no measured rate: the
 call is warned `OUTSIDE_CALIBRATED` and its display level comes from DeepVariant's own
 estimate, 10^(-GQ/10), as before stage 2b. Since slice 3c, HG002's cells measured where
@@ -50,7 +50,7 @@ _GT_SEP = re.compile(r"[/|]")
 
 @dataclass(frozen=True)
 class Reliability:
-    """How far a call can be trusted: the number (measured on HG003, with its Jeffreys 95%
+    """How far a call can be trusted: the number (measured on a GIAB sample, with its Jeffreys 95%
     interval), the level it shows at, flags and warnings."""
 
     p_wrong: float | None

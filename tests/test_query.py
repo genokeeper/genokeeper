@@ -884,6 +884,7 @@ def test_cli_query_text_shows_findings_and_hidden_counts(
     out = capsys.readouterr().out
     assert "BRCA1" in out and "rs71" in out and "clinvar:71" in out
     assert "p_wrong 1.0e-04" in out
+    assert "(measured on GIAB reference samples, DNBSEQ-T7)" in out
     assert "reliability_below:medium: 1" in out
 
 

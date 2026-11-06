@@ -16,9 +16,11 @@ would read zero depth, so the CI test refuses one.
 
 The correct copies of those false duplications (`CORRECT_COPY_RESOURCE`, GIAB's BED) are read
 well on the masked reference, but GIAB's v4.2.1 truths, made on the unmasked one, can lack what
-is there. So HG003's and HG004's measurements (`without_false_duplications`, `hg004_snp_f1`) and
-HG003's benchmark at run time (`without_correct_copies`) leave them out. HG002's v5.0q truth
-holds there, and its cells rate them; the structural tables read the mask alone.
+is there. So every measurement against those truths (`without_false_duplications`,
+`hg004_snp_f1`) and HG003's benchmark at run time (`without_correct_copies`) leave them out.
+HG002's cells rate what v5.0q's benchmark holds of them: v5.0q showed no excess of errors there
+on one sample, which does not establish that it is correct (BR-030). The rest is uncalibrated.
+The structural tables read the mask alone.
 
     python -m genokeeper.masking verify UNMASKED MASKED OUT   # the BED, refused unless committed
     python -m genokeeper.masking derive UNMASKED MASKED       # writes MASK_RESOURCE
@@ -84,7 +86,7 @@ def without_mask(lab: Path, bed: Path, out: Path) -> Path:
 
 def without_correct_copies(bed: Path) -> list[Interval]:
     """`bed`'s intervals minus the correct copies: a benchmark of GIAB's v4.2.1 truths, which
-    are not valid there."""
+    can lack real variants there."""
     return subtract(read_bed(bed), load_correct_copies())
 
 

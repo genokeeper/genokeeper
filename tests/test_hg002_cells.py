@@ -50,7 +50,7 @@ def test_cell_regions() -> None:
 
 
 def test_lab_regions_keep_the_correct_copies_in_the_only_part(tmp_path: Path) -> None:
-    """HG003's truth is not valid on a correct copy and v5.0q's is, so a copy inside HG003's
+    """HG003's truth can lack real variants on a correct copy, so a copy inside HG003's
     benchmark falls in the only part, which grades, and not in the shared one."""
     lab = tmp_path / "lab"
     grch38_fasta(lab).parent.mkdir(parents=True)

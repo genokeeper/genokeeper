@@ -2,7 +2,7 @@
 statements of every kind, each with an answer (track design, A4).
 
 A site's answer comes from its dosage and its reliability alone (the level judged on the
-error rate measured on HG003, `genotype.reliability`): `carrier` (one or two copies of the
+error rate measured on a GIAB sample, `genotype.reliability`): `carrier` (one or two copies of the
 claim's allele), `not_a_carrier` (dosage 0 at medium or high reliability),
 `probably_not_a_carrier` (dosage 0 at low) or `unknown` (dosage `unknown`, or no call row);
 a structural variant (`SV_NOUNS`: slice 3b's deletions, 3d's depth losses and gains and its

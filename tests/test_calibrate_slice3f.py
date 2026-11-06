@@ -12,7 +12,7 @@ from typing import Any
 import pysam
 import pytest
 
-from genokeeper import cli, pipeline
+from genokeeper import cli, masking, pipeline
 from genokeeper.ancestry.archaic import ArchaicShare
 from genokeeper.bloodgroups import Rbceq2Positions, SystemCall
 from genokeeper.calibrate import (
@@ -64,6 +64,7 @@ from genokeeper.containers import IMAGES, DockerUnavailable
 from genokeeper.genotype.gvcf import Allele, Called
 from genokeeper.haplocheck import Haplocheck
 from genokeeper.hhv6 import Hhv6Call
+from genokeeper.masking import masked_bed
 from genokeeper.mito import MitoCall
 from genokeeper.pgx.hla import HlaCall, t1k_index
 from genokeeper.pgx.hla_typing import TAG_RSIDS, load_hg002_truth
@@ -371,6 +372,7 @@ def make_lab(lab: Path) -> Path:
     for path in files:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(f"{path.name}\n")
+    masked_bed(lab).write_text("")
     for key in LIBRARIES:
         folder = library_dir(lab, key)
         cram, gvcf = (
@@ -808,6 +810,39 @@ def test_build_measures_three_libraries(
     assert table.hhv6_background == pytest.approx(0.03)
     assert table.chrm_floor == 0.02
     assert table.report["population"].startswith("EUR")
+
+
+def test_roh_leaves_the_correct_copies_out_of_the_v4_truths(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """HG003's and HG004's ROH truth loses the correct copies, and is read again when they
+    change; HG002's v5.0q benchmark is copied as it is and is not."""
+    lab = make_lab(tmp_path / "lab")
+    whole = "chr2\t0\t242000000\nchr21\t44100000\t44300000\nchr6\t0\t171000000\n"
+    for vcf, bench in slice3f.truths(lab).values():
+        Path(f"{vcf}.tbi").write_text("index\n")
+        bench.write_text(whole)
+    _fake_build(lab, monkeypatch, [])
+    scored: list[tuple[str, str]] = []
+    real = build.truth_sites_vcf
+
+    def spy(truth: Path, bench: Path, af: Path, out: Path) -> Path:
+        library = next(k for k in LIBRARIES if library_dir(lab, k) in bench.parents)
+        scored.append((library, bench.read_text()))
+        return real(truth, bench, af, out)
+
+    monkeypatch.setattr(build, "truth_sites_vcf", spy)
+    build.build_slice3f(lab, grading=load_grading(), threads=2)
+    without = whole.replace(
+        "chr21\t44100000\t44300000\n", "chr21\t44253497\t44300000\n"
+    )
+    assert dict(scored) == {"pcrfree": whole, "hg003": without, "hg004": without}
+    scored.clear()
+    other = tmp_path / "other.tsv"
+    other.write_text("chrom\tstart\tend\n")
+    monkeypatch.setattr(masking, "CORRECT_COPY_RESOURCE", other)
+    build.build_slice3f(lab, grading=load_grading(), threads=2)
+    assert dict(scored) == {"hg003": whole, "hg004": whole}
 
 
 def test_build_slice3f_refuses_missing_library(

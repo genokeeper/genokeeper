@@ -623,7 +623,10 @@ def _text_block(finding: dict[str, Any]) -> str:
         else:
             ci = r["p_wrong_ci"]
             interval = f" [{ci[0]:.1e}, {ci[1]:.1e}]" if ci is not None else ""
-            p_wrong = f"{r['p_wrong']:.1e}{interval} (measured on HG003, DNBSEQ-T7)"
+            p_wrong = (
+                f"{r['p_wrong']:.1e}{interval}"
+                " (measured on GIAB reference samples, DNBSEQ-T7)"
+            )
         gq = f", GQ {r['gq']}" if r["gq"] is not None else ""
         flags = ", ".join(r["flags"]) or "none"
         lines.append(

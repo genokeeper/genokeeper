@@ -1531,7 +1531,7 @@ def test_english_page_names_each_view(
         "asthma: 1st decile",
         "CYP2D6: *1/*2, Intermediate Metabolizer",
         "reliability high, calls: BCyrius *1/*2; Aldy *1/*2",
-        "0/1, reliability high, chance of error 1.0e-4 (measured on HG003, DNBSEQ-T7)",
+        "0/1, reliability high, chance of error 1.0e-4 (measured on GIAB reference samples, DNBSEQ-T7)",
         "Y haplogroup R1b-M269",
         "HTT: CAG 17/20, normal",
         "HLA table: 2 genes",
