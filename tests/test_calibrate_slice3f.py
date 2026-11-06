@@ -846,6 +846,42 @@ def test_roh_leaves_the_correct_copies_out_of_the_v4_truths(
     assert dict(scored) == {"hg003": whole, "hg004": whole}
 
 
+def test_roh_compares_three_files_cut_to_one_benchmark(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`ours` and `spiked` come from the sites cut to the bed the truth is cut to, and each
+    `bcftools roh` reads its own file (BR-034)."""
+    lab = make_lab(tmp_path / "lab")
+    for vcf, bench in slice3f.truths(lab).values():
+        Path(f"{vcf}.tbi").write_text("index\n")
+        bench.write_text("chr2\t0\t242000000\n")
+    _fake_build(lab, monkeypatch, [])
+    calls: dict[str, list[tuple[Any, ...]]] = {}
+
+    def record(name: str) -> None:
+        real = getattr(build, name)
+
+        def spy(*args: Any) -> Any:
+            calls.setdefault(name, []).append(args)
+            return real(*args)
+
+        monkeypatch.setattr(build, name, spy)
+
+    for name in ("inside", "truth_sites_vcf", "spike", "run_roh"):
+        record(name)
+    build.build_slice3f(lab, grading=load_grading(), threads=2)
+    assert len(calls["inside"]) == len(LIBRARIES)
+    read: list[Path] = []
+    for (sites, bed, ours), truth, spiked in zip(
+        calls["inside"], calls["truth_sites_vcf"], calls["spike"], strict=True
+    ):
+        assert sites != ours
+        assert truth[1] == bed
+        assert spiked[0] == ours
+        read += [ours, truth[3], spiked[2]]
+    assert [args[0] for args in calls["run_roh"]] == read
+
+
 def test_build_slice3f_refuses_missing_library(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
