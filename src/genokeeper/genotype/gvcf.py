@@ -17,7 +17,9 @@ which honours a block's `END`. For each claim (track design, stage 2a, "The call
   `OTHER_ALLELE_WARNING`: DeepVariant writes every candidate at a position into one record;
 - a position inside a called deletion with no record of its own, or a called `*` allele where
   the claim's allele has no copy, is unknown (`INSIDE_DELETION_REASON`) (builder's call);
-  so is a position inside another called multi-base record (`MULTI_BASE_REASON`).
+  so is a position inside another called multi-base record (`MULTI_BASE_REASON`);
+- an allele whose reference span overlaps a masked block (`genokeeper.masking`) is unknown
+  (`MASKED_REASON`), before any normalisation: the lab's reference is N there.
 
 On a haploid locus (`haploid(chrom, pos)`: a male's chrX or chrY outside the PARs) a
 homozygous genotype is one copy: DeepVariant writes a hom call `1/1` and every reference
@@ -35,6 +37,8 @@ from pathlib import Path
 
 import pysam
 
+from genokeeper.masking import load_mask
+from genokeeper.regions import Interval
 from genokeeper.store.db import RowType
 from genokeeper.tools import run_tool
 from genokeeper.variants.key import ucsc_contig
@@ -47,6 +51,7 @@ INDEL_BLOCK_WARNING = "indel site in a reference block; reference inferred"
 NOCALL_REASON = "genotype unknown: no-call"
 NO_COVERAGE_REASON = "genotype unknown: no coverage"
 MULTI_BASE_REASON = "genotype unknown: inside a multi-base record"
+MASKED_REASON = "genotype unknown: in a masked false duplication of the reference"
 
 # A reference block's GQ is binomial and capped at 50 (DeepVariant's gVCF; track design 2a).
 BLOCK_GQ_CAP = 50
@@ -165,16 +170,19 @@ def normalise(
     """Each allele left-aligned and trimmed against `fasta` by `bcftools norm`, in order.
 
     `-c e` stops at a REF the reference does not have: the alleles and the gVCF are on one
-    reference, so a mismatch means the wrong FASTA, never a claim to skip.
+    reference and `calls_at` keeps the masked blocks' alleles out, so a mismatch means the
+    wrong FASTA, never a claim to skip.
 
     The comparison's anchor comes from the lab's GRCh38 FASTA, which a record written in
     another frame (`CAA>CA` for `CA>C`) cannot move, because both sides are rewritten
     against that one reference before they are compared.
 
     The alleles (the user's calls) are written under `scratch`, the run's work directory
-    inside reports/ (deny-ruled, git-ignored), never the system temp, and removed after."""
+    inside reports/ (deny-ruled, git-ignored), made here if missing, never the system temp,
+    and removed after."""
     if not alleles:
         return []
+    scratch.mkdir(parents=True, exist_ok=True)
     order = {name: i for i, name in enumerate(contigs)}
     lines = sorted(
         (order[chrom], pos, f"{chrom}\t{pos}\t{i}\t{ref}\t{alt}\t.\t.\t.\n")
@@ -331,6 +339,13 @@ def _call(
     )
 
 
+def _masked(allele: Allele, chrom: str, mask: Iterable[Interval]) -> bool:
+    """Whether `allele`'s reference span, on the gVCF's `chrom`, overlaps a block of `mask`
+    (0-based half-open)."""
+    start, end = allele[1] - 1, allele[1] - 1 + max(len(allele[2]), 1)
+    return any(c == chrom and s < end and start < e for c, s, e in mask)
+
+
 def calls_at(
     gvcf: Path,
     alleles: Iterable[Allele],
@@ -343,8 +358,10 @@ def calls_at(
 
     `gvcf` is DeepVariant's indexed gVCF on `fasta`; `haploid(chrom, pos)` says whether a
     locus has one copy (asked at the normalised position, in the gVCF's contig names);
-    `scratch` takes `normalise`'s files."""
+    `scratch` takes `normalise`'s files. An allele in a masked block never reaches
+    `normalise`, whose `-c e` stops at every other REF `fasta` does not have."""
     wanted = list(dict.fromkeys(alleles))
+    mask = load_mask()
     with pysam.VariantFile(str(gvcf)) as vcf:
         contigs = {
             str(name): int(c.length or 0) for name, c in vcf.header.contigs.items()
@@ -357,7 +374,12 @@ def calls_at(
             return None
 
         known = [(a, contig(a[0])) for a in wanted]
-        on_contig = [(a, (c, a[1], a[2].upper(), a[3].upper())) for a, c in known if c]
+        masked = {a for a, c in known if c and _masked(a, c, mask)}
+        on_contig = [
+            (a, (c, a[1], a[2].upper(), a[3].upper()))
+            for a, c in known
+            if c and a not in masked
+        ]
         claims = normalise(
             [raw for _, raw in on_contig], fasta=fasta, contigs=contigs, scratch=scratch
         )
@@ -382,7 +404,7 @@ def calls_at(
         scratch=scratch,
     )
     normal = dict(zip(keys, normed, strict=True))
-    out: dict[Allele, Called] = {}
+    out: dict[Allele, Called] = dict.fromkeys(masked, _unknown(MASKED_REASON))
     for allele, c in known:
         if c is None:
             out[allele] = _unknown(NO_COVERAGE_REASON)

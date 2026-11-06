@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pysam
 import pytest
+from fixtures.gvcf_mini import block, ref, write_fasta, write_gvcf
 from fixtures.run_context import run_context
 
 from genokeeper import roh
@@ -174,6 +175,25 @@ def test_sites_vcf_rows_carry_af_alleles(
         ("chr1", "400", "T", "C", "1/1"),
         ("chr2", "100", "G", "C", "./."),  # graded low
     ]
+
+
+@pytest.mark.tools
+def test_sites_vcf_makes_its_scratch_folder(tmp_path: Path) -> None:
+    """The run's `scratch` does not exist yet when the real call layer writes under it."""
+    base = ref("chr1", 2001)
+    alt = "A" if base != "A" else "C"
+    af = tmp_path / "af.EUR.tsv.gz"
+    af.write_bytes(gzip.compress(f"chr1\t2001\t{base},{alt}\t0.2\n".encode()))
+    out = roh.sites_vcf(
+        write_gvcf(tmp_path / "s.g.vcf.gz", [block("chr1", 1900, 2100)]),
+        af,
+        write_fasta(tmp_path / "ref.fa"),
+        tmp_path / "sites.vcf.gz",
+        haploid=lambda chrom, pos: False,
+        scratch=tmp_path / "work" / "scratch",
+        level=lambda allele, called: Level.HIGH,
+    )
+    assert [r[9] for r in _rows(out)] == ["0/0"]
 
 
 TRUTH = """\

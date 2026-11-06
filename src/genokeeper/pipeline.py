@@ -3580,7 +3580,6 @@ def typing_steps(
         return on_haploid_contig(chrom, pos, grading=grading, male=male)
 
     def graded(alleles: Sequence[Allele], scratch: Path) -> dict[Allele, Called]:
-        scratch.mkdir(parents=True, exist_ok=True)
         try:
             return calls_at(
                 gvcf, alleles, fasta=fasta, haploid=haploid, scratch=scratch

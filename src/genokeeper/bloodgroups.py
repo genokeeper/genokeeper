@@ -19,8 +19,8 @@ genomes do not carry). RBCeq2 runs without `--HPAs`, `--RH` or `--phased`.
 Two rulings decide what a system's call is worth before RBCeq2 is read:
 - R9, per allele (R14): `rbceq2_positions` checks each allele's REF against the GRCh38
   FASTA; a mismatching allele is not written (calls_at refuses a REF the FASTA does not
-  have) and is named under its system (`unchecked`), whose statement says so; the system
-  stays shown.
+  have, outside a masked block) and is named under its system (`unchecked`), whose statement
+  says so; the system stays shown.
 - R10: RBCeq2 reads an explicit `./.` as the reference and makes a confident call from it
   (`./.` at ABO c.261delG gave A1/A1), so a system with any no-call among its written
   positions is unassessed whatever RBCeq2 says (`uncovered`, read from the VCF as written).

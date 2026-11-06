@@ -9,10 +9,12 @@ from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
 
+import pysam
 import pytest
 from fixtures.gvcf_mini import (
     HOMOPOLYMER,
     PAR_END,
+    SEQUENCES,
     block,
     other_base,
     ref,
@@ -22,12 +24,14 @@ from fixtures.gvcf_mini import (
     write_gvcf,
 )
 
+from genokeeper import masking
 from genokeeper.calibrate.table import VERSION_KEYS, CalibrationTable
 from genokeeper.config import load_grading
 from genokeeper.genotype import gvcf as gvcf_module
 from genokeeper.genotype.gvcf import (
     INDEL_BLOCK_WARNING,
     INSIDE_DELETION_REASON,
+    MASKED_REASON,
     MULTI_BASE_REASON,
     NO_COVERAGE_REASON,
     NOCALL_REASON,
@@ -44,7 +48,7 @@ from genokeeper.genotype.reliability import (
     grade_called,
 )
 from genokeeper.store.db import Level, RowType
-from genokeeper.tools import run_tool
+from genokeeper.tools import ToolFailed, run_tool
 
 pytestmark = pytest.mark.tools
 
@@ -309,6 +313,69 @@ def test_no_coverage_unknown(tmp_path: Path) -> None:
         assert calls[claim].dosage == "unknown"
         assert calls[claim].row_type == RowType.NONE
         assert calls[claim].warnings == (NO_COVERAGE_REASON,)
+
+
+@pytest.fixture
+def masked_fasta(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """The mini reference with chr1's bases 3001-3100 masked (N, and listed in the mask) and
+    3501-3510 N but not masked, as a gap of the reference is."""
+    resource = tmp_path / "mask.tsv"
+    resource.write_text("# derived\nchrom\tstart\tend\nchr1\t3000\t3100\n")
+    monkeypatch.setattr(masking, "MASK_RESOURCE", resource)
+    bases = list(SEQUENCES["chr1"])
+    bases[3000:3100] = "N" * 100
+    bases[3500:3510] = "N" * 10
+    sequences = SEQUENCES | {"chr1": "".join(bases)}
+    fasta = tmp_path / "masked.fa"
+    fasta.write_text("".join(f">{c}\n{seq}\n" for c, seq in sequences.items()))
+    pysam.faidx(str(fasta))
+    return fasta
+
+
+def test_allele_in_a_masked_block_is_unknown(
+    tmp_path: Path, masked_fasta: Path
+) -> None:
+    """A resource's allele over N is unknown, its REF spanning into the block or its contig
+    named `1`; the bases beside the block are called as ever."""
+    first, last = _snv("chr1", 3001), _snv("chr1", 3100)
+    spanning = ("chr1", 2999, ref("chr1", 2999, 3), ref("chr1", 2999))
+    bare = ("1", *_snv("chr1", 3050)[1:])
+    before, after = _snv("chr1", 3000), _snv("chr1", 3101)
+    records = [
+        block("chr1", 2900, 3000),
+        variant("chr1", 3101, 1, [after[3]], gt="0/1", gq=37, ad=[14, 16]),
+        block("chr1", 3102, 3200),
+    ]
+    gvcf = write_gvcf(tmp_path / "mini.g.vcf.gz", records)
+    claims = [first, last, spanning, bare, before, after]
+    calls = calls_at(
+        gvcf, claims, fasta=masked_fasta, haploid=diploid, scratch=tmp_path
+    )
+    for claim in (first, last, spanning, bare):
+        assert calls[claim] == Called(
+            gt=None,
+            dosage="unknown",
+            row_type=RowType.NONE,
+            gq=None,
+            dp=None,
+            ad=None,
+            vaf=None,
+            warnings=(MASKED_REASON,),
+        )
+    assert (calls[before].dosage, calls[after].dosage) == ("0", "1")
+
+
+@pytest.mark.parametrize("pos", [2950, 3505])
+def test_ref_mismatch_outside_a_masked_block_stops(
+    tmp_path: Path, masked_fasta: Path, pos: int
+) -> None:
+    """A REF the FASTA lacks stops the run on a base and on an N the mask does not list: the
+    alleles and the gVCF are then on different references."""
+    base = ref("chr1", pos)
+    wrong = ("chr1", pos, other_base(base), base)
+    gvcf = write_gvcf(tmp_path / "mini.g.vcf.gz", [block("chr1", 2900, 3000)])
+    with pytest.raises(ToolFailed, match="Reference allele mismatch"):
+        calls_at(gvcf, [wrong], fasta=masked_fasta, haploid=diploid, scratch=tmp_path)
 
 
 def test_other_alt_dosage_zero_with_warning(tmp_path: Path) -> None:

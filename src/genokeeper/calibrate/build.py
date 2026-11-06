@@ -1852,7 +1852,6 @@ def _measure_library(
             said = "; ".join(f"{t} failed: {why}" for t, why in typing.failed.items())
             raise RunRefused(f"{lib_label(key)}: {said}; no slice 3f table written")
         scratch = work / ".slice3f-scratch"
-        scratch.mkdir(exist_ok=True)
         try:
             ours = calls_at(
                 gvcf,
