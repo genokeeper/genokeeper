@@ -56,7 +56,7 @@ files, not this one. How to file, close and reference an entry:
 | [BR-030](bugs/BR-030.md) | HG003's and HG004's benchmarks count GIAB's v4.2.1 truth on the correct copies of the masked false duplications, where it can lack real variants | `genokeeper/genokeeper#17` |
 | [BR-032](bugs/BR-032.md) | a resource allele inside a masked false duplication stopped the whole step at bcftools norm | `genokeeper/genokeeper#22` |
 | [BR-033](bugs/BR-033.md) | the ancestry target merged the panel's split rows, and plink2 refused the bed | `genokeeper/genokeeper#23` |
-| [BR-034](bugs/BR-034.md) | ROH's calibration passed -T beside --AF-file, which bcftools roh refuses | `claude/roh-cut-to-benchmark` |
+| [BR-034](bugs/BR-034.md) | ROH's calibration passed -T beside --AF-file, which bcftools roh refuses | `genokeeper/genokeeper#24` |
 
 ## Void identifiers (0)
 
