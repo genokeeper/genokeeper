@@ -1523,6 +1523,33 @@ def test_uncalibrated_dosage_fmr1_unassessed(
     }
 
 
+@pytest.mark.parametrize("table", ["missing", "stale"])
+def test_x_linked_loci_need_a_current_foundation_table(
+    genome: Genome, monkeypatch: pytest.MonkeyPatch, table: str
+) -> None:
+    """A measured one-X dosage under the shipped `calibrated_on` is not used while the
+    `foundation` table is missing or stale: the dosage statement refuses that dosage with
+    the table's reason, and FMR1 and AFF2 are unassessed by the X-dosage rule, not graded on
+    it. The loci off the X keep their grades."""
+    assert load_grading().dosage.calibrated_on
+    monkeypatch.setattr(pipeline, "measure_ratios", lambda *_a, **_k: ONE_X)
+    reason = NOT_CALIBRATED
+    if table == "stale":
+        lab = genome.lab.paths.lab
+        versions = calibrate_foundation.foundation_versions(lab) | {"dosage": "{}"}
+        write_calibration_table(lab, "foundation", lambda _: None, versions)
+        reason = "stale: dosage changed; run `genokeeper calibrate`"
+    run_id = _run_genome(genome)
+    dosage = _statements(genome, run_id)[DOSAGE_STATEMENT]
+    assert (dosage["kind"], dosage["reason"]) == ("unassessed", reason)
+    with connect(genome.store) as con:
+        rows, _accounting = _stage3(con, run_id)
+    assert {(rows[i]["kind"], rows[i]["reason"]) for i in X_LINKED} == {
+        ("unassessed", X_NOT_CALIBRATED)
+    }
+    assert rows["expansionhunter:HTT"]["kind"] == "non_finding"
+
+
 def test_run_passes_min_spanning(
     genome: Genome, monkeypatch: pytest.MonkeyPatch
 ) -> None:
