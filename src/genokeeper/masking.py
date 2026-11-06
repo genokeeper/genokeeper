@@ -15,9 +15,10 @@ check reads is the one in git.
 would read zero depth, so the CI test refuses one.
 
 The correct copies of those false duplications (`CORRECT_COPY_RESOURCE`, GIAB's BED) are read
-well on the masked reference, but GIAB's small-variant truths, made on the unmasked one, can
-lack what is there. `without_false_duplications` leaves both copies out for the small-variant
-scorers alone; the structural tables read the mask (`masked_bed`) and keep the correct copies.
+well on the masked reference, but GIAB's v4.2.1 truths, made on the unmasked one, can lack what
+is there. So HG003's and HG004's measurements (`without_false_duplications`, `hg004_snp_f1`) and
+HG003's benchmark at run time (`without_correct_copies`) leave them out. HG002's v5.0q truth
+holds there, and its cells rate them; the structural tables read the mask alone.
 
     python -m genokeeper.masking verify UNMASKED MASKED OUT   # the BED, refused unless committed
     python -m genokeeper.masking derive UNMASKED MASKED       # writes MASK_RESOURCE
@@ -74,12 +75,23 @@ def masked_bed(lab: Path) -> Path:
     return grch38_fasta(lab).with_name(MASKED_BED)
 
 
+def without_mask(lab: Path, bed: Path, out: Path) -> Path:
+    """`bed`'s intervals minus the lab's mask (`masked_bed`), written whole to `out`: a
+    benchmark read on the masked reference, where a masked block has no reads."""
+    _write(out, _bed(subtract(read_bed(bed), read_bed(masked_bed(lab)))))
+    return out
+
+
+def without_correct_copies(bed: Path) -> list[Interval]:
+    """`bed`'s intervals minus the correct copies: a benchmark of GIAB's v4.2.1 truths, which
+    are not valid there."""
+    return subtract(read_bed(bed), load_correct_copies())
+
+
 def without_false_duplications(lab: Path, bed: Path, out: Path) -> Path:
-    """`bed`'s intervals minus the lab's mask (`masked_bed`) and the correct copies, written
-    whole to `out`: a small-variant benchmark read on the masked reference, where a masked
-    block has no reads and the truth is not valid on a correct copy."""
-    remove = [*read_bed(masked_bed(lab)), *load_correct_copies()]
-    _write(out, _bed(subtract(read_bed(bed), remove)))
+    """`bed`'s intervals minus the lab's mask and the correct copies, written whole to `out`:
+    a v4.2.1 benchmark read on the masked reference."""
+    _write(out, _bed(subtract(without_correct_copies(bed), read_bed(masked_bed(lab)))))
     return out
 
 

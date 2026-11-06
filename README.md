@@ -489,10 +489,11 @@ Slice 3c aligns everything to GIAB's GRCh38 with the GRC false duplications mask
 lab's `reference/GRCh38_no_alt_maskedGRC.fa`): `--with-masked-reference` moves it from
 `prefetch/3c/` at its sha256 pin or downloads it, derives the masked intervals by comparing
 it with NCBI's FASTA (refused unless they equal the committed copy), bwa-indexes it and
-builds its rtg SDF. GIAB's small-variant truths were made on the unmasked reference and can
-lack a real variant on the copy of a false duplication that stays, so HG003's table, HG004's
-F1 and HG002's cells and true heterozygotes leave out those correct copies as well as the
-mask. The libraries aligned before it are re-aligned from their own CRAMs:
+builds its rtg SDF. GIAB's v4.2.1 truths were made on the unmasked reference and can lack a
+real variant on the copy of a false duplication that stays, so HG003's table and HG004's F1
+leave out those correct copies as well as the mask. At run time HG002's cells rate a site on
+such a copy where v5.0q's benchmark holds it, and any other site there is uncalibrated. The
+libraries aligned before it are re-aligned from their own CRAMs:
 `python -m genokeeper.calibrate.hg002 realign pcrfree` (and `pcr`, `hg003`) turns the old
 CRAM back into a FASTQ pair, refused unless its reads and bases equal the CRAM's, and
 aligns it again; `clean` then deletes what the new record replaced. On a new lab, `align

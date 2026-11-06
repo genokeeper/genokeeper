@@ -38,12 +38,12 @@ a masked block, where it would read zero depth.
 # false_duplications_correct_copy.GRCh38.tsv
 
 The copies GRCh38 keeps of the same GRC false duplications: the correct copy of each masked
-block. GIAB's v4.2.1 and v5.0q truths were made on the unmasked reference, where a read of such
-a haplotype could go to the false copy, so they can lack a real variant on the correct copy; on
-the masked reference every read lands there and the caller reports what the truth lacks. So
-the three small-variant scorers (HG003's `small_variants`, HG004's SNP F1, HG002's cells and
-true heterozygotes) leave these intervals out as well as the mask
-(`genokeeper.masking.load_correct_copies`); nothing else reads them.
+block. GIAB's v4.2.1 truths were made on the unmasked reference, where a read of such a haplotype
+could go to the false copy, so they can lack a real variant on the correct copy; on the masked
+reference every read lands there and the caller reports what the truth lacks. So HG003's
+`small_variants` and HG004's SNP F1 leave these intervals out as well as the mask. A run reads
+HG003's benchmark without them too, so HG002's cells rate a site there inside v5.0q's benchmark
+and any other is uncalibrated; v5.0q was held valid on them by a measurement (BR-030).
 
 - URL: https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/genome-stratifications/v3.6/GRCh38@all/OtherDifficult/GRCh38_false_duplications_correct_copy.bed.gz
 - Release: GIAB genome stratifications v3.6, retrieved 2026-11-05, 201 bytes
@@ -52,7 +52,7 @@ true heterozygotes) leave these intervals out as well as the mask
 - sha256 of the decompressed BED: e77d1572ecb059e1f6fa3684ce60e4b9235740749618969ea7a27370e90240eb
 - Rebuild: decompress the .gz above under the three `#` lines and the `chrom start end` header
   this file has; its rows are the BED's, unchanged. The file's sha256 is the `correct_copies`
-  version of the `small_variants`, `hg002_cells` and `foundation` tables, so an edit stales them.
+  version of the `small_variants` and `hg002_cells` tables, so an edit stales them.
 
 Checked 2026-11-05 against `GRCh38_no_alt.fa`: 12 intervals, 1,237,625 bp, none overlapping
 the mask. Each of the mask's 12 blocks has one, the interval holding 86-100% of the block's

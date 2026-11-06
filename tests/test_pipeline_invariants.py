@@ -114,6 +114,7 @@ from genokeeper.calibrate.hg002_cells import (
     ONLY,
     SHARED,
     cells_dir,
+    lab_regions,
     open_cells,
     write_cells,
 )
@@ -128,6 +129,7 @@ from genokeeper.calibrate.stage3 import (
     two_x_key,
 )
 from genokeeper.calibrate.table import (
+    GENOTYPE,
     VERSION_KEYS,
     CalibrationTable,
     CellKey,
@@ -172,7 +174,14 @@ from genokeeper.evidence.pharmgkb import DOWNLOADS as PHARMGKB_DOWNLOADS
 from genokeeper.genelists import DPYD_NOTE
 from genokeeper.genotype import clonal
 from genokeeper.genotype.clonal import Span
-from genokeeper.genotype.reliability import AF_CLONAL
+from genokeeper.genotype.gvcf import Called
+from genokeeper.genotype.reliability import (
+    AF_CLONAL,
+    OUTSIDE_CALIBRATED,
+    Reliability,
+    StrataIndex,
+    grade_called,
+)
 from genokeeper.history import dates, snapshots
 from genokeeper.identity import analyser_identity
 from genokeeper.masking import CORRECT_COPY_RESOURCE
@@ -187,7 +196,7 @@ from genokeeper.pipeline import pgx_inputs as read_pgx_inputs
 from genokeeper.prs import pgsc
 from genokeeper.prs.scores import load_not_covered, load_scores
 from genokeeper.query import Filters, query, show
-from genokeeper.regions import SEX_REGIONS, giab38_dir, read_bed
+from genokeeper.regions import read_bed, subtract
 from genokeeper.repeats import expansionhunter
 from genokeeper.repeats.expansionhunter import EH_VERSION
 from genokeeper.repeats.loci import Rule
@@ -212,7 +221,7 @@ from genokeeper.sources.repeats import (
 )
 from genokeeper.sources.smn import TWO_COPIES_REASON
 from genokeeper.sources.traits import TRAIT_ALLELES
-from genokeeper.store.db import TABLES, Level, Validity, connect
+from genokeeper.store.db import TABLES, Level, RowType, Validity, connect
 from genokeeper.yhaplogroup import YLEAF_VERSION
 
 pytestmark = pytest.mark.tools
@@ -3071,17 +3080,14 @@ def test_hg002_cells_stale_when_their_regions_change(
 def test_small_variant_tables_stale_when_the_correct_copies_change(
     genome: Genome, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """The three small-variant tables are scored without the correct copies: another
-    resource stales each."""
+    """HG003's table is scored without the correct copies and HG002's cells take them
+    in: another resource stales both."""
     lab = genome.lab.paths.lab
     vcf, v5 = calibrate_build.hg002_truth(lab)
     vcf.parent.mkdir(parents=True, exist_ok=True)
     for path in (vcf, v5):
         path.write_text("chr1\t0\t10\n")
-    regions = giab38_dir(lab) / SEX_REGIONS
-    regions.parent.mkdir(parents=True, exist_ok=True)
-    regions.touch()
-    names = ("small_variants", "hg002_cells", "foundation")
+    names = ("small_variants", "hg002_cells")
     for name in names:
         versions = tables.TABLES[name].versions(lab)
         write_calibration_table(lab, name, lambda _: None, versions)
@@ -3093,6 +3099,116 @@ def test_small_variant_tables_stale_when_the_correct_copies_change(
         assert tables.open_table(lab, name) == tables.Stale(
             "stale: correct_copies changed; run `genokeeper calibrate`"
         )
+
+
+def _write_hg002_cells(genome: Genome, table: CalibrationTable, v5_bed: str) -> None:
+    """HG002's cells with v5.0q's benchmark `v5_bed`, each part holding `table`."""
+    lab = genome.lab.paths.lab
+    _, v5 = calibrate_build.hg002_truth(lab)
+    v5.parent.mkdir(parents=True, exist_ok=True)
+    v5.write_text(v5_bed)
+    regions = lab_regions(lab)
+    write_cells(cells_dir(lab), dict.fromkeys(regions, table), regions)
+
+
+def test_a_site_on_a_correct_copy_is_rated_by_hg002_cells(genome: Genome) -> None:
+    """HG003's table says nothing on a correct copy (chr21:44,095,806-44,253,497), though
+    HG003's BED holds it: HG002's cell rates a site inside v5.0q, a site outside v5.0q is
+    uncalibrated, and past the copy HG003's table still rates."""
+    lab = genome.lab.paths.lab
+    bench = layout(lab)["truth"] / BENCH_BED
+    bench.write_text(bench.read_text() + "chr21\t44100000\t44300000\n")
+    cell = CellKey("variant", "snv", "easy", 40)
+    hg002 = CalibrationTable.from_counts(
+        {(GENOTYPE, cell): Counts(7, 10_000, 3e5)}, genome.table.versions
+    )
+    _write_hg002_cells(genome, hg002, "chr21\t44100000\t44200000\n")
+    calibration = pipeline.open_calibration(lab, genome.table.versions)
+    assert calibration is not None and calibration.extra
+    called = Called(
+        gt="0/1",
+        dosage="1",
+        row_type=RowType.PASS,
+        gq=45,
+        dp=None,
+        ad=None,
+        vaf=None,
+        warnings=(),
+    )
+
+    def grade(pos: int) -> Reliability:
+        return grade_called(
+            called,
+            "chr21",
+            pos,
+            strata=StrataIndex({}),
+            medians={},
+            grading=load_grading(),
+            indel=False,
+            haploid=False,
+            table=calibration.table,
+            benchmark=calibration.benchmark,
+            extra=calibration.extra,
+        )
+
+    in_v5 = grade(44_150_000)
+    assert in_v5.p_wrong == 7 / 10_000 and OUTSIDE_CALIBRATED not in in_v5.warnings
+    outside_v5 = grade(44_220_000)
+    assert outside_v5.p_wrong is None and OUTSIDE_CALIBRATED in outside_v5.warnings
+    past_the_copy = grade(44_260_000)
+    assert past_the_copy.p_wrong == genome.table.rate_for(cell).rate
+
+
+def test_gene_coverage_reads_the_benchmark_the_run_grades_with(
+    genome: Genome, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A gene on a correct copy is outside HG003's benchmark, and inside when HG002's cells
+    are in use and v5.0q holds it."""
+    one = {"GENEC": [Exon("GENEC", "NM_000001.1", 1, "chr1", 1000, 2000)]}
+    monkeypatch.setattr(gene_coverage, "load_cds", lambda: one)
+    monkeypatch.setattr(
+        pipeline,
+        "without_correct_copies",
+        lambda bed: subtract(read_bed(bed), [("chr1", 0, 100_000)]),
+    )
+
+    def outside() -> float:
+        run_id = _run_genome(genome)
+        with connect(genome.store) as con:
+            row = con.execute(
+                "SELECT outside_benchmark FROM coverage WHERE run_id = ?", [run_id]
+            ).fetchone()
+        assert row is not None
+        return row[0]
+
+    assert outside() == 1.0
+    _write_hg002_cells(genome, genome.table, "chr1\t0\t100000\n")
+    assert outside() == 0.0
+
+
+def test_coverage_runs_again_when_the_correct_copies_change(
+    genome: Genome, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The coverage step's benchmark depends on the correct copies, so its key holds them:
+    unchanged it is reused, and another resource (under a table measured on it) reads again."""
+    lab = genome.lab.paths.lab
+    one = {"GENEC": [Exon("GENEC", "NM_000001.1", 1, "chr1", 1000, 2000)]}
+    monkeypatch.setattr(gene_coverage, "load_cds", lambda: one)
+
+    def reused() -> bool:
+        run_id = _run_genome(genome)
+        with connect(genome.store) as con:
+            return _inputs_json(con, run_id)["steps"]["coverage"]["reused"]
+
+    assert not reused()
+    assert reused()
+    other = tmp_path / "other.tsv"
+    other.write_text("chrom\tstart\tend\n")
+    monkeypatch.setattr(masking, "CORRECT_COPY_RESOURCE", other)
+    versions = {**genome.table.versions, "correct_copies": sha256_file(other)}
+    table = CalibrationTable(cells=genome.table.cells, versions=versions)
+    write_calibration_table(lab, "small_variants", table.write, versions)
+    assert not reused()
 
 
 def test_calibrate_refuses_hg002_cells_without_pcrfree_calls(

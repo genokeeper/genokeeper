@@ -17,13 +17,14 @@ import gzip
 import re
 from bisect import bisect_right
 from collections import Counter
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
 
 from genokeeper.calibrate.table import CalibrationTable, CellKey, CellRate, gq_bin
 from genokeeper.config import Grading
 from genokeeper.genotype.gvcf import INDEL_BLOCK_WARNING, OTHER_ALLELE_WARNING, Called
+from genokeeper.regions import Interval, merge
 from genokeeper.store.db import Level, RowType
 from genokeeper.tools import run_tool
 from genokeeper.variants.key import ucsc_contig
@@ -73,6 +74,16 @@ class StrataIndex:
     def from_beds(cls, beds: dict[str, Path]) -> StrataIndex:
         """Read each flag's BED (plain, gzip or BGZF); contigs are normalised to `chr` names."""
         return cls({flag: _read_bed(path) for flag, path in beds.items()})
+
+    @classmethod
+    def from_intervals(cls, flag: str, intervals: Iterable[Interval]) -> StrataIndex:
+        """One flag over `intervals`, on `chr` names."""
+        contigs: dict[str, _Intervals] = {}
+        for contig, start, end in merge(intervals):
+            starts, ends = contigs.setdefault(ucsc_contig(contig), ([], []))
+            starts.append(start)
+            ends.append(end)
+        return cls({flag: contigs})
 
     def flags_at(self, chrom: str, pos: int) -> tuple[str, ...]:
         """The flags whose intervals contain the 1-based position `pos`, sorted by name."""
@@ -212,7 +223,8 @@ def grade_called(
 ) -> Reliability:
     """Grade a call from our own gVCF (`genotype.gvcf`) at GRCh38 `chrom:pos`, where its
     flags come from; `indel` says the claim's allele is one, `haploid` that the locus has
-    one copy. `benchmark` holds HG003's benchmark regions, where `table` was measured;
+    one copy. `benchmark` holds HG003's benchmark regions where `table` was measured, the
+    correct copies of the GRC false duplications left out;
     outside them, the first of `extra` (HG002's cells) whose ploidy is the locus's and
     whose regions hold the position rates the call instead.
 

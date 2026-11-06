@@ -7,7 +7,7 @@ from pathlib import Path
 import pysam
 import pytest
 
-from genokeeper.calibrate import foundation, layout, measure, rtg_path, tables
+from genokeeper.calibrate import measure, tables
 from genokeeper.calibrate.foundation import (
     CONTROLS,
     TRUE_HET_SHARE,
@@ -20,15 +20,11 @@ from genokeeper.calibrate.measure import true_het_vafs
 from genokeeper.calibrate.records import (
     HG004_MIN_SNP_F1,
     Record,
-    library_dir,
     reference_sha256,
     write_record,
 )
-from genokeeper.calibrate.stage3 import hg002_truth
 from genokeeper.config import grch38_fasta
-from genokeeper.masking import masked_bed
 from genokeeper.pipeline import RunRefused
-from genokeeper.regions import SEX_REGIONS, giab38_dir, read_bed
 from genokeeper.sex import Dosage
 
 
@@ -163,56 +159,6 @@ def test_foundation_refuses_unaccepted_hg004(tmp_path: Path) -> None:
         build_foundation(lab, 2)
     assert HG004_MIN_SNP_F1 == 0.99
     assert not tables.folder(lab, "foundation").exists()
-
-
-def test_foundation_true_hets_leave_out_the_correct_copies(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """HG002's true heterozygotes are read in v5.0q's benchmark minus the mask and the
-    correct copies. The controls are faked; the read stops the build."""
-
-    class Scored(Exception):
-        pass
-
-    lab = tmp_path / "lab"
-    fasta = grch38_fasta(lab)
-    fasta.parent.mkdir(parents=True)
-    fasta.write_text(">chr1\nACGT\n")
-    masked_bed(lab).write_text("chr21\t5010000\t5166246\n")
-    truth, bench = hg002_truth(lab)
-    bench.parent.mkdir(parents=True)
-    truth.write_text("")
-    bench.write_text("chr21\t5000000\t5200000\nchr21\t44000000\t44300000\n")
-    layout(lab)["sdf"].mkdir(parents=True)
-    rtg = rtg_path(lab)
-    rtg.parent.mkdir(parents=True)
-    rtg.write_text("")
-    regions = giab38_dir(lab) / SEX_REGIONS
-    regions.parent.mkdir(parents=True)
-    regions.write_text("")
-    library_dir(lab, "pcrfree").mkdir(parents=True)
-    gvcf = tmp_path / "calls" / "sample.g.vcf.gz"
-    monkeypatch.setattr(foundation, "read_aligned", lambda *_: (tmp_path, "k", None))
-    monkeypatch.setattr(foundation, "read_called", lambda *_: gvcf)
-    monkeypatch.setattr(foundation, "measure_ratios", lambda *_a, **_k: (1.0, 0.0))
-    monkeypatch.setattr(foundation, "x_het_share", lambda *_a, **_k: (0.5, 2000))
-    read: list[list[tuple[str, int, int]]] = []
-
-    def true_hets(_gvcf: Path, _truth: Path, bed: Path, **_: object) -> list[float]:
-        read.append(read_bed(bed))
-        raise Scored
-
-    monkeypatch.setattr(foundation, "true_het_vafs", true_hets)
-    with pytest.raises(Scored):
-        build_foundation(lab, 2)
-    assert read == [
-        [
-            ("chr21", 5_000_000, 5_010_000),
-            ("chr21", 5_166_246, 5_200_000),
-            ("chr21", 44_000_000, 44_095_806),
-            ("chr21", 44_253_497, 44_300_000),
-        ]
-    ]
 
 
 def test_foundation_is_registered_after_3c_tables() -> None:

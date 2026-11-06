@@ -366,7 +366,11 @@ from genokeeper.insertions import (
     run_scramble,
     scramble_regions,
 )
-from genokeeper.masking import correct_copies_sha256, masked_bed
+from genokeeper.masking import (
+    correct_copies_sha256,
+    masked_bed,
+    without_correct_copies,
+)
 from genokeeper.mito import (
     CALLS_FILE,
     VCF_FILE,
@@ -998,8 +1002,9 @@ def calibration_versions(
 @dataclass(frozen=True)
 class Calibration:
     """The calibration table a run grades with, HG003's benchmark regions it was measured
-    in, HG002's cells where HG003's truth does not reach (`hg002_cells`, empty when they
-    are not current), and what the run records of them."""
+    in (the BED without the correct copies), HG002's cells where HG003's truth does not
+    reach (`hg002_cells`, empty when they are not current), and what the run records of
+    them."""
 
     table: CalibrationTable
     benchmark: StrataIndex
@@ -1009,8 +1014,8 @@ class Calibration:
 
 def open_calibration(lab: Path, versions: Mapping[str, str]) -> Calibration | None:
     """The lab's calibration table (`tables.folder(lab, "small_variants")`) and HG003's
-    benchmark BED, or None with no table there (the run refuses after its QC step, which
-    records the bases the calibration needs); refuse (`RunRefused`) a table measured under
+    benchmark BED without the correct copies, or None with no table there (the run refuses
+    after its QC step, which records the bases the calibration needs); refuse (`RunRefused`) a table measured under
     other `versions` than the run's own (`calibration_versions`) with `tables.open_table`'s
     reason, naming each that differs, a table that is unreadable, and a missing benchmark
     BED. HG002's cells are opened beside it (`open_cells`) and never refuse:
@@ -1063,7 +1068,9 @@ def open_calibration(lab: Path, versions: Mapping[str, str]) -> Calibration | No
     )
     return Calibration(
         table=table,
-        benchmark=StrataIndex.from_beds({"benchmark": bench}),
+        benchmark=StrataIndex.from_intervals(
+            "benchmark", without_correct_copies(bench)
+        ),
         record={
             "path": str(folder),
             "manifest_sha256": sha256_file(folder / MANIFEST),
@@ -2429,11 +2436,12 @@ def foundation_steps(
     genes' MANE CDS +/- `[coverage] cds_margin` (`coverage.cds_bed`), one `qc.mosdepth`
     call per expected copy count (`expected_copies`) at `min_depth_per_copy` x copies, and
     each gene's row (`coverage_rows`): the shares inside the low-mappability and segdup
-    strata and outside the `benchmarks` (read minus the lab's mask) beside its callable
-    share, and its `owners` source. Its key holds the align key, the sex (and, for a male,
-    [par]), the CDS resource's, those BEDs' and the mask's sha256, [coverage], the owners and
-    mosdepth's version. `dosage`: the X and Y depth ratios (`sex.measure_ratios`) and the
-    chrX heterozygous share from the `called` step's VCF (`sex.x_het_share`); its key holds
+    strata and outside the `benchmarks` (HG003's without the correct copies, then HG002's
+    when its cells rate the run; all read minus the lab's mask) beside its callable share,
+    and its `owners` source. Its key holds the align key, the sex (and, for a male, [par]),
+    the CDS resource's, those BEDs', the mask's and the correct copies' sha256, [coverage],
+    the owners and mosdepth's version. `dosage`: the X and Y depth ratios
+    (`sex.measure_ratios`) and the chrX heterozygous share from the `called` step's VCF (`sex.x_het_share`); its key holds
     the align and call keys, the sex regions BED's sha256, `[sex] mapq`, `[dosage] het_low,
     het_high, min_x_sites`, `[reliability] min_dp` and mosdepth's version.
 
@@ -2474,8 +2482,10 @@ def foundation_steps(
                 threads=threads,
                 thresholds=t.min_depth_per_copy * n,
             )
+        hg003, *cells = benchmarks
         benchmark = subtract(
-            [i for b in benchmarks for i in read_bed(b)], read_bed(masked_bed(lab))
+            [*without_correct_copies(hg003), *(i for b in cells for i in read_bed(b))],
+            read_bed(masked_bed(lab)),
         )
         rows = gene_coverage.coverage_rows(
             depth,
@@ -2500,6 +2510,7 @@ def foundation_steps(
             + [json.dumps(grading.par if male else {}, sort_keys=True)]
             + [hashlib.sha256(cds.read_bytes()).hexdigest()]
             + [sha256_file(p) for p in [*difficult, *benchmarks, masked_bed(lab)]]
+            + [correct_copies_sha256()]
             + [
                 json.dumps(asdict(t), sort_keys=True),
                 json.dumps(owners, sort_keys=True),

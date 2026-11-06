@@ -49,8 +49,9 @@ def test_cell_regions() -> None:
     }
 
 
-def test_lab_regions_leave_out_the_correct_copies(tmp_path: Path) -> None:
-    """The only and shared parts lose the correct copies as well as the lab's mask."""
+def test_lab_regions_keep_the_correct_copies_in_the_only_part(tmp_path: Path) -> None:
+    """HG003's truth is not valid on a correct copy and v5.0q's is, so a copy inside HG003's
+    benchmark falls in the only part, which grades, and not in the shared one."""
     lab = tmp_path / "lab"
     grch38_fasta(lab).parent.mkdir(parents=True)
     masked_bed(lab).write_text("chr21\t5010000\t5166246\n")
@@ -64,7 +65,7 @@ def test_lab_regions_leave_out_the_correct_copies(tmp_path: Path) -> None:
     assert regions[ONLY] == [
         ("chr21", 5_000_000, 5_010_000),
         ("chr21", 5_166_246, 5_200_000),
-        ("chr21", 44_253_497, 44_300_000),
+        ("chr21", 44_095_806, 44_300_000),
     ]
     assert regions[SHARED] == [("chr21", 44_000_000, 44_095_806)]
 
