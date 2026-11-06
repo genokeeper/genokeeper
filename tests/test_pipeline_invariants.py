@@ -1229,7 +1229,8 @@ def _stage3(
 
 
 # The X-linked loci, unassessed by the X-dosage rule under a [dosage] that is not calibrated
-# (an empty `calibrated_on`), once the run's own checks pass.
+# (an empty `calibrated_on`, or no current `foundation` table), once the run's own checks
+# pass.
 X_LINKED = {"expansionhunter:FMR1", "expansionhunter:AFF2"}
 # One X copy (a depth ratio of 0.5) or two, the run's X and Y depth ratios.
 ONE_X = (0.5, 0.5)
@@ -1256,10 +1257,16 @@ EXCLUSION_NORMAL = {"CNBP", "ATXN10", "TBP", "FGF14", "AFF2", "RFC1"}
 
 
 def _dosage_at(
-    monkeypatch: pytest.MonkeyPatch, ratios: tuple[float, float], **kw: Any
+    genome: Genome,
+    monkeypatch: pytest.MonkeyPatch,
+    ratios: tuple[float, float],
+    **kw: Any,
 ) -> Grading:
-    """A grading whose [dosage] is calibrated (`kw` replacing its fields), the run's X and
-    Y depth ratios `ratios`."""
+    """A grading whose [dosage] is calibrated (`kw` replacing its fields) over a current
+    `foundation` table, the run's X and Y depth ratios `ratios`."""
+    lab = genome.lab.paths.lab
+    versions = calibrate_foundation.foundation_versions(lab)
+    write_calibration_table(lab, "foundation", lambda _: None, versions)
     monkeypatch.setattr(pipeline, "measure_ratios", lambda *_a, **_k: ratios)
     g = _grading()
     fields: dict[str, Any] = {"calibrated_on": "2026-10-30 test"} | kw
@@ -1359,7 +1366,7 @@ def test_calibrated_stage3_statements(
     haplogroup stated. No repeat statement is actionable, none a watch but the eleven's,
     TCF4's or PABPN1's; the accounting balances; the run records the table's versions,
     ExpansionHunter's build and the five images."""
-    run_id = _run_genome(genome, grading=_dosage_at(monkeypatch, ONE_X))
+    run_id = _run_genome(genome, grading=_dosage_at(genome, monkeypatch, ONE_X))
     with connect(genome.store) as con:
         rows, accounting = _stage3(con, run_id)
         inputs = _inputs_json(con, run_id)
@@ -1460,7 +1467,7 @@ def test_female_run_fmr1_two_x(
     """A female run with two X copies grades FMR1 by the two-X rule: two distinct spanned
     alleles are normal; the table withholding `FMR1:two_x` leaves it unassessed with that
     reason."""
-    grading = _dosage_at(monkeypatch, TWO_X)
+    grading = _dosage_at(genome, monkeypatch, TWO_X)
     two = _eh_line(
         genome.stage3.vcf.read_text(),
         "FMR1",
@@ -1490,7 +1497,7 @@ def test_xxy_run_fmr1_unassessed(
 ) -> None:
     """Two X copies with a Y present (XXY): two distinct spanned FMR1 alleles are seen, but
     the closing design leaves an XXY sample unassessed, naming the measured dosage."""
-    grading = _dosage_at(monkeypatch, (1.0, 0.5))
+    grading = _dosage_at(genome, monkeypatch, (1.0, 0.5))
     two = _eh_line(
         genome.stage3.vcf.read_text(),
         "FMR1",
@@ -1514,7 +1521,7 @@ def test_uncalibrated_dosage_fmr1_unassessed(
 ) -> None:
     """A measured one-X dosage under a [dosage] whose `calibrated_on` is empty is not used:
     FMR1 and AFF2 are unassessed by the X-dosage rule, naming `genokeeper calibrate`."""
-    grading = _dosage_at(monkeypatch, ONE_X, calibrated_on="")
+    grading = _dosage_at(genome, monkeypatch, ONE_X, calibrated_on="")
     run_id = _run_genome(genome, grading=grading)
     with connect(genome.store) as con:
         rows, _accounting = _stage3(con, run_id)
@@ -1555,7 +1562,7 @@ def test_run_passes_min_spanning(
 ) -> None:
     """`[exclusion] min_spanning` reaches the source: at 50, under a table written with it,
     every non-standard locus is unassessed on too few spanning reads, and CFTR unread."""
-    grading = _dosage_at(monkeypatch, ONE_X)
+    grading = _dosage_at(genome, monkeypatch, ONE_X)
     grading = replace(grading, exclusion=replace(grading.exclusion, min_spanning=50))
     write_stage3(genome.lab, grading=grading)
     run_id = _run_genome(genome, grading=grading)
@@ -1688,7 +1695,7 @@ def test_fmr1_unassessed_at_the_default_filters(
 ) -> None:
     """FMR1's unassessed statement is in `query`'s default output, with its reason."""
     run_id = _run_genome(
-        genome, grading=_dosage_at(monkeypatch, ONE_X, calibrated_on="")
+        genome, grading=_dosage_at(genome, monkeypatch, ONE_X, calibrated_on="")
     )
     with connect(genome.store) as con:
         result = query(con, run_id, Filters())

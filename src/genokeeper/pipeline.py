@@ -205,6 +205,7 @@ from genokeeper.calibrate.stage3 import (
 from genokeeper.calibrate.table import MANIFEST, CalibrationTable
 from genokeeper.calibrate.tables import (
     NOT_CALIBRATED,
+    Current,
     Stale,
     open_table,
     versions_files,
@@ -4743,11 +4744,15 @@ def run_genome(
         thresholds=grading.dosage,
     )
 
-    # The repeat source after 3c's dosage: the X-linked loci follow the run's X dosage,
-    # read only under a calibrated [dosage] (else None: "not calibrated"). Warning:
-    # `[dosage] calibrated_on` is free text in config/grading.toml, never checked against a
-    # calibration report or the masked reference, so an edit that sets it without
-    # calibrating lets an unmeasured tolerance decide FMR1's and AFF2's copies.
+    # The repeat source after 3c's dosage: the X-linked loci follow the run's X dosage, read
+    # only under a calibrated [dosage] with a current `foundation` table, the table that
+    # lets the dosage statement above accept the same dosage (else None: "not calibrated",
+    # which holds for a missing table and a stale one and names the command both need; the
+    # statement carries the table's own reason). The table's versions hold the reference
+    # and `tolerance`, so a tolerance it was not measured under does not count FMR1's and
+    # AFF2's copies. Warning: `[dosage] calibrated_on` is still free text in
+    # config/grading.toml, and `y_absent_max` is in no version, so an edit to it moves the
+    # Y call here without staling the table.
     loci = grading.repeats.loci
     ratios = foundation.dosage
     x_dosage = (
@@ -4756,7 +4761,9 @@ def run_genome(
             ratios.x_ratio,
             ratios.y_ratio > grading.dosage.y_absent_max,
         )
-        if ratios is not None and grading.dosage.calibrated_on
+        if ratios is not None
+        and grading.dosage.calibrated_on
+        and isinstance(dosage_table, Current)
         else None
     )
     graded_keys = {*loci, RFC1_LOCUS, CFTR_GENE}

@@ -577,7 +577,8 @@ assessed" in `query --gene` and `genotype --gene`, unless a stage-3 source state
 sex-chromosome dosage (X and Y depth ratios, the chrX allele balance) is one statement,
 `dosage:sex-chromosomes`: every non-normal pattern a "screening result, needs a karyotype",
 mosaic loss of Y research information, and unassessed while the `foundation` calibration table
-is missing ("not calibrated") or stale.
+is missing ("not calibrated") or stale; FMR1 and AFF2, which read that dosage, are then
+unassessed too.
 The run prints the identity verdict and how many genes fall below the callable share, and
 records the reference in its tools: `genokeeper changes` names "reference changed" (the
 Changes tab, «референсный геном») as the cause of every change between two runs on
