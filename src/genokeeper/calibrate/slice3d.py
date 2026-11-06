@@ -61,7 +61,7 @@ _HG002 = tuple(k for k, sample in TRIO.items() if sample == "HG002")
 _PARENTS = ("hg003", "hg004")
 # The run's 3d steps: bump when a step's output changes. Here, not in `pipeline`, because
 # the tables record them.
-CNV_STEP_VERSION = "1"
+CNV_STEP_VERSION = "2"
 CNVPYTOR_STEP_VERSION = "1"
 INSURVEYOR_STEP_VERSION = "1"
 SCRAMBLE_STEP_VERSION = "1"

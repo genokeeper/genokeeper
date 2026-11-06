@@ -5,7 +5,6 @@ container is replaced by a stub that checks the arguments and writes the output.
 The counts are the tests' own reading of the fixtures (`_records`), never the code under
 test."""
 
-import threading
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -159,13 +158,12 @@ MASKED = "chr1\t5000\t6000\nchr20\t100\t900\n"
 
 class _Delly:
     """Stands for `run_container` and `run_tool`: copies the template and records each
-    shard's arguments, mounts, label and exclude list."""
+    `delly cnv` container's arguments, mounts, label and exclude list."""
 
     def __init__(self) -> None:
-        self.lock = threading.Lock()
-        self.shards: dict[
-            str, tuple[list[str], list[tuple[Path, str, bool]], str | None, str]
-        ] = {}
+        self.runs: list[
+            tuple[list[str], list[tuple[Path, str, bool]], str | None, str]
+        ] = []
         self.tools: list[list[str]] = []
 
     def container(
@@ -182,13 +180,9 @@ class _Delly:
         if args[0] == "cp":
             (out / "exclude.template.tsv").write_text(TEMPLATE)
             return
-        with self.lock:
-            self.shards[out.name] = (
-                list(args),
-                list(mounts),
-                label,
-                (out / "exclude.tsv").read_text(),
-            )
+        self.runs.append(
+            (list(args), list(mounts), label, (out / "exclude.tsv").read_text())
+        )
         (out / "delly.bcf").write_bytes(b"")
 
     def tool(self, args: list[str], **_: object) -> str:
@@ -196,52 +190,58 @@ class _Delly:
         return ""
 
 
-@pytest.mark.parametrize("haploid", [("chrX", "chrY"), ()])
+@pytest.mark.parametrize(
+    ("haploid", "shards", "outside"),
+    [
+        (("chrX", "chrY"), PRIMARY, ["chrM", "chrEBV"]),
+        ((), [c for c in PRIMARY if c != "chrY"], ["chrY", "chrM", "chrEBV"]),
+    ],
+)
 def test_run_delly_cnv_args(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, haploid: tuple[str, ...]
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    haploid: tuple[str, ...],
+    shards: list[str],
+    outside: list[str],
 ) -> None:
+    """One container over the genome, whatever `shards` holds: DELLY reads `-x` only on
+    its finished calls, so its exclude list is what keeps them on `shards`."""
     cram, fasta, out = _cram_and_fasta(tmp_path, CONTIGS)
     masked = tmp_path / "masked.bed"
     masked.write_text(MASKED)
     fake = _Delly()
     monkeypatch.setattr("genokeeper.deletions.callers.run_container", fake.container)
-    monkeypatch.setattr("genokeeper.deletions.callers.run_tool", fake.tool)
+    monkeypatch.setattr(callers, "run_container", fake.container)
     monkeypatch.setattr(callers, "run_tool", fake.tool)
     found = run_delly_cnv(
-        cram, fasta, out, threads=2, shards=PRIMARY, haploid=haploid, masked=masked,
+        cram, fasta, out, shards=shards, haploid=haploid, masked=masked,
         min_length=1000,
     )  # fmt: skip
     assert found == out / "dellycnv.vcf.gz"
-    shards = ["chr1", "chr20", "chrX", "chrY"]
-    assert sorted(fake.shards) == sorted(shards)
-    for chrom, (args, mounts, label, exclude) in fake.shards.items():
-        assert label == CNV_LABEL == "dna:cnv"
-        assert args[:2] == ["delly", "cnv"]
-        assert args[args.index("-z") + 1] == "1000"
-        assert args[args.index("-g") + 1] == "/ref/g.fa"
-        assert args[args.index("-x") + 1] == "/out/exclude.tsv"
-        assert args[-1] == "/cram/x.cram"
-        if haploid:
-            assert args[args.index("--haploid-chr") + 1] == "chrX,chrY"
-        else:
-            assert "--haploid-chr" not in args
-        assert {(t, ro) for _, t, ro in mounts} == {
-            ("/cram", True),
-            ("/ref", True),
-            ("/out", False),
-        }
-        assert (out / "dellycnv-shards" / chrom, "/out", False) in mounts
-        assert exclude.startswith(TEMPLATE + MASKED)
-        bare = exclude.removeprefix(TEMPLATE + MASKED).splitlines()
-        assert bare == [c for c in CONTIGS if c != chrom]
-    concat, view, index = fake.tools
-    assert concat[:2] == ["bcftools", "concat"]
-    assert concat[-len(shards) :] == [
-        str(out / "dellycnv-shards" / c / "delly.bcf") for c in shards
-    ]
+    ((args, mounts, label, exclude),) = fake.runs
+    assert label == CNV_LABEL == "dna:cnv"
+    assert args[:2] == ["delly", "cnv"]
+    assert args[args.index("-z") + 1] == "1000"
+    assert args[args.index("-g") + 1] == "/ref/g.fa"
+    assert args[args.index("-x") + 1] == "/out/exclude.tsv"
+    assert args[args.index("-o") + 1] == "/out/delly.bcf"
+    assert args[-1] == "/cram/x.cram"
+    if haploid:
+        assert args[args.index("--haploid-chr") + 1] == "chrX,chrY"
+    else:
+        assert "--haploid-chr" not in args
+    assert {(t, ro) for _, t, ro in mounts} == {
+        ("/cram", True),
+        ("/ref", True),
+        ("/out", False),
+    }
+    assert (out, "/out", False) in mounts
+    assert exclude == TEMPLATE + MASKED + "".join(f"{c}\n" for c in outside)
+    view, index = fake.tools
     assert view[:2] == ["bcftools", "view"]
     assert view[view.index("-f") + 1] == "PASS"
     assert view[view.index("-o") + 1] == str(found)
+    assert view[-1] == str(out / "delly.bcf")
     assert index[:2] == ["bcftools", "index"] and index[-1] == str(found)
 
 

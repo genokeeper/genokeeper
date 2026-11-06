@@ -3,11 +3,11 @@ read as `Deletion` events (slice 3d).
 
 Both depth callers run offline in their images (`containers.IMAGES`) behind the core gate, on
 the CRAM, its index and the FASTA mounted read-only and one output directory read-write, as
-3b's callers do. `delly cnv` shards per chromosome exactly as 3b's `delly sr`
-(`deletions.callers.delly_shards`): the chr20 shard found 46 of 46 of the whole-genome run's
-chr20 PASS calls at reciprocal overlap 0.5 on HG002 (plan Task 6, 2026-10-30). Its exclude
-list adds 3c's masked intervals to DELLY's template. CNVpytor's four commands run in one
-container; its call table is its stdout.
+3b's callers do. `delly cnv` runs once, unlike 3b's `delly sr`: DELLY 2.7.0's `cnv` mode counts
+every chromosome whatever `-x` says and reads the list only on its finished calls (`coral.h`),
+so a per-chromosome shard is a whole-genome run (BR-031). Its exclude list adds 3c's masked
+intervals and the contigs outside its `shards` to DELLY's template. CNVpytor's four commands
+run in one container; its call table is its stdout.
 
 A depth event is a `Deletion` of type `DEL` (a loss) or `DUP` (a gain), its deleted or
 copied bases `[pos, end)` 0-based as 3b's deletions: DELLY's `<CNV>` record covers POS..END
@@ -26,8 +26,10 @@ from pathlib import Path
 from genokeeper.config import Grading
 from genokeeper.containers import run_container
 from genokeeper.deletions.callers import (
+    _contigs,
+    _exclude,
     _inputs,
-    delly_shards,
+    _template,
     read_records,
     vcf_records,
 )
@@ -58,7 +60,6 @@ def run_delly_cnv(
     fasta: Path,
     out_dir: Path,
     *,
-    threads: int,
     shards: Collection[str],
     haploid: Sequence[str],
     masked: Path,
@@ -66,39 +67,34 @@ def run_delly_cnv(
 ) -> Path:
     """`delly cnv` on `cram` (GRCh38), its events from `min_length` bp (`-z`; `[cnv]`),
     `haploid` (a male's `("chrX", "chrY")`, a female's `()`) passed as `--haploid-chr`,
-    sharded per chromosome in `shards` (`delly_shards`, `out_dir/dellycnv-shards/`, label
-    `dna:cnv`) with every interval of the `masked` BED (3c's masked intervals) excluded;
-    their BCFs concatenated in the `.fai`'s order and kept to FILTER PASS as
+    in one container behind `dna:cnv`; its exclude list holds DELLY's template, every
+    interval of the `masked` BED (3c's masked intervals) and every contig of the FASTA not
+    in `shards`, which keeps its calls on `shards`. They are kept to FILTER PASS as
     `out_dir/dellycnv.vcf.gz`, bgzipped and indexed."""
+    extra = [f"{c}\t{s}\t{e}" for c, s, e in read_bed(masked)]
+    _exclude(
+        _template(out_dir), _contigs(fasta), shards, out_dir / "exclude.tsv", extra
+    )
     command = ["delly", "cnv", "-g", f"/ref/{fasta.name}", "-z", str(min_length)]
     if haploid:
         command += ["--haploid-chr", ",".join(haploid)]
-    bcfs = delly_shards(
-        cram,
-        fasta,
-        out_dir,
-        threads=threads,
-        shards=shards,
-        folder="dellycnv-shards",
-        command=command,
-        label=CNV_LABEL,
-        extra=[f"{c}\t{s}\t{e}" for c, s, e in read_bed(masked)],
-    )
-    merged, out = out_dir / "dellycnv.all.bcf", out_dir / "dellycnv.vcf.gz"
-    run_tool(
+    run_container(
+        "delly",
         [
-            "bcftools", "concat", "--no-version", "-Ob", "-o", str(merged),
-            *map(str, bcfs),
-        ]
+            *command, "-x", "/out/exclude.tsv", "-o", "/out/delly.bcf",
+            f"/cram/{cram.name}",
+        ],
+        mounts=_inputs(cram, fasta, out_dir),
+        label=CNV_LABEL,
     )  # fmt: skip
+    out = out_dir / "dellycnv.vcf.gz"
     run_tool(
         [
             "bcftools", "view", "--no-version", "-f", "PASS", "-Oz", "-o", str(out),
-            str(merged),
+            str(out_dir / "delly.bcf"),
         ]
     )  # fmt: skip
     run_tool(["bcftools", "index", "-f", "-t", str(out)])
-    merged.unlink(missing_ok=True)
     return out
 
 

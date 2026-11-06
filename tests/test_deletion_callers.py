@@ -330,6 +330,7 @@ def test_run_delly_shard_fails_the_step(
     with pytest.raises(RuntimeError, match="shard chr2 failed"):
         run_delly(cram, fasta, out, threads=1, shards=PRIMARY)
     assert fake.tools == []
+    assert sorted(fake.shards) == ["chr1"]  # chr20 and chrX, behind it, never started
 
 
 def test_run_dysgu_args(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

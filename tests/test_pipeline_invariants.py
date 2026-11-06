@@ -1025,11 +1025,11 @@ def test_run_genome_end_to_end(genome: Genome) -> None:
     )
     assert genome.slice3d.runs == dict.fromkeys(
         (
-            *("parascopy depth", "cnvpytor", "insurveyor", "scramble", "truvari"),
-            *("parascopy cn", "gauchian", "kilda", "aldy"),
+            *("delly cnv", "parascopy depth", "cnvpytor", "insurveyor"),
+            *("scramble", "truvari", "parascopy cn", "gauchian", "kilda", "aldy"),
         ),
         1,
-    ) | {"delly cnv": 3}  # one per primary chromosome, as 3b's DELLY
+    )
     # Each caller one container per primary chromosome of the mini FASTA (chr1, chrX, chrY).
     assert genome.deletions.runs == {"delly": 3, "dysgu": 3, "truvari": 1}
     # Dysgu's shards reach its cached step: every shard's records, kept on its chromosome.
@@ -2397,10 +2397,11 @@ def test_gba1_contradiction_applied(
 
 
 def test_female_no_haploid(genome: Genome) -> None:
-    """A female run gives `delly cnv` no `--haploid-chr` and no chrY shard."""
+    """A female run gives `delly cnv` no `--haploid-chr`, and chrY is on its exclude list."""
     run_id = _run_genome(genome, sex="female")
     assert genome.slice3d.haploid == {None}
-    assert genome.slice3d.shards == {"chr1", "chrX"}
+    assert "chrY" in genome.slice3d.excluded
+    assert not {"chr1", "chrX"} & genome.slice3d.excluded
     statements, _, _ = _slice3d(genome, run_id)
     assert statements["cnv:screen"]["kind"] == "non_finding"
 

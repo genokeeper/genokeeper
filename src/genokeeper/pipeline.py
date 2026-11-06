@@ -2703,9 +2703,9 @@ def cnv_steps(
     junctions: _Step,
 ) -> tuple[CnvResults, dict[str, _Step]]:
     """The depth callers' steps on `cram`, side by side as `deletion_steps` runs its
-    callers: `dellycnv` (`delly cnv` from `[cnv] min_length`, sharded as 3b's DELLY, with
+    callers: `dellycnv` (`delly cnv` from `[cnv] min_length`, one whole-genome run, with
     3c's `masked` intervals excluded and, for a `male`, chrX and chrY haploid; a female's
-    shards leave chrY out) and, when `cnvpytor` (the `cnv` table kept it), `cnvpytor` at
+    calls leave chrY out) and, when `cnvpytor` (the `cnv` table kept it), `cnvpytor` at
     `[cnv] bin_size`. Each key holds `cram_key`, its image, the FASTA's sha256 and its
     options (DELLY's also the masked BED's sha256 and the shards). The events are DELLY's
     read against the sample's ploidy and CNVpytor's merged (`merge_depth` at
@@ -2723,7 +2723,6 @@ def cnv_steps(
             cram,
             fasta,
             out,
-            threads=threads,
             shards=shards,
             haploid=haploid,
             masked=masked,

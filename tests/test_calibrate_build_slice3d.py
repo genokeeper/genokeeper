@@ -102,11 +102,13 @@ def _truth(path: Path, extra: Sequence[str] = ()) -> None:
 
 class Recorded:
     """Every container call, with the calibration library whose CRAM it read (its `/cram`
-    mount's library folder; empty for a call that reads none), before `run` takes it."""
+    mount's library folder; empty for a call that reads none), before `run` takes it, and
+    per library the bare contig names on `delly cnv`'s exclude list."""
 
     def __init__(self, lab: Path, run: Any) -> None:
         self.run = run
         self.calls: list[Call] = []
+        self.excluded: dict[str, set[str]] = {}
         self._folders = {library_dir(lab, key): key for key in RECORDED}
 
     def library(self, mounts: Sequence[tuple[Path, str, bool]]) -> str:
@@ -128,6 +130,9 @@ class Recorded:
     ) -> None:
         out = next((s for s, t, _ in mounts if t == "/out"), Path())
         self.calls.append((self.library(mounts), list(args), name, out.name))
+        if args[:2] == ["delly", "cnv"]:
+            lines = (out / "exclude.tsv").read_text().splitlines()
+            self.excluded[self.library(mounts)] = {x for x in lines if "\t" not in x}
         self.run(name, args, mounts=mounts, platform=platform, label=label)
 
 
@@ -318,18 +323,16 @@ def test_build_deletions_uses_judge_library(
 
 
 def test_hg004_runs_female(lab: Lab) -> None:
-    """HG004 (female) runs its depth caller without `--haploid-chr` and every caller without
-    a chrY shard; HG003 (male) with both."""
+    """HG004 (female) runs its depth caller without `--haploid-chr` and with chrY excluded,
+    and DELLY's deletions without a chrY shard; HG003 (male) with `--haploid-chr` and chrY
+    kept."""
     build_cnv(lab.lab, 2)
 
-    def shards(library: str, *, depth: bool) -> set[str]:
+    def shards(library: str) -> set[str]:
         return {
             out
-            for key, args, name, out in lab.recorded.calls
-            if key == library
-            and name == "delly"
-            and args[:1] != ["cp"]
-            and (args[:2] == ["delly", "cnv"]) == depth
+            for key, args, _, out in lab.recorded.calls
+            if key == library and args[:2] == ["delly", "sr"]
         }
 
     def haploid(library: str) -> list[bool]:
@@ -339,11 +342,12 @@ def test_hg004_runs_female(lab: Lab) -> None:
             if key == library and args[:2] == ["delly", "cnv"]
         ]
 
-    assert shards("hg004", depth=True) == {"chr20", "chrX"}
-    assert shards("hg004", depth=False) == {"chr20", "chrX"}
-    assert not any(haploid("hg004"))
-    assert shards("hg003", depth=True) == {"chr20", "chrX", "chrY"}
-    assert haploid("hg003") and all(haploid("hg003"))
+    assert "chrY" in lab.recorded.excluded["hg004"]
+    assert shards("hg004") == {"chr20", "chrX"}
+    assert haploid("hg004") == [False]
+    assert "chrY" not in lab.recorded.excluded["hg003"]
+    assert not {"chr20", "chrX"} & lab.recorded.excluded["hg003"]
+    assert haploid("hg003") == [True]
 
 
 class _Large(FakeSlice3d):

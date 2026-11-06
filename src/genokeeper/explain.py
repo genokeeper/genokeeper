@@ -35,7 +35,6 @@ import sys
 import tempfile
 import threading
 from collections.abc import Callable
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -50,6 +49,7 @@ from genokeeper.evidence.medlineplus import (
     load_medlineplus,
 )
 from genokeeper.lang import LANGUAGES, Language, language
+from genokeeper.parallel import map_until_failure
 from genokeeper.pipeline import _newest_dated
 from genokeeper.query import (
     HAPLOID_DOSAGE_NOTE,
@@ -458,11 +458,7 @@ def explain(
                 file=sys.stderr,
             )
 
-    pool = ThreadPoolExecutor(max_workers=jobs)
-    try:
-        list(pool.map(lambda plan: one(*plan), asked))
-    finally:
-        pool.shutdown(cancel_futures=True)
+    map_until_failure(lambda plan: one(*plan), asked, workers=jobs)
     return counts
 
 

@@ -5,8 +5,8 @@ gate, on the CRAM, its index and the FASTA (with its `.fai`) mounted read-only a
 directory mounted read-write. DELLY parallelises over samples only, so one sample runs on one
 core: `run_delly` runs one container per chromosome it is given (`exons.PRIMARY`, or without
 chrY for a female sample: DELLY 2.7.0 exits 1 on a shard with too few reads to estimate its
-library), each behind its own `dna:delly` gate (`delly_shards`, which slice 3d's `delly cnv`
-shards through too), and concatenates their BCFs natively.
+library), each behind its own `dna:delly` gate (`delly_shards`), and concatenates their BCFs
+natively.
 `run_dysgu` shards the same way, one chromosome after another, to bound its memory. bcftools
 runs natively (`run_tool`), as 3a's wrappers run samtools.
 
@@ -27,11 +27,11 @@ bound.
 
 import gzip
 from collections.abc import Collection, Iterator, Mapping, Sequence
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from genokeeper.containers import run_container
 from genokeeper.deletions.screen import Deletion
+from genokeeper.parallel import map_until_failure
 from genokeeper.tools import run_tool
 
 DELLY_LABEL = "dna:delly"
@@ -85,16 +85,26 @@ def _contigs(fasta: Path) -> list[str]:
     return list(_lengths(fasta))
 
 
+def _template(out_dir: Path) -> str:
+    """DELLY's template exclude list, copied out of its image into `out_dir`."""
+    run_container(
+        "delly",
+        ["cp", DELLY_TEMPLATE, "/out/exclude.template.tsv"],
+        mounts=[(out_dir, "/out", False)],
+    )
+    return (out_dir / "exclude.template.tsv").read_text()
+
+
 def _exclude(
     template: str,
     contigs: Sequence[str],
-    own: str,
+    own: Collection[str],
     path: Path,
     extra: Sequence[str] = (),
 ) -> None:
     """`template`'s lines, the `extra` ones, and a whole-contig line (a bare name, as
-    DELLY's `-x` reads it) for every contig but `own`."""
-    lines = [template.rstrip("\n"), *extra, *(c for c in contigs if c != own)]
+    DELLY's `-x` reads it) for every contig not in `own`."""
+    lines = [template.rstrip("\n"), *extra, *(c for c in contigs if c not in own)]
     path.write_text("\n".join(lines) + "\n")
 
 
@@ -108,26 +118,20 @@ def delly_shards(
     folder: str,
     command: Sequence[str],
     label: str,
-    extra: Sequence[str] = (),
 ) -> list[Path]:
     """DELLY's `command` (its subcommand and options before `-x`) on `cram`, one container
     per chromosome of the FASTA in `shards` (in its `.fai`'s order), at most `threads` at a
     time, each behind its own `label` gate in its own `out_dir/<folder>/<chrom>/` with its
-    own exclude list (DELLY's template, the `extra` lines, every other contig); their BCFs
-    in that order. A shard that fails fails the step: the error is raised once the running
-    shards finish."""
+    own exclude list (DELLY's template, every other contig); their BCFs in that order. A
+    shard that fails fails the step: no shard starts after it, and its error is raised once
+    the running shards finish."""
     contigs = _contigs(fasta)
     folders = [out_dir / folder / c for c in contigs if c in shards]
-    run_container(
-        "delly",
-        ["cp", DELLY_TEMPLATE, "/out/exclude.template.tsv"],
-        mounts=[(out_dir, "/out", False)],
-    )
-    template = (out_dir / "exclude.template.tsv").read_text()
+    template = _template(out_dir)
 
     def shard(path: Path) -> Path:
         path.mkdir(parents=True, exist_ok=True)
-        _exclude(template, contigs, path.name, path / "exclude.tsv", extra)
+        _exclude(template, contigs, (path.name,), path / "exclude.tsv")
         run_container(
             "delly",
             [
@@ -139,11 +143,7 @@ def delly_shards(
         )  # fmt: skip
         return path / "delly.bcf"
 
-    pool = ThreadPoolExecutor(max_workers=threads)
-    try:
-        return list(pool.map(shard, folders))
-    finally:
-        pool.shutdown(cancel_futures=True)
+    return map_until_failure(shard, folders, workers=threads)
 
 
 def run_delly(

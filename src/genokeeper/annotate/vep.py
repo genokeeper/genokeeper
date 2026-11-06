@@ -26,7 +26,6 @@ import re
 import shutil
 import sys
 from collections.abc import Collection, Iterable, Iterator, Sequence
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 from pathlib import Path
 
@@ -34,6 +33,7 @@ import pysam
 
 from genokeeper.config import load_paths
 from genokeeper.containers import PLATFORMS, run_container
+from genokeeper.parallel import map_until_failure
 from genokeeper.tools import run_tool
 from genokeeper.variants.key import make_vid
 
@@ -491,11 +491,7 @@ def run_spliceai(out_dir: Path, fasta: Path, *, threads: int) -> None:
         )  # fmt: skip
         return (folder / f"{i}.out.vcf").read_text().splitlines(keepends=True)
 
-    pool = ThreadPoolExecutor(max_workers=count)
-    try:
-        outputs = list(pool.map(shard, range(count)))
-    finally:
-        pool.shutdown(cancel_futures=True)
+    outputs = map_until_failure(shard, range(count), workers=count)
     joined = [line for line in outputs[0] if line.startswith("#")] + [
         line for output in outputs for line in output if not line.startswith("#")
     ]

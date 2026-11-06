@@ -437,7 +437,7 @@ and Truvari only when the screen ran.
 
 Slice 3d screens the same exons, with DPYD and CHEK2 added, for what the deletion screen
 leaves. Losses and gains of read depth of 1 kb or more come from DELLY's `delly cnv` (the
-3b image, one chromosome at a time) and CNVpytor 1.3.2 (`cnvpytor`). Insertions of 50 bp or
+3b image, one whole-genome run) and CNVpytor 1.3.2 (`cnvpytor`). Insertions of 50 bp or
 more come from Dysgu and INSurVeyor 1.1.3 (`insurveyor`), matched by Truvari, with mobile
 elements labelled by Scramble 1.0.2 (`scramble`) on the target exons only. Each goes through
 3b's gene gate and wording: at validity limited, needing confirmation. A depth event of

@@ -1105,27 +1105,26 @@ def _records(text: str, extra: Sequence[str]) -> str:
 
 class FakeSlice3d:
     """Stands in for slice 3d's `run_container` calls (`cnv.callers`, `insertions`,
-    `paralogs`, and where they reach `deletions.callers`' DELLY shards, `truvari`'s union,
+    `paralogs`, `truvari`'s union,
     `smn`'s Parascopy and `pgx.cyp2d6`'s Aldy: `over` routes a call here by its label, or
     Parascopy's depth and Truvari between Dysgu's and INSurVeyor's insertions), and for
     `run_tool` in `insertions` and `paralogs` (`tool`): each writes what it wrote on HG002
     (`fixtures/hg002/`, Task 6's runs), with `dellycnv`, `cnvpytor`, `meis` and `gauchian`
-    adding records or replacing a result. `delly cnv`'s records land on its first shard, as
-    `FakeDeletions` does. `runs` counts each container (`delly cnv`, `parascopy depth` and
-    `parascopy cn` named apart), `haploid` holds each `delly cnv` shard's `--haploid-chr`
-    value (None without one), `shards` its shards; a name in `fail` exits 1."""
+    adding records or replacing a result. `runs` counts each container (`delly cnv`,
+    `parascopy depth` and `parascopy cn` named apart), `haploid` holds `delly cnv`'s
+    `--haploid-chr` value (None without one), `excluded` the bare contig names on its
+    exclude list; a name in `fail` exits 1."""
 
     def __init__(self) -> None:
         self.runs: dict[str, int] = {}
         self.fail: set[str] = set()
         self.haploid: set[str | None] = set()
-        self.shards: set[str] = set()
+        self.excluded: set[str] = set()
         self.dellycnv: list[str] = []
         self.cnvpytor: list[str] = []
         self.meis: list[str] = []
         self.gauchian: tuple[str, str] | None = None
         self._lock = threading.Lock()
-        self._first: str | None = None
 
     @staticmethod
     def handles(name: str, args: Sequence[str], label: str | None) -> bool:
@@ -1170,26 +1169,19 @@ class FakeSlice3d:
     ) -> None:
         key = self._key(name, args)
         out = _mount(mounts, "/aldy-out" if name == "aldy" else "/out")
-        first = None
         with self._lock:
             self.runs[key] = self.runs.get(key, 0) + 1
             if key == "delly cnv":
                 given = list(args)
                 at = given.index("--haploid-chr") if "--haploid-chr" in given else None
                 self.haploid.add(None if at is None else given[at + 1])
-                self.shards.add(out.name)
-                first = self._first = self._first or out.name
+                lines = (out / "exclude.tsv").read_text().splitlines()
+                self.excluded = {line for line in lines if "\t" not in line}
         if key in self.fail:
             raise ToolFailed(1, ["docker", name], "", f"{name} crashed\n")
         if key == "delly cnv":
             text = (HG002 / "hg002.dellycnv.vcf.txt").read_text()
-            extra = self.dellycnv
-            if out.name != first:
-                text, extra = (
-                    "".join(x for x in text.splitlines(True) if x[0] == "#"),
-                    [],
-                )
-            (out / "delly.bcf").write_text(_records(text, extra))
+            (out / "delly.bcf").write_text(_records(text, self.dellycnv))
         elif name == "cnvpytor":
             rows = (HG002 / "hg002.cnvpytor.calls.txt").read_text()
             (out / "calls.tsv").write_text(
