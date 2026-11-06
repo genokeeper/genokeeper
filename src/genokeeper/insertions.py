@@ -80,9 +80,10 @@ INSERTION_WORDING = Wording(
 
 
 def run_insurveyor(cram: Path, fasta: Path, out_dir: Path, *, threads: int) -> Path:
-    """INSurVeyor on `cram` (GRCh38) with `threads`, its work directory `out_dir/work`;
-    its PASS calls (`out.pass.vcf.gz`, every record `SVTYPE=INS`) sorted, bgzipped and
-    indexed natively as `out_dir/insurveyor.vcf.gz`."""
+    """INSurVeyor on `cram` (GRCh38) with `threads`, its work directory `out_dir/work`,
+    which the tool does not create; its PASS calls (`out.pass.vcf.gz`, every record
+    `SVTYPE=INS`) sorted, bgzipped and indexed natively as `out_dir/insurveyor.vcf.gz`."""
+    (out_dir / "work").mkdir(exist_ok=True)
     run_container(
         "insurveyor",
         [

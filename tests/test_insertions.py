@@ -387,7 +387,7 @@ def test_run_insurveyor_args(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
         label: str | None = None,
     ) -> None:
         seen.append((name, list(args), list(mounts), label))
-        (out / "work").mkdir()
+        # insurveyor.py opens <workdir>/full_cmd.txt first and never creates the folder.
         (out / "work" / "out.pass.vcf.gz").write_bytes(b"")
 
     monkeypatch.setattr(insertions, "run_container", fake)
