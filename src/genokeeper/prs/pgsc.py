@@ -319,7 +319,7 @@ def write_target_vcf(
     in `target_positions`' order, an allele's position's ALTs next to each other), its
     genotype by `genotype.sites.site_genotype` on an autosome. `one_row_per_alt` gives each
     allele of `calls` a row of its own, for a reader that takes one row per panel row:
-    a person who carries another ALT of the position then reads `./.` on this one's row.
+    a person who carries another ALT of the position and none of this one reads `./.` here.
 
     The calls stream through: a genome's millions of positions are never held at once.
     `out` holds the user's genotypes: the caller puts it under the run's work directory."""
