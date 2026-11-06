@@ -217,7 +217,8 @@ class DosageThresholds:
     them balanced in one X suggests an extra X; a Y ratio at most `y_absent_max` is no Y.
     `calibrated_on` empty: the bounds are not yet set from the calibration report (the
     statement's `source_version`; the `foundation` table's staleness decides whether the
-    run grades)."""
+    statement grades, and FMR1 and AFF2 read the dosage only with a value and a current
+    table)."""
 
     # Half the smallest mosaic share the screen reports (30%): a design value, not
     # calibrated.

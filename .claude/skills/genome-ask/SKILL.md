@@ -1045,7 +1045,8 @@ Four checks of the run itself. None of them is actionable.
   `possible mosaic loss of Y` is research information (topic `research`, validity
   `limited`; hidden by the default view): name the estimated share of cells without Y from
   its reason, say it is common with age and not actionable. Unassessed with `not
-  calibrated` means its bounds are not yet set from the calibration report.
+  calibrated` means this lab has no `foundation` calibration table; `genokeeper calibrate`
+  builds it.
 - **Allele fraction.** A heterozygous call with fewer reads for the allele than a germline
   heterozygote shows (`[af_guard] min_het_vaf`) carries
   `allele fraction low: may be clonal, not inherited; confirm in another tissue` in one of

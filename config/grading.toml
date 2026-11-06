@@ -246,7 +246,7 @@ homopolymer = 6
 # many spanning, flanking and in-repeat reads together: the fewest reads behind any of HG002's
 # alleles on its two libraries at the standard-rule loci the table keeps, the "fewest reads
 # behind an allele" line of `genokeeper calibrate --only stage3 --report`. The report of
-# November 2026 on the masked reference and Illumina's regions (catalog b1965231, BR-008)
+# 2026-11-05 on the masked reference and Illumina's regions (catalog b1965231, BR-008)
 # reads PCR-free 5 and PCR 17, both ATXN7; 2026-10-28's 4 came from STRchive's regions.
 min_allele_reads = 5
 
