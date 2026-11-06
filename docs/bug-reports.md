@@ -52,7 +52,7 @@ files, not this one. How to file, close and reference an entry:
 | [BR-025](bugs/BR-025.md) | `genokeeper explain` writes no explanation of a stage-3 watch item, which the dashboard now lists | `claude/explain-stage3-watch` |
 | [BR-026](bugs/BR-026.md) | Secretor status is stated twice, by the FUT2 trait and the FUT2 blood group, and neither says which one to trust | `genokeeper/genokeeper#10` |
 | [BR-029](bugs/BR-029.md) | A no-call at a FUT2 position leaves FUT1 and FUT3 stating a secretor-dependent phenotype read from the reference | `genokeeper/genokeeper#14` |
-| [BR-031](bugs/BR-031.md) | delly cnv ran as per-chromosome shards, each a whole-genome run, and a failed shard did not stop the shards behind it |  |
+| [BR-031](bugs/BR-031.md) | delly cnv ran as per-chromosome shards, each a whole-genome run, and a failed shard did not stop the shards behind it | `genokeeper/genokeeper#18` |
 
 ## Void identifiers (0)
 
