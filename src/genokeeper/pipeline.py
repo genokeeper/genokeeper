@@ -3485,7 +3485,7 @@ HHV6_STEP_VERSION = "1"
 ROH_SITES_STEP_VERSION = "1"
 ROH_STEP_VERSION = "1"
 BLOODGROUPS_STEP_VERSION = "1"
-ADMIXTURE_STEP_VERSION = "1"
+ADMIXTURE_STEP_VERSION = "2"  # 2: one row per pruned.bim row
 ARCHAIC_STEP_VERSION = "1"
 # The typing steps' names in `TypingResults.failed` ("<tool> failed: <line>").
 HHV6_STEP, ROH_STEP, RBCEQ2_STEP = "HHV-6", "ROH", "RBCeq2"
@@ -3744,7 +3744,9 @@ def typing_steps(
         alleles = pruned_alleles(bim)
         calls = graded(alleles, out / "scratch")
         target = write_target_vcf(
-            ((a, calls[a], level(a, calls[a])) for a in alleles), out / "target.vcf.gz"
+            ((a, calls[a], level(a, calls[a])) for a in alleles),
+            out / "target.vcf.gz",
+            one_row_per_alt=True,
         )
         bed = to_bed(target, out / "bed" / "target.bed")
         k = len(read_groups(groups_file))

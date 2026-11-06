@@ -177,6 +177,25 @@ def test_target_vcf_has_ref_rows(tmp_path: Path) -> None:
     ]
 
 
+def test_write_target_vcf_one_row_per_alt(tmp_path: Path) -> None:
+    """Each allele keeps its own row and its own dosage, as `pruned.bim` lists them; a
+    carrier of the position's other ALT is `./.` on this one's row."""
+    other = _called("0", "0/1", RowType.PASS, OTHER)
+    sites = [
+        (("chr1", 100, "A", "G"), _called("1", "0/1"), Level.HIGH),
+        (("chr1", 100, "A", "T"), other, Level.HIGH),
+        (("chr1", 200, "C", "T"), _called("2", "1/1"), Level.HIGH),
+    ]
+    out = pgsc.write_target_vcf(sites, tmp_path / "t.vcf.gz", one_row_per_alt=True)
+    with gzip.open(out, "rt") as handle:
+        rows = [r.split("\t") for r in handle.read().splitlines() if r[0] != "#"]
+    assert [(r[1], r[3], r[4], r[9]) for r in rows] == [
+        ("100", "A", "G", "0/1"),
+        ("100", "A", "T", "./."),
+        ("200", "C", "T", "1/1"),
+    ]
+
+
 def test_target_positions_take_their_reference_from_the_fasta(tmp_path: Path) -> None:
     """A scoring file names an effect and another allele, the panel a REF and an ALT: the
     one the GRCh38 FASTA has at the position is the REF. Autosomes only; an allele pair the

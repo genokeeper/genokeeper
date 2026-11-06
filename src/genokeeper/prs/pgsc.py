@@ -309,12 +309,17 @@ def target_positions(
 
 
 def write_target_vcf(
-    calls: Iterable[tuple[Allele, Called | None, Level | None]], out: Path
+    calls: Iterable[tuple[Allele, Called | None, Level | None]],
+    out: Path,
+    *,
+    one_row_per_alt: bool = False,
 ) -> Path:
     """Write pgsc_calc's input to `out` (gzipped, byte for byte the same for the same
     calls): one row per position of `calls` (each allele with our call there and its grade,
     in `target_positions`' order, an allele's position's ALTs next to each other), its
-    genotype by `genotype.sites.site_genotype` on an autosome.
+    genotype by `genotype.sites.site_genotype` on an autosome. `one_row_per_alt` gives each
+    allele of `calls` a row of its own, for a reader that takes one row per panel row:
+    a person who carries another ALT of the position then reads `./.` on this one's row.
 
     The calls stream through: a genome's millions of positions are never held at once.
     `out` holds the user's genotypes: the caller puts it under the run's work directory."""
@@ -330,8 +335,10 @@ def write_target_vcf(
             '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n'
             f"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{SAMPLE}\n"
         )
-        for (chrom, pos, ref), site in itertools.groupby(calls, key=lambda c: c[0][:3]):
+        width = 4 if one_row_per_alt else 3
+        for _, site in itertools.groupby(calls, key=lambda c: c[0][:width]):
             alleles, called, levels = zip(*site, strict=True)
+            chrom, pos, ref, _ = alleles[0]
             gt = site_genotype(called, levels, haploid=False)
             alts = ",".join(a[3] for a in alleles)
             handle.write(f"{chrom}\t{pos}\t.\t{ref}\t{alts}\t.\tPASS\t.\tGT\t{gt}\n")

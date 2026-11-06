@@ -4,8 +4,8 @@ The panel's reference (`typing_files.build_panel_reference`) is its unrelated sa
 LD-pruned SNPs (`pruned.bim`), fastmixture's supervised P file with the superpopulations as
 labels 1..K (AMR unlabelled) and `groups.json` naming each label. The user's genotypes at
 the pruned SNPs (`pruned_alleles`) are written by `pgsc.write_target_vcf` (reference rows
-explicit, an unknown call `./.`: the projection needs every SNP of the P file), turned into a
-bed by one plink2 call in pgsc_calc's image (`to_bed`; variant IDs `chrom:pos:ref:alt`, as
+explicit, an unknown call `./.`, one row per `pruned.bim` row, where a position can hold two
+or three: the projection needs every SNP of the P file), turned into a bed by one plink2 call in pgsc_calc's image (`to_bed`; variant IDs `chrom:pos:ref:alt`, as
 the panel's), and projected on the P file (`run_projection`). Both containers run offline,
 gated `dna:ancestry`.
 """

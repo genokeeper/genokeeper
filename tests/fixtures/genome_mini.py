@@ -1538,6 +1538,15 @@ class FakeTyping:
         def coverage(_bam: Path, out: Path) -> Path:
             return write(out, "#rname\tstartpos\tendpos\tmeandepth\n")
 
+        def to_bed(vcf: Path, out: Path) -> Path:
+            """plink2's `--make-bed`, which exits 7 on a row with two ALTs."""
+            with gzip.open(vcf, "rt") as handle:
+                if any("," in row.split("\t")[4] for row in handle if row[0] != "#"):
+                    raise RuntimeError(
+                        "target.bim cannot contain multiallelic variants"
+                    )
+            return write(out, "bed")
+
         def hhv6(_depths: Any, haploid: float, **kw: Any) -> Any:
             return classify({"NC_000898.1": self.ratio * haploid}, haploid, **kw)
 
@@ -1579,8 +1588,11 @@ class FakeTyping:
                 alleles=(abo,), systems={abo[:2]: frozenset({"ABO"})}, unchecked={}
             ),
             "run_rbceq2": rbceq2,
-            "pruned_alleles": lambda _bim: [snp],
-            "to_bed": lambda _vcf, out: write(out, "bed"),
+            "pruned_alleles": lambda _bim: [
+                snp,
+                (*snp[:3], "T" if ref != "T" else "C"),
+            ],
+            "to_bed": to_bed,
             "read_groups": lambda _path: ("AFR", "CSA", "EAS", "EUR", "MID"),
             "run_projection": projection,
             "run_hmmix": hmmix,
