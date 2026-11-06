@@ -1550,7 +1550,7 @@ class FakeTyping:
         def hhv6(_depths: Any, haploid: float, **kw: Any) -> Any:
             return classify({"NC_000898.1": self.ratio * haploid}, haploid, **kw)
 
-        def roh(_vcf: Path, _af: Path, out: Path, **_kw: Any) -> Path:
+        def roh(_vcf: Path, _af: Path, out: Path) -> Path:
             self._ran("roh")
             return write(out, "RG\tsample\tchr1\t100\t6000100\t6000001\t50\t80.0\n")
 

@@ -13,8 +13,8 @@ reads must carry the AF file's REF and ALT with a reference call written `0/0` (
   site `0/0`, one where the truth calls another allele `./.` (as our calls write it).
 
 Both take the same sites (`af_alleles`: autosomes, positions with one ALT in the AF file), so
-the run and the calibration feed `run_roh` one kind of input. `spike` makes an artificial
-isodisomy the calibration must find. `read_runs` reads the runs (`RG` lines) and
+the run and the calibration feed `run_roh` one kind of input. `inside` cuts our sites to a
+benchmark, and `spike` makes an artificial isodisomy the calibration must find. `read_runs` reads the runs (`RG` lines) and
 `summarise` gives the total length and count of long runs, the longest run and the runs long
 enough to suggest isodisomy. Heterodisomy leaves no run, and nothing here speaks of the
 parents.
@@ -192,20 +192,43 @@ def spike(vcf: Path, region: tuple[str, int, int], out: Path) -> Path:
     return out
 
 
-def run_roh(vcf: Path, af: Path, out: Path, *, regions: Path | None = None) -> Path:
+def inside(vcf: Path, bench: Path, out: Path) -> Path:
+    """`vcf` (gzipped) as `out` with the header and only the rows inside the BED `bench`, as
+    `truth_sites_vcf` leaves its rows out: `bcftools roh` refuses `-t` and `-T` beside
+    `--AF-file`, and `-r` and `-R` need an indexed file."""
+    intervals = StrataIndex.from_beds({"benchmark": bench})
+    with (
+        gzip.open(vcf, "rt", encoding="utf-8") as src,
+        gzip.open(out, "wt", encoding="utf-8", compresslevel=1) as dst,
+    ):
+        for line in src:
+            if line.startswith("#"):
+                dst.write(line)
+                continue
+            chrom, pos, _ = line.split("\t", 2)
+            if intervals.flags_at(chrom, int(pos)):
+                dst.write(line)
+    return out
+
+
+def run_roh(vcf: Path, af: Path, out: Path) -> Path:
     """`bcftools roh -G30 --AF-file af` on `vcf` (`sites_vcf`'s or `truth_sites_vcf`'s:
     autosomal biallelic SNVs) into `out` (`-O r`, its `RG` lines), in the `truvari` image,
-    offline, behind the gate as `LABEL`. `regions` (a BED) restricts the sites read, as the
-    calibration restricts its runs to the benchmark."""
+    offline, behind the gate as `LABEL`."""
     out.parent.mkdir(parents=True, exist_ok=True)
-    args = ["bcftools", "roh", "-G30", "--AF-file", f"/af/{af.name}"]
-    mounts = [(vcf.parent, "/in", True), (af.parent, "/af", True)]
-    if regions is not None:
-        args += ["-T", f"/regions/{regions.name}"]
-        mounts.append((regions.parent, "/regions", True))
-    args += ["-O", "r", "-o", f"/out/{out.name}", f"/in/{vcf.name}"]
-    mounts.append((out.parent, "/out", False))
-    run_container("truvari", args, mounts=mounts, label=LABEL)
+    run_container(
+        "truvari",
+        [
+            "bcftools", "roh", "-G30", "--AF-file", f"/af/{af.name}",
+            "-O", "r", "-o", f"/out/{out.name}", f"/in/{vcf.name}",
+        ],
+        mounts=[
+            (vcf.parent, "/in", True),
+            (af.parent, "/af", True),
+            (out.parent, "/out", False),
+        ],
+        label=LABEL,
+    )  # fmt: skip
     return out
 
 

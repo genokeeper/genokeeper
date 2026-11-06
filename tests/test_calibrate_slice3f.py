@@ -547,7 +547,7 @@ def _fake_typing_tools(monkeypatch: pytest.MonkeyPatch) -> None:
         "align_viral": lambda _a, _b, _f, out, threads: write(out, "bam"),
         "viral_coverage": coverage,
         "sites_vcf": lambda _g, _af, _fa, out, **_kw: write(out, "sites"),
-        "run_roh": lambda _v, _af, out, **_kw: write(
+        "run_roh": lambda _v, _af, out: write(
             out, "RG\tsample\tchr1\t100\t6000100\t6000001\t50\t80.0\n"
         ),
         "rbceq2_positions": lambda _fasta: Rbceq2Positions(
@@ -764,9 +764,10 @@ def _fake_build(
         "calls_at": lambda _g, alleles, **_kw: {a: _ref_call() for a in alleles},
         "truth_calls": lambda _v, _b, alleles, **_kw: {a: _ref_call() for a in alleles},
         "truth_ta": lambda _vcf: "TA6/TA6",
+        "inside": lambda _v, _b, out: write(out),
         "truth_sites_vcf": lambda _t, _b, _af, out: write(out),
         "spike": lambda _v, _region, out: write(out),
-        "run_roh": lambda _v, _af, out, **_kw: write(out, ""),
+        "run_roh": lambda _v, _af, out: write(out, ""),
         "rbceq2_positions": lambda _fasta: Rbceq2Positions((ABO_ALLELE,), {}, {}),
         "run_rbceq2": _rbceq2_tables,
         "call_chrm": chrm,

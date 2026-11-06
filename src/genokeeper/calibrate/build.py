@@ -303,6 +303,7 @@ from genokeeper.regions import Interval, giab38_dir, merge, read_bed, subtract
 from genokeeper.repeats.expansionhunter import region
 from genokeeper.roh import (
     Run,
+    inside,
     read_runs,
     run_roh,
     spike,
@@ -1550,7 +1551,7 @@ def build_paralogs(lab: Path, threads: int) -> None:
 # ROH on the trio reads the EUR AF file: Ashkenazi Jews are not a panel population.
 TRIO_POPULATION = "EUR"
 MIXTURE_SEED = 7
-SLICE3F_STEP_VERSION = "1"
+SLICE3F_STEP_VERSION = "2"  # 2: ROH cut to the benchmark before bcftools roh
 # The calibration's grade in the typing steps' calls key (`deepvariant_level`).
 LEVEL_NAME = "deepvariant-gq"
 _UNKNOWN = Called("./.", "unknown", RowType.NOCALL, None, None, None, None, ())
@@ -1792,19 +1793,19 @@ def _measure_library(
         return on_haploid_contig(chrom, pos, grading=grading, male=male)
 
     def build_roh(out: Path) -> None:
-        sites = steps["roh_sites"].path
         bed = out / "benchmark.bed"
         if key == "pcrfree":
             shutil.copy(bench, bed)
         else:  # v4.2.1, which can lack real variants on the correct copies (BR-030)
             without_false_duplications(lab, bench, bed)
+        sites = inside(steps["roh_sites"].path, bed, out / "ours.vcf.gz")
         given = {
             "ours": sites,
             "truth": truth_sites_vcf(truth_vcf, bed, af, out / "truth.vcf.gz"),
             "spiked": spike(sites, SPIKE, out / "spiked.vcf.gz"),
         }
         for name, vcf in given.items():
-            run_roh(vcf, af, out / f"{name}.txt", regions=bed)
+            run_roh(vcf, af, out / f"{name}.txt")
 
     def build_truth_blood(out: Path) -> None:
         where = rbceq2_positions(fasta)

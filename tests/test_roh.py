@@ -263,8 +263,8 @@ def test_spike_rewrites_only_inside_region(tmp_path: Path) -> None:
 
 
 def test_run_roh_command(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """`bcftools roh -G30 --AF-file` in the `truvari` image, offline, gated `dna:roh`; the
-    calibration's benchmark regions as a targets file."""
+    """`bcftools roh -G30 --AF-file` in the `truvari` image, offline, gated `dna:roh`, with
+    no targets file: it refuses one beside `--AF-file`."""
     seen: list[tuple[str, list[str], dict[str, tuple[Path, bool]], str | None]] = []
 
     def fake(
@@ -282,21 +282,35 @@ def test_run_roh_command(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Non
 
     monkeypatch.setattr(roh, "run_container", fake)
     vcf, af = tmp_path / "in" / "sites.vcf.gz", tmp_path / "af" / "af.EUR.tsv.gz"
-    bed = tmp_path / "bench" / "bench.bed"
-    out = roh.run_roh(vcf, af, tmp_path / "out" / "roh.txt", regions=bed)
+    out = roh.run_roh(vcf, af, tmp_path / "out" / "roh.txt")
     assert out == tmp_path / "out" / "roh.txt"
     assert len(read_runs(out)) == 5811
     ((name, args, mounts, label),) = seen
     assert (name, label) == ("truvari", "dna:roh")
     assert args == [
         "bcftools", "roh", "-G30", "--AF-file", "/af/af.EUR.tsv.gz",
-        "-T", "/regions/bench.bed", "-O", "r", "-o", "/out/roh.txt",
-        "/in/sites.vcf.gz",
+        "-O", "r", "-o", "/out/roh.txt", "/in/sites.vcf.gz",
     ]  # fmt: skip
     assert mounts["/in"] == (vcf.parent, True)
     assert mounts["/af"] == (af.parent, True)
-    assert mounts["/regions"] == (bed.parent, True)
     assert mounts["/out"] == (out.parent, False)
+
+
+def test_inside_keeps_the_header_and_the_benchmark_rows(tmp_path: Path) -> None:
+    """Rows inside the BED survive, bounds as a BED gives them, on `chr` names."""
+    vcf = tmp_path / "sites.vcf.gz"
+    rows = [f"chr1\t{pos}\t.\tA\tG\t.\tPASS\t.\tGT\t0/1\n" for pos in (10, 11, 20, 21)]
+    with gzip.open(vcf, "wt") as handle:
+        handle.write("##fileformat=VCFv4.2\n" + "".join(rows))
+    bed = tmp_path / "bench.bed"
+    bed.write_text("chr1\t10\t20\n")
+    out = roh.inside(vcf, bed, tmp_path / "cut.vcf.gz")
+    with gzip.open(out, "rt") as handle:
+        assert handle.read().splitlines() == [
+            "##fileformat=VCFv4.2",
+            rows[1].rstrip(),
+            rows[2].rstrip(),
+        ]
 
 
 @pytest.mark.tools
