@@ -12,11 +12,11 @@ from concurrent.futures import (
 def map_until_failure[T, R](
     fn: Callable[[T], R], items: Iterable[T], *, workers: int
 ) -> list[R]:
-    """`fn` over `items`, at most `workers` at a time, the results in `items`' order. The
-    first exception stops the rest: an item not started by then never starts, the running
-    calls finish, and that exception is raised. `ThreadPoolExecutor.map` differs on both
-    counts: the workers go on through the queue, and a failure stays hidden behind every
-    earlier item still running."""
+    """`fn` over `items`, at most `workers` at a time, the results in `items`' order. At the
+    first exception an item no worker has taken never starts, calls already inside `fn` run
+    to their end, even one still waiting at the core gate to start its container, and that
+    exception is raised. `ThreadPoolExecutor.map` instead goes on through the queue, and
+    hides a failure behind every earlier item still running."""
     failures: list[Exception] = []
 
     def guarded(item: T) -> R:

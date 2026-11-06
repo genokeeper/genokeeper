@@ -123,8 +123,8 @@ def delly_shards(
     per chromosome of the FASTA in `shards` (in its `.fai`'s order), at most `threads` at a
     time, each behind its own `label` gate in its own `out_dir/<folder>/<chrom>/` with its
     own exclude list (DELLY's template, every other contig); their BCFs in that order. A
-    shard that fails fails the step: no shard starts after it, and its error is raised once
-    the running shards finish."""
+    shard that fails fails the step: a shard no worker has taken never runs, one already at
+    its gate still does, and the error is raised once those finish."""
     contigs = _contigs(fasta)
     folders = [out_dir / folder / c for c in contigs if c in shards]
     template = _template(out_dir)

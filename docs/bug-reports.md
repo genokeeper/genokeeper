@@ -9,13 +9,14 @@ files, not this one. How to file, close and reference an entry:
 | ID | Sev | Area | Title | Found |
 |---|---|---|---|---|
 
-## Partially fixed (3)
+## Partially fixed (4)
 
 | ID | Sev | Area | Title | Found |
 |---|---|---|---|---|
 | [BR-009](bugs/BR-009.md) | low | sources | A repeat statement's words contradict its grading: a watch's class reads normal, a watch says the expansion is reliable, a finding answers carrier, AR reads GCA | 2026-10-28 |
 | [BR-012](bugs/BR-012.md) | medium | annotate | One VEP row per variant lets a non-MANE LoF hide a MANE Plus Clinical missense in a listed gene | 2026-11-02 |
 | [BR-027](bugs/BR-027.md) | medium | evidence | SLC37A4 has no MANE model on the primary assembly, so its predicted LoFs fail gate 2 and read as doubtful | 2026-11-02 |
+| [BR-031](bugs/BR-031.md) | high | cnv | delly cnv ran as per-chromosome shards, each a whole-genome run, and a failed shard did not stop the shards behind it | 2026-11-06 |
 
 ## Rejected (6)
 
@@ -28,7 +29,7 @@ files, not this one. How to file, close and reference an entry:
 | [BR-020](bugs/BR-020.md) | low | calibrate | An INSurVeyor insertion of unknown length might take the short band's chance of being false, though the insertion calibration never measures such a call | 2026-11-02 |
 | [BR-028](bugs/BR-028.md) | low | annotate | SpliceAI's annotation lacks PCDH15's last coding exon and TNNT2's intron 1, so a splice change there gets no score | 2026-11-02 |
 
-## Fixed (21)
+## Fixed (20)
 
 | ID | Title | Fixed in |
 |---|---|---|
@@ -52,7 +53,6 @@ files, not this one. How to file, close and reference an entry:
 | [BR-025](bugs/BR-025.md) | `genokeeper explain` writes no explanation of a stage-3 watch item, which the dashboard now lists | `claude/explain-stage3-watch` |
 | [BR-026](bugs/BR-026.md) | Secretor status is stated twice, by the FUT2 trait and the FUT2 blood group, and neither says which one to trust | `genokeeper/genokeeper#10` |
 | [BR-029](bugs/BR-029.md) | A no-call at a FUT2 position leaves FUT1 and FUT3 stating a secretor-dependent phenotype read from the reference | `genokeeper/genokeeper#14` |
-| [BR-031](bugs/BR-031.md) | delly cnv ran as per-chromosome shards, each a whole-genome run, and a failed shard did not stop the shards behind it | `genokeeper/genokeeper#18` |
 
 ## Void identifiers (0)
 
