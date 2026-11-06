@@ -15,7 +15,8 @@ nothing a watch item, and only the coeliac rule-out is flagged `exclusion`.
 - `hla:KIR`: always unassessed, not covered.
 
 A gene in `withheld` (the calibration table's, keyed by gene, `DQ` for the tag SNPs) makes
-its statements unassessed with the table's reason; `not_run` makes every statement but
+its statements unassessed with the table's reason, and leaves `hla:table`'s row empty, the
+callers' calls under the claim's `withheld`; `not_run` makes every statement but
 `hla:KIR` unassessed with it. A caller that made no call for a gene is unassessed, never
 negative.
 """
@@ -44,7 +45,15 @@ from genokeeper.pgx.hla_typing import (
     load_hg002_truth,
     load_hla_alleles,
 )
-from genokeeper.sources import INFORMATION_NOTE, Collected, Fields, Row, RunContext
+from genokeeper.sources import (
+    INFORMATION_NOTE,
+    WITHHELD,
+    Collected,
+    Fields,
+    Row,
+    RunContext,
+    withheld_entry,
+)
 from genokeeper.sources.panel import CLAIM_SCHEMA
 from genokeeper.store.db import Kind, Topic, Validity
 
@@ -68,6 +77,8 @@ CLASS_II = (
 )
 # The keys of `withheld` that hold back the coeliac statement.
 DQ_WITHHELD = ("HLA-DQA1", "HLA-DQB1", "DQ")
+TABLE_ROW = "the gene's two alleles in this table"
+CONFIRM_TYPING = "HLA typing in a laboratory"
 MONSUUR = "Monsuur et al. 2008, doi:10.1371/journal.pone.0002270"
 VERSION = f"IPD-IMGT/HLA {IMGT_HLA_VERSION}"
 
@@ -203,6 +214,7 @@ class HlaSource:
 
     def _table(self, ctx: RunContext) -> Row:
         genes: list[dict[str, object]] = []
+        held: list[Fields] = []
         for gene in CLASS_I + CLASS_II:
             calls = self._calls(gene)
             if all(call is None for call in calls.values()):
@@ -210,6 +222,16 @@ class HlaSource:
             entry: dict[str, object] = {"gene": gene}
             if gene in self.withheld:
                 entry |= {"alleles": None, "callers": None, "note": self.withheld[gene]}
+                typed = {name: shown(call) for name, call in calls.items()}
+                held.append(
+                    withheld_entry(
+                        self.withheld[gene],
+                        {"gene": gene, "callers": typed},
+                        would_be=Kind.FINDING,
+                        significance=TABLE_ROW,
+                        confirm=CONFIRM_TYPING,
+                    )
+                )
             elif gene in CLASS_I:
                 o, t = calls[OPTITYPE], calls[T1K]
                 agreed = _alleles(o)
@@ -241,7 +263,13 @@ class HlaSource:
                 f"; {', '.join(map(str, other))}: {INFORMATION_NOTE}" if other else ""
             )
             kind, reason = Kind.FINDING, CLASS_II_ONE_CALLER + note
-        claim = {"schema": CLAIM_SCHEMA, "type": "hla_table", "genes": genes}
+        claim: dict[str, object] = {
+            "schema": CLAIM_SCHEMA,
+            "type": "hla_table",
+            "genes": genes,
+        }
+        if held:
+            claim[WITHHELD] = held
         return self._row(
             ctx,
             f"{HLA_TOOL}:table",

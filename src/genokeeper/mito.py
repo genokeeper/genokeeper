@@ -24,7 +24,7 @@ Slice 3f ("chrM floor", "haplocheck"): given the run's heteroplasmy floor, the c
 below it is unknown with its level kept, and one at or above it, still a heteroplasmy, says
 it depends on the tissue. A heteroplasmy is unknown whatever the floor when haplocheck flags
 contamination (a contaminant's variant would pass as one) or fails, or the calibration
-withholds heteroplasmies. Each such unknown's warning starts `genotype unknown`, as `query` reads it.
+withholds heteroplasmies. Each such unknown's first warning starts `genotype unknown`, as `query` reads it, and the next keeps the level.
 Without these keywords a call is graded exactly as before 3f.
 """
 
@@ -185,7 +185,11 @@ def mito_called(
             if why is not None:
                 return Called(
                     gt=None, dosage="unknown", row_type=RowType.PASS, gq=None,
-                    dp=own.dp, ad=None, vaf=level, warnings=(f"genotype unknown: {why}",),
+                    dp=own.dp, ad=None, vaf=level,
+                    warnings=(
+                        f"genotype unknown: {why}",
+                        f"{HETEROPLASMY_WARNING} at level {level:.3g}",
+                    ),
                 )  # fmt: skip
         warnings = (
             ()

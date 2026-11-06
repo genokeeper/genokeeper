@@ -13,7 +13,7 @@ CONTRACT = {
     *("unassessed", "unassessed_sites"),
     *("unassessed.total", "unassessed.by_gene"),
     *("unassessed.by_gene.sites", "unassessed.by_gene.topics"),
-    "unassessed.by_gene.reasons",
+    *("unassessed.by_gene.reasons", "unassessed.by_gene.withheld"),
     *("id", "kind", "topic", "gene", "marker", "genotype", "reliability", "validity"),
     *("effect", "actionable", "claim", "sources"),
     *("marker.rsid", "marker.grch38"),
@@ -83,6 +83,7 @@ STAGE3_CONTRACT = {
     # RFC1's motif call.
     "claim.confirm",
     "claim.rfc1",
+    "claim.range",
 }
 # Slice 3c: the keys the sex-chromosome dosage statement's claim adds, and a gene's
 # coverage, which `query --gene` prints at the top.
@@ -128,6 +129,17 @@ CONTRACT |= PGX_CONTRACT | PHARMGKB_CONTRACT | PRS_CONTRACT
 CONTRACT |= HAPLOGROUP_CONTRACT | GWAS_CONTRACT | PREDICTED_CONTRACT | STAGE3_CONTRACT
 CONTRACT |= DOSAGE_CONTRACT | COVERAGE_CONTRACT | SLICE3F_CONTRACT
 CONTRACT |= SLICE3F_FINDING_CONTRACT
+# What a calibration table withheld (`sources.withheld`), under any claim.
+CONTRACT |= {
+    "claim.withheld",
+    *(
+        f"claim.withheld.{key}"
+        for key in (
+            *("reliability", "reason", "value", "would_be"),
+            *("significance", "confirm"),
+        )
+    ),
+}
 # The key paths `genotype --json` adds to those: `run_id` and the finding keys it shares.
 GENOTYPE_CONTRACT = {
     *("assessed", "sites"),
@@ -168,12 +180,13 @@ CHANGES_CONTRACT = {
 # (change kind -> count); its `sites` are findings with four keys more, rooted at the top
 # like the rest. Slice 3f's HLA claims hold two more, `status` (caller -> status) and
 # `tag_dosages` (rsid -> dosage), and its ancestry claims two: `probabilities` and
-# `proportions` (population -> share).
+# `proportions` (population -> share). A withheld entry's `value` holds the keys its source
+# measures, documented with that source.
 _MAPS = frozenset(
     {
         *("versions", "hidden", "topics", "reasons", "by_answer", "by_level"),
         *("callers", "research", "status", "tag_dosages"),
-        *("probabilities", "proportions"),
+        *("probabilities", "proportions", "value"),
     }
 )
 # CFTR's repeat claim keys its `alleles` by tract (`tg`, `t`), each an allele list.

@@ -28,7 +28,12 @@ answer from memory, from a portal report, or from what a gene "usually" means fo
   listed because the site matters, not because the user carries the allele: its genotype
   could not be determined. Say so in those words. The exception: a reason starting
   `not covered:` means no method or score qualifies, so say "not covered" and the reason,
-  never "genotype unknown".
+  never "genotype unknown", and where the claim holds `withheld`, what it holds too (see
+  Withheld values).
+- **A withheld value is never a result.** Where a calibration table withheld what a tool
+  measured, the statement stays unassessed and its claim keeps the value under `withheld`.
+  Report it with its reliability, the reason and its significance, never as the user's
+  result, a normal or an exclusion (see Withheld values).
 - **Never drop the hidden counts.** Every answer says how many findings and unassessed
   claims the filters hid and why (the `hidden` map), and offers to show them.
 - **No finding is not a normal result.** An empty `findings` list means the store holds no
@@ -167,6 +172,9 @@ Fit the filters to the question:
   - `by_gene`: a map of gene symbol to its counts, genes in alphabetical order (`""` for a
     claim with no gene):
     - `sites`: how many unassessed claims the gene has;
+    - `withheld`: how many of them hold a value a calibration table withheld
+      (`claim.withheld`); when it is not 0, read them (`--list-unassessed` or `show`) before
+      answering (see Withheld values);
     - `topics`: a map of topic to count;
     - `reasons`: a map of why the genotype is unknown to count, largest first — each claim
       once, under its call's first warning that starts with `genotype unknown` (e.g.
@@ -449,6 +457,9 @@ Each finding has these keys:
     included on a borderline one: word it as the class the interval may reach, never as the
     allele's class (a borderline watch is not an expansion), and quote the repeats and the
     interval with it; null when unassessed, and null for RFC1 and CFTR;
+  - `range`: the same reading of the alleles, kept when unassessed: read it only from
+    `claim.withheld`, never as a class the run graded; null without an allele, and null for
+    RFC1 and CFTR;
   - `thresholds`: the locus's ranges from STRchive, in repeats (null for RFC1 and CFTR):
     - `normal_max`: the largest normal count;
     - `intermediate`: `[low, high]`, or null;
@@ -522,7 +533,8 @@ Each finding has these keys:
   - `genes`: one entry per gene a caller typed, class I first:
     - `gene`: the gene, e.g. `HLA-A`;
     - `alleles`: its two alleles, or null where OptiType and T1K disagree on a class I
-      gene or the calibration withholds the gene;
+      gene or the calibration withholds the gene (`claim.withheld` then keeps its callers'
+      calls);
     - `callers`: who typed it (`OptiType and T1K`, or `T1K`), or each caller's call when
       they disagree;
     - `note`: why the entry reads as it does (`class II typed by T1K alone`, `the callers
@@ -614,6 +626,28 @@ Each finding has these keys:
     - `copies`: the copies of `effect_allele`, or `unknown`;
     - `genotype`: our call's GT there, null without a call;
     - `level`: that call's reliability level, null without a call.
+
+  on any statement a calibration table withheld a value from; the claim's other keys stay
+  as they are for an unassessed statement (see Withheld values):
+  - `withheld`: a list, absent where nothing was withheld, one element per value (more
+    only in `hla:table` and `cnv:screen`, which are no unassessed statements):
+    - `reliability`: always `low`, the lowest level;
+    - `reason`: why it is withheld, the table's words;
+    - `value`: what the tool measured, by the keys of its source: a repeat's `alleles`,
+      `range` and, for RFC1, `rfc1`; SMN's `smn1`, `smn2`, `g27134tg` and `callers`; the Y
+      haplogroup's `haplogroup`, `marker`, `qc_score` and `valid_markers`; a paralog's
+      `copy_number`, `callers` and `variants`; `kiv2`; an HLA allele's `callers` and
+      `status`, the coeliac screen's `t1k` and `tags`; HHV-6's `species` and `ratio`; the
+      runs of homozygosity's `total_long`, `n_long`, `longest` and `isodisomy`; a blood
+      group's `genotype` and `phenotype`; the ancestry keys; a MITOMAP variant's `level`; an
+      `hla:table` gene's `gene` and `callers`; a deletion's, depth event's or insertion's
+      `chrom`, `start`, `end`, `length`, `exons`, `callers` and `depth_ratio`; a named
+      locus's `name`, `chrom`, `start`, `end` and `callers`; a large event's keys;
+    - `would_be`: the `kind` the statement would have, were the value true: hypothetical,
+      never its kind;
+    - `significance`: what the value would mean, were it true: the reason the statement
+      would carry, or null where that kind has none;
+    - `confirm`: the test that would confirm it, or null where there is none (ancestry).
 - `gene_call` — a pharmacogenomic gene result's call, APOE's, a repeat locus's or SMN1's
   (null for every other finding):
   - `diplotype`: the diplotype, null when unresolved;
@@ -769,6 +803,41 @@ Each finding has these keys:
 - `research` — a map of change kind to count over the research associations, which are
   counted, never listed, unless `--gene`, `--marker` or `--text` names them.
 - `note` — `no earlier snapshot` when there is nothing to compare with, else null.
+
+## Withheld values
+
+A calibration table withholds an item where its method failed on a public reference genome:
+a false call on a healthy sample, libraries that disagree, a parent's finding. The statement
+stays `unassessed`, with the table's reason, whatever the tool measured. Nothing is hidden
+from the user: where the tool measured something, `claim.withheld` holds it. No `withheld`
+means there is no value (the tool did not run, or made no call): say "not covered" or "not
+assessed" with the reason, as before.
+
+- **Find it.** `unassessed.by_gene.<gene>.withheld` counts them; `--list-unassessed`, `show
+  <id> --json` and `genotype --gene` show them. Most sit below the default filters, so add
+  `--min-validity limited` and say so. A statement with no gene (the Y haplogroup, HHV-6,
+  ROH, ancestry) counts under `""`. Two statements carry one for what has no unassessed
+  statement of its own: `show hla:table --json` (a withheld gene) and `show cnv:screen
+  --json` (a large event in a withheld band).
+- **Report all of it, in this order.** That the calibration withheld the result, quoting
+  `reason`; the value (for a repeat the repeats, their intervals and the reads behind them);
+  its reliability, in these words: "the lowest: this method failed its calibration here";
+  what it would mean were it true (`would_be`, `significance`, for a repeat `value.range`
+  against `claim.thresholds`, and `validity.level` with `validity.source_level`, the locus's
+  link to the disease, never the call's); and the test, `confirm`.
+- **Never a result.** A value in the pathogenic range is no finding: "the tool's estimate
+  lies in the pathogenic range, unconfirmed, and this method failed its calibration here;
+  `confirm` would settle it", never "you have an expansion", and no alarm. A value in the
+  normal range is no normal: never "normal", "excluded", "not a carrier" or any reassurance.
+  `would_be` is hypothetical; `kind` is the statement's. Never count one as a finding, a
+  watch item, a normal or an exclusion, and never add one to a total.
+- **chrM.** Where the heteroplasmies are withheld (the calibration's reason, or haplocheck's
+  flag or failure), `dosage` is `unknown`, the first warning says why, and a `heteroplasmy
+  at level …` warning keeps the level: a claim of MITOMAP's also has `claim.withheld`, one
+  of ClinVar's has its own `classification` and `condition` as its significance. Read the
+  level as measured, not as carried.
+- **The dashboard** shows none of this: it counts a withheld item as unassessed, with its
+  reason. An explanation never states one.
 
 ## Drugs
 
@@ -958,6 +1027,7 @@ sample only). Ask for them with `--gene SMN1`, `--gene <gene>` or `--topic ances
   say what its reason says. `show smn:SMN1` gives the same statement.
 - A locus the calibration withholds, a disagreement between the two SMN callers or a Y
   haplogroup Yleaf did not state is unassessed with its `reason`: never read it as normal.
+  What the calibration withheld keeps its value (see Withheld values).
 - FMR1 (fragile X): see stage 3e.
 - The Y haplogroup traces the paternal line alone: never the user's ethnicity or a
   health result. Name it with its `validity.level` and `source_level` (Yleaf's QC score).
@@ -1124,7 +1194,7 @@ How to answer:
   PMS2 exons 12-15, the F8 inversions, OTOA, GSTT1, GSTM1, UGT2B17, NCF1, SORD) is an
   unassessed `paralogs:<gene>` statement: answer "not covered: <reason>" with its
   `validity.reason`, never normal. So is a locus the calibration withholds, or one the
-  callers disagree on.
+  callers disagree on; the first keeps its value (see Withheld values).
 - When none is shown, read the run's `versions` (`query --json`): with `delly cnv` among
   them the screen ran, so say "the screen found none; a miss is possible" (the `cnv:screen`
   and `insertions:screen` statements' reasons give the counts), never "no copy-number
@@ -1183,7 +1253,8 @@ actionable and none of the new ones is a watch item (TCF4's intermediate and PAB
   familial adult myoclonic epilepsy loci and the rest) answer "not covered: <reason>" from
   the statement's `reason`: never "normal" and never "none found".
 - A locus the calibration withholds is unassessed with its `reason` (libraries that
-  disagree, a trio check that failed, a finding in a parent): read it as a gap.
+  disagree, a trio check that failed, a finding in a parent): a gap, with the value the
+  tool gave (see Withheld values).
 
 ## Slice 3f: typing, mitochondria and what remains
 
@@ -1256,7 +1327,7 @@ unassessed "not calibrated", never normal; a tool that failed leaves it unassess
   phenotype, `not for clinical use: a transfusion is always cross-matched by serology`. A
   system with a no-call at any of its positions is unassessed, whatever RBCeq2 would say,
   because RBCeq2 reads a no-call as the reference; a system the calibration saw disagree is
-  withheld. An RBCeq2 allele whose GRCh38 REF disagrees with the reference is left out and
+  withheld (see Withheld values). An RBCeq2 allele whose GRCh38 REF disagrees with the reference is left out and
   named in the reasons ("RBCeq2 allele … not checked"): the system is shown without it.
   Not covered, each its own unassessed statement: RhD and RHCE (`bloodgroup:RH`, copy
   number), MNS (`bloodgroup:MNS`, GYPA/GYPB hybrid genes) and the platelet antigens

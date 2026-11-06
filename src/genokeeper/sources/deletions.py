@@ -12,7 +12,7 @@ the haploinsufficient genes it is under
 research; elsewhere a non-finding, its reason saying why. Each is worded by its class's
 chance of being false: "likely present" below `likely_below`, else "possible", always "needs confirmation by MLPA, a microarray, qPCR or
 long reads"; a class whose band the table did not measure is withheld (unassessed, no vid,
-`NOT_MEASURED`). Each deletion's `variant` and `call` rows go on its first statement only.
+`NOT_MEASURED`, its claim's `withheld` keeping the grade it would have). Each deletion's `variant` and `call` rows go on its first statement only.
 
 Slice 3d's copy-number and insertion screens are the same source in their own words
 (`Wording`: the tool every row names, the noun, the claim type, the test that confirms, the
@@ -33,7 +33,14 @@ from genokeeper.deletions.screen import CallClass, Deletion, Shown, warnings
 from genokeeper.evidence.clinvar import placement
 from genokeeper.evidence.predicted import BOTH_COPIES, GENETICIST_NOTE, lof_gene_gate
 from genokeeper.genelists import carrier_genes, gene_mode
-from genokeeper.sources import Collected, Fields, Row, RunContext
+from genokeeper.sources import (
+    WITHHELD,
+    Collected,
+    Fields,
+    Row,
+    RunContext,
+    withheld_entry,
+)
 from genokeeper.sources.panel import CLAIM_SCHEMA
 from genokeeper.store.db import Kind, Level, RowType, Topic, Validity
 from genokeeper.variants.key import make_vid
@@ -65,6 +72,9 @@ NOT_MEASURED = "not calibrated: no {} calls measured"
 
 
 type Placed = tuple[Kind, Topic | None, str | None]
+
+# What a withheld call's `value` holds of its claim.
+_EVENT = ("chrom", "start", "end", "length", "exons", "callers", "depth_ratio")
 
 
 @dataclass(frozen=True)
@@ -338,7 +348,17 @@ class DeletionSource:
             }
             locus = f"{d.chrom}:{d.pos}-{d.end}"
             if rate is None:
-                kind, reason = Kind.UNASSESSED, NOT_MEASURED.format(c.band)
+                why = NOT_MEASURED.format(c.band)
+                claim[WITHHELD] = [
+                    withheld_entry(
+                        why,
+                        {key: claim[key] for key in _EVENT},
+                        would_be=kind,
+                        significance=reason,
+                        confirm=w.confirm_by,
+                    )
+                ]
+                kind, reason = Kind.UNASSESSED, why
             statement = self._statement(
                 ctx,
                 f"{self.tool}:{gene}:{locus}",

@@ -19,7 +19,7 @@ from genokeeper.config import Grading
 from genokeeper.evidence.clingen import Curation
 from genokeeper.evidence.frequency import FafTable
 from genokeeper.genelists import GeneList
-from genokeeper.store.db import Kind, record_accounting
+from genokeeper.store.db import Kind, Level, record_accounting
 from genokeeper.store.writer import StoreWriter
 
 type Fields = dict[str, object]
@@ -28,6 +28,29 @@ type Fields = dict[str, object]
 # measured here (the HHV-6 band's width, ancestry, the blood-group phenotypes, the traits'
 # phenotypes).
 INFORMATION_NOTE = "information from the tools' own models; not checked against a reference genome here"
+# The claim key of what a calibration table withheld (`withheld_entry`, `sources.withheld`).
+WITHHELD = "withheld"
+
+
+def withheld_entry(
+    reason: str,
+    value: Fields,
+    *,
+    would_be: Kind,
+    significance: str | None,
+    confirm: str | None,
+) -> Fields:
+    """One element of a claim's `WITHHELD` list: what the tool measured (`value`), at the
+    lowest reliability, why it is withheld, and were it true the kind and reason the
+    statement would have (`would_be`, `significance`) and the test that confirms it."""
+    return {
+        "reliability": str(Level.LOW),
+        "reason": reason,
+        "value": value,
+        "would_be": str(would_be),
+        "significance": significance,
+        "confirm": confirm,
+    }
 
 
 @dataclass(frozen=True)

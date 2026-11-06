@@ -42,6 +42,7 @@ import duckdb
 from genokeeper.config import load_paths
 from genokeeper.evidence.pgx import GENE_UNRESOLVED
 from genokeeper.insertions import INSERTIONS_TOOL
+from genokeeper.sources import WITHHELD
 from genokeeper.sources.cnv import CNV_TOOL
 from genokeeper.sources.deletions import DELETIONS_TOOL
 from genokeeper.sources.paralogs import LPA_TOOL, PARALOGS_TOOL
@@ -482,14 +483,16 @@ def _counted(counts: dict[str, int]) -> dict[str, int]:
 
 
 def _unassessed_summary(sites: list[dict[str, Any]]) -> dict[str, Any]:
-    """`{"total", "by_gene": {gene: {"sites", "topics", "reasons"}}}`, genes in order; a
-    claim without a gene counts under `""`."""
+    """`{"total", "by_gene": {gene: {"sites", "withheld", "topics", "reasons"}}}`, genes
+    in order, `withheld` counting the claims holding what a table withheld; a claim without
+    a gene counts under `""`."""
     by_gene: dict[str, dict[str, Any]] = {}
     for site in sites:
         entry = by_gene.setdefault(
-            site["gene"] or "", {"sites": 0, "topics": {}, "reasons": {}}
+            site["gene"] or "", {"sites": 0, "withheld": 0, "topics": {}, "reasons": {}}
         )
         entry["sites"] += 1
+        entry["withheld"] += WITHHELD in (site["claim"] or {})
         for part, key in (
             ("topics", site["topic"]),
             ("reasons", unassessed_reason(site)),
@@ -500,6 +503,7 @@ def _unassessed_summary(sites: list[dict[str, Any]]) -> dict[str, Any]:
         "by_gene": {
             gene: {
                 "sites": entry["sites"],
+                "withheld": entry["withheld"],
                 "topics": _counted(entry["topics"]),
                 "reasons": _counted(entry["reasons"]),
             }

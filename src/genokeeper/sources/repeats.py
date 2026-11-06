@@ -618,15 +618,18 @@ class RepeatSource:
             or locus.validity
             or _VALIDITY.get(locus.evidence, Validity.LIMITED)
         )
+        # The class the grading reads (BR-009): the longest allele's interval's upper
+        # bound, so a watch never reads normal.
+        reached = (
+            str(classify(locus, _worst(locus, alleles).ci[1])) if alleles else None
+        )
         claim = {
             "locus_id": locus.locus_id,
             "motif": locus.motif,
             "alleles": _allele_fields(alleles),
-            # The class the grading reads (BR-009): the longest allele's interval's upper
-            # bound, so a watch never reads normal.
-            "class": str(classify(locus, _worst(locus, alleles).ci[1]))
-            if assessed
-            else None,
+            "class": reached if assessed else None,
+            # Beside an unassessed `class`, for what a table withheld (`sources.withheld`).
+            "range": reached,
             "thresholds": {
                 "normal_max": locus.normal_max,
                 "intermediate": locus.intermediate,
@@ -776,6 +779,7 @@ class RepeatSource:
             "motif": RFC1_MOTIF,
             "alleles": _allele_fields(alleles),
             "class": None,
+            "range": None,
             "thresholds": None,
             "image": None,
         }
@@ -833,6 +837,7 @@ class RepeatSource:
             "motif": "TG/T",
             "alleles": {"tg": _allele_fields(tgs), "t": _allele_fields(ts)},
             "class": None,
+            "range": None,
             "thresholds": None,
             "image": None,
         }

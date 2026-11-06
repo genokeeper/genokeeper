@@ -4,7 +4,8 @@ One statement for the screen (`cnv:screen`, 3b's shape): unassessed with its rea
 depth callers did not run, else a non-finding at validity limited naming how many events
 were called and shown, with what the depth screen does not cover, the target exons in 3b's
 mask (segmental duplications or low mappability) no Parascopy model covers, and the
-large-event bands the calibration withholds in its claim. Then the shown losses and gains through 3b's statements
+large-event bands the calibration withholds in its claim, each such event under its
+`withheld`. Then the shown losses and gains through 3b's statements
 (`DeletionSource`) in their own words (`LOSS_WORDING`, `GAIN_WORDING`), placed by each
 gene's kind (`Shown.kinds`, `cnv.screen.gain_kind`): a loss or a tandem duplication goes
 through 1e's gene gate as a loss of function, or the gene's override (A4: a DPYD loss is a
@@ -24,7 +25,14 @@ from dataclasses import dataclass, field, replace
 
 from genokeeper.cnv.screen import DEPTH_CALLERS, LargeEvent, NamedCnv
 from genokeeper.deletions.screen import CallClass, Shown
-from genokeeper.sources import Collected, Fields, Row, RunContext
+from genokeeper.sources import (
+    WITHHELD,
+    Collected,
+    Fields,
+    Row,
+    RunContext,
+    withheld_entry,
+)
 from genokeeper.sources.deletions import (
     CONFIRM_BY,
     DELETION_WORDING,
@@ -63,6 +71,8 @@ SCREEN_WORDING = replace(
 )
 LARGE_REASON = "screening result, needs a chromosomal microarray"
 LARGE_NOT_CALIBRATED = "shown, not calibrated: no truth set holds a large CNV"
+LARGE_WORDING = f"{LARGE_REASON}; {LARGE_NOT_CALIBRATED}"
+LARGE_CONFIRM = "a chromosomal microarray"
 TANDEM_NOTE = "a tandem duplication inside the gene may disrupt it"
 GAIN_DEPTH_ONLY = "possible extra copy, effect unknown"
 WHOLE_GAIN = "no known effect of an extra copy"
@@ -76,6 +86,21 @@ NOT_COVERED_DEPTH = (
 # Drop reasons the source adds to the screen's.
 LARGE_WITHHELD = "a large event in a withheld band"
 NAMED_AGAIN = "a named locus already stated"
+
+
+def _large(event: LargeEvent) -> Fields:
+    """A large event's own claim keys."""
+    d, c = event.event, event.call_class
+    return {
+        "chrom": d.chrom,
+        "start": d.pos + 1,
+        "end": d.end,
+        "length": d.length,
+        "direction": d.svtype,
+        "callers": dict(d.callers),
+        "class": {"band": c.band, "evidence": c.evidence, "masked": c.masked},
+        "regions": list(event.regions),
+    }
 
 
 def _none(_: Shown) -> list[str]:
@@ -204,14 +229,7 @@ class CnvSource:
         claim = {
             "schema": CLAIM_SCHEMA,
             "type": "large_copy_number",
-            "chrom": d.chrom,
-            "start": d.pos + 1,
-            "end": d.end,
-            "length": d.length,
-            "direction": d.svtype,
-            "callers": dict(d.callers),
-            "class": {"band": c.band, "evidence": c.evidence, "masked": c.masked},
-            "regions": list(event.regions),
+            **_large(event),
         }
         return self._own_row(
             ctx,
@@ -222,7 +240,7 @@ class CnvSource:
             kind=str(Kind.FINDING),
             gene=None,
             claim=json.dumps(claim),
-            reason=f"{LARGE_REASON}; {LARGE_NOT_CALIBRATED}",
+            reason=LARGE_WORDING,
             topic=str(Topic.RISKS),
         )
 
@@ -234,9 +252,7 @@ class CnvSource:
         # Both copies: DFNB1 itself, a risk (controller ruling, 2026-10-30).
         reason = named.homozygous_reason if d.gt == "1/1" else named.reason
         kind = Kind.FINDING
-        if rate is None:
-            kind, reason = Kind.UNASSESSED, NOT_MEASURED.format(c.band)
-        claim = {
+        claim: dict[str, object] = {
             "schema": CLAIM_SCHEMA,
             "type": "named_copy_number",
             "name": named.name,
@@ -248,6 +264,18 @@ class CnvSource:
             "class": {"band": c.band, "evidence": c.evidence, "masked": c.masked},
             "false_call_rate": None if rate is None else list(rate),
         }
+        if rate is None:
+            why = NOT_MEASURED.format(c.band)
+            claim[WITHHELD] = [
+                withheld_entry(
+                    why,
+                    {k: claim[k] for k in ("name", "chrom", "start", "end", "callers")},
+                    would_be=kind,
+                    significance=reason,
+                    confirm=CONFIRM_BY,
+                )
+            ]
+            kind, reason = Kind.UNASSESSED, why
         return self._own_row(
             ctx,
             f"{CNV_TOOL}:named:{named.name}",
@@ -279,6 +307,19 @@ class CnvSource:
             "not_covered": list(NOT_COVERED_DEPTH),
             "notes": list(self.notes),
         }
+        held = [
+            withheld_entry(
+                self.large_withheld[e.call_class.band],
+                _large(e),
+                would_be=Kind.FINDING,
+                significance=LARGE_WORDING,
+                confirm=LARGE_CONFIRM,
+            )
+            for e in self.large
+            if e.call_class.band in self.large_withheld
+        ]
+        if held:
+            extra[WITHHELD] = held
         screen = self._rows_by(SCREEN_WORDING)
         shown = len(self.shown) + len(large) + len(stated)
         rows = [screen._screen_row(ctx, shown=shown, extra=extra)]

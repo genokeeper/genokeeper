@@ -569,6 +569,7 @@ from genokeeper.sources.repeats import CFTR_GENE, REPEATS_TOOL, RepeatSource, XD
 from genokeeper.sources.roh import RohSource
 from genokeeper.sources.smn import SMN_TOOL, SmnSource
 from genokeeper.sources.traits import TRAIT_ALLELES, TraitSource
+from genokeeper.sources.withheld import reveal
 from genokeeper.sources.yleaf import YLEAF_TOOL, YleafSource
 from genokeeper.store.db import (
     Kind,
@@ -876,12 +877,13 @@ def store_sources(
     phases: Mapping[Pair, Phase] | None = None,
     gauchian: GauchianCall | None = None,
 ) -> None:
-    """The run's statements into the store: each source collects its rows, the statements
+    """The run's statements into the store: each source collects its rows, with what a
+    calibration table withheld kept in their claims (`sources.withheld`), the statements
     Gauchian's GBA1 call contradicts become unassessed (`gba1_unassessed`), the
     compound-heterozygote promotion runs across all of them with the candidate pairs'
     read-backed `phases` (none: every pair unphased), and they are written with one
     accounting row per tool. A new source is one more item in `sources`."""
-    collected = gba1_unassessed([source.collect(ctx) for source in sources], gauchian)
+    collected = gba1_unassessed([reveal(source, ctx) for source in sources], gauchian)
     promoted = promote.promote_compound_hets(
         collected, ctx.lists, ctx.inheritance, ctx.haploid, phases
     )

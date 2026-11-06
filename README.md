@@ -713,7 +713,11 @@ Open Claude Code in this repository and ask in plain words ("am I a carrier of a
 findings store and answers with each claim's genotype reliability, clinical validity, effect
 and sources, plus what the filters hid. A claim at a site whose genotype is unknown is never a
 finding: the query counts these `unassessed` claims per gene, with why the genotype is
-unknown, and lists them on request. Carrier and "do I have" questions go through `genokeeper
+unknown, and lists them on request. What a calibration table withholds stays one of those
+claims, never a finding, a watch item, a normal or an exclusion, and the dashboard's counts
+do not change; where the tool measured a value, the claim keeps it for the skill under
+`withheld`, at the lowest reliability, with the table's reason, what it would mean were it
+true and the test that would confirm it. Carrier and "do I have" questions go through `genokeeper
 genotype`: an answer per site from its dosage and reliability (`carrier`, `not_a_carrier`,
 `probably_not_a_carrier`, `unknown`; `possible_carrier` for a screening result that needs
 confirmation, every stage-3 finding among them; `needs_confirmation` for another deletion,

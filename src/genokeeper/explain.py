@@ -60,6 +60,7 @@ from genokeeper.query import (
     open_store,
     query,
 )
+from genokeeper.sources import WITHHELD
 from genokeeper.store.db import Kind, Level, Validity
 
 if TYPE_CHECKING:
@@ -183,14 +184,15 @@ class Rejected:
 
 def grounding(finding: dict[str, Any], medlineplus: MedlinePlus | None) -> list[Source]:
     """The finding's own source (its claim, without a local file's absolute path such as a
-    REViewer image's: it names the user's home), then the MedlinePlus summaries of its
+    REViewer image's: it names the user's home, and without what a table withheld, which
+    no explanation states), then the MedlinePlus summaries of its
     gene and of each `|`-separated part of its claim's condition that names one."""
     claim = finding["claim"]
     if isinstance(claim, dict):
         claim = {
             k: v
             for k, v in claim.items()
-            if not (isinstance(v, str) and v.startswith("/"))
+            if k != WITHHELD and not (isinstance(v, str) and v.startswith("/"))
         }
     sources = [Source(finding["id"], json.dumps(claim, sort_keys=True))]
     if medlineplus is None:

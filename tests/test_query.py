@@ -109,7 +109,12 @@ def test_an_unassessed_claim_is_counted_never_a_finding(
     assert result.unassessed == {
         "total": 1,
         "by_gene": {
-            "BRCA1": {"sites": 1, "topics": {"risks": 1}, "reasons": {NOCALL: 1}}
+            "BRCA1": {
+                "sites": 1,
+                "withheld": 0,
+                "topics": {"risks": 1},
+                "reasons": {NOCALL: 1},
+            }
         },
     }
     # The unassessed row still faces the validity filter, counted under its own prefix.
@@ -141,11 +146,17 @@ def test_the_unassessed_summary_counts_genes_topics_and_reasons(
         "by_gene": {
             "BRCA1": {
                 "sites": 5,
+                "withheld": 0,
                 "topics": {"risks": 4, "carrier": 1},
                 # Each row once, under its first "genotype unknown" warning.
                 "reasons": {NOCALL: 3, NO_READS: 1, "no call row": 1},
             },
-            "CFTR": {"sites": 1, "topics": {"risks": 1}, "reasons": {NO_READS: 1}},
+            "CFTR": {
+                "sites": 1,
+                "withheld": 0,
+                "topics": {"risks": 1},
+                "reasons": {NO_READS: 1},
+            },
         },
     }
     assert result.hidden == {}
