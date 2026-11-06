@@ -22,7 +22,7 @@ from genokeeper.explain import LOOSEST, grounding
 from genokeeper.hhv6 import Hhv6Call
 from genokeeper.mito import MitoCall, mito_called
 from genokeeper.paralogs import PsCall
-from genokeeper.pgx.hla import read_optitype, read_t1k
+from genokeeper.pgx.hla import T1K, read_optitype, read_t1k
 from genokeeper.pgx.hla_typing import CONFIRM_DQ, TAG_RSIDS
 from genokeeper.prs.pgsc import PopSimilarity
 from genokeeper.query import query, show
@@ -37,7 +37,12 @@ from genokeeper.sources.deletions import DeletionSource
 from genokeeper.sources.hhv6 import Hhv6Source
 from genokeeper.sources.hla import CONFIRM_TYPING, TABLE_ROW, HlaSource
 from genokeeper.sources.mitomap import MitomapSource
-from genokeeper.sources.paralogs import LpaSource, ParalogSource
+from genokeeper.sources.paralogs import (
+    ALDY_NAME,
+    PARASCOPY_NAME,
+    LpaSource,
+    ParalogSource,
+)
 from genokeeper.sources.repeats import (
     CONFIRM_TEST,
     FINDING_REASON,
@@ -47,7 +52,7 @@ from genokeeper.sources.repeats import (
     XDosage,
 )
 from genokeeper.sources.roh import RohSource
-from genokeeper.sources.smn import SmnSource
+from genokeeper.sources.smn import CALLER_NAME, SmnSource
 from genokeeper.sources.withheld import reveal
 from genokeeper.sources.yleaf import YleafSource
 from genokeeper.store.db import Kind, Level, connect, start_run, transaction
@@ -204,8 +209,8 @@ CASES: dict[str, tuple[Callable[[], Source], str, Kind, str, object]] = {
         ),
         "smn:SMN1",
         Kind.FINDING,
-        "smn1",
-        1,
+        CALLER_NAME,
+        {"smn1": 1, "smn2": 2, "g27134tg": 0},
     ),
     "the Y haplogroup": (
         lambda: YleafSource(
@@ -213,22 +218,22 @@ CASES: dict[str, tuple[Callable[[], Source], str, Kind, str, object]] = {
         ),
         "yleaf:haplogroup",
         Kind.FINDING,
-        "haplogroup",
+        "name",
         "J-C134621",
     ),
     "a paralog locus": (
         _paralog,
         "paralogs:STRC",
         Kind.FINDING,
-        "called",
-        1,
+        PARASCOPY_NAME,
+        {"copies": 1},
     ),
     "a low-quality copy number its own rule leaves unassessed": (
         lambda: replace(_paralog(), calls={"STRC": PsCall(1, 1.0, True, 1)}),
         "paralogs:STRC",
         Kind.UNASSESSED,
-        "called",
-        1,
+        PARASCOPY_NAME,
+        {"copies": 1},
     ),
     "Lp(a)": (
         lambda: LpaSource(20.0, REASON, None),
@@ -392,9 +397,15 @@ def test_the_withheld_entry(tmp_path: Path, name: str) -> None:
         (SmnSource(None, None, None, REASON, 20.0), "smn:SMN1"),
         (YleafSource(None, None, REASON, 0.95, True), "yleaf:haplogroup"),
         (LpaSource(None, REASON, None), "lpa:LPA"),
-        # A caller's line of placeholders, and a depth with no copy number, are no value.
+        # I2: a caller's line of `?`, or a depth or a quality with no copy number.
         (
-            SmnSource(SmnCaller(None, None, None, "x"), None, None, REASON, 20.0),
+            SmnSource(
+                SmnCaller(None, None, None, "x"),
+                ParascopyCall(None, None, 40.0, True),
+                None,
+                REASON,
+                20.0,
+            ),
             "smn:SMN1",
         ),
         (
@@ -407,6 +418,10 @@ def test_the_withheld_entry(tmp_path: Path, name: str) -> None:
             "paralogs:CYP2A6",
         ),
         (Hhv6Source(None, None, REASON), "hhv6:ici"),
+        (
+            Hhv6Source(Hhv6Call(None, float("nan"), Kind.UNASSESSED), None, REASON),
+            "hhv6:ici",
+        ),
         (RohSource(None, None, REASON), "roh:summary"),
         (
             BloodGroupSource(
@@ -417,6 +432,16 @@ def test_the_withheld_entry(tmp_path: Path, name: str) -> None:
         (
             HlaSource(
                 {}, {}, {rsid: "unknown" for rsid in TAG_RSIDS}, None, {"HLA-B": REASON}
+            ),
+            "hla:HLA-B*27",
+        ),
+        (
+            HlaSource(
+                {"HLA-B": (None, None)},
+                {"HLA-B": (None, None)},
+                {rsid: "unknown" for rsid in TAG_RSIDS},
+                None,
+                {"HLA-B": REASON},
             ),
             "hla:HLA-B*27",
         ),
@@ -433,6 +458,94 @@ def test_no_value_nothing_changes(
 ) -> None:
     ctx = run_context(tmp_path)
     assert _row(reveal(source, ctx), statement) == _row(source.collect(ctx), statement)
+
+
+G1 = {
+    "CYP2A6: Aldy 3, no Parascopy": (
+        replace(_paralog(), calls={}, aldy_cyp2a6=3, withheld={"CYP2A6": REASON}),
+        "paralogs:CYP2A6",
+        {ALDY_NAME: {"copies": 3}},
+        "no row over CYP2A6",
+    ),
+    "GBA1: Parascopy 4, no Gauchian": (
+        replace(
+            _paralog(),
+            calls={"GBA1": PsCall(4, 40.0, True, 1)},
+            withheld={"GBA1": REASON},
+        ),
+        "paralogs:GBA1",
+        {PARASCOPY_NAME: {"copies": 4}},
+        "gave no GBA1 call",
+    ),
+    "SMN: Parascopy SMN1 1, no caller": (
+        SmnSource(None, ParascopyCall(1, 2, 40.0, True), None, REASON, 20.0),
+        "smn:SMN1",
+        {PARASCOPY_NAME: {"smn1": 1, "smn2": 2}},
+        "gave no SMN1 copy number",
+    ),
+    "SMN: caller SMN1 1 alone": (
+        SmnSource(SmnCaller(1, None, None, "x"), None, None, REASON, 20.0),
+        "smn:SMN1",
+        {CALLER_NAME: {"smn1": 1}},
+        "gave no usable SMN1 copy number",
+    ),
+}
+
+
+@pytest.mark.parametrize("name", G1)
+def test_a_value_one_caller_gave_keeps_its_entry(tmp_path: Path, name: str) -> None:
+    source, statement, value, significance = G1[name]
+    row = _row(reveal(source, run_context(tmp_path)), statement)
+    assert row.statement["kind"] == Kind.UNASSESSED
+    (entry,) = _claim(row)["withheld"]
+    assert entry["value"] == value
+    assert (entry["reliability"], entry["reason"]) == (Level.LOW, REASON)
+    assert entry["would_be"] == Kind.UNASSESSED
+    assert significance in entry["significance"]
+    assert entry["confirm"]
+
+
+def test_a_withheld_value_sits_only_under_withheld(tmp_path: Path) -> None:
+    """G2: on a withheld STRC the copy number is under `withheld` and nowhere beside it, in
+    `show` and in `genotype`, where an agent could read it as the result."""
+    con = _stored(tmp_path / "store", _paralog(), revealed=True)
+    _, shown = show(con, None, "paralogs:STRC")
+    assert shown is not None
+    (site, *_) = genotype(con, None, gene="STRC").sites
+    assert site["answer"] == Answer.UNKNOWN
+    for claim in (shown["claim"], site["claim"]):
+        entry = claim.pop("withheld")
+        assert entry[0]["value"] == {PARASCOPY_NAME: {"copies": 1}}
+        assert claim["copy_number"] is None
+        assert 1 not in claim.values()
+        assert set(claim) == {
+            *("schema", "type", "locus", "genes", "measure"),
+            *("copy_number", "callers", "condition"),
+        }
+
+
+def test_a_withheld_repeat_holds_its_ranges_only_under_withheld(tmp_path: Path) -> None:
+    source = _repeats("HTT", Allele(42, (41, 43), 6, 3, 0))
+    claim = _claim(_row(reveal(source, run_context(tmp_path)), "expansionhunter:HTT"))
+    assert "range" not in claim
+    assert claim["class"] is None
+    assert claim["withheld"][0]["value"]["range"]["reaches"] == "pathogenic"
+
+
+def test_measured_data_is_never_stored(tmp_path: Path) -> None:
+    """Every source hands its values beside the statement, and the store takes none: an
+    unwithheld SMN call stores no key it did not."""
+    source = SmnSource(
+        SmnCaller(1, 2, 0, "high"),
+        ParascopyCall(1, 2, 40.0, True),
+        None,
+        None,
+        20.0,
+    )
+    row = _row(source.collect(run_context(tmp_path)), "smn:SMN1")
+    assert row.measured[CALLER_NAME]["smn1"] == 1
+    assert "measured" not in row.statement
+    assert CALLER_NAME not in _claim(row)
 
 
 def test_a_tool_not_run_changes_nothing(tmp_path: Path) -> None:
@@ -555,7 +668,7 @@ def test_a_withheld_hla_gene_stays_out_of_the_table_and_the_explanation(
     entry = next(e for e in table["claim"]["withheld"] if e["value"]["gene"] == "HLA-B")
     assert entry["reliability"] == Level.LOW
     assert entry["reason"] == REASON
-    assert entry["value"]["callers"]["T1K"] != "no call"
+    assert entry["value"]["callers"][T1K]
     assert entry["confirm"] == CONFIRM_TYPING
     assert entry["significance"] == TABLE_ROW
     # An explanation is written from the claim: a withheld value must not become one.

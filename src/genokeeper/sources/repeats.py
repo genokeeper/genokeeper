@@ -29,7 +29,7 @@ from genokeeper.repeats.loci import (
 )
 from genokeeper.repeats.not_covered import NOT_COVERED, NotCovered
 from genokeeper.repeats.rfc1 import RFC1_LOCUS, RFC1_MOTIF, RFC1_PAIRS
-from genokeeper.sources import Collected, Fields, Row, RunContext
+from genokeeper.sources import Collected, Fields, Row, RunContext, present
 from genokeeper.sources.panel import CLAIM_SCHEMA
 from genokeeper.store.db import Kind, Level, Topic, Validity
 
@@ -515,6 +515,19 @@ def _allele_fields(alleles: tuple[Allele, ...]) -> list[dict[str, object]]:
     ]
 
 
+def _measured(locus: RepeatLocus, alleles: tuple[Allele, ...]) -> Fields | None:
+    """The alleles, with where the longest estimate lies and how far the longest interval
+    reaches, which differ on a wide interval."""
+    if not alleles:
+        return None
+    estimate = max(
+        (classify(locus, a.repeats) for a in alleles), key=_SEVERITY.__getitem__
+    )
+    reaches = classify(locus, _worst(locus, alleles).ci[1])
+    ranges = {"estimate": str(estimate), "reaches": str(reaches)}
+    return {"alleles": _allele_fields(alleles), "range": ranges}
+
+
 def _callers(alleles: tuple[Allele, ...]) -> dict[str, str]:
     if not alleles:
         return {}
@@ -570,8 +583,8 @@ class RepeatSource:
         rows: list[Row] = []
         gene_calls: list[Fields] = []
         graded = [self._locus(ctx, locus) for locus in self.loci.values()]
-        for statement, gene_call in [*graded, self._rfc1(ctx), self._cftr(ctx)]:
-            rows.append(Row(None, None, statement))
+        for row, gene_call in [*graded, self._rfc1(ctx), self._cftr(ctx)]:
+            rows.append(row)
             gene_calls.append(gene_call)
         rows += [Row(None, None, self._not_covered(ctx, n)) for n in NOT_COVERED]
         return Collected(
@@ -597,7 +610,7 @@ class RepeatSource:
             min_spanning=self.min_spanning,
         )
 
-    def _locus(self, ctx: RunContext, locus: RepeatLocus) -> tuple[Fields, Fields]:
+    def _locus(self, ctx: RunContext, locus: RepeatLocus) -> tuple[Row, Fields]:
         call = None if self.calls is None else self.calls.get(locus.variant_id)
         alleles = () if call is None else call.alleles
         graded = self._graded(locus, call)
@@ -618,26 +631,15 @@ class RepeatSource:
             or locus.validity
             or _VALIDITY.get(locus.evidence, Validity.LIMITED)
         )
-        # The class the grading reads (BR-009): the longest allele's interval's upper
-        # bound, so a watch never reads normal.
-        reached = (
-            str(classify(locus, _worst(locus, alleles).ci[1])) if alleles else None
-        )
-        estimate = max(
-            (classify(locus, a.repeats) for a in alleles),
-            key=_SEVERITY.__getitem__,
-            default=None,
-        )
         claim = {
             "locus_id": locus.locus_id,
             "motif": locus.motif,
             "alleles": _allele_fields(alleles),
-            "class": reached if assessed else None,
-            # For what a table withheld (`sources.withheld`): where the estimate lies and
-            # how far its interval reaches, which differ on a wide interval.
-            "range": None
-            if estimate is None
-            else {"estimate": str(estimate), "reaches": reached},
+            # The class the grading reads (BR-009): the longest allele's interval's upper
+            # bound, so a watch never reads normal.
+            "class": str(classify(locus, _worst(locus, alleles).ci[1]))
+            if assessed
+            else None,
             "thresholds": {
                 "normal_max": locus.normal_max,
                 "intermediate": locus.intermediate,
@@ -667,7 +669,7 @@ class RepeatSource:
             level=level,
             warnings=warnings,
         )
-        return statement, gene_call
+        return Row(None, None, statement, _measured(locus, alleles)), gene_call
 
     def _statement(
         self,
@@ -764,7 +766,7 @@ class RepeatSource:
             return LOW_DEPTH_REASON
         return None
 
-    def _rfc1(self, ctx: RunContext) -> tuple[Fields, Fields]:
+    def _rfc1(self, ctx: RunContext) -> tuple[Row, Fields]:
         """RFC1's statement and gene call, graded by its motif call."""
         call = self.rfc1
         alleles = () if call is None else call.alleles
@@ -787,7 +789,6 @@ class RepeatSource:
             "motif": RFC1_MOTIF,
             "alleles": _allele_fields(alleles),
             "class": None,
-            "range": None,
             "thresholds": None,
             "image": None,
         }
@@ -814,9 +815,11 @@ class RepeatSource:
             level=level,
             warnings=warnings,
         )
-        return statement, gene_call
+        motif = call and {"call": call.call, "description": call.description}
+        measured = present({"alleles": _allele_fields(alleles), "rfc1": motif})
+        return Row(None, None, statement, measured), gene_call
 
-    def _cftr(self, ctx: RunContext) -> tuple[Fields, Fields]:
+    def _cftr(self, ctx: RunContext) -> tuple[Row, Fields]:
         """CFTR's statement and gene call, graded on its TG and T tracts."""
         calls = {} if self.calls is None else self.calls
         tg, t = calls.get(CFTR_TG), calls.get(CFTR_T)
@@ -845,7 +848,6 @@ class RepeatSource:
             "motif": "TG/T",
             "alleles": {"tg": _allele_fields(tgs), "t": _allele_fields(ts)},
             "class": None,
-            "range": None,
             "thresholds": None,
             "image": None,
         }
@@ -879,7 +881,8 @@ class RepeatSource:
             level=level,
             warnings=warnings,
         )
-        return statement, gene_call
+        measured = {"alleles": claim["alleles"]} if tgs or ts else None
+        return Row(None, None, statement, measured), gene_call
 
     def _not_covered(self, ctx: RunContext, locus: NotCovered) -> Fields:
         """A not-covered locus's statement: unassessed with its reason, no gene call."""

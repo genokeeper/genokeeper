@@ -17,7 +17,7 @@ from genokeeper.smn import (
     ParascopyCall,
     SmnCaller,
 )
-from genokeeper.sources import Collected, Fields, Row, RunContext
+from genokeeper.sources import Collected, Fields, Row, RunContext, present
 from genokeeper.sources.panel import CLAIM_SCHEMA
 from genokeeper.sources.repeats import CONFIRM
 from genokeeper.store.db import Kind, Level, Topic, Validity
@@ -119,6 +119,12 @@ class SmnSource:
             "g27134tg": None if caller is None else caller.g27134tg,
             "callers": callers,
         }
+        c, p = caller, parascopy
+        measured = {
+            CALLER_NAME: c
+            and present({"smn1": c.smn1, "smn2": c.smn2, "g27134tg": c.g27134tg}),
+            PARASCOPY_NAME: p and present({"smn1": p.smn1, "smn2": p.smn2}),
+        }
         statement: Fields = {
             "run_id": ctx.run_id,
             "statement_id": f"{SMN_TOOL}:{SMN_GENE}",
@@ -154,7 +160,7 @@ class SmnSource:
         }
         return Collected(
             tool=self.tool,
-            rows=[Row(None, None, statement)],
+            rows=[Row(None, None, statement, present(measured))],
             extra={"gene_call": [gene_call]},
             input_rows=1,
             dropped={},

@@ -25,14 +25,7 @@ from dataclasses import dataclass, field, replace
 
 from genokeeper.cnv.screen import DEPTH_CALLERS, LargeEvent, NamedCnv
 from genokeeper.deletions.screen import CallClass, Shown
-from genokeeper.sources import (
-    WITHHELD,
-    Collected,
-    Fields,
-    Row,
-    RunContext,
-    withheld_entry,
-)
+from genokeeper.sources import Collected, Fields, Row, RunContext
 from genokeeper.sources.deletions import (
     CONFIRM_BY,
     DELETION_WORDING,
@@ -43,7 +36,7 @@ from genokeeper.sources.deletions import (
     Rate,
     Wording,
 )
-from genokeeper.sources.panel import CLAIM_SCHEMA
+from genokeeper.sources.panel import CLAIM_SCHEMA, WITHHELD, withheld_entry
 from genokeeper.store.db import Kind, Topic, Validity
 
 CNV_TOOL = "cnv"

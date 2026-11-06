@@ -10,7 +10,7 @@ make it unassessed.
 """
 
 import json
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 
 from genokeeper.roh import RohSummary, Run
 from genokeeper.sources import Collected, Fields, Row, RunContext
@@ -101,7 +101,7 @@ class RohSource:
         }
         return Collected(
             tool=self.tool,
-            rows=[Row(None, None, statement)],
+            rows=[Row(None, None, statement, s and asdict(s))],
             extra={},
             input_rows=1,
             dropped={},

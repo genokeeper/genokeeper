@@ -33,15 +33,8 @@ from genokeeper.deletions.screen import CallClass, Deletion, Shown, warnings
 from genokeeper.evidence.clinvar import placement
 from genokeeper.evidence.predicted import BOTH_COPIES, GENETICIST_NOTE, lof_gene_gate
 from genokeeper.genelists import carrier_genes, gene_mode
-from genokeeper.sources import (
-    WITHHELD,
-    Collected,
-    Fields,
-    Row,
-    RunContext,
-    withheld_entry,
-)
-from genokeeper.sources.panel import CLAIM_SCHEMA
+from genokeeper.sources import Collected, Fields, Row, RunContext
+from genokeeper.sources.panel import CLAIM_SCHEMA, WITHHELD, withheld_entry
 from genokeeper.store.db import Kind, Level, RowType, Topic, Validity
 from genokeeper.variants.key import make_vid
 

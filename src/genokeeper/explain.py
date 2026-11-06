@@ -60,7 +60,7 @@ from genokeeper.query import (
     open_store,
     query,
 )
-from genokeeper.sources import WITHHELD
+from genokeeper.sources.panel import WITHHELD
 from genokeeper.store.db import Kind, Level, Validity
 
 if TYPE_CHECKING:

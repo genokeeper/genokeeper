@@ -42,9 +42,9 @@ import duckdb
 from genokeeper.config import load_paths
 from genokeeper.evidence.pgx import GENE_UNRESOLVED
 from genokeeper.insertions import INSERTIONS_TOOL
-from genokeeper.sources import WITHHELD
 from genokeeper.sources.cnv import CNV_TOOL
 from genokeeper.sources.deletions import DELETIONS_TOOL
+from genokeeper.sources.panel import WITHHELD
 from genokeeper.sources.paralogs import LPA_TOOL, PARALOGS_TOOL
 from genokeeper.sources.predicted import PREDICTED_TOOL
 from genokeeper.sources.repeats import REPEATS_TOOL

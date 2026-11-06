@@ -26,15 +26,8 @@ from genokeeper.genotype.gvcf import Called
 from genokeeper.genotype.reliability import Reliability
 from genokeeper.pgx.outside import OutsideCall
 from genokeeper.pgx.pharmcat import UGT1A1_28, GeneResult
-from genokeeper.sources import (
-    WITHHELD,
-    Collected,
-    Fields,
-    Row,
-    RunContext,
-    withheld_entry,
-)
-from genokeeper.sources.panel import CLAIM_SCHEMA
+from genokeeper.sources import Collected, Fields, Row, RunContext
+from genokeeper.sources.panel import CLAIM_SCHEMA, WITHHELD, withheld_entry
 from genokeeper.store.db import Kind, Topic, Validity
 
 PGX_TOOL = "pharmcat"

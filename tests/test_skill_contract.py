@@ -49,7 +49,6 @@ from genokeeper.repeats.not_covered import NOT_COVERED
 from genokeeper.roh import RohSummary, Run
 from genokeeper.sex import Dosage
 from genokeeper.smn import ParascopyCall, SmnCaller
-from genokeeper.sources import withheld_entry
 from genokeeper.sources.ancestry import AncestrySource
 from genokeeper.sources.bloodgroups import SECRETOR_TRAIT, BloodGroupSource
 from genokeeper.sources.dosage import STATEMENT_ID as DOSAGE_STATEMENT
@@ -57,6 +56,7 @@ from genokeeper.sources.dosage import DosageSource
 from genokeeper.sources.hhv6 import Hhv6Source
 from genokeeper.sources.hla import HlaSource
 from genokeeper.sources.mitomap import MitomapSource
+from genokeeper.sources.panel import withheld_entry
 from genokeeper.sources.repeats import RepeatSource
 from genokeeper.sources.roh import RohSource
 from genokeeper.sources.smn import SmnSource
@@ -253,7 +253,6 @@ def test_contract_list_matches_the_query_and_show_output(tmp_path: Path) -> None
                         }
                     ],
                     "class": "pathogenic",
-                    "range": {"estimate": "pathogenic", "reaches": "pathogenic"},
                     "thresholds": {
                         "normal_max": 26,
                         "intermediate": [27, 35],

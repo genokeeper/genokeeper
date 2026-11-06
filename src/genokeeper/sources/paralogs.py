@@ -25,7 +25,7 @@ No statement here is a watch item or actionable.
 
 import json
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 
 from genokeeper.config import ParalogThresholds
 from genokeeper.evidence.pgx import GENE_UNRESOLVED
@@ -40,7 +40,7 @@ from genokeeper.paralogs import (
 )
 from genokeeper.pgx.cyp2d6 import ALDY_VERSION
 from genokeeper.smn import PARASCOPY_VERSION
-from genokeeper.sources import Collected, Fields, Row, RunContext
+from genokeeper.sources import Collected, Fields, Row, RunContext, present
 from genokeeper.sources.panel import CLAIM_SCHEMA
 from genokeeper.sources.predicted import PREDICTED_TOOL
 from genokeeper.sources.repeats import CONFIRM
@@ -325,6 +325,19 @@ class ParalogSource:
         call = self.calls.get(locus.locus)
         return None if call is None else call.cn
 
+    def _measured(self, locus: Locus) -> Fields | None:
+        """Each caller's own call of the locus."""
+        call = self.calls.get(locus.locus)
+        g = self.gauchian if locus.locus == "GBA1" else None
+        aldy = self.aldy_cyp2a6 if locus.locus == "CYP2A6" else None
+        return present(
+            {
+                PARASCOPY_NAME: call and present({"copies": call.cn}),
+                GAUCHIAN_NAME: g and present(asdict(g)),
+                ALDY_NAME: present({"copies": aldy}),
+            }
+        )
+
     def _agreed(self, locus: Locus) -> bool | None:
         """Whether the two callers agree (None with one, or one without a value)."""
         call = self.calls.get(locus.locus)
@@ -350,8 +363,6 @@ class ParalogSource:
             "genes": list(locus.genes),
             "measure": locus.measure,
             "copy_number": copies,
-            # A caller's copies whatever the grade, for `sources.withheld`.
-            "called": self._copies(locus),
             "callers": callers,
         }
         if locus.locus in _CONDITIONS:
@@ -397,7 +408,7 @@ class ParalogSource:
             if assessed or reason is None
             else [f"{GENE_UNRESOLVED}: {reason}"],
         }
-        return Row(None, None, statement), gene_call
+        return Row(None, None, statement, self._measured(locus)), gene_call
 
     def collect(self, ctx: RunContext) -> Collected:
         """Each locus's statement and gene call, then the not-covered genes'."""
@@ -509,7 +520,7 @@ class LpaSource:
         }
         return Collected(
             tool=self.tool,
-            rows=[Row(None, None, statement)],
+            rows=[Row(None, None, statement, present({"kiv2": self.kiv2}))],
             extra={},
             input_rows=1,
             dropped={},

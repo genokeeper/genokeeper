@@ -122,7 +122,7 @@ class AncestrySource:
                 "points": None,
                 "exclusion": False,
             }
-            rows.append(Row(None, None, statement))
+            rows.append(Row(None, None, statement, fields))
         return Collected(
             tool=self.tool, rows=rows, extra={}, input_rows=len(rows), dropped={}
         )

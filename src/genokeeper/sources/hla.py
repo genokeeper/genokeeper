@@ -45,16 +45,8 @@ from genokeeper.pgx.hla_typing import (
     load_hg002_truth,
     load_hla_alleles,
 )
-from genokeeper.sources import (
-    INFORMATION_NOTE,
-    WITHHELD,
-    Collected,
-    Fields,
-    Row,
-    RunContext,
-    withheld_entry,
-)
-from genokeeper.sources.panel import CLAIM_SCHEMA
+from genokeeper.sources import INFORMATION_NOTE, Collected, Fields, Row, RunContext
+from genokeeper.sources.panel import CLAIM_SCHEMA, WITHHELD, withheld_entry
 from genokeeper.store.db import Kind, Topic, Validity
 
 HLA_TOOL = "hla"
@@ -88,6 +80,11 @@ def _alleles(call: HlaCall | None) -> list[str] | None:
     if call is None or call[0] is None or call[1] is None:
         return None
     return sorted((call[0], call[1]))
+
+
+def _typed(calls: Mapping[str, HlaCall | None]) -> dict[str, list[str | None]]:
+    """Each caller's own alleles; a caller with none is absent."""
+    return {name: list(c) for name, c in calls.items() if c is not None and any(c)}
 
 
 def _dq(found: DqStatus | None) -> dict[str, object] | None:
@@ -149,6 +146,7 @@ class HlaSource:
             )
             kind = Kind.UNASSESSED
         research = a.topic is Topic.RESEARCH
+        typed = _typed(calls)
         claim = {
             "schema": CLAIM_SCHEMA,
             "type": "hla_association" if research else "hla_allele",
@@ -172,6 +170,7 @@ class HlaSource:
             topic=a.topic,
             source_id=a.source,
             source=HLA_ASSOCIATION_TOOL if research else HLA_TOOL,
+            measured={"callers": typed, "status": statuses} if typed else None,
         )
 
     def _coeliac(self, ctx: RunContext) -> Row:
@@ -210,6 +209,7 @@ class HlaSource:
             topic=Topic.RISKS,
             source_id=MONSUUR,
             exclusion=kind is Kind.NON_FINDING,
+            measured={"t1k": _dq(t1k), "tags": _dq(tags)} if t1k or tags else None,
         )
 
     def _table(self, ctx: RunContext) -> Row:
@@ -222,11 +222,10 @@ class HlaSource:
             entry: dict[str, object] = {"gene": gene}
             if gene in self.withheld:
                 entry |= {"alleles": None, "callers": None, "note": self.withheld[gene]}
-                typed = {name: shown(call) for name, call in calls.items()}
                 held.append(
                     withheld_entry(
                         self.withheld[gene],
-                        {"gene": gene, "callers": typed},
+                        {"gene": gene, "callers": _typed(calls)},
                         would_be=Kind.FINDING,
                         significance=TABLE_ROW,
                         confirm=CONFIRM_TYPING,
@@ -317,6 +316,7 @@ class HlaSource:
         source_id: str,
         exclusion: bool = False,
         source: str = HLA_TOOL,
+        measured: Fields | None = None,
     ) -> Row:
         statement: Fields = {
             "run_id": ctx.run_id,
@@ -337,7 +337,7 @@ class HlaSource:
             "points": None,
             "exclusion": exclusion,
         }
-        return Row(None, None, statement)
+        return Row(None, None, statement, measured)
 
     def collect(self, ctx: RunContext) -> Collected:
         """One statement per allele row, then the coeliac statement, the table and KIR."""

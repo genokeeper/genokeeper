@@ -25,7 +25,7 @@ one statement `bloodgroup:<system>` per system of the packaged positions
 
 import json
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 
 from genokeeper.bloodgroups import (
     DEPENDS,
@@ -192,4 +192,6 @@ class BloodGroupSource:
             "points": None,
             "exclusion": False,
         }
-        return Row(None, None, statement)
+        typed = (self.calls or {}).get(system)
+        measured = asdict(typed) if typed and typed.genotype else None
+        return Row(None, None, statement, measured)

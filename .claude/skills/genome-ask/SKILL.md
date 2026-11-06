@@ -457,12 +457,6 @@ Each finding has these keys:
     included on a borderline one: word it as the class the interval may reach, never as the
     allele's class (a borderline watch is not an expansion), and quote the repeats and the
     interval with it; null when unassessed, and null for RFC1 and CFTR;
-  - `range`: the alleles' ranges, kept when unassessed: read them only from
-    `claim.withheld`, never as a class the run graded; null without an allele, and null for
-    RFC1 and CFTR:
-    - `estimate`: the range the longest estimate lies in, by its repeat count;
-    - `reaches`: the range the longest allele's interval reaches at its upper bound, as
-      `class` reads it; a wide interval reaches past its estimate;
   - `thresholds`: the locus's ranges from STRchive, in repeats (null for RFC1 and CFTR):
     - `normal_max`: the largest normal count;
     - `intermediate`: `[low, high]`, or null;
@@ -635,12 +629,15 @@ Each finding has these keys:
   - `withheld`: a list, absent where nothing was withheld, one element per value (more
     only in `hla:table` and `cnv:screen`, which are no unassessed statements):
     - `reliability`: always `low`, the lowest level;
-    - `reason`: why it is withheld, the table's words;
-    - `value`: what the tool measured, by the keys of its source: a repeat's `alleles`,
-      `range` and, for RFC1, `rfc1`; SMN's `smn1`, `smn2`, `g27134tg` and `callers`; the Y
-      haplogroup's `haplogroup`, `marker`, `qc_score` and `valid_markers`; a paralog's
-      `called` (its copies), `callers` and `variants`; `kiv2`; an HLA allele's `callers` and
-      `status`, the coeliac screen's `t1k` and `tags`; HHV-6's `species` and `ratio`; the
+    - `reason`: why it is withheld, in the reason's own words;
+    - `value`: what the tools measured, and only that: a caller with nothing is absent. A
+      repeat's `alleles` and `range`, with `estimate` (the range the longest estimate lies
+      in, by its repeats) and `reaches` (the range the longest interval reaches at its upper
+      bound, as `class` reads it: a wide interval reaches past its estimate), and, for RFC1,
+      `rfc1`; by caller name, SMN's `smn1`, `smn2` and `g27134tg`, a paralog's `copies` or,
+      from Gauchian, its call's fields; the Y haplogroup's `name`, `marker`, `qc_score` and
+      `valid_markers`; an HLA allele's `callers` and `status`; `kiv2`; the coeliac screen's
+      `t1k` and `tags`; HHV-6's `species` and `ratio`; the
       runs of homozygosity's `total_long`, `n_long`, `longest` and `isodisomy`; a blood
       group's `genotype` and `phenotype`; the ancestry keys; a MITOMAP variant's `level`; an
       `hla:table` gene's `gene` and `callers`; a deletion's, depth event's or insertion's

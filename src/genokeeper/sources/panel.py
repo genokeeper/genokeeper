@@ -18,11 +18,35 @@ from genokeeper.genotype.gvcf import Called
 from genokeeper.genotype.reliability import Reliability
 from genokeeper.panel.build import Claim, ClaimSet
 from genokeeper.sources import Collected, Fields, Row, RunContext
+from genokeeper.store.db import Kind, Level
 
 CLAIMS_TOOL = "clinvar"
 # Written into every stored claim since before the rename to genokeeper; a new name would be
 # a new schema, read beside this one.
 CLAIM_SCHEMA = "genomelab.claim/1"
+# The claim key of what a calibration table withheld (`withheld_entry`, `sources.withheld`).
+WITHHELD = "withheld"
+
+
+def withheld_entry(
+    reason: str,
+    value: Fields,
+    *,
+    would_be: Kind,
+    significance: str | None,
+    confirm: str | None,
+) -> Fields:
+    """One element of a claim's `WITHHELD` list: what the tool measured (`value`), at the
+    lowest reliability, why it is withheld, and were it true the kind and reason the
+    statement would have (`would_be`, `significance`) and the test that confirms it."""
+    return {
+        "reliability": str(Level.LOW),
+        "reason": reason,
+        "value": value,
+        "would_be": str(would_be),
+        "significance": significance,
+        "confirm": confirm,
+    }
 
 
 def clinvar_claim(

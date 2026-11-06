@@ -72,6 +72,10 @@ class Hhv6Source:
             "ratio": None if call is None or math.isnan(call.ratio) else call.ratio,
             "confirm": CONFIRM,
         }
+        ratio = claim["ratio"]
+        measured = (
+            None if ratio is None else {"species": claim["species"], "ratio": ratio}
+        )
         statement: Fields = {
             "run_id": ctx.run_id,
             "statement_id": f"{HHV6_TOOL}:ici",
@@ -93,7 +97,7 @@ class Hhv6Source:
         }
         return Collected(
             tool=self.tool,
-            rows=[Row(None, None, statement)],
+            rows=[Row(None, None, statement, measured)],
             extra={},
             input_rows=1,
             dropped={},

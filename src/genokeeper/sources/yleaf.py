@@ -9,7 +9,7 @@ haplogroup is stated: the claim is unassessed, its reason why.
 """
 
 import json
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 
 from genokeeper.sources import Collected, Fields, Row, RunContext
 from genokeeper.sources.panel import CLAIM_SCHEMA
@@ -95,7 +95,7 @@ class YleafSource:
         }
         return Collected(
             tool=self.tool,
-            rows=[Row(None, None, statement)],
+            rows=[Row(None, None, statement, self.found and asdict(self.found))],
             extra={},
             input_rows=1,
             dropped={},

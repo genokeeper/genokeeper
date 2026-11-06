@@ -22,7 +22,7 @@ from pathlib import Path
 
 from genokeeper.genotype.reliability import StrataIndex
 from genokeeper.mito import CHRM, MitoCall, grade_mito, mito_called
-from genokeeper.sources import Collected, Fields, Row, RunContext
+from genokeeper.sources import Collected, Fields, Row, RunContext, present
 from genokeeper.sources.panel import CLAIM_SCHEMA, call_row
 from genokeeper.sources.repeats import CONFIRM
 from genokeeper.store.db import Kind, Topic, Validity
@@ -156,9 +156,9 @@ class MitomapSource:
                 "exclusion": False,
             }
             variant: Fields = {"run_id": ctx.run_id, "vid": vid, "rsid": None}
-            rows.append(
-                Row(variant, call_row(ctx.run_id, vid, called, reliability), statement)
-            )
+            graded = call_row(ctx.run_id, vid, called, reliability)
+            level = present({"level": called.vaf})
+            rows.append(Row(variant, graded, statement, level))
         return Collected(
             tool=self.tool,
             rows=rows,

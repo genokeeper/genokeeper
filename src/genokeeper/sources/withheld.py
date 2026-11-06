@@ -7,9 +7,12 @@ no call and no accounting, so what it keeps is never a finding, a watch item, a 
 exclusion, and the claim's own keys keep their nulls for every reader of them. It only adds
 the claim's `WITHHELD` list, which no grading reader opens.
 
-It grades the source a second time with nothing withheld, so the entry says what the
-statement would be were the value true, in the source's own words, whatever its rules. An
-item with no measured value (`_MEASURED`: no call, a tool not run) stays as it was. Four
+Each source hands over what its tools measured as typed data beside the statement
+(`Row.measured`, per caller where there are several, a caller with nothing absent), so whether
+a value exists is never read off display text, and that data reaches the store only inside
+the entry. No measured value (no call, a tool not run): the item stays as it was. `reveal`
+grades the source a second time with nothing withheld, so the entry says what the statement
+would be were the value true, in the source's own words, whatever its rules. Four
 values have no unassessed statement to reveal, and their sources write the entry themselves:
 an HLA gene in the `hla:table` finding, a large depth event in the `cnv:screen` statement,
 a call of a band no table measured (deletions, depth events, insertions, named loci) and
@@ -22,84 +25,50 @@ from dataclasses import replace
 from typing import Any, cast
 
 from genokeeper.pgx.hla_typing import CONFIRM_DQ
-from genokeeper.sources import (
-    WITHHELD,
-    Collected,
-    Fields,
-    Row,
-    RunContext,
-    Source,
-    withheld_entry,
-)
+from genokeeper.sources import Collected, Row, RunContext, Source
 from genokeeper.sources.hla import CONFIRM_TYPING
+from genokeeper.sources.panel import WITHHELD, withheld_entry
 from genokeeper.store.db import Kind
 
 # The fields a source carries a table's reasons in: one reason, or item -> reason.
 _REASONS = ("withheld", "heteroplasmy_withheld")
-_COPIES = "a targeted copy-number test such as MLPA"
-# What each claim type measures, and the test that confirms it where a claim names none
-# (`confirm`; None where no test exists).
-_MEASURED: dict[str, tuple[tuple[str, ...], str | None]] = {
-    "repeat_expansion": (("alleles", "range", "rfc1"), "a targeted PCR test"),
-    "smn_copy_number": (("smn1", "smn2", "g27134tg", "callers"), "MLPA or qPCR"),
-    "y_haplogroup": (
-        ("haplogroup", "marker", "qc_score", "valid_markers"),
-        "Y-chromosome SNP testing in a laboratory",
-    ),
-    "paralog_copy_number": (("called", "callers", "variants"), _COPIES),
-    "lpa_kiv2": (("kiv2",), "a one-off Lp(a) blood test"),
-    "hla_allele": (("callers", "status"), CONFIRM_TYPING),
-    "hla_association": (("callers", "status"), CONFIRM_TYPING),
-    "hla_coeliac": (("t1k", "tags"), CONFIRM_DQ),
-    "hhv6_ici": (("species", "ratio"), "ddPCR"),
-    "roh_summary": (
-        ("total_long", "n_long", "longest", "isodisomy"),
-        "a SNP microarray",
-    ),
-    "blood_group": (("genotype", "phenotype"), "serology"),
-    "ancestry_similarity": (("population", "low_confidence", "probabilities"), None),
-    "ancestry_admixture": (("proportions",), None),
-    "ancestry_neanderthal": (("neanderthal_bp", "denisovan_bp", "share"), None),
-    "mitomap": (("level",), "mtDNA testing in a clinical laboratory"),
+# The test that confirms what each claim type measures, where a claim names none (`confirm`;
+# none for ancestry: no test exists).
+_CONFIRM = {
+    "repeat_expansion": "a targeted PCR test",
+    "smn_copy_number": "MLPA or qPCR",
+    "y_haplogroup": "Y-chromosome SNP testing in a laboratory",
+    "paralog_copy_number": "a targeted copy-number test such as MLPA",
+    "lpa_kiv2": "a one-off Lp(a) blood test",
+    "hla_allele": CONFIRM_TYPING,
+    "hla_association": CONFIRM_TYPING,
+    "hla_coeliac": CONFIRM_DQ,
+    "hhv6_ici": "ddPCR",
+    "roh_summary": "a SNP microarray",
+    "blood_group": "serology",
+    "mitomap": "mtDNA testing in a clinical laboratory",
 }
-# What a claim holds for a caller that made no call (`hla.status`).
-_NO_VALUE = (None, "unknown")
-# Each caller's line, placeholders included: shown beside a value, never one alone.
-_LINES = "callers"
 
 
-def _measured(value: object) -> bool:
-    """Whether a claim's key holds a measurement, at any depth."""
-    if isinstance(value, Mapping):
-        return any(_measured(v) for v in cast(Mapping[str, object], value).values())
-    if isinstance(value, list):
-        return any(_measured(v) for v in cast(list[object], value))
-    return value not in _NO_VALUE
-
-
-def _revealed(row: Row, ungated: Fields | None, reason: str | None) -> Row:
+def _revealed(row: Row, ungated: Row, reason: str | None) -> Row:
     """`row`, an unassessed statement `ungated` is otherwise and with a value, with what
     was withheld in its claim; `reason`: the table's, where the statement names another."""
-    statement = row.statement
+    statement, graded = row.statement, ungated.statement
     if (
-        ungated is None
+        not row.measured
         or statement["kind"] != Kind.UNASSESSED
-        or (ungated["kind"], ungated["reason"])
+        or (graded["kind"], graded["reason"])
         == (statement["kind"], statement["reason"])
     ):
         return row
     claim = json.loads(str(statement["claim"]))
-    graded = json.loads(str(ungated["claim"]))
-    keys, confirm = _MEASURED.get(claim["type"], ((), None))
-    value = {key: graded[key] for key in keys if _measured(graded.get(key))}
-    if not value.keys() - {_LINES}:
-        return row
     entry = withheld_entry(
         reason or str(statement["reason"]),
-        value,
-        would_be=Kind(str(ungated["kind"])),
-        significance=cast(str | None, ungated["reason"]),
-        confirm=graded.get("confirm") or confirm,
+        row.measured,
+        would_be=Kind(str(graded["kind"])),
+        significance=cast(str | None, graded["reason"]),
+        confirm=json.loads(str(graded["claim"])).get("confirm")
+        or _CONFIRM.get(claim["type"]),
     )
     held = json.dumps({**claim, WITHHELD: [entry]}, ensure_ascii=False)
     return replace(row, statement={**statement, "claim": held})
@@ -114,13 +83,10 @@ def reveal(source: Source, ctx: RunContext) -> Collected:
         return shown
     reasons = getattr(source, name)
     nothing = {} if isinstance(reasons, Mapping) else None
-    ungated = {
-        str(row.statement["statement_id"]): row.statement
-        for row in cast(Any, replace)(source, **{name: nothing}).collect(ctx).rows
-    }
+    ungated = cast(Any, replace)(source, **{name: nothing}).collect(ctx).rows
     reason = reasons if isinstance(reasons, str) else None
     rows = [
-        _revealed(row, ungated.get(str(row.statement["statement_id"])), reason)
-        for row in shown.rows
+        _revealed(row, graded, reason)
+        for row, graded in zip(shown.rows, ungated, strict=True)
     ]
     return replace(shown, rows=rows)

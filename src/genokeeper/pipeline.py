@@ -4518,7 +4518,7 @@ def run_genome(
         cpic_levels=pgx.cpic_levels,
         version=PHARMCAT_VERSION,
         ugt1a1_unread=ugt1a1_unread,
-        ugt1a1_calls=ugt1a1_read(pgx_graded) if ugt1a1_unread else (),
+        ugt1a1_calls=ugt1a1_read(pgx_graded),
     )
     pharmgkb_source = PharmGkbSource(
         located=[(a, allele, *pgx_graded[allele]) for a, allele in located],
