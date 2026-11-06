@@ -83,7 +83,7 @@ def test_copies(ratio: float, expected: int | None) -> None:
 def test_sex_from_x_copies() -> None:
     t = load_grading().dosage
     assert sex_from_ratios(0.50, 0.25, t) == "male"  # a high Y ratio does not change it
-    assert sex_from_ratios(0.50, 0.05, t) == "male"  # nor a low Y above y_absent_max
+    assert sex_from_ratios(0.50, 0.10, t) == "male"  # nor a low Y above y_absent_max
     assert sex_from_ratios(0.50, 0.0, t) == "male"
     assert sex_from_ratios(1.0, 0.0, t) == "female"
     with pytest.raises(SexRefused, match="--sex") as refused:
@@ -97,7 +97,7 @@ def test_sex_from_x_copies() -> None:
         (1.0, 0.49, 0.6, "47,XXY", Kind.FINDING, Topic.RISKS),
         (0.5, 1.02, 0.0, "47,XYY", Kind.FINDING, Topic.RISKS),
         (0.5, 0.01, 0.0, "45,X", Kind.FINDING, Topic.RISKS),
-        (0.5, 0.05, 0.0, "possible mosaic loss of Y", Kind.FINDING, Topic.RESEARCH),
+        (0.5, 0.10, 0.0, "possible mosaic loss of Y", Kind.FINDING, Topic.RESEARCH),
         (0.5, 0.25, 0.0, "possible mosaic loss of Y", Kind.FINDING, Topic.RESEARCH),
         (
             0.75,
@@ -129,7 +129,7 @@ def test_karyotype_table(
     assert (k.label, k.kind, k.topic) == (label, kind, topic)
     if label == "possible mosaic loss of Y":
         assert k.validity == Validity.LIMITED
-        share = "90%" if y == 0.05 else "50%"
+        share = "80%" if y == 0.10 else "50%"
         assert k.reason == (
             f"estimated share of cells without Y: {share} (information; not actionable)"
         )

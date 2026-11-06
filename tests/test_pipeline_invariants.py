@@ -1228,9 +1228,8 @@ def _stage3(
     return rows, accounting
 
 
-# The X-linked loci, unassessed by the X-dosage rule while the run's [dosage] is not
-# calibrated (the shipped grading's `calibrated_on` is empty), once the run's own checks
-# pass.
+# The X-linked loci, unassessed by the X-dosage rule under a [dosage] that is not calibrated
+# (an empty `calibrated_on`), once the run's own checks pass.
 X_LINKED = {"expansionhunter:FMR1", "expansionhunter:AFF2"}
 # One X copy (a depth ratio of 0.5) or two, the run's X and Y depth ratios.
 ONE_X = (0.5, 0.5)
@@ -1657,9 +1656,13 @@ def test_stage3_statements_answer_genotype_and_show(genome: Genome) -> None:
     assert "borderline, indeterminate" in atxn2["not_a_finding_because"]
 
 
-def test_fmr1_unassessed_at_the_default_filters(genome: Genome) -> None:
+def test_fmr1_unassessed_at_the_default_filters(
+    genome: Genome, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """FMR1's unassessed statement is in `query`'s default output, with its reason."""
-    run_id = _run_genome(genome)
+    run_id = _run_genome(
+        genome, grading=_dosage_at(monkeypatch, ONE_X, calibrated_on="")
+    )
     with connect(genome.store) as con:
         result = query(con, run_id, Filters())
     fmr1 = result.unassessed["by_gene"]["FMR1"]

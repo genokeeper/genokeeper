@@ -192,7 +192,6 @@ def test_qc_and_sex_values_checked(
 def test_repeat_loci_loaded() -> None:
     grading = load_grading()
     repeats = grading.repeats
-    assert repeats.min_allele_reads == 4
     eleven = [
         "HTT", "AR", "DMPK", "C9orf72", "ATXN1", "ATXN2", "ATXN3", "ATXN7", "CACNA1A",
         "ATN1", "FXN",
@@ -435,12 +434,14 @@ def test_coverage_section_required(tmp_path: Path) -> None:
 def test_dosage_section_checked(tmp_path: Path) -> None:
     d = load_grading().dosage
     assert d == DosageThresholds()
-    assert (d.tolerance, d.het_low, d.het_high, d.x_het_min) == (0.15, 0.2, 0.8, 0.25)
-    assert (d.min_x_sites, d.y_absent_max, d.calibrated_on) == (1000, 0.02, "")
+    # The design's values, which the calibration measures under and never moves.
+    assert (d.tolerance, d.het_low, d.het_high) == (0.15, 0.2, 0.8)
+    assert d.min_x_sites == 1000
+    assert d.calibrated_on  # the report's date and controls, the statement's version
     for old, new in [
         ("tolerance = 0.15", "tolerance = 0.25"),
         ("het_low = 0.2", "het_low = 0.8"),
-        ("y_absent_max = 0.02", "y_absent_max = 0.35"),
+        (f"y_absent_max = {d.y_absent_max}", "y_absent_max = 0.35"),
     ]:
         with pytest.raises(ValueError, match=r"\[dosage\]"):
             load_grading(_variant(tmp_path, old, new))
@@ -448,8 +449,8 @@ def test_dosage_section_checked(tmp_path: Path) -> None:
         load_grading(
             _variant(
                 tmp_path,
-                'y_absent_max = 0.02\ncalibrated_on = ""',
-                "y_absent_max = 0.02\ncalibrated_on = 1",
+                f'calibrated_on = "{d.calibrated_on}"',
+                "calibrated_on = 1",
             )
         )
     with pytest.raises(ValueError, match=r"unknown keys in \[sex\]"):
@@ -461,14 +462,16 @@ def test_dosage_section_checked(tmp_path: Path) -> None:
 def test_af_guard_section_required(tmp_path: Path) -> None:
     g = load_grading().af_guard
     assert g == AfGuardThresholds()
-    assert (g.min_het_vaf, g.calibrated_on) == (0.30, "")
+    assert g.calibrated_on
     assert g.clonal_genes == (
         "TP53", "CHEK2", "DNMT3A", "TET2", "ASXL1", "PPM1D", "JAK2", "SF3B1", "SRSF2",
     )  # fmt: skip
     with pytest.raises(ValueError, match=r"missing sections.*'af_guard'"):
         load_grading(_variant(tmp_path, "[af_guard]", "[unused_af_guard]"))
     with pytest.raises(ValueError, match=r"\[af_guard\] min_het_vaf"):
-        load_grading(_variant(tmp_path, "min_het_vaf = 0.30", "min_het_vaf = 0.6"))
+        load_grading(
+            _variant(tmp_path, f"min_het_vaf = {g.min_het_vaf}", "min_het_vaf = 0.6")
+        )
     with pytest.raises(TypeError, match=r"\[af_guard\] clonal_genes"):
         load_grading(_variant(tmp_path, '"TP53", ', "53, "))
     with pytest.raises(ValueError, match=r"\[af_guard\] clonal_genes"):

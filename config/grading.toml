@@ -243,13 +243,12 @@ homopolymer = 6
 
 [repeats]
 # Slice 3a (genokeeper.sources.repeats): an allele carries a finding only with at least this
-# many spanning, flanking and in-repeat reads together. Set from the stage 3 calibration of
-# 2026-10-28 (`genokeeper calibrate --stage3`, catalog 57789eab): the fewest reads behind
-# any of HG002's alleles on its two libraries, ATXN7's two on the PCR-free one (4 each).
-# That catalog had STRchive's regions; the packaged one has Illumina's (BR-008), so the value
-# is re-derived from the "fewest reads behind an allele" line of the next stage-3 report
-# (`genokeeper calibrate --only stage3 --report`).
-min_allele_reads = 4
+# many spanning, flanking and in-repeat reads together: the fewest reads behind any of HG002's
+# alleles on its two libraries at the standard-rule loci the table keeps, the "fewest reads
+# behind an allele" line of `genokeeper calibrate --only stage3 --report`. The report of
+# November 2026 on the masked reference and Illumina's regions (catalog b1965231, BR-008)
+# reads PCR-free 5 and PCR 17, both ATXN7; 2026-10-28's 4 came from STRchive's regions.
+min_allele_reads = 5
 
 [repeat_loci]
 # STRchive v2.28.0, its STRchive-loci.json, read 2026-10-24: per gene the catalog ids, the
@@ -395,17 +394,18 @@ min_callable = 0.95
 # fraction is at most het_high, read from min_x_sites such sites or more; one X with x_het_min
 # of them balanced suggests a 46,XY/47,XXY mosaic. A Y ratio at most y_absent_max is no Y (the
 # female control's noise). x_het_min and y_absent_max are set from `genokeeper calibrate
-# --only foundation --report` (Task 15, a commit citing the report); until then they are the
-# plan's placeholders and calibrated_on is empty. The dosage statement is unassessed while
-# the foundation table is missing ("not calibrated") or stale; calibrated_on is its
-# source_version.
+# --only foundation --report`, here the report of 2026-11-05: x_het_min halfway between the
+# largest male share (HG003 0.0648) and HG004's (0.5912), y_absent_max twice HG004's Y ratio
+# (0.0276), each rounded up to 0.01; every control's ratios lie within half the tolerance. The
+# dosage statement is unassessed while the foundation table is missing ("not calibrated") or
+# stale; calibrated_on is its source_version.
 tolerance = 0.15
 het_low = 0.2
 het_high = 0.8
-x_het_min = 0.25
+x_het_min = 0.33
 min_x_sites = 1000
-y_absent_max = 0.02
-calibrated_on = ""
+y_absent_max = 0.06
+calibrated_on = "2026-11-05 HG002 pcrfree/pcr, HG003, HG004"
 
 [af_guard]
 # Slice 3c (genokeeper.genotype.clonal, genotype.reliability.guard_allele_fraction): the
@@ -415,12 +415,12 @@ calibrated_on = ""
 # clonal_genes (the genes clonal haematopoiesis mutates most; their MANE v1.5 spans in
 # resources/af_guard/) it is warned that it may be clonal, not inherited, and its level is
 # capped at low. min_het_vaf is set from `genokeeper calibrate --only foundation --report`
-# (HG002 PCR-free's 0.6% quantile of its true heterozygous SNVs' VAF, rounded down to 0.01;
-# Task 15, a commit citing the report); until then it is the design's 0.30 and calibrated_on
-# is empty.
-min_het_vaf = 0.30
+# (HG002 PCR-free's 0.6% quantile of its true heterozygous SNVs' VAF, rounded down to 0.01):
+# the report of 2026-11-05, over 2,138,950 true heterozygous SNVs, 1.399% of them below the
+# design's 0.30.
+min_het_vaf = 0.25
 clonal_genes = ["TP53", "CHEK2", "DNMT3A", "TET2", "ASXL1", "PPM1D", "JAK2", "SF3B1", "SRSF2"]
-calibrated_on = ""
+calibrated_on = "2026-11-05 HG002 pcrfree"
 
 [insertions]
 # Slice 3d's insertion screen (genokeeper.insertions): Dysgu's and INSurVeyor's insertions of

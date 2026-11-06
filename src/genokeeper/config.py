@@ -138,7 +138,7 @@ class RepeatThresholds:
     a finding, and each locus's STRchive thresholds and grading rule (slices 3a and 3e).
     The built-in `loci` is empty: the shipped file holds them."""
 
-    min_allele_reads: int = 4
+    min_allele_reads: int = 5
     loci: dict[str, RepeatLocus] = field(default_factory=dict)
 
 
@@ -224,10 +224,10 @@ class DosageThresholds:
     tolerance: float = 0.15
     het_low: float = 0.2
     het_high: float = 0.8
-    x_het_min: float = 0.25
+    x_het_min: float = 0.33
     min_x_sites: int = 1000
-    y_absent_max: float = 0.02
-    calibrated_on: str = ""
+    y_absent_max: float = 0.06
+    calibrated_on: str = "2026-11-05 HG002 pcrfree/pcr, HG003, HG004"
 
 
 # The genes clonal haematopoiesis mutates most (the closing design, "Allele-fraction guard").
@@ -243,9 +243,9 @@ class AfGuardThresholds:
     `calibrated_on` empty: the bound is the design's, not yet set from the calibration
     report."""
 
-    min_het_vaf: float = 0.30
+    min_het_vaf: float = 0.25
     clonal_genes: tuple[str, ...] = CLONAL_GENES
-    calibrated_on: str = ""
+    calibrated_on: str = "2026-11-05 HG002 pcrfree"
 
 
 @dataclass(frozen=True, kw_only=True)
