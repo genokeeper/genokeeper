@@ -253,7 +253,7 @@ def test_contract_list_matches_the_query_and_show_output(tmp_path: Path) -> None
                         }
                     ],
                     "class": "pathogenic",
-                    "range": "pathogenic",
+                    "range": {"estimate": "pathogenic", "reaches": "pathogenic"},
                     "thresholds": {
                         "normal_max": 26,
                         "intermediate": [27, 35],

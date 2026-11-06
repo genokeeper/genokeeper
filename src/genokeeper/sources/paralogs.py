@@ -350,6 +350,8 @@ class ParalogSource:
             "genes": list(locus.genes),
             "measure": locus.measure,
             "copy_number": copies,
+            # A caller's copies whatever the grade, for `sources.withheld`.
+            "called": self._copies(locus),
             "callers": callers,
         }
         if locus.locus in _CONDITIONS:

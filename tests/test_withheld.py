@@ -23,10 +23,10 @@ from genokeeper.hhv6 import Hhv6Call
 from genokeeper.mito import MitoCall, mito_called
 from genokeeper.paralogs import PsCall
 from genokeeper.pgx.hla import read_optitype, read_t1k
-from genokeeper.pgx.hla_typing import TAG_RSIDS
+from genokeeper.pgx.hla_typing import CONFIRM_DQ, TAG_RSIDS
 from genokeeper.prs.pgsc import PopSimilarity
 from genokeeper.query import query, show
-from genokeeper.repeats.loci import Allele, RepeatCall, Rfc1Call
+from genokeeper.repeats.loci import Allele, RepeatCall, Rfc1Call, Rule
 from genokeeper.roh import RohSummary, Run
 from genokeeper.smn import ParascopyCall, SmnCaller
 from genokeeper.sources import Collected, Source, write_collected
@@ -35,10 +35,17 @@ from genokeeper.sources.bloodgroups import BloodGroupSource
 from genokeeper.sources.cnv import CnvSource
 from genokeeper.sources.deletions import DeletionSource
 from genokeeper.sources.hhv6 import Hhv6Source
-from genokeeper.sources.hla import HlaSource
+from genokeeper.sources.hla import CONFIRM_TYPING, TABLE_ROW, HlaSource
 from genokeeper.sources.mitomap import MitomapSource
 from genokeeper.sources.paralogs import LpaSource, ParalogSource
-from genokeeper.sources.repeats import RepeatSource, XDosage
+from genokeeper.sources.repeats import (
+    CONFIRM_TEST,
+    FINDING_REASON,
+    RFC1_CONFIRM,
+    RFC1_NORMAL,
+    RepeatSource,
+    XDosage,
+)
 from genokeeper.sources.roh import RohSource
 from genokeeper.sources.smn import SmnSource
 from genokeeper.sources.withheld import reveal
@@ -127,28 +134,35 @@ CASES: dict[str, tuple[Callable[[], Source], str, Kind, str, object]] = {
         "expansionhunter:HTT",
         Kind.FINDING,
         "range",
-        "pathogenic",
+        {"estimate": "pathogenic", "reaches": "pathogenic"},
+    ),
+    "a normal estimate whose interval reaches the pathogenic range": (
+        lambda: _repeats("HTT", Allele(20, (18, 44), 6, 3, 0)),
+        "expansionhunter:HTT",
+        Kind.WATCH,
+        "range",
+        {"estimate": "normal", "reaches": "pathogenic"},
     ),
     "repeat in the normal range": (
         lambda: _repeats("HTT", _spanned(17), _spanned(19)),
         "expansionhunter:HTT",
         Kind.NON_FINDING,
         "range",
-        "normal",
+        {"estimate": "normal", "reaches": "normal"},
     ),
     "an exclusion-only normal": (
         lambda: _repeats("FMR1", _spanned(30)),
         "expansionhunter:FMR1",
         Kind.NON_FINDING,
         "range",
-        "normal",
+        {"estimate": "normal", "reaches": "normal"},
     ),
     "a size its own rule leaves unassessed": (
         lambda: _repeats("FMR1", _spanned(60)),
         "expansionhunter:FMR1",
         Kind.UNASSESSED,
         "range",
-        "intermediate",
+        {"estimate": "intermediate", "reaches": "intermediate"},
     ),
     "RFC1": (
         lambda: _repeats(
@@ -167,6 +181,18 @@ CASES: dict[str, tuple[Callable[[], Source], str, Kind, str, object]] = {
         Kind.FINDING,
         "rfc1",
         {"call": "affected", "description": "2 expanded pathogenic alleles"},
+    ),
+    "RFC1's normal": (
+        lambda: _repeats(
+            "other",
+            _spanned(1),
+            withheld={"RFC1": REASON},
+            rfc1=Rfc1Call("normal", "no expanded allele", (_spanned(1),), 30.0, False),
+        ),
+        "expansionhunter:RFC1",
+        Kind.NON_FINDING,
+        "rfc1",
+        {"call": "normal", "description": "no expanded allele"},
     ),
     "SMN1": (
         lambda: SmnSource(
@@ -194,7 +220,14 @@ CASES: dict[str, tuple[Callable[[], Source], str, Kind, str, object]] = {
         _paralog,
         "paralogs:STRC",
         Kind.FINDING,
-        "copy_number",
+        "called",
+        1,
+    ),
+    "a low-quality copy number its own rule leaves unassessed": (
+        lambda: replace(_paralog(), calls={"STRC": PsCall(1, 1.0, True, 1)}),
+        "paralogs:STRC",
+        Kind.UNASSESSED,
+        "called",
         1,
     ),
     "Lp(a)": (
@@ -245,6 +278,42 @@ CASES: dict[str, tuple[Callable[[], Source], str, Kind, str, object]] = {
         Kind.FINDING,
         "level",
         0.30,
+    ),
+}
+
+
+# name -> a word of what the value would mean (None: that kind has no reason), the test.
+MEANS: dict[str, tuple[str | None, str | None]] = {
+    "repeat in the pathogenic range": (FINDING_REASON, "a targeted PCR test"),
+    "a normal estimate whose interval reaches the pathogenic range": (
+        "borderline",
+        "a targeted PCR test",
+    ),
+    "repeat in the normal range": (None, "a targeted PCR test"),
+    "an exclusion-only normal": ("read across in full", CONFIRM_TEST[Rule.X_LINKED]),
+    "a size its own rule leaves unassessed": (
+        "upper bound is above the normal range",
+        "a targeted PCR test",
+    ),
+    "RFC1": ("possible affected", "a targeted PCR test"),
+    "RFC1's normal": (RFC1_NORMAL, RFC1_CONFIRM),
+    "SMN1": ("one SMN1 copy", "MLPA or qPCR"),
+    "the Y haplogroup": (None, "Y-chromosome SNP testing in a laboratory"),
+    "a paralog locus": ("one STRC copy", "a targeted copy-number test such as MLPA"),
+    "a low-quality copy number its own rule leaves unassessed": (
+        "gave no usable STRC copy number",
+        "a targeted copy-number test such as MLPA",
+    ),
+    "Lp(a)": ("a one-off Lp(a) blood test", "a one-off Lp(a) blood test"),
+    "an HLA allele": (None, CONFIRM_TYPING),
+    "the coeliac screen": ("disagree", CONFIRM_DQ),
+    "HHV-6": ("ddPCR", "ddPCR"),
+    "runs of homozygosity": ("1 runs of 5 Mb or more", "a SNP microarray"),
+    "a blood group": ("not for clinical use", "serology"),
+    "the Neanderthal share": ("every non-African genome", None),
+    "a MITOMAP heteroplasmy": (
+        "mtDNA testing",
+        "mtDNA testing in a clinical laboratory",
     ),
 }
 
@@ -308,6 +377,12 @@ def test_the_withheld_entry(tmp_path: Path, name: str) -> None:
         assert entry["value"][key]
     else:
         assert entry["value"][key] == value
+    fragment, confirm = MEANS[name]
+    assert entry["confirm"] == confirm
+    if fragment is None:
+        assert entry["significance"] is None
+    else:
+        assert fragment in entry["significance"]
 
 
 @pytest.mark.parametrize(
@@ -317,6 +392,20 @@ def test_the_withheld_entry(tmp_path: Path, name: str) -> None:
         (SmnSource(None, None, None, REASON, 20.0), "smn:SMN1"),
         (YleafSource(None, None, REASON, 0.95, True), "yleaf:haplogroup"),
         (LpaSource(None, REASON, None), "lpa:LPA"),
+        # A caller's line of placeholders, and a depth with no copy number, are no value.
+        (
+            SmnSource(SmnCaller(None, None, None, "x"), None, None, REASON, 20.0),
+            "smn:SMN1",
+        ),
+        (
+            replace(_paralog(), calls={"STRC": PsCall(None, None, False, 0)}),
+            "paralogs:STRC",
+        ),
+        (replace(_paralog(), calls={}), "paralogs:STRC"),
+        (
+            replace(_paralog(), calls={}, withheld={"CYP2A6": REASON}),
+            "paralogs:CYP2A6",
+        ),
         (Hhv6Source(None, None, REASON), "hhv6:ici"),
         (RohSource(None, None, REASON), "roh:summary"),
         (
@@ -467,6 +556,8 @@ def test_a_withheld_hla_gene_stays_out_of_the_table_and_the_explanation(
     assert entry["reliability"] == Level.LOW
     assert entry["reason"] == REASON
     assert entry["value"]["callers"]["T1K"] != "no call"
+    assert entry["confirm"] == CONFIRM_TYPING
+    assert entry["significance"] == TABLE_ROW
     # An explanation is written from the claim: a withheld value must not become one.
     (own, *_) = grounding(table, None)
     assert "withheld" not in json.loads(own.text)

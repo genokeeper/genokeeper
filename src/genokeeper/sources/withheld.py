@@ -9,11 +9,11 @@ the claim's `WITHHELD` list, which no grading reader opens.
 
 It grades the source a second time with nothing withheld, so the entry says what the
 statement would be were the value true, in the source's own words, whatever its rules. An
-item with no measured value (`_MEASURED`: no call, a tool not run) stays as it was. Three
-values have no statement of their own to reveal, and their sources write the entry
-themselves: an HLA gene in the `hla:table` finding, a large depth event in the `cnv:screen`
-statement, and a call of a band no table measured (deletions, depth events, insertions,
-named loci).
+item with no measured value (`_MEASURED`: no call, a tool not run) stays as it was. Four
+values have no unassessed statement to reveal, and their sources write the entry themselves:
+an HLA gene in the `hla:table` finding, a large depth event in the `cnv:screen` statement,
+a call of a band no table measured (deletions, depth events, insertions, named loci) and
+UGT1A1*28's call beside PharmCAT's gene result, which is never given it (`sources.pgx`).
 """
 
 import json
@@ -46,7 +46,7 @@ _MEASURED: dict[str, tuple[tuple[str, ...], str | None]] = {
         ("haplogroup", "marker", "qc_score", "valid_markers"),
         "Y-chromosome SNP testing in a laboratory",
     ),
-    "paralog_copy_number": (("copy_number", "callers", "variants"), _COPIES),
+    "paralog_copy_number": (("called", "callers", "variants"), _COPIES),
     "lpa_kiv2": (("kiv2",), "a one-off Lp(a) blood test"),
     "hla_allele": (("callers", "status"), CONFIRM_TYPING),
     "hla_association": (("callers", "status"), CONFIRM_TYPING),
@@ -62,8 +62,10 @@ _MEASURED: dict[str, tuple[tuple[str, ...], str | None]] = {
     "ancestry_neanderthal": (("neanderthal_bp", "denisovan_bp", "share"), None),
     "mitomap": (("level",), "mtDNA testing in a clinical laboratory"),
 }
-# What a claim holds for a caller that made no call (`hla.shown`, `hla.status`).
-_NO_VALUE = (None, "no call", "unknown")
+# What a claim holds for a caller that made no call (`hla.status`).
+_NO_VALUE = (None, "unknown")
+# Each caller's line, placeholders included: shown beside a value, never one alone.
+_LINES = "callers"
 
 
 def _measured(value: object) -> bool:
@@ -90,7 +92,7 @@ def _revealed(row: Row, ungated: Fields | None, reason: str | None) -> Row:
     graded = json.loads(str(ungated["claim"]))
     keys, confirm = _MEASURED.get(claim["type"], ((), None))
     value = {key: graded[key] for key in keys if _measured(graded.get(key))}
-    if not value:
+    if not value.keys() - {_LINES}:
         return row
     entry = withheld_entry(
         reason or str(statement["reason"]),

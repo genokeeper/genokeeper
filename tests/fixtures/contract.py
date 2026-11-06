@@ -83,7 +83,7 @@ STAGE3_CONTRACT = {
     # RFC1's motif call.
     "claim.confirm",
     "claim.rfc1",
-    "claim.range",
+    *("claim.range", "claim.range.estimate", "claim.range.reaches"),
 }
 # Slice 3c: the keys the sex-chromosome dosage statement's claim adds, and a gene's
 # coverage, which `query --gene` prints at the top.

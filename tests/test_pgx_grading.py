@@ -21,9 +21,18 @@ from genokeeper.evidence.pgx import (
     load_cpic_alleles,
     load_cpic_levels,
 )
+from genokeeper.explain import LOOSEST
 from genokeeper.genelists import load_gene_lists
+from genokeeper.genotype.gvcf import Called
+from genokeeper.genotype.reliability import Reliability
 from genokeeper.pgx.outside import OutsideCall, outside_lines
-from genokeeper.pgx.pharmcat import DOSING, DrugRec, GeneResult, parse_report
+from genokeeper.pgx.pharmcat import (
+    DOSING,
+    UGT1A1_28,
+    DrugRec,
+    GeneResult,
+    parse_report,
+)
 from genokeeper.query import Filters, query
 from genokeeper.sources import RunContext, write_collected
 from genokeeper.sources.panel import clinvar_statement
@@ -33,8 +42,17 @@ from genokeeper.sources.pgx import (
     PGX_TOOL,
     UGT1A1_28_UNREAD,
     PgxSource,
+    ugt1a1_read,
 )
-from genokeeper.store.db import Level, Validity, connect, start_run, transaction
+from genokeeper.store.db import (
+    Kind,
+    Level,
+    RowType,
+    Validity,
+    connect,
+    start_run,
+    transaction,
+)
 from genokeeper.store.writer import StoreWriter
 
 REPORT = Path(__file__).parent / "fixtures" / "pharmcat_report_mini.json"
@@ -523,6 +541,75 @@ def test_untrusted_ugt1a1_warned(tmp_path: Path) -> None:
         "SELECT warnings FROM gene_call WHERE gene = 'UGT1A1'"
     ).fetchone() or (None,)
     assert UGT1A1_28_UNREAD in list(stored or [])
+
+
+def _low(dosage: str, gt: str | None) -> tuple[Called, Reliability]:
+    return (
+        Called(gt, dosage, RowType.PASS, 5, 30, None, None, ()),
+        Reliability(p_wrong=None, level=Level.LOW, flags=(), warnings=()),
+    )
+
+
+def test_an_untrusted_ugt1a1_call_stays_visible_and_changes_nothing_else(
+    tmp_path: Path,
+) -> None:
+    """The calibration's gate leaves the call out of PharmCAT's input: the claim keeps it
+    as withheld, and the gene result, its kind and its gene call stay PharmCAT's."""
+    ugt1a1 = _result(gene="UGT1A1", diplotype="*1/*1", drugs=())
+    calls = ugt1a1_read(
+        {
+            UGT1A1_28[0]: _low("0", "0/0"),
+            UGT1A1_28[1]: _low("1", "0/1"),
+            UGT1A1_28[2]: _low("unknown", None),
+        }
+    )
+    plain = PgxSource([ugt1a1], {}, LEVELS, "3.4.0", ugt1a1_unread=True)
+    kept = replace(plain, ugt1a1_calls=calls)
+    ctx = _context(tmp_path, "r")
+    before, after = plain.collect(ctx), kept.collect(ctx)
+    assert after.extra == before.extra
+    row, unchanged = after.rows[0].statement, before.rows[0].statement
+    assert {**row, "claim": ""} == {**unchanged, "claim": ""}
+    claim = json.loads(str(row["claim"]))
+    (entry,) = claim.pop("withheld")
+    assert claim == json.loads(str(unchanged["claim"]))
+    assert entry["reliability"] == Level.LOW
+    assert entry["reason"] == UGT1A1_28_UNREAD
+    # The ALT a dosage counts, each with its grade; none where the dosage is unknown.
+    assert entry["value"] == {
+        "rs3064744": [
+            {"alt": "C", "gt": "0/0", "dosage": "0", "level": "low"},
+            {"alt": "CATAT", "gt": "0/1", "dosage": "1", "level": "low"},
+        ]
+    }
+    assert entry["would_be"] == row["kind"]
+    assert "TA7" in entry["significance"]
+    assert entry["confirm"] == "UGT1A1 genotyping in a laboratory"
+    # In `query --json`, for the agent, beside the finding it stays.
+    con, _ = _store(tmp_path, kept)
+    (found,) = [
+        f for f in query(con, None, LOOSEST).findings if f["id"] == "pharmcat:UGT1A1"
+    ]
+    assert found["kind"] == Kind.FINDING
+    assert found["claim"]["withheld"][0]["value"] == entry["value"]
+
+
+def test_no_ugt1a1_value_or_a_trusted_one_writes_no_entry(tmp_path: Path) -> None:
+    ugt1a1 = _result(gene="UGT1A1", diplotype="*1/*1", drugs=())
+    ctx = _context(tmp_path, "r")
+    read = ugt1a1_read({a: _low("unknown", None) for a in UGT1A1_28})
+    assert read == []
+    for unread, calls in ((True, read), (False, [{"alt": "CATAT"}])):
+        source = PgxSource(
+            [ugt1a1],
+            {},
+            LEVELS,
+            "3.4.0",
+            ugt1a1_unread=unread,
+            ugt1a1_calls=calls,
+        )
+        claim = json.loads(str(source.collect(ctx).rows[0].statement["claim"]))
+        assert "withheld" not in claim
 
 
 def test_ifnl3_retired_and_g6pd_gap(tmp_path: Path) -> None:

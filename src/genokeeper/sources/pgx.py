@@ -22,9 +22,18 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from genokeeper.evidence.pgx import grade_gene_result, source_level, unresolved
+from genokeeper.genotype.gvcf import Called
+from genokeeper.genotype.reliability import Reliability
 from genokeeper.pgx.outside import OutsideCall
-from genokeeper.pgx.pharmcat import GeneResult
-from genokeeper.sources import Collected, Fields, Row, RunContext
+from genokeeper.pgx.pharmcat import UGT1A1_28, GeneResult
+from genokeeper.sources import (
+    WITHHELD,
+    Collected,
+    Fields,
+    Row,
+    RunContext,
+    withheld_entry,
+)
 from genokeeper.sources.panel import CLAIM_SCHEMA
 from genokeeper.store.db import Kind, Topic, Validity
 
@@ -32,8 +41,25 @@ PGX_TOOL = "pharmcat"
 UGT1A1_28_UNREAD = (
     "UGT1A1*28 (rs3064744, TA repeat) not read: graded low, not calibrated"
 )
+UGT1A1_28_MEANS = (
+    "UGT1A1*28 is the TA7 allele (ALT CATAT; reference TA6): PharmCAT's diplotype here did"
+    " not read this call, so it may differ with it"
+)
+UGT1A1_28_CONFIRM = "UGT1A1 genotyping in a laboratory"
 IFNL3_RETIRED = "retired by CPIC (peginterferon pairs)"
 G6PD_GAP = "not covered: PharmCAT does not call the G6PD Mediterranean haplotype or Villeurbanne"
+
+
+def ugt1a1_read(
+    graded: Mapping[tuple[str, int, str, str], tuple[Called, Reliability]],
+) -> list[Fields]:
+    """UGT1A1*28's calls, the ALT each dosage counts, where it is known."""
+    found = ((a, *graded[a]) for a in UGT1A1_28 if a in graded)
+    return [
+        {"alt": a[3], "gt": c.gt, "dosage": c.dosage, "level": r.level}
+        for a, c, r in found
+        if c.dosage != "unknown"
+    ]
 
 
 def pgx_claim(result: GeneResult) -> str:
@@ -75,7 +101,8 @@ class PgxSource:
     """PharmCAT's gene results (`pharmcat.parse_report`), the outside calls it was given
     (gene -> call), CPIC's levels (`evidence.pgx.load_cpic_levels`) and PharmCAT's version,
     the statements' source version. `ugt1a1_unread`: UGT1A1*28 was written as a no-call
-    because the calibration does not trust it."""
+    because the calibration does not trust it; `ugt1a1_calls` (`ugt1a1_read`): those calls,
+    kept under the gene result's claim's `withheld`."""
 
     results: Sequence[GeneResult]
     outside: Mapping[str, OutsideCall]
@@ -83,6 +110,7 @@ class PgxSource:
     version: str
     tool: str = PGX_TOOL
     ugt1a1_unread: bool = False
+    ugt1a1_calls: Sequence[Mapping[str, object]] = ()
 
     def _g6pd_gap(self, ctx: RunContext) -> Row:
         claim = {"schema": CLAIM_SCHEMA, "type": "pharmcat_gap", "gene": "G6PD"}
@@ -120,8 +148,19 @@ class PgxSource:
             kind = (
                 Kind.FINDING if unresolved(result, outside) is None else Kind.UNASSESSED
             )
+            claim = pgx_claim(result)
             if result.gene == "UGT1A1" and self.ugt1a1_unread:
                 warnings = (*warnings, UGT1A1_28_UNREAD)
+                if self.ugt1a1_calls:
+                    entry = withheld_entry(
+                        UGT1A1_28_UNREAD,
+                        {"rs3064744": list(self.ugt1a1_calls)},
+                        would_be=kind,
+                        significance=UGT1A1_28_MEANS,
+                        confirm=UGT1A1_28_CONFIRM,
+                    )
+                    held = {**json.loads(claim), WITHHELD: [entry]}
+                    claim = json.dumps(held, ensure_ascii=False)
             reason = "; ".join(warnings) or None
             if result.gene == "IFNL3":
                 kind, actionable, reason = Kind.NON_FINDING, False, IFNL3_RETIRED
@@ -131,7 +170,7 @@ class PgxSource:
                 "kind": str(kind),
                 "vid": None,
                 "gene": result.gene,
-                "claim": pgx_claim(result),
+                "claim": claim,
                 "validity": str(validity),
                 "source_level": source_level(result),
                 "reason": reason,

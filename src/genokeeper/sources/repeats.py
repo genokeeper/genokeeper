@@ -623,13 +623,21 @@ class RepeatSource:
         reached = (
             str(classify(locus, _worst(locus, alleles).ci[1])) if alleles else None
         )
+        estimate = max(
+            (classify(locus, a.repeats) for a in alleles),
+            key=_SEVERITY.__getitem__,
+            default=None,
+        )
         claim = {
             "locus_id": locus.locus_id,
             "motif": locus.motif,
             "alleles": _allele_fields(alleles),
             "class": reached if assessed else None,
-            # Beside an unassessed `class`, for what a table withheld (`sources.withheld`).
-            "range": reached,
+            # For what a table withheld (`sources.withheld`): where the estimate lies and
+            # how far its interval reaches, which differ on a wide interval.
+            "range": None
+            if estimate is None
+            else {"estimate": str(estimate), "reaches": reached},
             "thresholds": {
                 "normal_max": locus.normal_max,
                 "intermediate": locus.intermediate,

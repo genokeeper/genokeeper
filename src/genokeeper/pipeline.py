@@ -561,7 +561,7 @@ from genokeeper.sources.paralogs import (
     ParalogSource,
     gba1_contradicted,
 )
-from genokeeper.sources.pgx import PgxSource
+from genokeeper.sources.pgx import PgxSource, ugt1a1_read
 from genokeeper.sources.pharmgkb import PHARMGKB_RESEARCH_TOOL, PharmGkbSource
 from genokeeper.sources.predicted import PredictedSource, clinvar_truncations
 from genokeeper.sources.prs import PrsSource
@@ -4518,6 +4518,7 @@ def run_genome(
         cpic_levels=pgx.cpic_levels,
         version=PHARMCAT_VERSION,
         ugt1a1_unread=ugt1a1_unread,
+        ugt1a1_calls=ugt1a1_read(pgx_graded) if ugt1a1_unread else (),
     )
     pharmgkb_source = PharmGkbSource(
         located=[(a, allele, *pgx_graded[allele]) for a, allele in located],

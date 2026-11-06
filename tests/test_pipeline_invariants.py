@@ -4123,6 +4123,25 @@ def _flagged(rows: dict[str, dict[str, Any]]) -> set[str]:
     return {sid for sid, r in rows.items() if r["exclusion"]}
 
 
+def test_an_untrusted_ugt1a1_call_goes_to_the_gene_result(
+    genome: Genome, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The run hands `PgxSource` the calls its gate left out (`test_pgx_grading` has the
+    entry; no UGT1A1*28 position sits on the mini contigs, so the calls are stood in for)."""
+    call = {"alt": "CATAT", "gt": "0/1", "dosage": "1", "level": "low"}
+    given: list[dict[str, Any]] = []
+    real = pipeline.PgxSource
+
+    def source(**fields: Any) -> Any:
+        given.append(fields)
+        return real(**fields)
+
+    monkeypatch.setattr(pipeline, "ugt1a1_read", lambda _: [call])
+    monkeypatch.setattr(pipeline, "PgxSource", source)
+    _run_genome(genome)
+    assert [(g["ugt1a1_unread"], g["ugt1a1_calls"]) for g in given] == [(True, [call])]
+
+
 def test_uncalibrated_slice3f_unassessed(genome: Genome) -> None:
     """Without a slice 3f table the run finishes and no typing tool runs: every statement
     the table gates is unassessed with 3c's reason (KIR, RH, MNS and the platelet antigens

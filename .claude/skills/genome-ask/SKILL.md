@@ -457,9 +457,12 @@ Each finding has these keys:
     included on a borderline one: word it as the class the interval may reach, never as the
     allele's class (a borderline watch is not an expansion), and quote the repeats and the
     interval with it; null when unassessed, and null for RFC1 and CFTR;
-  - `range`: the same reading of the alleles, kept when unassessed: read it only from
+  - `range`: the alleles' ranges, kept when unassessed: read them only from
     `claim.withheld`, never as a class the run graded; null without an allele, and null for
-    RFC1 and CFTR;
+    RFC1 and CFTR:
+    - `estimate`: the range the longest estimate lies in, by its repeat count;
+    - `reaches`: the range the longest allele's interval reaches at its upper bound, as
+      `class` reads it; a wide interval reaches past its estimate;
   - `thresholds`: the locus's ranges from STRchive, in repeats (null for RFC1 and CFTR):
     - `normal_max`: the largest normal count;
     - `intermediate`: `[low, high]`, or null;
@@ -636,13 +639,15 @@ Each finding has these keys:
     - `value`: what the tool measured, by the keys of its source: a repeat's `alleles`,
       `range` and, for RFC1, `rfc1`; SMN's `smn1`, `smn2`, `g27134tg` and `callers`; the Y
       haplogroup's `haplogroup`, `marker`, `qc_score` and `valid_markers`; a paralog's
-      `copy_number`, `callers` and `variants`; `kiv2`; an HLA allele's `callers` and
+      `called` (its copies), `callers` and `variants`; `kiv2`; an HLA allele's `callers` and
       `status`, the coeliac screen's `t1k` and `tags`; HHV-6's `species` and `ratio`; the
       runs of homozygosity's `total_long`, `n_long`, `longest` and `isodisomy`; a blood
       group's `genotype` and `phenotype`; the ancestry keys; a MITOMAP variant's `level`; an
       `hla:table` gene's `gene` and `callers`; a deletion's, depth event's or insertion's
       `chrom`, `start`, `end`, `length`, `exons`, `callers` and `depth_ratio`; a named
       locus's `name`, `chrom`, `start`, `end` and `callers`; a large event's keys;
+      `pharmcat:UGT1A1`'s `rs3064744`, its calls at the TA repeat, each `alt`, `gt`, `dosage`
+      and `level`;
     - `would_be`: the `kind` the statement would have, were the value true: hypothetical,
       never its kind;
     - `significance`: what the value would mean, were it true: the reason the statement
@@ -806,29 +811,41 @@ Each finding has these keys:
 
 ## Withheld values
 
-A calibration table withholds an item where its method failed on a public reference genome:
-a false call on a healthy sample, libraries that disagree, a parent's finding. The statement
-stays `unassessed`, with the table's reason, whatever the tool measured. Nothing is hidden
-from the user: where the tool measured something, `claim.withheld` holds it. No `withheld`
-means there is no value (the tool did not run, or made no call): say "not covered" or "not
-assessed" with the reason, as before.
+A calibration table withholds an item where its method failed on a public reference genome
+(a false call on a healthy sample, libraries that disagree, a parent's finding) or where it
+measured nothing to trust; haplocheck's flag, a step that failed or a missing region list can
+withhold one the same way. The statement stays `unassessed`, with that reason, whatever the
+tool measured. Nothing is hidden from the user: where the tool measured something and was
+withheld, `claim.withheld` holds it. No `withheld` does not mean no value: a statement
+unassessed for another reason (low depth, callers that disagree, a heteroplasmy below the
+floor) keeps what it has in the claim's own keys (`claim.alleles`, `claim.callers`,
+`claim.level`), read as that statement's section says. Only where those hold nothing too, say
+"not covered" or "not assessed" with the reason, as before.
 
 - **Find it.** `unassessed.by_gene.<gene>.withheld` counts them; `--list-unassessed`, `show
   <id> --json` and `genotype --gene` show them. Most sit below the default filters, so add
   `--min-validity limited` and say so. A statement with no gene (the Y haplogroup, HHV-6,
-  ROH, ancestry) counts under `""`. Two statements carry one for what has no unassessed
-  statement of its own: `show hla:table --json` (a withheld gene) and `show cnv:screen
-  --json` (a large event in a withheld band).
+  ROH, ancestry) counts under `""`. Three statements carry one for what has no unassessed
+  statement of its own: `show hla:table --json` (a withheld gene), `show cnv:screen --json`
+  (a large event in a withheld band) and `pharmcat:UGT1A1` (UGT1A1*28's call, which PharmCAT
+  was not given: its diplotype does not read it, and `significance` says what that means).
 - **Report all of it, in this order.** That the calibration withheld the result, quoting
   `reason`; the value (for a repeat the repeats, their intervals and the reads behind them);
-  its reliability, in these words: "the lowest: this method failed its calibration here";
-  what it would mean were it true (`would_be`, `significance`, for a repeat `value.range`
-  against `claim.thresholds`, and `validity.level` with `validity.source_level`, the locus's
-  link to the disease, never the call's); and the test, `confirm`.
-- **Never a result.** A value in the pathogenic range is no finding: "the tool's estimate
-  lies in the pathogenic range, unconfirmed, and this method failed its calibration here;
-  `confirm` would settle it", never "you have an expansion", and no alarm. A value in the
-  normal range is no normal: never "normal", "excluded", "not a carrier" or any reassurance.
+  its reliability, in these words: "the lowest", and why in `reason`'s own terms: "failed its
+  calibration here" only where `reason` says so ("not calibrated" is a measurement not made,
+  haplocheck's a possible contamination, a failed step a step that failed);
+  what it would mean were it true (`would_be`, `significance`, for a repeat
+  `value.range.estimate` and `value.range.reaches` against `claim.thresholds`, and
+  `validity.level` with `validity.source_level`, the locus's link to the disease, never the
+  call's); and the test, `confirm`.
+- **Never a result.** State where a repeat's estimate lies and how far its interval reaches,
+  apart: "the tool estimates 20 repeats, in the normal range, and its interval reaches 44, in
+  the pathogenic range", from `value.alleles`, `value.range.estimate` and
+  `value.range.reaches`; never call the range an interval reaches the estimate's. An estimate
+  in the pathogenic range is no finding: "the tool's estimate lies in the pathogenic range,
+  unconfirmed; `confirm` would settle it", never "you have an expansion", and no alarm. An
+  estimate in the normal range is no normal: never "normal", "excluded", "not a carrier" or
+  any reassurance.
   `would_be` is hypothetical; `kind` is the statement's. Never count one as a finding, a
   watch item, a normal or an exclusion, and never add one to a total.
 - **chrM.** Where the heteroplasmies are withheld (the calibration's reason, or haplocheck's
