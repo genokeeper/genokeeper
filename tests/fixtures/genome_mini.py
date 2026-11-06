@@ -1188,7 +1188,6 @@ class FakeSlice3d:
                 rows + "".join(f"{r}\n" for r in self.cnvpytor)
             )
         elif name == "insurveyor":
-            (out / "work").mkdir()
             text = (HG002 / "hg002.insurveyor.vcf.txt").read_text()
             (out / "work" / "out.pass.vcf.gz").write_text(text)
         elif name == "scramble":
