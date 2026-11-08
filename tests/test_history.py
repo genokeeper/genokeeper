@@ -504,6 +504,57 @@ def test_reference_change_is_a_cause(
     assert reference == "reference" and fasta.startswith("source:fasta@")
 
 
+def test_a_moved_panel_is_no_cause_of_another_sources_change(tmp_path: Path) -> None:
+    """A source `SOURCE_INPUTS` does not list reads every input as a possible cause: the
+    PanelApp panel is not one of them, as only its own statements read it."""
+    row: dict[str, Any] = {"vid": vid(1001), "gene": "CBS", "source": "expansionhunter"}
+    write(
+        tmp_path,
+        D1,
+        [statement("expansionhunter:CBS", **row)],
+        [call(vid(1001))],
+        inputs={**INPUTS, "panelapp": {**file("pa1"), "failed": None}},
+    )
+    write(
+        tmp_path,
+        D2,
+        [statement("expansionhunter:CBS", **row)],
+        [call(vid(1001), level="medium")],
+        inputs={**INPUTS, "panelapp": {**file("pa2"), "failed": None}},
+    )
+    (change,) = diff(tmp_path, D1, D2)
+    assert change.causes == ("genotype",)
+
+
+def test_a_panel_statements_cause_is_what_it_reads(tmp_path: Path) -> None:
+    """A moved panel is a cause of a panel statement; an input the layer does not read
+    (a polygenic scoring file) is not."""
+    sid = f"panelapp:{vid(1001)}:ENST01"
+    row: dict[str, Any] = {"source": "panelapp", "topic": "research"}
+    write(
+        tmp_path,
+        D1,
+        [at(sid, 1001, reason="gene rated green", **row)],
+        [call(vid(1001))],
+        inputs={**INPUTS, "panelapp": {**file("pa1"), "failed": None}},
+    )
+    moved_scores = {"scores": {"PGS000018": file("s2")}, "panel": file("p1")}
+    write(
+        tmp_path,
+        D2,
+        [at(sid, 1001, reason="gene rated amber", **row)],
+        [call(vid(1001))],
+        inputs={
+            **INPUTS,
+            "panelapp": {**file("pa2"), "failed": None},
+            "prs": moved_scores,
+        },
+    )
+    (change,) = diff(tmp_path, D1, D2)
+    assert len(change.causes) == 1
+    assert change.causes[0].startswith("source:panelapp@")
+
+
 def test_genotype_cause_when_only_the_call_moved(tmp_path: Path) -> None:
     write(tmp_path, D1, [at("clinvar:1", 1001)], [call(vid(1001))])
     write(tmp_path, D2, [at("clinvar:1", 1001)], [call(vid(1001), level="medium")])

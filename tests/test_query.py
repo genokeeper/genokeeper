@@ -1202,6 +1202,45 @@ def test_panel_variants_hidden_until_named(con: duckdb.DuckDBPyConnection) -> No
         assert ids(con, named) == [sid], named
 
 
+def test_the_skills_panel_queries_return_the_statements(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    """`--text panelapp: --min-validity limited --min-reliability low` returns a statement
+    at a low-reliability call, and with `--list-unassessed` the failed layer's."""
+    sid = "panelapp:GRCh38:chr17:1000:C:T:ENST01"
+    seed(
+        con,
+        [
+            Row(
+                sid,
+                gene="GENEZ",
+                level="low",
+                validity="limited",
+                topic="research",
+                claim={"type": "panelapp_variant"},
+            ),
+            Row(
+                "panelapp:panel",
+                kind="unassessed",
+                gene=None,
+                level=None,
+                validity="limited",
+                topic="research",
+                claim={"type": "panelapp_variant"},
+                reason="the panel's research layer could not run",
+            ),
+        ],
+    )
+    con.execute("UPDATE statement SET source = 'panelapp'")
+    f = Filters(
+        text="panelapp:", min_validity=Validity.LIMITED, min_reliability=Level.LOW
+    )
+    assert ids(con, f) == [sid]
+    listed = query(con, None, f, list_unassessed=True).unassessed_sites
+    assert listed is not None
+    assert [site["id"] for site in listed] == ["panelapp:panel"]
+
+
 def test_level_3_hidden_by_default(con: duckdb.DuckDBPyConnection) -> None:
     """A level-3 annotation is a research association: counted, not returned, until a gene,
     marker or text (its drug or its phenotype) names it."""

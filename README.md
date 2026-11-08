@@ -631,7 +631,8 @@ geneticist (`config/grading.toml` [predicted]); outside the listed genes, or fai
 gate, it is research. A predicted finding never outranks a ClinVar-classified one in the
 feed. Rare, probably damaging variants in the genes of Genomics England PanelApp's
 Intellectual disability panel (panel 285, version 11.93, 2,867 genes, one pinned file from
-the bootstrap) are stated from the same VEP records, as research: validity limited,
+the bootstrap) are stated from the same VEP records when gnomAD's filtering allele frequency is below
+0.01 at any inheritance, as research: validity limited,
 topic research, never actionable, returned only to `--gene`, `--marker` or `--text` and
 never on the dashboard's feed, each `predicted, not classified`, naming the panel, the
 gene's confidence level and its inheritance, and repeating no predicted finding. SpliceAI

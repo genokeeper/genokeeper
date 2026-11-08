@@ -161,12 +161,26 @@ SOURCE_INPUTS: dict[str, tuple[str, ...]] = {
         "cgd",
         "faf",
     ),
+    # The panel, and what its statements are graded on or repeat (`sources.panelapp`).
+    "panelapp": (
+        "panelapp",
+        "clinvar38",
+        "vep",
+        "clingen_dosage",
+        "gene_validity",
+        "gencc",
+        "cgd",
+        "faf",
+    ),
 }
 # Inputs that are no cause: a run's cache records, whose `reused` flag differs between two
 # runs on the same inputs; the reference FASTA, whose change is `REFERENCE_CAUSE`; and slice
 # 3c's checks of the run itself (the identity verdict, the coverage and dosage steps'
-# failures), which grade no statement.
-_NOT_INPUTS = frozenset({"steps", "fasta", "identity", "coverage", "dosage"})
+# failures), which grade no statement; and the PanelApp panel, which only its own layer
+# reads, so a moved panel is no cause of a source this table does not list.
+_NOT_INPUTS = frozenset(
+    {"steps", "fasta", "identity", "coverage", "dosage", "panelapp"}
+)
 # A change the reference moved (the masked GRCh38's md5 in `tools`): new calls, not news.
 REFERENCE_CAUSE = "reference"
 # The tools key naming an input's release when its record carries none.

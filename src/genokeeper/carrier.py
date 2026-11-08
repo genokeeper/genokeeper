@@ -6,7 +6,8 @@ error rate measured on a GIAB sample, `genotype.reliability`): `carrier` (one or
 claim's allele), `not_a_carrier` (dosage 0 at medium or high reliability),
 `probably_not_a_carrier` (dosage 0 at low) or `unknown` (dosage `unknown`, or no call row);
 a structural variant (`SV_NOUNS`: slice 3b's deletions, 3d's depth losses and gains and its
-insertions) `needs_confirmation`, whatever its dosage. A screening finding under carrier at
+insertions) and a PanelApp panel statement `needs_confirmation`, whatever its dosage. A
+screening finding under carrier at
 validity limited (`possible_carrier`: 3b's deletions, 3d's, 3e's RFC1) answers
 `possible_carrier`, never `carrier` (the closing design's "Where each kind of result goes").
 A research association counts the copies of its own risk allele, which may be the
@@ -69,6 +70,7 @@ from genokeeper.query import (
 )
 from genokeeper.sources.cnv import CNV_TOOL, GAIN_WORDING, LOSS_WORDING, WHOLE_GAIN
 from genokeeper.sources.deletions import DELETIONS_TOOL
+from genokeeper.sources.panelapp import PANELAPP_TOOL
 from genokeeper.sources.paralogs import LPA_TOOL, PARALOGS_TOOL
 from genokeeper.sources.predicted import PREDICTED_TOOL
 from genokeeper.sources.repeats import CFTR_CALL, REPEATS_TOOL
@@ -171,6 +173,7 @@ _ANSWER_TEXT = {
     ),
     Answer.INFORMATION: "information, not a carrier status; see its reason",
 }
+PANEL_ANSWER_TEXT = "a computer's prediction that needs confirmation; see its reason"
 
 
 def load_mechanisms() -> dict[str, str]:
@@ -225,10 +228,11 @@ def possible_carrier(statement: dict[str, Any]) -> bool:
 def answer(site: dict[str, Any]) -> Answer:
     """A site's answer from its dosage (`_dosage`) and its reliability level; a possible
     carrier (`possible_carrier`) is one whatever its dosage, and any other structural
-    variant (`sv_noun`) needs confirmation; neither is ever `carrier`."""
+    variant (`sv_noun`) or PanelApp panel statement needs confirmation; none is ever
+    `carrier`."""
     if possible_carrier(site):
         return Answer.POSSIBLE_CARRIER
-    if sv_noun(site) is not None:
+    if sv_noun(site) is not None or _source(site) == PANELAPP_TOOL:
         return Answer.NEEDS_CONFIRMATION
     dosage = _dosage(site)
     if dosage is None or dosage == "unknown":
@@ -511,7 +515,9 @@ def _site_block(site: dict[str, Any]) -> str:
     if site["id"] == CFTR_REPEAT_ID:
         return "\n".join([*lines, f"  {CFTR_REPEAT_LINE}"])
     lines.append(f"  claim: {site['classification']}; condition: {site['condition']}")
-    lines.append(f"  answer: {_ANSWER_TEXT[Answer(site['answer'])]}")
+    panel = _source(site) == PANELAPP_TOOL
+    text = PANEL_ANSWER_TEXT if panel else _ANSWER_TEXT[Answer(site["answer"])]
+    lines.append(f"  answer: {text}")
     if site["not_a_finding_because"] is not None:
         lines.append(f"  not a finding: {site['not_a_finding_because']}")
     return "\n".join(lines)

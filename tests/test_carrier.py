@@ -113,6 +113,41 @@ def test_cftr_5t_is_not_cf_carrier(
     assert "answer: not a carrier of the allele" in out  # the CF site's own answer
 
 
+@pytest.mark.parametrize("other_site", [False, True])
+def test_a_panel_statement_needs_confirmation_never_carrier(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], other_site: bool
+) -> None:
+    """A PanelApp statement answers `needs_confirmation`, whatever its dosage, and says so
+    as a prediction, not a structural variant: in a gene with no other site and beside
+    one."""
+    con = connect(tmp_path / "genomelab.duckdb")
+    panel_id = "panelapp:GRCh38:chr17:1000:C:T:ENST01"
+    rows = [
+        Row(
+            panel_id,
+            gene="GENEZ",
+            validity="limited",
+            topic="research",
+            claim={"type": "panelapp_variant", "classification": "predicted"},
+        )
+    ]
+    if other_site:
+        rows.append(Row("clinvar:7", gene="GENEZ", pos=1001, dosage="0"))
+    seed(con, rows)
+    con.execute(
+        "UPDATE statement SET source = 'panelapp' WHERE statement_id LIKE 'panelapp:%'"
+    )
+    found = {s["id"]: s for s in genotype(con, None, gene="GENEZ").to_json()["sites"]}
+    assert found[panel_id]["answer"] == Answer.NEEDS_CONFIRMATION
+    con.close()
+    db = str(tmp_path / "genomelab.duckdb")
+    assert main(["genotype", "--gene", "GENEZ", "--db", db]) == 0
+    out = capsys.readouterr().out
+    assert "answer: a computer's prediction that needs confirmation" in out
+    assert "answer: carrier of the allele" not in out
+    assert "a structural variant" not in out
+
+
 @pytest.mark.parametrize(
     ("kind", "reason", "confirm", "expected"),
     [

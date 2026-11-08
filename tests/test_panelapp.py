@@ -3,12 +3,14 @@ Intellectual disability panel: the panel file, which variants qualify, what each
 says, and that a `predicted:` finding is not repeated."""
 
 import json
+from collections.abc import Sequence
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
 import pytest
 from fixtures.faf_mini import write_faf_table
-from fixtures.panelapp_mini import GENES, write_panel
+from fixtures.panelapp_mini import GENES, GeneRow, write_panel
 
 from genokeeper.annotate.vep import VepRecord
 from genokeeper.config import load_grading
@@ -23,11 +25,14 @@ from genokeeper.sources.panelapp import (
     ALREADY_PREDICTED,
     FAILED_STATEMENT,
     NOT_A_DIAGNOSIS,
+    ONE_COPY_NOTE,
     PANEL_VERSION,
     PANELAPP_TOOL,
     GenePanel,
     PanelAppSource,
     PanelGene,
+    collect_panel,
+    failed_panel,
     load_panel,
     without_repeats,
 )
@@ -87,7 +92,12 @@ def _missense(**kw: Any) -> VepRecord:
     )
 
 
-def _ctx(tmp_path: Path, faf: dict[str, float] | None = None) -> RunContext:
+def _ctx(
+    tmp_path: Path,
+    faf: dict[str, float] | None = None,
+    inheritance: dict[str, str] | None = None,
+    haploid: bool = False,
+) -> RunContext:
     return RunContext(
         run_id="run",
         lists=LISTS,
@@ -96,9 +106,9 @@ def _ctx(tmp_path: Path, faf: dict[str, float] | None = None) -> RunContext:
         gene_level={},
         faf=FafTable.open(write_faf_table(tmp_path / "faf", faf)),
         ba1_exceptions=frozenset(),
-        inheritance={},
+        inheritance=inheritance or {},
         male=True,
-        haploid=lambda chrom, pos: False,
+        haploid=lambda chrom, pos: haploid,
         source_version="20261011",
     )
 
@@ -108,6 +118,9 @@ def _collect(
     *records: VepRecord,
     called: Called = HET,
     faf: dict[str, float] | None = None,
+    inheritance: dict[str, str] | None = None,
+    genes: Sequence[GeneRow] = GENES,
+    haploid: bool = False,
 ) -> Collected:
     predicted = PredictedSource(
         sites=[(r, called, RELIABLE, 0) for r in records],
@@ -116,8 +129,8 @@ def _collect(
         truncations=[],
         haploinsufficient=frozenset(),
     )
-    source = PanelAppSource(gene_panel=_panel(tmp_path), predicted=predicted)
-    return source.collect(_ctx(tmp_path, faf))
+    panel = load_panel(write_panel(tmp_path / "panel.json", genes))
+    return collect_panel(panel, predicted, _ctx(tmp_path, faf, inheritance, haploid))
 
 
 def _one(tmp_path: Path, *records: VepRecord, **kw: Any) -> dict[str, object]:
@@ -130,20 +143,24 @@ def _dropped(collected: Collected) -> dict[str, int]:
 
 
 def test_the_panel_keeps_each_genes_confidence_and_inheritance(tmp_path: Path) -> None:
-    """Green is diagnostic grade, amber and red are not (`0` and `1` are both red); an empty
-    mode of inheritance reads as not stated, and a gene is found by its symbol or, as a
+    """Green, amber and red (`0` and `1` are both red); an empty mode of inheritance reads as not stated, and a gene is found by its symbol or, as a
     symbol can have moved since the panel's HGNC snapshot, by its Ensembl id."""
     panel = _panel(tmp_path)
     assert panel.name == "Intellectual disability"
     assert panel.version == PANEL_VERSION
     assert set(panel.genes) == {g[0] for g in GENES}
-    assert panel.genes[GREEN] == PanelGene("green", True, AR_TEXT)
-    assert panel.genes["GENEAMBER"] == PanelGene("amber", False, "Unknown")
-    assert panel.genes["GENERED"] == PanelGene("red", False, "not stated by the panel")
+    assert panel.genes[GREEN] == PanelGene("green", AR_TEXT)
+    assert panel.genes["GENEAMBER"] == PanelGene("amber", "Unknown")
+    assert panel.genes["GENERED"] == PanelGene("red", "not stated by the panel")
     assert panel.genes["GENENONE"].confidence == "red"
     renamed = _record(gene="NEWNAME", gene_id="ENSG01")
     assert panel.gene(renamed) == panel.genes[GREEN]
     assert panel.gene(_record(gene="ELSEWHERE", gene_id="ENSG99")) is None
+
+
+def test_a_missing_panel_names_the_bootstrap(tmp_path: Path) -> None:
+    with pytest.raises(FileNotFoundError, match="scripts/bootstrap.sh"):
+        load_panel(tmp_path / "panel.json")
 
 
 @pytest.mark.parametrize(
@@ -201,22 +218,62 @@ def test_a_rare_loss_of_function_in_a_panel_gene_is_one_research_statement(
     reason = str(s["reason"])
     assert "predicted, not classified" in reason
     assert "Intellectual disability" in reason
-    assert "confidence green, diagnostic grade" in reason
+    assert (
+        "gene rated green on the panel: its link to the condition is well established;"
+        " this says nothing about this variant"
+    ) in reason
+    assert "diagnostic grade" not in reason
     assert AR_TEXT in reason
     assert "discuss with a geneticist" in reason
     assert NOT_A_DIAGNOSIS in reason
-    assert "one copy of a variant in a recessive gene is not a diagnosis" in reason
+    assert ONE_COPY_NOTE in reason
 
 
 @pytest.mark.parametrize(
     ("gene", "level"),
     [("GENEAMBER", "amber"), ("GENERED", "red")],
 )
-def test_amber_and_red_genes_read_not_diagnostic_grade(
+def test_amber_and_red_genes_name_the_genes_evidence(
     tmp_path: Path, gene: str, level: str
 ) -> None:
     reason = str(_one(tmp_path, _record(gene=gene, gene_id="ENSG02"))["reason"])
-    assert f"confidence {level}, not diagnostic grade" in reason
+    assert f"gene rated {level} on the panel: the evidence for its link" in reason
+    assert "this says nothing about this variant" in reason
+    assert "diagnostic grade" not in reason
+
+
+MONO = "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted"
+XLR = "X-LINKED: hemizygous mutation in males, biallelic mutations in females"
+BOTH = "BOTH monoallelic and biallelic, autosomal or pseudoautosomal"
+
+
+@pytest.mark.parametrize("inheritance", [MONO, XLR, BOTH, "Unknown", ""])
+def test_the_one_copy_note_is_only_for_a_biallelic_gene(
+    tmp_path: Path, inheritance: str
+) -> None:
+    """Every statement says it is no diagnosis; the one-copy sentence only where it is true."""
+    genes = [(GREEN, "3", inheritance, "ENSG01")]
+    reason = str(_one(tmp_path, _record(), genes=genes)["reason"])
+    assert NOT_A_DIAGNOSIS in reason
+    assert ONE_COPY_NOTE not in reason
+
+
+@pytest.mark.parametrize(
+    ("called", "haploid"),
+    [
+        (Called("1/1", "2", RowType.PASS, 40, 30, (0, 30), 1.0, ()), False),
+        (HET, True),
+        (Called(None, "unknown", RowType.PASS, 40, 30, None, None, ("x",)), False),
+    ],
+)
+def test_the_one_copy_note_is_only_for_a_heterozygous_call(
+    tmp_path: Path, called: Called, haploid: bool
+) -> None:
+    """A homozygote, a hemizygous male (a haploid site) and an unknown genotype are no het:
+    the sentence is dropped, in a gene the panel calls biallelic."""
+    reason = str(_one(tmp_path, _record(), called=called, haploid=haploid)["reason"])
+    assert NOT_A_DIAGNOSIS in reason
+    assert ONE_COPY_NOTE not in reason
 
 
 def test_a_missense_qualifies_at_its_calibrated_score(tmp_path: Path) -> None:
@@ -261,6 +318,19 @@ def test_a_common_variant_or_no_copy_is_counted_out(tmp_path: Path) -> None:
     assert _dropped(common) == {"population_frequency": 1}
     absent = Called("0/0", "0", RowType.PASS, 40, 30, (30, 0), 0.0, ())
     assert _dropped(_collect(tmp_path, _record(), called=absent)) == {"not_carried": 1}
+
+
+@pytest.mark.parametrize("mode", ["AR", "AD", None])
+@pytest.mark.parametrize(("faf", "kept"), [(0.0099, 1), (0.01, 0), (0.02, 0)])
+def test_rare_is_one_limit_at_any_inheritance(
+    tmp_path: Path, mode: str | None, faf: float, kept: int
+) -> None:
+    """Below 0.01 whatever the gene's inheritance: `grade_predicted` lets a recessive gene's
+    allele through up to BA1's 0.05, which is not rare."""
+    inheritance = {GREEN: mode} if mode else {}
+    collected = _collect(tmp_path, _record(), faf={VID: faf}, inheritance=inheritance)
+    assert len(collected.rows) == kept
+    assert _dropped(collected) == ({} if kept else {"population_frequency": 1})
 
 
 def test_an_unknown_genotype_is_unassessed(tmp_path: Path) -> None:
@@ -362,9 +432,11 @@ def test_a_compound_het_the_promotion_made_is_not_repeated() -> None:
 
 
 def test_a_failed_layer_is_one_unassessed_statement(tmp_path: Path) -> None:
-    source = PanelAppSource(gene_panel=None, predicted=None, failed="no panel file")
-    collected = source.collect(_ctx(tmp_path))
+    ctx = _ctx(tmp_path)
+    pending = replace(ctx, run_id="pending")
+    collected = PanelAppSource(failed_panel(pending, "no panel file")).collect(ctx)
     (row,) = collected.rows
+    assert row.statement["run_id"] == "run"
     s = row.statement
     assert (row.variant, row.call) == (None, None)
     assert (s["statement_id"], s["kind"], s["vid"], s["gene"]) == (

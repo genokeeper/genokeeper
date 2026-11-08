@@ -3225,6 +3225,35 @@ def test_a_damaged_panel_leaves_the_run(genome: Genome, damage: Any) -> None:
     assert "\n" not in failed
 
 
+def test_no_panel_statement_is_computed_after_the_boundary(
+    genome: Genome, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The panel's statements are computed once, inside its boundary: an error in anything
+    the layer would compute after the boundary has returned cannot stop the run."""
+    _panel_finding(genome)
+    closed = False
+    boundary = pipeline._panelapp_layer  # pyright: ignore[reportPrivateUsage]
+    rule = panelapp_module.predicted_rule
+
+    def layer(*args: Any, **kw: Any) -> Any:
+        nonlocal closed
+        found = boundary(*args, **kw)
+        closed = True
+        return found
+
+    def after_the_boundary(*args: Any) -> Any:
+        if closed:
+            raise RuntimeError("computed after the boundary")
+        return rule(*args)
+
+    monkeypatch.setattr(pipeline, "_panelapp_layer", layer)
+    monkeypatch.setattr(panelapp_module, "predicted_rule", after_the_boundary)
+    run_id = _run_genome(genome)
+    assert closed
+    (row,) = _panel_rows(genome, run_id).values()
+    assert row[0] == "finding"
+
+
 def test_anything_wrong_inside_the_panel_layer_is_held_at_its_boundary(
     genome: Genome, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -3329,7 +3358,7 @@ def test_a_refresh_carries_the_panel_statements(
     after = _panel_rows(genome, runs[-1])
     assert set(after) == set(before)
     ((statement, row),) = after.items()
-    assert "confidence amber, not diagnostic grade" in row[5]
+    assert "gene rated amber on the panel" in row[5]
     args: dict[str, Any] = {
         "base": first,
         "run": None,

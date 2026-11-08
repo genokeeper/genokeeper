@@ -564,8 +564,9 @@ from genokeeper.sources.mito import MitoSource
 from genokeeper.sources.mitomap import MitomapSource
 from genokeeper.sources.panel import ClaimsSource
 from genokeeper.sources.panelapp import (
-    GenePanel,
     PanelAppSource,
+    collect_panel,
+    failed_panel,
     load_panel,
     panelapp_path,
     without_repeats,
@@ -1945,18 +1946,17 @@ def _panelapp_layer(
 
     The layer's one boundary, with `_research_layer`'s rule: it is optional, so anything
     wrong inside (the file missing or damaged, a bug in the grading) leaves the one unassessed
-    statement saying what failed, and the run goes on. Its statements are collected here
-    under the placeholder run id, as the phasing's are, so nothing they read can first
-    fail inside the store phase."""
+    statement saying what failed, and the run goes on. Its statements are computed here,
+    once, under the placeholder run id, and the store phase only puts the run's id on them
+    (`PanelAppSource`), so nothing about this layer can stop the run."""
     path = panelapp_path(lab)
     try:
-        gene_panel: GenePanel = load_panel(path)
-        source = PanelAppSource(gene_panel=gene_panel, predicted=predicted)
-        source.collect(pending)
+        gene_panel = load_panel(path)
+        collected = collect_panel(gene_panel, predicted, pending)
     except Exception as e:  # noqa: BLE001 - the layer's one boundary: recorded, the run goes on
         failed = _one_line(e) or type(e).__name__
-        return PanelAppSource(None, None, failed), {"failed": failed}
-    return source, {
+        return PanelAppSource(failed_panel(pending, failed)), {"failed": failed}
+    return PanelAppSource(collected), {
         **_file(path, sha256_file(path)),
         "version": gene_panel.version,
         "genes": len(gene_panel.genes),

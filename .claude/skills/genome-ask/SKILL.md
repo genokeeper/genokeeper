@@ -98,7 +98,7 @@ Fit the filters to the question:
 | "Do I carry the PPARG diabetes risk variant?" | `--gene PPARG --min-validity limited` or `--marker rs1801282 --min-validity limited` (see Research associations) |
 | "Do I have a deletion in BRCA1?" | `--gene BRCA1 --min-validity limited --min-reliability low` (see Stage 3b screening: deletions) |
 | "Is my X/Y normal? Any sex-chromosome anomaly?" | `show dosage:sex-chromosomes --json` (see Stage 3c) |
-| "Anything in my neurodevelopment genes? Rare variants in autism or intellectual disability genes?" | `--text panelapp: --min-validity limited`, one gene with `--gene <gene> --min-validity limited` (see Rare variants in neurodevelopment genes) |
+| "Anything in my neurodevelopment genes? Rare variants in autism or intellectual disability genes?" | `--text panelapp: --min-validity limited --min-reliability low`, one gene with `--gene <gene> --min-validity limited --min-reliability low` (see Rare variants in neurodevelopment genes) |
 | "How many AMY1 copies do I have?" | `--gene AMY1 --min-validity limited --min-reliability low` (see Stage 3d screening) |
 | "What is my RhD?" | `--gene RHD --min-validity limited --min-reliability low` (see Stage 3d screening) |
 | "My HLA? Coeliac? Blood group? Neanderthal? Lactose?" | `--gene HLA-B`, `show hla:coeliac --json`, `--topic traits --min-validity limited`, `--topic ancestry --min-validity limited` (see Slice 3f) |
@@ -452,7 +452,8 @@ Each finding has these keys:
   genes):
   - `panel`: the panel's name, `Intellectual disability`;
   - `panel_version`: the panel's version, e.g. `11.93`;
-  - `panel_confidence`: `green` (diagnostic grade), `amber` or `red` (neither is);
+  - `panel_confidence`: `green`, `amber` or `red`, the panel's rating of the gene's link to
+    the condition, never of the variant;
   - `panel_inheritance`: the gene's mode of inheritance as the panel writes it, or `not
     stated by the panel`;
 
@@ -696,7 +697,8 @@ Each finding has these keys:
   `paralogs`, `expansionhunter`), and for a stage-3 gene-level finding at any validity
   (SMN1's one copy, an expanded repeat), `possible_carrier` (possibly a carrier: a screening
   result that needs confirmation; see its reason); for any other deletion, depth event or insertion,
-  `needs_confirmation`; for a gene-level finding under traits, drugs or wellness (a 3d copy
+  `needs_confirmation`; for a PanelApp panel statement (source `panelapp`) `needs_confirmation`
+  too, whatever its dosage; for a gene-level finding under traits, drugs or wellness (a 3d copy
   number, Lp(a)), `information`; none is ever `carrier`. It is about this allele only, never the
   gene.
 - `classification` — in `sites` only: the claim's classification, e.g. ClinVar's CLNSIG.
@@ -1062,13 +1064,15 @@ splice change at SpliceAI 0.2 or above. Each one is `limited`, so add
 Rare, probably damaging variants the user carries in Genomics England PanelApp's
 Intellectual disability panel (`panelapp:<vid>:<transcript>`, source `panelapp`, panel 285 at
 version 11.93, `claim.panel_version`): each a PASS variant ClinVar does not classify germline,
-rare by the same gnomAD rule as a predicted finding, that VEP predicts a loss of function
-passing every gate of the LoF filter, or a missense at or above its calibrated REVEL or
-AlphaMissense score, in one of the panel's 2,867 genes. A variant that is already a predicted
-finding (`predicted:<vid>:<transcript>`) stays that and is not repeated here. Every one is
-`limited`, topic `research`, never actionable, hidden from every query that names no gene,
-marker or text and from the dashboard's feed; `--text panelapp: --min-validity limited` lists
-them all and `--gene` finds one gene's.
+rare (gnomAD's filtering allele frequency below 0.01, at any inheritance, or absent from
+gnomAD), that VEP predicts a loss of function passing every gate of the LoF filter, or a
+missense at or above its calibrated REVEL or AlphaMissense score, in one of the panel's
+2,867 genes. A variant that is already a predicted finding (`predicted:<vid>:<transcript>`)
+stays that and is not repeated here, so a rare high-score missense usually appears as a
+`predicted:` finding, not here. Every one is `limited`, topic `research`, never actionable,
+hidden from every query that names no gene, marker or text and from the dashboard's feed;
+`query --text panelapp: --min-validity limited --min-reliability low --json` returns them
+all, and `--gene <gene>` with the same two flags one gene's.
 
 - It is a computer's prediction on a broad panel: most people carry something on it. Say so
   first, in those words, before any variant. Never a diagnosis, and never pathogenic: label
@@ -1079,10 +1083,16 @@ them all and `--gene` finds one gene's.
   that reason, and the panel says nothing about ADHD. Asked about ADHD or autism, say that, and
   that for those the polygenic research scores say what little there is (see Research
   polygenic scores).
-- Give the gene's confidence from `claim.panel_confidence`: `green` is diagnostic grade,
-  `amber` and `red` are not. Say so for each. Give `claim.panel_inheritance` as the panel
-  writes it, and that one copy of a variant in a recessive gene is not a diagnosis
-  (`validity.reason` says it too): a recessive condition needs two.
+- Say plainly that it is not a diagnosis (`validity.reason` says so on every one).
+  `genotype --gene` answers each one `needs_confirmation`, never `carrier`.
+- Name `claim.panel_confidence` as the evidence for the gene, not the variant: `green` is a
+  well-established link between the gene and the condition, `amber` moderate evidence, `red`
+  weak evidence; none says anything about the user's variant, so never say "diagnostic grade"
+  beside it. Give `claim.panel_inheritance` as the panel writes it. Where `validity.reason`
+  says that one copy of a variant in a recessive gene is not a diagnosis (a heterozygous call
+  in a gene the panel calls biallelic), say so: a recessive condition needs two. It does not
+  say so, and you must not, for a monoallelic or X-linked gene, a homozygous call or a
+  hemizygous male.
 - Every one carries "discuss with a geneticist" in `validity.reason`: say so, and that this
   is the conversation to have about it.
 - SpliceAI scored only the ACMG SF and carrier genes. A splice change in another panel gene was
@@ -1092,8 +1102,10 @@ them all and `--gene` finds one gene's.
   are not read here (chrM's calls are mutserve's, see the mitochondrial findings).
 - One variant can have two statements, on two transcripts: they share a `vid`. Present them as
   one variant.
-- If the layer could not run (`panelapp:panel`, unassessed, found with `--list-unassessed`),
-  `validity.reason` says what failed: give that, and that these variants were not assessed,
+- If the layer could not run (`panelapp:panel`, unassessed: `query --text panelapp:
+  --min-validity limited --min-reliability low --list-unassessed --json`, under
+  `unassessed_sites`), `validity.reason` says what failed, and a missing file names
+  `scripts/bootstrap.sh`: give that, and that these variants were not assessed,
   never that the user has none. A store from a run before this layer holds no such statement:
   say that run did not compute them.
 
