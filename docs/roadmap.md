@@ -14,17 +14,18 @@ Tier 4 carrier list) is delivered and calibrated on the masked reference: AMY1 i
 mobile element only Scramble called is not measured. Slice 3e (thirteen more repeat loci, RFC1,
 CFTR's poly-T/TG) is delivered and calibrated on HG002's two libraries, HG003 and HG004; its table
 withholds nine of the 24 loci (3a's ATXN2 and CACNA1A among them), FMR1's and AFF2's two-X branches
-and RFC1, named with their reasons in the README. The code of slice 3c (the masked reference,
-`realign`, HG004, four run-time checks) is delivered; its calibration on the PCR, HG003 and HG004
-libraries follows in its own pull request, and until then each of its rows reads "not calibrated".
-Slice 3f (HLA typing, chrM, HHV-6, ancestry, blood groups, traits) is delivered and its table built
-on the GIAB trio: eight blood group systems and chrM heteroplasmy are withheld, so not graded, and PharmCAT's
+and RFC1, named with their reasons in the README. Slice 3c (the masked reference, `realign`, HG004,
+four run-time checks) is delivered: the `foundation` table of 2026-11-05, on HG002's PCR-free and
+PCR libraries, HG003 and HG004, sets the sex-dosage and allele-fraction bounds, while sample
+identity and per-gene coverage use design thresholds. Slice 3f (HLA typing, chrM, HHV-6, ancestry,
+blood groups, traits) is delivered and its table built on the GIAB trio: eight blood group systems
+and chrM heteroplasmy are withheld, so not graded, and PharmCAT's
 read-backed phase sets are not trusted. Slice 3g added 34 polygenic scores, named 24 conditions
 not covered and added six single-gene traits.
 
 ## Next
 
-The calibration of 3c. A third CYP2D6 caller, StellarPGx, so two of three callers agreeing
+A third CYP2D6 caller, StellarPGx, so two of three callers agreeing
 on the activity score gives a high-reliability call where BCyrius and Aldy disagree. No open
 short-read caller was found for HBA1/HBA2, CYP21A2 or the F8 inversions; they stay named not
 covered.

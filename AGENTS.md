@@ -31,11 +31,12 @@ documents it links to.
   Truvari, each class's chance of being false measured on HG002's two libraries
   (`genokeeper calibrate --only deletions`); every shown deletion needs confirmation by MLPA, a
   microarray, qPCR or long reads.
-- Stage 3, slice 3c code delivered (2026-11-01): GRCh38 with the GRC false duplications
-  masked, `realign` for the calibration libraries, HG004, HG002 cells for chrX, chrY and
-  v5.0q-only regions, and four run-time checks (sample identity, per-gene coverage, sex
-  dosage, an allele-fraction guard). Calibration pending: until the PCR, HG003 and HG004
-  libraries are re-aligned and `genokeeper calibrate` runs, the checks show "not calibrated".
+- Stage 3, slice 3c delivered (2026-11-01): GRCh38 with the GRC false duplications masked,
+  `realign` for the calibration libraries, HG004, HG002 cells for chrX, chrY and v5.0q-only regions
+  (their own table), and four run-time checks (sample identity, per-gene coverage, sex dosage, an
+  allele-fraction guard). The `foundation` table of 2026-11-05 on HG002 PCR-free, HG002 PCR, HG003
+  and HG004 sets the sex-dosage and allele-fraction bounds; identity and coverage use design
+  thresholds.
 - Slice 3g (2026-10-30): 34 more polygenic scores by 1d's rule read strictly, 24 conditions
   named not covered, a weak-power wording; six single-gene traits (2026-11-02: FUT2, ABCC11,
   MC1R, HERC2, AMPD1, CCR5Δ32).

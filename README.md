@@ -574,6 +574,15 @@ Y depth ratios and the chrX allele balance a normal karyotype gives, and HG002's
 heterozygotes' allele fractions; `--report` proposes the `[dosage]` and `[af_guard]`
 bounds, which go into `config/grading.toml` by hand, in a commit citing the report.
 
+The `foundation` table as measured on 2026-11-05, on the masked reference, over HG002 PCR-free,
+HG002 PCR, HG003 and HG004. The three male libraries' X depth ratios run from 0.4908 to 0.5090
+and their Y ratios from 0.5121 to 0.5306; HG004, female, reads 0.9847 and 0.0276, and its SNP F1
+against its v4.2.1 truth is 0.9962. The chrX heterozygous share is 0.0371 on HG002 PCR-free
+(69,855 sites), 0.0648 on HG003 (71,552) and 0.5912 on HG004 (100,474); HG002 PCR is aligned and
+not called, so it gives the depth ratios alone. Those measurements set `[dosage]`'s `x_het_min`
+at 0.33 and `y_absent_max` at 0.06. `[af_guard]`'s `min_het_vaf` of 0.25 comes from HG002
+PCR-free alone: 2,138,950 true heterozygous SNVs, 1.399% of them below 0.30.
+
 `genokeeper run` reads the paired FASTQ in `data/raw/` (`--fastq1`/`--fastq2` name them),
 checks the reads come from the platform the T7 checkpoint was trained on, aligns them with
 bwa, refuses a sample that fails the QC gate (`config/grading.toml` [qc]) before calling,
