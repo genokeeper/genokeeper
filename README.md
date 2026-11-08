@@ -508,6 +508,33 @@ loci, RFC1's motif analysis, CFTR's poly-T/TG and the trio checks on HG002, HG00
 a run without a current table leaves every graded repeat statement unassessed, naming
 `genokeeper calibrate`, and still writes the 22 not-covered statements.
 
+The table of 2026-11-06 keeps 15 of the 24 loci (HTT, AR, DMPK, C9orf72, ATXN1, ATXN3, ATXN7,
+ATN1, FXN, TCF4, PABPN1, CNBP, ATXN10, JPH3, FGF14) and CFTR's poly-T/TG
+(`expansionhunter:CFTR-polyT-TG`), and withholds the 12 items below. The table has no HG002 truth
+for FXN, TCF4, CNBP or FGF14, so those four rest on the libraries' agreement and the trio. A
+withheld item is not graded, which is not dropped: it stays unassessed with the table's reason,
+and the value the tool measured stays visible to the skill at the lowest reliability (see
+[Asking about the genome](#asking-about-the-genome)). Each reason below starts "not covered:" in
+the store. PCR-free and PCR are HG002's two libraries.
+
+| Withheld | The table's reason | What was measured |
+|---|---|---|
+| ATXN2 | false call in calibration | Truth 22/30. PCR sized it exactly; PCR-free called 22/27 (interval 26–64), 3 off and not Mendelian. HG002's 30 is above the normal maximum of 28, so even an exact call is not a normal. |
+| CACNA1A | false call in calibration | Truth 11/11. PCR-free's interval reached 19, past the normal maximum of 18; PCR called 10/11. |
+| FMR1 | false call in calibration | Truth 31. PCR-free was exact; PCR called 24 with interval 19–60 and no spanning read. |
+| AFF2 | false call in calibration | Truth 19. PCR-free was exact, but no allele of HG004's is within 2 repeats of it; PCR called 16 with interval 16–79 and no spanning read. |
+| FMR1's two-X branch | the X rule did not hold on the trio in calibration | HG004 must be a two-X normal carrying HG002's allele. It read 30/31 on 1 spanning read, unassessed. |
+| AFF2's two-X branch | the X rule did not hold on the trio in calibration | HG004 read 26/26 on no spanning read, unassessed, and neither allele is near HG002's 19. |
+| NOP56 | HG002's two libraries disagree in calibration | Both 4/7. PCR-free has 2 spanning reads behind an allele, under the floor of 3, so it is unassessed; PCR is a normal on 10. |
+| TBP | HG002's two libraries disagree in calibration | Both 37/36. PCR-free is a normal on 5 spanning reads; PCR has 2, unassessed. |
+| PPP2R2B | the rule never gave a normal on a healthy calibration sample | All four samples read 10/10. Two alleles of one length are unassessed under the exclusion rule. |
+| ZFHX3 | the rule never gave a normal on a healthy calibration sample | All four samples read 20/20, unassessed the same way. |
+| THAP11 | the rule never gave a normal on a healthy calibration sample | All four samples read 29/29, unassessed the same way. |
+| RFC1 | the RFC1 motif call was not a clear normal on a healthy calibration sample | All four samples read normal, "no expanded allele", but HG002 carries a benign expanded AAAAG allele (GIAB's v5.0q truth) that both libraries had to see. They missed it, so a normal here has not been shown to see an expanded allele (BR-038). |
+
+While FMR1 and AFF2 are withheld as genes, a two-X sample's statement carries the gene's reason
+rather than its branch's.
+
 `uv run genokeeper calibrate [--only NAME] [--report] [--threads N]` is the one calibration
 command: it rebuilds every stale table (one whose recorded versions differ from this
 pipeline's) in dependency order, each swapped in whole, and says "current" for the rest; a

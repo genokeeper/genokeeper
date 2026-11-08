@@ -44,11 +44,11 @@ documents it links to.
   Lp(a)) and the Tier 4 carrier list. AMY1 is withheld and a mobile element only Scramble called
   is not measured, each unassessed with its value under `claim.withheld`; no measured class
   reads "likely" (README.md, slice 3d's limits).
-- Stage 3, slice 3e code delivered (2026-11-01): one ExpansionHunter build (Illumina
-  commit 9e93322f4a, htslib 1.22.1) over 24 loci, RFC1 and CFTR's poly-T/TG, an exclusion-only
-  rule at the new loci, FMR1 and AFF2 by the X dosage, and 22 loci named not covered; every
-  graded repeat statement reads "not calibrated" until a follow-up pull request runs
-  `genokeeper calibrate --only stage3` on HG002, HG003 and HG004.
+- Stage 3, slice 3e delivered (2026-11-01; `stage3` table of 2026-11-06 on HG002, HG003, HG004):
+  one ExpansionHunter build (Illumina commit 9e93322f4a, htslib 1.22.1) over 24 loci, RFC1 and
+  CFTR's poly-T/TG, an exclusion-only rule at the new loci, FMR1 and AFF2 by the X dosage, 22
+  loci named not covered. The table withholds 12 items: not graded, each value kept for the
+  agent ([which and why](README.md#building-the-store)).
 - Stage 3, slice 3f delivered, its `slice3f` table built (2026-11-06, the GIAB trio): HLA, MITOMAP's
   chrM variants, HHV-6, runs of homozygosity, blood groups, ancestry, traits. Withheld, so not graded,
   the value kept: ABO, C4A, C4B, CTL2, FUT3, MAM, PIGG, XG (measurable on no library) and chrM

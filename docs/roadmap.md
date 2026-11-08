@@ -11,20 +11,22 @@ Stage 3, closing the genome. Slices 3a (SMN1/SMN2, eleven repeat loci, the Y hap
 (deletions of 50 bp or more in the ACMG SF and carrier genes) are delivered and calibrated on
 HG002's two libraries. Slice 3d (depth copy number, insertions, paralog loci, GBA1, Lp(a), the
 Tier 4 carrier list) is delivered and calibrated on the masked reference: AMY1 is withheld and a
-mobile element only Scramble called is not measured. The code of slices 3c (the masked reference,
-`realign`, HG004, four run-time checks) and 3e (thirteen more repeat loci, RFC1, CFTR's
-poly-T/TG) is delivered; their calibrations on the PCR, HG003 and HG004 libraries follow in their
-own pull requests, and until then each of their rows reads "not calibrated". Slice 3f (HLA typing,
-chrM, HHV-6, ancestry, blood groups, traits) is delivered and its table built on the GIAB trio:
-eight blood group systems and chrM heteroplasmy are withheld, so not graded, and PharmCAT's
+mobile element only Scramble called is not measured. Slice 3e (thirteen more repeat loci, RFC1,
+CFTR's poly-T/TG) is delivered and calibrated on HG002's two libraries, HG003 and HG004; its table
+withholds nine of the 24 loci (3a's ATXN2 and CACNA1A among them), FMR1's and AFF2's two-X branches
+and RFC1, named with their reasons in the README. The code of slice 3c (the masked reference,
+`realign`, HG004, four run-time checks) is delivered; its calibration on the PCR, HG003 and HG004
+libraries follows in its own pull request, and until then each of its rows reads "not calibrated".
+Slice 3f (HLA typing, chrM, HHV-6, ancestry, blood groups, traits) is delivered and its table built
+on the GIAB trio: eight blood group systems and chrM heteroplasmy are withheld, so not graded, and PharmCAT's
 read-backed phase sets are not trusted. Slice 3g added 34 polygenic scores, named 24 conditions
 not covered and added six single-gene traits.
 
 ## Next
 
-The calibrations of 3c and 3e. A third CYP2D6 caller, StellarPGx, so two of three callers
-agreeing on the activity score gives a high-reliability call where BCyrius and Aldy disagree. No
-open short-read caller was found for HBA1/HBA2, CYP21A2 or the F8 inversions; they stay named not
+The calibration of 3c. A third CYP2D6 caller, StellarPGx, so two of three callers agreeing
+on the activity score gives a high-reliability call where BCyrius and Aldy disagree. No open
+short-read caller was found for HBA1/HBA2, CYP21A2 or the F8 inversions; they stay named not
 covered.
 
 Delivered before stage 3: the findings track (stages 1 and 2, slices 1a–1e) and stage 4, the

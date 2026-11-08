@@ -439,7 +439,8 @@ Each finding has these keys:
     or null;
   - `hgvsp`: the protein change in HGVS, e.g. `ENSP00000350283.3:p.Gln412Ter`, or null;
 
-  for a repeat locus (`repeat_expansion`, id `expansionhunter:<gene>`, no marker), with its
+  for a repeat locus (`repeat_expansion`, id `expansionhunter:<gene>`, CFTR's poly-T/TG
+  `expansionhunter:CFTR-polyT-TG`, no marker), with its
   `gene` and `condition` as above (the disease the expansion causes; a not-covered locus's
   statement carries only `gene` and `condition` of the keys below):
   - `locus_id`: the catalog locus (Illumina's ExpansionHunter catalog), e.g. `HTT`;
@@ -1253,6 +1254,9 @@ actionable and none of the new ones is a watch item (TCF4's intermediate and PAB
   motifs tested, AAGGG and ACAGG; STRchive also lists AAAGG and CAGGG as pathogenic, which
   the analysis does not test, so say a normal does not exclude those. "Expanded allele may
   exist but not observed" and "2 expanded alleles (possibly reference)" are unassessed.
+  A `reason` saying "not a clear normal" means the calibration's calls read normal but missed
+  an expanded allele HG002 is known to carry: say a normal here has not been shown to see
+  an expanded allele, even where the `withheld` value reads normal.
 - **CFTR's poly-T/TG** is a variable-penetrance allele: 5T with TG 12 or more is a
   "possible" finding, 5T with TG 11 or fewer "information" (low penetrance). One 5T alone
   causes no disease; with a cystic-fibrosis variant in trans it can cause a CFTR-related
@@ -1471,7 +1475,8 @@ pharmacogenomic ones (see Drugs above), polygenic scores and APOE, single-SNP re
 associations, the mitochondrial haplogroup, predicted findings for variants ClinVar has
 not classified (see above), and the stage 3a screens: SMN1 copy number (`smn:SMN1`), the
 repeat-expansion loci (`expansionhunter:<gene>`; stage 3e adds loci beyond 3a's eleven,
-RFC1, CFTR's poly-T/TG and the not-covered loci, see Stage 3e screening) and the Y
+RFC1, CFTR's poly-T/TG as `expansionhunter:CFTR-polyT-TG` and the not-covered loci, see Stage
+3e screening) and the Y
 haplogroup
 (`yleaf:haplogroup`), every non-normal one a "screening result, needs confirmation" (see
 Stage 3a screening), and the stage 3b screen for deletions of 50 bp or more in the ACMG SF
