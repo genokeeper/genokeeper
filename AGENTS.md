@@ -39,11 +39,11 @@ documents it links to.
 - Slice 3g (2026-10-30): 34 more polygenic scores by 1d's rule read strictly, 24 conditions
   named not covered, a weak-power wording; six single-gene traits (2026-11-02: FUT2, ABCC11,
   MC1R, HERC2, AMPD1, CCR5Δ32).
-- Stage 3, slice 3d code delivered (2026-11-01): depth copy number (DELLY cnv, CNVpytor),
+- Stage 3, slice 3d calibrated (2026-11-06): depth copy number (DELLY cnv, CNVpytor),
   insertions (INSurVeyor, Dysgu, Scramble), paralog loci (Parascopy, Gauchian for GBA1, KILDA for
-  Lp(a)) and the Tier 4 carrier list. Its calibration (`genokeeper calibrate --only paralogs`,
-  `cnv`, `insertions`, `deletions`) and a first run on real data follow in a later PR; until then each
-  3d row reads "not calibrated".
+  Lp(a)) and the Tier 4 carrier list. AMY1 is withheld and a mobile element only Scramble called
+  is not measured, each unassessed with its value under `claim.withheld`; no measured class
+  reads "likely" (README.md, slice 3d's limits).
 - Stage 3, slice 3e code delivered (2026-11-01): one ExpansionHunter build (Illumina
   commit 9e93322f4a, htslib 1.22.1) over 24 loci, RFC1 and CFTR's poly-T/TG, an exclusion-only
   rule at the new loci, FMR1 and AFF2 by the X dosage, and 22 loci named not covered; every

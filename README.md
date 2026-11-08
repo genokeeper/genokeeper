@@ -456,11 +456,50 @@ no dominant curation (Tier 4, 1,309 genes) join Tier 3 in the carrier gate. `uv 
 calibrate` builds the `cnv`, `insertions` and `paralogs` tables on HG002's two libraries
 and the HG002/HG003/HG004 trio, and measures the `deletions` table again, because its exon set
 and class features change. Each depth or insertion class's chance of being false is measured
-as 3b's, gains also by Mendelian consistency on the trio. A paralog locus is withheld where a
-calibration sample contradicts its truth (HG002's assembly-derived copy numbers), GBA1 where
-HG002 is not wild type, and Lp(a) where KILDA's count differs from HG002's by more than
+as 3b's, gains also by Mendelian consistency on the trio. A paralog locus is withheld where any
+of the four libraries gave no call, where HG002's two libraries disagree, where a library
+contradicts its sample's truth (HG002's assembly-derived copy numbers, HG003's and HG004's for
+STRC), or where HG002 shows more copies than its parents together; GBA1 also where HG002 is not
+wild type, and Lp(a) where KILDA's count differs from HG002's by more than
 `[lpa] max_kiv2_error` (a share of that count). A screen without a current table is
 unassessed with its reason.
+
+The 3d tables as measured on 2026-11-05 and 06, on the masked reference. A withheld item means
+"not graded": the statement stays unassessed with the table's reason, and `claim.withheld` keeps
+the run's own value at low reliability for `genokeeper query --json` and the `genome-ask` skill,
+never as a result.
+
+- **Withheld:** AMY1 ("not covered: no call in calibration": HG004 gave no usable call, while
+  both of HG002's libraries gave the truth's 6). STRC, RHD, C4, CYP2A6, GBA1 and Lp(a) are graded.
+- **Not measured:** a mobile element only Scramble called. Neither HG002 library had a rare one
+  inside the benchmark around the target exons (0 of the 8 truth insertions there found), so the
+  `mei` band has no rate and such an event reads "not calibrated: no mei calls measured", its
+  value kept the same way. An insertion Dysgu or INSurVeyor called keeps its own class, and
+  Scramble only labels it.
+- **Large events:** none of the three genomes gave a large call, so no large band is withheld.
+  A large event in a run has no rate: it is shown, not calibrated.
+- **CNVpytor stays:** 356 of the 405 calls both depth callers made were false, against 1,583 of
+  DELLY's 1,755.
+
+| Band | Truth events found (HG002 PCR-free, PCR) | Chance of being false, across the classes measured |
+|---|---|---|
+| Depth loss, 1-5 kb | 20 and 31 of 42 spike-ins | 0.971 to 0.999 |
+| Depth loss, 5-500 kb | 17 and 16 of 18 spike-ins | 0.832 to 0.965 |
+| Depth gain, 1-5 kb | 2 and 7 of 40 spike-ins | 0.963 to 0.983 |
+| Depth gain, 5-500 kb | 11 and 16 of 20 spike-ins | 0.915 to 0.992 |
+| Insertion, 50-999 bp | 1,643 and 1,494 of 12,243 | 0.998 to 1.000 |
+| Insertion, 1 kb or more | 96 and 93 of 2,113 | 0.998 to 0.999 |
+| Deletion, 50-999 bp | 1,328 and 1,195 of 7,260 | 0.851 to 0.996 |
+| Deletion, 1 kb or more | 86 and 86 of 197 | 0.136 to 0.997 |
+
+Every class's point estimate stays above `[deletions] likely_below` (0.1), so every event with
+a rate reads "possible", none "likely". No call is weak evidence of no event: the found column is the screen's reach. The
+insertion rates are if anything high (BR-037). Eight classes have an interval wider than 0.5
+and are kept as measured: the depth gains of 1-5 kb called by both callers with an end masked,
+and by DELLY alone with a junction, masked or not; the depth gains of 5-500 kb with a
+junction, by both callers with an end masked and by DELLY alone with none; and the deletions of
+1 kb or more with an end masked by both callers with depth support, and by Dysgu alone, masked
+or not.
 
 Slice 3e's repeat loci run from the one `expansionhunter` image, now built from source:
 `uv run python -m genokeeper.containers build expansionhunter` (or the bootstrap), then `uv
