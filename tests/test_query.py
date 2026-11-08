@@ -1147,6 +1147,30 @@ def _research_row(con: duckdb.DuckDBPyConnection) -> None:
     )
 
 
+def test_research_scores_hidden_until_named(con: duckdb.DuckDBPyConnection) -> None:
+    """A research score is a research layer's: counted, not returned, until a gene, marker
+    or text names it; `--text <condition>` finds it at `--min-validity limited`."""
+    seed(
+        con,
+        [
+            Row(
+                "pgsc_calc:research:PGS002746",
+                validity="limited",
+                topic="research",
+                claim={"type": "pgs_research", "condition": "ADHD"},
+            )
+        ],
+    )
+    con.execute("UPDATE statement SET source = 'pgsc_calc_research'")
+    loosest = Filters(min_reliability=Level.LOW, min_validity=Validity.CONFLICTING)
+    for f in (Filters(), loosest, replace(loosest, topic=Topic.RESEARCH)):
+        result = query(con, None, f)
+        assert (result.findings, result.hidden) == ([], {"research_association": 1})
+    limited = Filters(min_validity=Validity.LIMITED)
+    for text in ("adhd", "pgsc_calc:research:", "PGS002746"):
+        assert ids(con, replace(limited, text=text)) == ["pgsc_calc:research:PGS002746"]
+
+
 def test_level_3_hidden_by_default(con: duckdb.DuckDBPyConnection) -> None:
     """A level-3 annotation is a research association: counted, not returned, until a gene,
     marker or text (its drug or its phenotype) names it."""

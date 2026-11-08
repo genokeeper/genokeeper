@@ -374,8 +374,9 @@ BCyrius's and Haplogrep3's, which no registry publishes at their pinned versions
 `docker/` with every input pinned, Haplogrep3's with its PhyloTree tree baked in), and
 slice 1d's polygenic scores under `pgs/`: Nextflow 25.10.0 with its nf-schema plugin (it runs
 offline, on Homebrew's openjdk@21), pgsc_calc at the commit its tag v2.3.0 points to, the
-chosen scores' harmonised GRCh38 scoring files (md5-checked against the PGS Catalog's; slice
-3g's 34 new files are 677,577,718 bytes, fetched once they were approved), the
+chosen scores' harmonised GRCh38 scoring files and the research scores' (a separate step,
+so that fetching one never re-fetches a chosen file; all md5-checked against the PGS
+Catalog's; slice 3g's 34 new files are 677,577,718 bytes, fetched once they were approved), the
 HGDP+1kGP reference panel (16 GB, md5-checked, moved from `prefetch/1d/pgsc_calc/` when a
 copy with that md5 is there) and the panel's ancestry positions, filtered from it by plink2
 in pgsc_calc's own image. The
@@ -600,8 +601,15 @@ every process in its pinned image with `--network none`, checked task by task af
 which refuses results it cannot verify) on a VCF of our calls at every chosen score's and the
 panel's ancestry positions (an unknown or low call goes in as a no-call), each score a finding with
 its percentile against the population you are closest to (one below 0.75 overlap is
-unassessed), and APOE's diplotype from our calls at rs429358 and rs7412. Docker needs at
-least 32 GB of memory for it (Docker Desktop, Settings, Resources). Then the mitochondrial
+unassessed, what pgsc_calc computed kept under `claim.withheld`), and APOE's diplotype from our
+calls at rs429358 and rs7412. Docker needs at least 32 GB of memory for it (Docker Desktop,
+Settings, Resources). 27 more scores that do not pass the selection rule (`[[research_score]]`
+in `src/genokeeper/resources/pgs/scores.toml`, each with `why`) run in a second pgsc_calc run of
+their own, so the chosen scores' cache stays as it was, and are stored as research: validity
+limited, topic research, never actionable, returned only to `--gene`, `--marker` or `--text`
+and never on the dashboard's feed. A research score says little about one person, and one
+below the 0.75 overlap is still shown with its overlap: nothing is hidden, its reliability is
+stated. Then the mitochondrial
 haplogroup: Haplogrep3 3.3.2 (offline, in its image) on mutserve's homoplasmic chrM calls,
 on PhyloTree Build 17's rCRS tree (`phylotree-rcrs@17.3`); the chrM positions too few reads
 cover are named beside it, and with more than 1% of chrM uncovered it is unassessed. Then
@@ -913,6 +921,11 @@ still matches, and otherwise "Объяснение ещё не сгенерир�
 the bootstrap's MedlinePlus file.
 
 ## Refreshing
+
+**After the research polygenic scores land, run `scripts/bootstrap.sh` once**: a run without
+their scoring files is refused, naming the bootstrap, so a refresh fails until they are
+fetched. A refresh grades through `genokeeper run`, so each new run carries the research
+statements and `genokeeper changes` counts them under research, listing one only when named.
 
 ```bash
 uv run genokeeper refresh             # newest releases, a run when one is due, the Changes tab

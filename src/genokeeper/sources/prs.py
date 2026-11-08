@@ -8,9 +8,15 @@ no odds ratio, and the order would rank it as one). The decile is what the user 
 for the change feed. Its validity is moderate with a PGS Catalog evaluation in
 that population and limited otherwise, or when pgsc_calc assigned the population with low
 confidence. A score our target matches below `MIN_OVERLAP` of its variants is unassessed,
-its reason the rate; one pgsc_calc gave no percentile at a passing rate is unassessed for
-that reason. A weak score (slice 3g) adds `WEAK_REASON` last, scored or not, and each
-condition no score qualifies for is one unassessed `pgsc_calc:not-covered:<slug>`.
+its reason the rate, and what pgsc_calc computed is kept in the claim's `WITHHELD` list
+for the agent (`sources.withheld`); one pgsc_calc gave no percentile at a passing rate is
+unassessed for that reason. A weak score (slice 3g) adds `WEAK_REASON` last, scored or not,
+and each condition no score qualifies for is one unassessed `pgsc_calc:not-covered:<slug>`.
+
+A research score (`ResearchScoreSource`, a research layer: `sources.research`) is one
+`pgsc_calc:research:<PGS ID>` statement, limited and under the research topic, whatever its
+overlap (given first in its reason): nothing is hidden from the agent, and its reliability
+is stated.
 
 APOE is one gene-level statement (`apoe:APOE`, gene APOE, under risks) from our calls at
 the ClinVar claims of rs429358 C and rs7412 T, with a gene call (the diplotype, at the
@@ -37,12 +43,26 @@ from genokeeper.prs.pgsc import (
     ScoreResult,
     apoe_genotype,
 )
-from genokeeper.prs.scores import NotCovered, Score
+from genokeeper.prs.scores import NotCovered, ResearchScore, Score
 from genokeeper.sources import Collected, Fields, Row, RunContext
-from genokeeper.sources.panel import CLAIM_SCHEMA, grade_claim
+from genokeeper.sources.panel import (
+    CLAIM_SCHEMA,
+    WITHHELD,
+    grade_claim,
+    withheld_entry,
+)
 from genokeeper.store.db import Kind, Level, Topic, Validity
 
 PRS_TOOL = "pgsc_calc"
+PRS_RESEARCH_TOOL = "pgsc_calc_research"
+RESEARCH_SOURCE_LEVEL = "research score: did not pass the selection rule"
+RESEARCH_REASON = (
+    "this score says little about one person: it did not pass the selection rule and is"
+    " shown for research only"
+)
+WITHHELD_SIGNIFICANCE = (
+    "Too few of the score's variants matched for its decile to be reliable."
+)
 DECILE_REASON = (
     "shown in deciles: one genome's score is less precise than its percentile"
     " (Ding et al., Nat Genet 2022)"
@@ -79,6 +99,25 @@ def prs_validity(score: Score, result: ScoreResult) -> tuple[Validity, str | Non
     return Validity.MODERATE, None
 
 
+def _score_effect(result: ScoreResult, scored: bool) -> dict[str, object]:
+    """The statement's effect: a null relative and absolute effect, and the score, whose
+    values are null unless `scored`."""
+    return {
+        "relative": None,
+        "absolute": None,
+        "score": {
+            "percentile": result.percentile if scored else None,
+            "z": result.z if scored else None,
+            "population": result.population,
+            "match_rate": result.match_rate,
+            "z_norm2": result.z_norm2 if scored else None,
+            "decile": decile(result.percentile)
+            if scored and result.percentile is not None
+            else None,
+        },
+    }
+
+
 def _score_row(ctx: RunContext, score: Score, result: ScoreResult) -> Row:
     validity, why = prs_validity(score, result)
     unscored = (
@@ -99,7 +138,7 @@ def _score_row(ctx: RunContext, score: Score, result: ScoreResult) -> Row:
         )
         if r
     ]
-    claim = {
+    claim: Fields = {
         "schema": CLAIM_SCHEMA,
         "type": "pgs",
         "pgs_id": score.pgs_id,
@@ -111,20 +150,22 @@ def _score_row(ctx: RunContext, score: Score, result: ScoreResult) -> Row:
         "licence": score.licence,
         "weak": score.weak,
     }
-    effect = {
-        "relative": None,
-        "absolute": None,
-        "score": {
-            "percentile": result.percentile if scored else None,
-            "z": result.z if scored else None,
-            "population": result.population,
-            "match_rate": result.match_rate,
-            "z_norm2": result.z_norm2 if scored else None,
-            "decile": decile(result.percentile)
-            if scored and result.percentile is not None
-            else None,
-        },
-    }
+    if unscored is not None and result.percentile is not None:
+        claim[WITHHELD] = [
+            withheld_entry(
+                unscored,
+                {
+                    "decile": decile(result.percentile),
+                    "percentile": result.percentile,
+                    "match_rate": result.match_rate,
+                    "population": result.population,
+                },
+                would_be=Kind.FINDING,
+                significance=WITHHELD_SIGNIFICANCE,
+                confirm=None,
+            )
+        ]
+    effect = _score_effect(result, scored)
     statement: Fields = {
         "run_id": ctx.run_id,
         "statement_id": f"{PRS_TOOL}:{score.pgs_id}",
@@ -140,6 +181,57 @@ def _score_row(ctx: RunContext, score: Score, result: ScoreResult) -> Row:
         "actionable": False,
         "topic": str(score.topic),
         "source": PRS_TOOL,
+        "source_id": score.pgs_id,
+        "source_version": PGSC_CALC_VERSION,
+        "points": None,
+    }
+    return Row(None, None, statement)
+
+
+def _research_row(ctx: RunContext, score: ResearchScore, result: ScoreResult) -> Row:
+    scored = result.percentile is not None
+    overlap = (
+        f"score overlap {result.match_rate:.2f}, below {MIN_OVERLAP}"
+        if result.match_rate < MIN_OVERLAP
+        else None
+    )
+    reasons = [
+        r
+        for r in (
+            overlap,
+            None if scored else "pgsc_calc gave no percentile",
+            score.why,
+            DECILE_REASON if scored else None,
+            RESEARCH_REASON,
+        )
+        if r
+    ]
+    claim = {
+        "schema": CLAIM_SCHEMA,
+        "type": "pgs_research",
+        "pgs_id": score.pgs_id,
+        "condition": score.condition,
+        "trait_efo": score.trait_efo,
+        "publication": score.publication,
+        "development_ancestry": score.development_ancestry,
+        "evaluations": [list(e) for e in score.evaluations],
+        "licence": score.licence,
+        "why": score.why,
+    }
+    statement: Fields = {
+        "run_id": ctx.run_id,
+        "statement_id": f"{PRS_TOOL}:research:{score.pgs_id}",
+        "kind": str(Kind.FINDING if scored else Kind.UNASSESSED),
+        "vid": None,
+        "gene": None,
+        "claim": json.dumps(claim, ensure_ascii=False),
+        "validity": str(Validity.LIMITED),
+        "source_level": RESEARCH_SOURCE_LEVEL,
+        "reason": "; ".join(reasons),
+        "effect": json.dumps(_score_effect(result, scored)),
+        "actionable": False,
+        "topic": str(Topic.RESEARCH),
+        "source": PRS_RESEARCH_TOOL,
         "source_id": score.pgs_id,
         "source_version": PGSC_CALC_VERSION,
         "points": None,
@@ -172,6 +264,23 @@ def _not_covered_row(ctx: RunContext, entry: NotCovered) -> Row:
         "points": None,
     }
     return Row(None, None, statement)
+
+
+@dataclass(frozen=True)
+class ResearchScoreSource:
+    """pgsc_calc's result for each research score (`pgsc.parse_results`, pgs_id -> result,
+    one for every score)."""
+
+    scores: Sequence[ResearchScore]
+    results: Mapping[str, ScoreResult]
+    tool: str = PRS_RESEARCH_TOOL
+
+    def collect(self, ctx: RunContext) -> Collected:
+        """One statement per research score."""
+        rows = [_research_row(ctx, s, self.results[s.pgs_id]) for s in self.scores]
+        return Collected(
+            tool=self.tool, rows=rows, extra={}, input_rows=len(rows), dropped={}
+        )
 
 
 @dataclass(frozen=True)

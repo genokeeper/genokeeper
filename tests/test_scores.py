@@ -10,8 +10,10 @@ from genokeeper.prs.scores import (
     POPULATIONS,
     NotCovered,
     load_not_covered,
+    load_research_scores,
     load_scores,
     parse_not_covered,
+    parse_research_scores,
     parse_scores,
     topic_for,
 )
@@ -209,3 +211,85 @@ def test_not_covered_ids_are_unique_slugs() -> None:
 def test_not_covered_unknown_topic_refused() -> None:
     with pytest.raises(ValueError, match="health"):
         parse_not_covered(_not_covered("d", topic="health"))
+
+
+# --- the research layer: scores that do not pass the rule ------------------------------------
+
+_RESEARCH = """
+[[score]]
+pgs_id = "PGS000001"
+condition = "chosen"
+trait_efo = "EFO_1"
+publication = "p"
+development_ancestry = "d"
+evaluations = [["PPM1", "EUR"]]
+licence = "l"
+
+[[research_score]]
+pgs_id = "PGS000002"
+condition = "ADHD"
+trait_efo = "EFO_2"
+publication = "p"
+development_ancestry = "d"
+evaluations = [["PPM2", "AMR"]]
+licence = "l"
+why = "evaluated only on behaviour scales"
+
+[[research_score]]
+pgs_id = "PGS000003"
+condition = "ADHD"
+trait_efo = "EFO_2"
+publication = "p"
+development_ancestry = "d"
+evaluations = [["PPM3", "EUR"]]
+licence = "l"
+why = "evaluated only on questionnaires"
+"""
+
+
+def test_a_condition_can_hold_several_research_scores() -> None:
+    research = parse_research_scores(_RESEARCH)
+    assert [(s.pgs_id, s.condition) for s in research] == [
+        ("PGS000002", "ADHD"),
+        ("PGS000003", "ADHD"),
+    ]
+    assert research[0].why == "evaluated only on behaviour scales"
+    assert research[0].evaluations == (("PPM2", "AMR"),)
+
+
+@pytest.mark.parametrize(
+    ("text", "match"),
+    [
+        (re.sub(r'why = "evaluated only on behaviour scales"\n', "", _RESEARCH), "why"),
+        (_RESEARCH.replace('"evaluated only on behaviour scales"', '"  "'), "why"),
+        (_RESEARCH.replace("PGS000002", "PGS000001"), "chosen"),
+        (_RESEARCH.replace("PGS000003", "PGS000002"), "duplicate"),
+        (_RESEARCH.replace('"PPM2", "AMR"', '"PPM2", "Hispanic"'), "ancestry"),
+    ],
+)
+def test_a_wrong_research_score_is_refused(text: str, match: str) -> None:
+    with pytest.raises(ValueError, match=match):
+        parse_research_scores(text)
+
+
+def test_the_research_list_is_separate_from_the_chosen_one() -> None:
+    assert [s.pgs_id for s in parse_scores(_RESEARCH)] == ["PGS000001"]
+    assert parse_research_scores("") == ()
+
+
+def test_the_shipped_research_scores() -> None:
+    """Every `[[research_score]]` of the packaged list parses (`why` included) and none
+    repeats a chosen score."""
+    research = load_research_scores()
+    assert len(research) == 27
+    chosen = {s.pgs_id for s in load_scores()}
+    assert not {s.pgs_id for s in research} & chosen
+    assert all(s.why.strip() and s.evaluations for s in research)
+    assert sum(s.condition == "ADHD" for s in research) == 2  # several per condition
+    assert {s.condition for s in research} >= {
+        "autism spectrum disorder",
+        "intelligence quotient",
+        "years of education",
+        "hand grip strength",
+        "overweight and obesity",
+    }

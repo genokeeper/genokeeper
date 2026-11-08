@@ -11,6 +11,10 @@ comparison, where it would never match and leave the grade silently limited.
 
 A score may carry `weak` (slice 3g), and the same file names the conditions no score
 qualifies for (`load_not_covered`), each refused if a chosen score also names it.
+
+The same file's `research_score` tables (`load_research_scores`) are scores that do not pass
+the selection rule and are computed anyway: each has the fields of a score and a required
+`why`, none repeats a chosen score, and a condition can hold several.
 """
 
 import functools
@@ -18,6 +22,7 @@ import re
 import tomllib
 from dataclasses import dataclass
 from importlib.resources import files
+from typing import Any
 
 from genokeeper.store.db import Topic
 
@@ -74,36 +79,34 @@ def topic_for(efo_id: str) -> Topic:
     return _efo_topics().get(efo_id, Topic.RESEARCH)
 
 
+def _score(entry: dict[str, Any]) -> Score:
+    if set(entry) - {"weak"} != set(_FIELDS):
+        raise ValueError(f"score fields {sorted(entry)}: expected {sorted(_FIELDS)}")
+    weak = entry.get("weak", False)
+    if weak is not True and weak is not False:
+        raise ValueError(f"{entry['pgs_id']}: weak {weak!r} is not a boolean")
+    evaluations = tuple((str(p), str(a)) for p, a in entry["evaluations"])
+    wrong = [a for _, a in evaluations if a not in (*POPULATIONS, MIXED)]
+    if not evaluations or wrong:
+        raise ValueError(f"{entry['pgs_id']}: evaluation ancestry {wrong}")
+    return Score(
+        pgs_id=entry["pgs_id"],
+        evaluations=evaluations,
+        condition=entry["condition"],
+        trait_efo=entry["trait_efo"],
+        topic=topic_for(entry["trait_efo"]),
+        publication=entry["publication"],
+        development_ancestry=entry["development_ancestry"],
+        licence=entry["licence"],
+        weak=weak,
+    )
+
+
 def parse_scores(text: str) -> tuple[Score, ...]:
     """The scores of a `scores.toml` text; `ValueError` for a missing field, a duplicate
     PGS ID or condition, an evaluation outside `POPULATIONS` and `MIXED`, or a `weak` that
     is not a boolean."""
-    scores: list[Score] = []
-    for entry in tomllib.loads(text)["score"]:
-        if set(entry) - {"weak"} != set(_FIELDS):
-            raise ValueError(
-                f"score fields {sorted(entry)}: expected {sorted(_FIELDS)}"
-            )
-        weak = entry.get("weak", False)
-        if weak is not True and weak is not False:
-            raise ValueError(f"{entry['pgs_id']}: weak {weak!r} is not a boolean")
-        evaluations = tuple((str(p), str(a)) for p, a in entry["evaluations"])
-        wrong = [a for _, a in evaluations if a not in (*POPULATIONS, MIXED)]
-        if not evaluations or wrong:
-            raise ValueError(f"{entry['pgs_id']}: evaluation ancestry {wrong}")
-        scores.append(
-            Score(
-                pgs_id=entry["pgs_id"],
-                evaluations=evaluations,
-                condition=entry["condition"],
-                trait_efo=entry["trait_efo"],
-                topic=topic_for(entry["trait_efo"]),
-                publication=entry["publication"],
-                development_ancestry=entry["development_ancestry"],
-                licence=entry["licence"],
-                weak=weak,
-            )
-        )
+    scores = [_score(entry) for entry in tomllib.loads(text)["score"]]
     for key in ("pgs_id", "condition"):
         values = [getattr(s, key) for s in scores]
         if len(set(values)) != len(values):
@@ -114,6 +117,38 @@ def parse_scores(text: str) -> tuple[Score, ...]:
 def load_scores() -> tuple[Score, ...]:
     """The packaged score list, in its order."""
     return parse_scores(_resource("scores.toml"))
+
+
+@dataclass(frozen=True, kw_only=True)
+class ResearchScore(Score):
+    """A score that does not pass the selection rule, and `why`."""
+
+    why: str
+
+
+def parse_research_scores(text: str) -> tuple[ResearchScore, ...]:
+    """The research scores of a `scores.toml` text; `ValueError` for what a score refuses,
+    a `why` missing or blank, a PGS ID repeated or a chosen score's."""
+    data = tomllib.loads(text)
+    chosen = {e["pgs_id"] for e in data.get("score", [])}
+    scores: list[ResearchScore] = []
+    for entry in data.get("research_score", []):
+        why = entry.get("why")
+        if not isinstance(why, str) or not why.strip():
+            raise ValueError(f"{entry['pgs_id']}: a research score needs a why")
+        base = _score({k: v for k, v in entry.items() if k != "why"})
+        if base.pgs_id in chosen:
+            raise ValueError(f"{base.pgs_id}: a chosen score, not a research one")
+        scores.append(ResearchScore(**vars(base), why=why))
+    ids = [s.pgs_id for s in scores]
+    if len(set(ids)) != len(ids):
+        raise ValueError(f"a duplicate pgs_id among {ids}")
+    return tuple(scores)
+
+
+def load_research_scores() -> tuple[ResearchScore, ...]:
+    """The packaged research scores, in their order."""
+    return parse_research_scores(_resource("scores.toml"))
 
 
 @dataclass(frozen=True)

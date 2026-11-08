@@ -93,6 +93,7 @@ Fit the filters to the question:
 | "What about cancer / cardiomyopathy?" | `--text cancer` (gene, condition, classification, id, drug) |
 | "Anything on clopidogrel? My CYP2D6?" | `--topic drugs --text clopidogrel`, `--topic drugs --gene CYP2D6` (see Drugs) |
 | "My genetic risk of diabetes? My APOE?" | `--text diabetes --min-validity limited`, `--gene APOE` (see Polygenic scores and APOE) |
+| "My ADHD score? My IQ? A polygenic score for autism?" | `--text ADHD --min-validity limited` (see Research polygenic scores) |
 | "My haplogroup? My maternal line?" | `--topic ancestry --min-validity limited` (see The haplogroup) |
 | "Do I carry the PPARG diabetes risk variant?" | `--gene PPARG --min-validity limited` or `--marker rs1801282 --min-validity limited` (see Research associations) |
 | "Do I have a deletion in BRCA1?" | `--gene BRCA1 --min-validity limited --min-reliability low` (see Stage 3b screening: deletions) |
@@ -106,7 +107,7 @@ Fit the filters to the question:
 - `--topic`: `risks`, `carrier`, `drugs`, `traits`, `wellness`, `ancestry`, `research`.
 - `--min-reliability`: `high` > `medium` > `low`; default `medium`.
 - `--min-validity`: `strong` > `moderate` > `limited` > `conflicting`; default `moderate`.
-  The research associations (GWAS, hundreds of thousands, and PharmGKB level 3) come back only to a query with
+  The research associations (GWAS, hundreds of thousands, PharmGKB level 3, and the research polygenic scores) come back only to a query with
   `--gene`, `--marker` or `--text`; any other query counts them in `hidden` under
   `research_association`. At `limited` or below, still narrow a broad question with one of
   the three or a `--topic`: with `--list-unassessed` an unnarrowed query is large.
@@ -383,6 +384,10 @@ Each finding has these keys:
       `Moderate`, `Optional`, `No recommendation`, `Unspecified`). The store holds no
       dosing text: never state a dose, a dose change or a drug choice; send the user to a
       prescriber with the gene result.
+
+  for a research polygenic score (`pgs_research`, id `pgsc_calc:research:<PGS ID>`, no
+  marker and no gene, see Research polygenic scores), the keys of a `pgs` claim below but
+  `weak`, and `why`: why the score does not pass the selection rule.
 
   for a polygenic score (`pgs`, id `pgsc_calc:<PGS ID>`, no marker and no gene), with its
   `condition` as above (the condition it stands for; a condition no score covers is a
@@ -691,7 +696,8 @@ Each finding has these keys:
   `no known effect of an extra copy`, or why the genotype is unknown).
 - `sources` — a list; cite every entry with its version:
   - `source`: `clinvar` (APOE's too), `pharmcat`, `pharmgkb`, `pharmgkb_research` (a
-    level-3 PharmGKB annotation, a research association), `pgsc_calc`, `haplogrep3`,
+    level-3 PharmGKB annotation, a research association), `pgsc_calc`, `pgsc_calc_research`
+    (a research polygenic score), `haplogrep3`,
     `gwas_catalog`, `vep` (a predicted finding), `smn` (SMN1 copy number), `expansionhunter`
     (a repeat locus, FMR1's included), `yleaf` (the Y haplogroup), `deletions` (a deletion
     of 50 bp or more), `dosage` (the sex-chromosome dosage, a screening result), `cnv`,
@@ -826,7 +832,9 @@ floor) keeps what it has in the claim's own keys (`claim.alleles`, `claim.caller
   ROH, ancestry) counts under `""`. Three statements carry one for what has no unassessed
   statement of its own: `show hla:table --json` (a withheld gene), `show cnv:screen --json`
   (a large event in a withheld band) and `pharmcat:UGT1A1` (UGT1A1*28's call, which PharmCAT
-  was not given: its diplotype does not read it, and `significance` says what that means).
+  was not given: its diplotype does not read it, and `significance` says what that means). A
+  polygenic score below the overlap also carries one: no table withheld it, its `reason` is
+  the overlap.
 - **Report all of it, in this order.** That the calibration withheld the result, quoting
   `reason`; the value (for a repeat the repeats, their intervals and the reads behind them);
   its reliability, in these words: "the lowest", and why in `reason`'s own terms: "failed its
@@ -897,7 +905,8 @@ The store holds no dosing text, and the answer gives none:
 A question about a common disease's genetic risk ("my risk of diabetes?", "heart?") reads the
 polygenic scores (`pgsc_calc:<PGS ID>`, one per condition, 45 of them, listed in
 `src/genokeeper/resources/pgs/scores.toml`), found with `--text` and the condition, all of
-them with `--text pgsc_calc`; most are `limited`, so add `--min-validity limited`:
+them with `--text pgsc_calc` (research scores too, `pgsc_calc:research:<PGS ID>`, see Research
+polygenic scores); most are `limited`, so add `--min-validity limited`:
 
 - A score whose `validity.reason` holds "weak predictive power" (`claim.weak` true): say
   so, in those words, before the percentile or decile.
@@ -918,7 +927,9 @@ them with `--text pgsc_calc`; most are `limited`, so add `--min-validity limited
   user's closest population; `limited` means it was not (or the population was assigned
   with low confidence, `validity.reason`): say the percentile is less certain there.
 - Quote `match_rate`. A score below 0.75 is unassessed: say it could not be computed and
-  why, never a percentile.
+  why, never a percentile. What pgsc_calc computed anyway is under `claim.withheld` (`value`:
+  `decile`, `percentile`, `match_rate`, `population`; reliability `low`; see Withheld values):
+  report it as withheld, at the lowest reliability, never as the score's decile.
 - Alzheimer's score is built without the APOE region: APOE stands beside it, never in it.
 
 APOE (`apoe:APOE`) is the ε2/ε3/ε4 diplotype from the user's calls at rs429358 and rs7412,
@@ -926,6 +937,35 @@ its validity the weaker of ClinVar's claims at the two; its call is in `gene_cal
 diplotype and what ClinVar's claims say of its alleles (`show` the `clinvar:` claims at the
 two SNPs), never a number for the user's risk of dementia. An unphased double heterozygote
 (ε2/ε4 or ε1/ε3) is unassessed: say which two it could be.
+
+## Research polygenic scores
+
+Scores that do not pass the selection rule (27 of them, `pgsc_calc:research:<PGS ID>`, from
+`[[research_score]]` in `src/genokeeper/resources/pgs/scores.toml`) are computed in a second
+pgsc_calc run and stored as research: `limited`, topic `research`, never actionable, hidden
+from every query that names no gene, marker or text and from the dashboard's feed. Find one
+with `--text <condition> --min-validity limited` (`ADHD`, `autism`, `intelligence`, `bipolar`,
+`schizophrenia`, `neuroticism`, ...); `--text pgsc_calc:research:` lists them all. A condition
+can have several (ADHD has two; `claim.why` tells them apart).
+
+- Never present one as a risk, an IQ or a diagnosis, and never as a finding about the person.
+  A research score says little about one person: say so, in those words, before anything
+  else, and quote `claim.why`: why it does not pass the rule.
+- `validity.reason` holds `claim.why`, the deciles wording and that sentence; it starts with
+  the overlap when the score's overlap is below 0.75. A low-overlap research score is still
+  shown, with that overlap: give it, and say the number is less reliable for it.
+- Say what it was evaluated on, from `claim.why`, never the score's name: the ADHD and autism
+  scores were evaluated on behaviour and cognition scales (and hearing difficulty), never on
+  a diagnosis, so a high decile is not a diagnosis of ADHD or autism. The IQ score
+  (`intelligence quotient`, and `fluid intelligence`) is not a person's IQ.
+- Give the decile as for a chosen score (`effect.score.decile`, the population,
+  `match_rate`), a relative standing in the reference panel and nothing more. Never a
+  probability, a percentile as a result about the person, or advice.
+- A chosen score (`pgsc_calc:<PGS ID>`) is not one of these, and a `not-covered` statement
+  may stand beside a research score for the same condition: the rule still says the condition
+  is not covered.
+- A store from a run before this layer holds none: say that run did not compute
+  them.
 
 ## Research associations
 

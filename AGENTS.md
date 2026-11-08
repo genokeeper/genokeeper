@@ -37,9 +37,9 @@ documents it links to.
   allele-fraction guard). The `foundation` table of 2026-11-05 on HG002 PCR-free, HG002 PCR, HG003
   and HG004 sets the sex-dosage and allele-fraction bounds; identity and coverage use design
   thresholds.
-- Slice 3g (2026-10-30): 34 more polygenic scores by 1d's rule read strictly, 24 conditions
-  named not covered, a weak-power wording; six single-gene traits (2026-11-02: FUT2, ABCC11,
-  MC1R, HERC2, AMPD1, CCR5Δ32).
+- Slice 3g (2026-10-30): 34 more polygenic scores by 1d's rule read strictly, 24 named not covered,
+  a weak-power wording; six single-gene traits (2026-11-02: FUT2, ABCC11, MC1R, HERC2, AMPD1, CCR5Δ32).
+- 3g research layer (2026-11-08): 27 scores that fail 1d's rule, shown labelled; no real run yet.
 - Stage 3, slice 3d calibrated (2026-11-06): depth copy number (DELLY cnv, CNVpytor),
   insertions (INSurVeyor, Dysgu, Scramble), paralog loci (Parascopy, Gauchian for GBA1, KILDA for
   Lp(a)) and the Tier 4 carrier list. AMY1 is withheld and a mobile element only Scramble called

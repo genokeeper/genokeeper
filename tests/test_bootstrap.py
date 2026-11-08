@@ -65,7 +65,7 @@ from genokeeper.prs.pgsc import (
     pgsc_calc_dir,
     scoring_file,
 )
-from genokeeper.prs.scores import load_scores
+from genokeeper.prs.scores import load_research_scores, load_scores
 from genokeeper.regions import (
     AUTOSOMES,
     CHRX_AMPLICONIC,
@@ -1510,6 +1510,46 @@ def test_pgs_scoring_files_checked_against_their_published_md5(
     assert len(Path(env["CURL_LOG"]).read_text().splitlines()) == len(calls)
 
 
+def test_research_scoring_files_are_fetched_without_touching_the_chosen(
+    lab: dict[str, str], tmp_path: Path
+) -> None:
+    """A lab that holds the chosen scoring files gets only the research ones, each md5
+    checked: a chosen file fetched again could come back re-harmonised and move the
+    chosen run's cache key."""
+    env, serve = _serving(lab, tmp_path)
+    ids = [s.pgs_id for s in load_research_scores()]
+    chosen = [s.pgs_id for s in load_scores()]
+    for i in [*chosen, *ids]:
+        name = f"{i}_hmPOS_GRCh38.txt.gz"
+        (serve / name).write_bytes(gzip.compress(f"#pgs_id={i}\n".encode()))
+        md5 = hashlib.md5((serve / name).read_bytes()).hexdigest()
+        (serve / f"{name}.md5").write_text(f"{md5}  {name}\n")
+    home = Path(lab["GENOKEEPER_HOME"])
+    assert _run(env, "step_pgs_scores").returncode == 0
+    before = {i: scoring_file(home, i).read_bytes() for i in chosen}
+    calls = len(Path(env["CURL_LOG"]).read_text().splitlines())
+    name = f"{ids[0]}_hmPOS_GRCh38.txt.gz"
+    (serve / f"{name}.md5").write_text(f"{'0' * 32}  {name}\n")
+    refused = _run(env, "step_pgs_research_scores")
+    assert f"md5 mismatch for {PGS_SCORES_BASE}/{ids[0]}/" in refused.stderr
+    assert not scoring_file(home, ids[0]).exists()
+    assert (
+        _run(env, "check=1; step_pgs_research_scores").stdout
+        == f"missing: {len(ids)} PGS Catalog research scoring files"
+        f" ({PGS_SCORES_BASE}/)\n"
+    )
+    md5 = hashlib.md5((serve / name).read_bytes()).hexdigest()
+    (serve / f"{name}.md5").write_text(f"{md5}  {name}\n")
+    done = _run(env, "step_pgs_research_scores")
+    assert done.returncode == 0, done.stderr
+    assert all(scoring_file(home, i).is_file() for i in ids)
+    assert {i: scoring_file(home, i).read_bytes() for i in chosen} == before
+    fetched = Path(env["CURL_LOG"]).read_text().splitlines()[calls:]
+    assert not [c for c in fetched if any(f"/{i}/" in c for i in chosen)]
+    again = _run(env, "step_pgs_scores; check=1; step_pgs_scores")
+    assert (again.returncode, again.stdout) == (0, "")
+
+
 def test_pgs_panel_moved_from_prefetch_when_its_md5_matches(
     lab: dict[str, str], tmp_path: Path
 ) -> None:
@@ -1648,13 +1688,14 @@ def test_pgs_tools_pinned_by_sha256(lab: dict[str, str], tmp_path: Path) -> None
 
 def test_pgs_pins_match_genokeeper(lab: dict[str, str]) -> None:
     """The versions, commit and files the script pins are the ones `genokeeper.prs` reads:
-    every chosen score, in order."""
+    every chosen score, then every research score, in order."""
     shown = _run(
         lab,
         'echo "$nextflow_version"; echo "$nf_schema_version"; echo "$pgsc_calc_commit";'
-        ' echo "$pgs_panel_name"; echo "$pgs_panel_pvar"; echo $pgs_ids',
+        ' echo "$pgs_panel_name"; echo "$pgs_panel_pvar"; echo $pgs_ids;'
+        " echo $pgs_research_ids",
     )
-    nextflow, nf_schema, commit, panel, full, ids = shown.stdout.splitlines()
+    nextflow, nf_schema, commit, panel, full, ids, research = shown.stdout.splitlines()
     assert (nextflow, nf_schema, commit, panel, full) == (
         NEXTFLOW_VERSION,
         NF_SCHEMA_VERSION,
@@ -1663,6 +1704,7 @@ def test_pgs_pins_match_genokeeper(lab: dict[str, str]) -> None:
         PANEL_PVAR_NAME,
     )
     assert ids.split() == [s.pgs_id for s in load_scores()]
+    assert research.split() == [s.pgs_id for s in load_research_scores()]
 
 
 # --- slice 1c: MedlinePlus Genetics summaries -----------------------------------------------

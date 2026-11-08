@@ -660,3 +660,285 @@ why = "trained and evaluated only in UK Biobank"
 condition = "FEV1"
 topic = "wellness"
 why = "evaluated only in UK Biobank or for COPD"
+
+# --- research scores -----------------------------------------------------------------------
+#
+# Scores that do not pass the selection rule above, computed and shown anyway (the owner's
+# request, 2026-11-08) with the reason in `why`, in pgsc_calc:research:<PGS ID> statements
+# (genokeeper.sources.prs). Fields as a score's, plus `why`; a condition may hold several, and
+# none repeats a chosen score. Adding one needs only a table here and its id in
+# scripts/bootstrap.sh's pgs_research_ids. Metadata and evaluations from the PGS Catalog REST
+# API (/rest/score/<id> and /rest/performance/search?pgs_id=<id>), read 2026-11-08; `why` from
+# research note R8 (scores) of the closing design where it names the score, else from those
+# evaluations. At most three evaluations per population code, as above; PPM019856 (Genes &
+# Health, tagged European by the catalog) is written CSA, per R8.
+
+[[research_score]]
+pgs_id = "PGS002746"  # PRS_ADHD, 513,659 variants, Genome-wide significant variants
+condition = "ADHD"
+trait_efo = "MONDO_0007743"  # attention deficit-hyperactivity disorder
+publication = "Lahey BB et al., J Psychiatr Res 2022, doi:10.1016/j.jpsychires.2022.06.019"
+development_ancestry = "GWAS EUR 96.2%, EAS 3.5%, NR 0.3%"
+evaluations = [["PPM014922", "EUR"], ["PPM014919", "EUR"], ["PPM014921", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "evaluated only on behaviour and cognition scales in 4,483 children of the ABCD study (a general problems factor, an ADHD symptom factor, conduct, impulsivity, executive functioning; Lahey 2022) and on hearing difficulty in UK Biobank, never on a diagnosis of ADHD"
+
+[[research_score]]
+pgs_id = "PGS003753"  # PRS35445_ADHD, 35,445 variants, Genome-wide significant SNPs
+condition = "ADHD"
+trait_efo = "MONDO_0007743"  # attention deficit-hyperactivity disorder
+publication = "Sato JR et al., Genes Brain Behav 2023, doi:10.1111/gbb.12838"
+development_ancestry = "GWAS EUR 96.2%, EAS 3.5%, NR 0.3%"
+evaluations = [["PPM018515", "AMR"], ["PPM018516", "AMR"], ["PPM018517", "AMR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "only 35,445 variants, below the rule's 100,000, and evaluated only in 237 Brazilian people on a questionnaire ADHD score (DAWBA) and on brain-network measures (Sato 2023), never on a diagnosis of ADHD"
+
+[[research_score]]
+pgs_id = "PGS002790"  # ASD_SDPR, 916,713 variants, SDPR
+condition = "autism spectrum disorder"
+trait_efo = "MONDO_0005258"  # autism spectrum disorder
+publication = "Gui Y et al., Transl Psychiatry 2022, doi:10.1038/s41398-022-02041-6"
+development_ancestry = "GWAS EUR 100%"
+evaluations = [["PPM015302", "EUR"], ["PPM015303", "EUR"], ["PPM015304", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "evaluated only on child behaviour scales and cognition in ABCD and on cognition in UK Biobank (62 evaluations, Gui 2022), never on a diagnosis of autism"
+
+[[research_score]]
+pgs_id = "PGS003724"  # IQ, 6,683,248 variants, SBLUP
+condition = "intelligence quotient"
+trait_efo = "EFO_0004337"  # intelligence
+publication = "Hatoum AS et al., Biol Psychiatry 2022, doi:10.1016/j.biopsych.2022.06.034"
+development_ancestry = "GWAS EUR 100%"
+evaluations = [["PPM018418", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "its only evaluation is of IQ in 916 Colorado twins (R2 0.12; Hatoum 2022), one small cohort whose independence from the training GWAS is not established here; the selection review did not cover intelligence"
+
+[[research_score]]
+pgs_id = "PGS004427"  # X20016.score, 1,059,939 variants, LDpred2
+condition = "fluid intelligence"
+trait_efo = "EFO_0004337"  # intelligence
+publication = "Jung H et al., Commun Biol 2024, doi:10.1038/s42003-024-05874-7"
+development_ancestry = "development EUR 100%"
+evaluations = [["PPM020542", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "trained and evaluated only in UK Biobank on the fluid intelligence test (R2 0.22 without covariates in 56,192 Europeans; Jung 2024), so no independent evaluation"
+
+[[research_score]]
+pgs_id = "PGS003573"  # cont-decay-years_of_edu, 979,739 variants, LDpred2-auto
+condition = "years of education"
+trait_efo = "EFO_0011015"  # educational attainment
+publication = "Ding Y et al., Nature 2023, doi:10.1038/s41586-023-06079-4"
+development_ancestry = "development EUR 100%"
+evaluations = [["PPM017501", "EUR"], ["PPM017585", "EUR"], ["PPM017669", "EUR"], ["PPM017753", "mixed"], ["PPM017921", "CSA"], ["PPM018005", "EAS"], ["PPM018089", "AFR"], ["PPM018173", "AFR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "trained and evaluated only in UK Biobank (partial R2 3% in Europeans; Ding 2023), so no independent evaluation; within families, education GWAS effects shrink by about half (Howe 2022)"
+
+[[research_score]]
+pgs_id = "PGS002231"  # portability-ldpred2_years_of_edu, 950,845 variants, LDpred2 (bigsnpr)
+condition = "years of education"
+trait_efo = "EFO_0011015"  # educational attainment
+publication = "Privé F et al., Am J Hum Genet 2022, doi:10.1016/j.ajhg.2021.11.008"
+development_ancestry = "development EUR 100%"
+evaluations = [["PPM012694", "EUR"], ["PPM012695", "EUR"], ["PPM012696", "EUR"], ["PPM012697", "mixed"], ["PPM012698", "CSA"], ["PPM012699", "EAS"], ["PPM012700", "AFR"], ["PPM012701", "AFR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "trained and evaluated only in UK Biobank (partial r 0.20, about 4% of the variance, in held-out Europeans; Prive 2022), so no independent evaluation; within families, education GWAS effects shrink by about half (Howe 2022)"
+
+[[research_score]]
+pgs_id = "PGS002786"  # BD_SDPR, 948,996 variants, SDPR
+condition = "bipolar disorder"
+trait_efo = "MONDO_0004985"  # bipolar disorder
+publication = "Gui Y et al., Transl Psychiatry 2022, doi:10.1038/s41398-022-02041-6"
+development_ancestry = "GWAS EUR 100%"
+evaluations = [["PPM015054", "EUR"], ["PPM015055", "EUR"], ["PPM015056", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "evaluated only on child behaviour scales and cognition in ABCD and on cognition and brain imaging in UK Biobank (76 evaluations, Gui 2022), never on bipolar disorder"
+
+[[research_score]]
+pgs_id = "PGS000133"  # SCZ_BVU, 604,645 variants, PRS-CS
+condition = "schizophrenia"
+trait_efo = "MONDO_0005090"  # schizophrenia
+publication = "Zheutlin AB et al., Am J Psychiatry 2019, doi:10.1176/appi.ajp.2019.18091085"
+development_ancestry = "GWAS EUR 94%, EAS 6%"
+evaluations = [["PPM000413", "EUR"], ["PPM000417", "EUR"], ["PPM038704", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "the runner-up to the chosen PGS000134 (one score per condition): evaluated on schizophrenia in Vanderbilt's BioVU (OR 1.69, AUC 0.60, 110 cases; Zheutlin 2019), a smaller evaluation with fewer variants"
+
+[[research_score]]
+pgs_id = "PGS002342"  # mental_NEUROTICISM.BOLT-LMM, 1,109,311 variants, BOLT-LMM
+condition = "neuroticism"
+trait_efo = "EFO_0007660"  # neuroticism measurement
+publication = "Weissbrod O et al., Nat Genet 2022, doi:10.1038/s41588-022-01036-9"
+development_ancestry = "GWAS EUR 100%"
+evaluations = [["PPM013107", "AFR"], ["PPM013156", "EAS"], ["PPM013205", "EUR"], ["PPM013254", "CSA"], ["PPM038319", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "trained on a UK Biobank GWAS and evaluated only in UK Biobank (incremental R2 3.1% in Europeans; Weissbrod 2022), so no independent evaluation"
+
+[[research_score]]
+pgs_id = "PGS004451"  # disease.F41.score, 1,059,939 variants, LDpred2
+condition = "other anxiety disorders"
+trait_efo = "MONDO_0005618"  # anxiety disorder
+publication = "Jung H et al., Commun Biol 2024, doi:10.1038/s42003-024-05874-7"
+development_ancestry = "development EUR 100%"
+evaluations = [["PPM020566", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "trained and evaluated only in UK Biobank on ICD-10 F41 (OR 1.19 in 56,192 Europeans; Jung 2024), so no independent evaluation"
+
+[[research_score]]
+pgs_id = "PGS002209"  # portability-ldpred2_more_evening, 955,439 variants, LDpred2 (bigsnpr)
+condition = "chronotype"
+trait_efo = "EFO_0008328"  # chronotype measurement
+publication = "Privé F et al., Am J Hum Genet 2022, doi:10.1016/j.ajhg.2021.11.008"
+development_ancestry = "development EUR 100%"
+evaluations = [["PPM012519", "EUR"], ["PPM012520", "EUR"], ["PPM012521", "EUR"], ["PPM012522", "mixed"], ["PPM012523", "CSA"], ["PPM012524", "EAS"], ["PPM012525", "AFR"], ["PPM012526", "AFR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "trained and evaluated only in UK Biobank (partial r 0.22 in held-out Europeans; Prive 2022), so no independent evaluation"
+
+[[research_score]]
+pgs_id = "PGS000205"  # RISK_PC_COGA, 1,110,737 variants, PRS-CS
+condition = "risk tolerance"
+trait_efo = "EFO_0008579"  # risk-taking behaviour
+publication = "Barr PB et al., Transl Psychiatry 2020, doi:10.1038/s41398-020-00865-8"
+development_ancestry = "GWAS EUR 100%"
+evaluations = [["PPM000627", "EUR"], ["PPM038392", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "evaluated only on alcohol use disorder in COGA (delta R2 1.6%; Barr 2020) and on hearing difficulty in UK Biobank, never on risk tolerance itself"
+
+[[research_score]]
+pgs_id = "PGS000908"  # PRS_Insomnia, 2,746,982 variants, SBayesR
+condition = "insomnia"
+trait_efo = "MONDO_0013600"  # insomnia
+publication = "Campos AI et al., Commun Med (Lond) 2021, doi:10.1038/s43856-021-00046-8"
+development_ancestry = "GWAS EUR 100%"
+evaluations = [["PPM002950", "EUR"], ["PPM002951", "EUR"], ["PPM002952", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "evaluated only on insomnia as an antidepressant side effect in the Australian Genetics of Depression Study (ten drugs; Campos 2021) and on hearing difficulty in UK Biobank, never on insomnia itself"
+
+[[research_score]]
+pgs_id = "PGS004161"  # UKBB_EnsPGS.GCST008972.Urate, 1,005,478 variants, UKBB-EUR.MultiPRS.CV
+condition = "urate"
+trait_efo = "EFO_0004531"  # urate measurement
+publication = "Monti R et al., Am J Hum Genet 2024, doi:10.1016/j.ajhg.2024.06.003"
+development_ancestry = "GWAS EUR 63.1%, EAS 27.5%, AFR 7.4%, SAS 2%, AMR 0.1%; development EUR 100%"
+evaluations = [["PPM019856", "CSA"], ["PPM019857", "CSA"], ["PPM019858", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "no European evaluation outside UK Biobank, its training cohort (R2 0.09 in Europeans; Monti 2024); its one other evaluation labelled European, in Genes & Health (R2 0.08), is a British Bangladeshi and Pakistani cohort"
+
+[[research_score]]
+pgs_id = "PGS003492"  # cont-decay-apoB, 979,739 variants, LDpred2-auto
+condition = "apolipoprotein B"
+trait_efo = "EFO_0004615"  # apolipoprotein B measurement
+publication = "Ding Y et al., Nature 2023, doi:10.1038/s41586-023-06079-4"
+development_ancestry = "development EUR 100%"
+evaluations = [["PPM017420", "EUR"], ["PPM017504", "EUR"], ["PPM017588", "EUR"], ["PPM017672", "mixed"], ["PPM017840", "CSA"], ["PPM017924", "EAS"], ["PPM018008", "AFR"], ["PPM018092", "AFR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "trained and evaluated only in UK Biobank (partial R2 0.15 in Europeans; Ding 2023), so no independent evaluation"
+
+[[research_score]]
+pgs_id = "PGS004799"  # migraine_PRSmixPlus_eur, 4,319,950 variants, PRSmixPlus
+condition = "migraine"
+trait_efo = "MONDO_0005277"  # migraine disorder
+publication = "Truong B et al., Cell Genom 2024, doi:10.1016/j.xgen.2024.100523"
+development_ancestry = "development EUR 100%"
+evaluations = [["PPM021024", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "trained and evaluated in All of Us (incremental R2 1.9% in 9,462 Europeans; Truong 2024), so no evaluation outside its development cohort"
+
+[[research_score]]
+pgs_id = "PGS002143"  # portability-ldpred2_hand_grip_strength, 966,283 variants, LDpred2 (bigsnpr)
+condition = "hand grip strength"
+trait_efo = "EFO_0006941"  # grip strength measurement
+publication = "Privé F et al., Am J Hum Genet 2022, doi:10.1016/j.ajhg.2021.11.008"
+development_ancestry = "development EUR 100%"
+evaluations = [["PPM011991", "EUR"], ["PPM011992", "EUR"], ["PPM011993", "EUR"], ["PPM011994", "mixed"], ["PPM011995", "CSA"], ["PPM011996", "EAS"], ["PPM011997", "AFR"], ["PPM011998", "AFR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "trained and evaluated only in UK Biobank on hand grip strength (partial r 0.26 in held-out Europeans, 0.08 to 0.20 in other ancestries; Prive 2022), so no independent evaluation"
+
+[[research_score]]
+pgs_id = "PGS002254"  # PRS_reported, 1,142,416 variants, LDpred
+condition = "physical activity (self-reported)"
+trait_efo = "EFO_0008002"  # physical activity measurement
+publication = "Kujala UM et al., Med Sci Sports Exerc 2020, doi:10.1249/mss.0000000000002290"
+development_ancestry = "GWAS EUR 100%"
+evaluations = [["PPM012823", "EUR"], ["PPM012824", "EUR"], ["PPM021392", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "the selection review did not cover physical activity; evaluated on leisure-time physical activity in Finnish cohorts (delta R2 0.25% in FTC, 0.24% in NFBC; Kujala 2020) and in HUNT (R2 1.4%), and on waist, BMI, HDL cholesterol, stroke, hypertension and type 2 diabetes in HUNT (Tynkkynen)"
+
+[[research_score]]
+pgs_id = "PGS002255"  # PRS_measured, 1,140,182 variants, LDpred
+condition = "physical activity (measured)"
+trait_efo = "EFO_0008002"  # physical activity measurement
+publication = "Kujala UM et al., Med Sci Sports Exerc 2020, doi:10.1249/mss.0000000000002290"
+development_ancestry = "GWAS EUR 100%"
+evaluations = [["PPM012825", "EUR"], ["PPM012826", "EUR"], ["PPM012827", "EUR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "the selection review did not cover physical activity; evaluated on leisure-time activity, moderate-to-vigorous activity and daily steps in Finnish cohorts (delta R2 0.07% to 1.44%; Kujala 2020) and on hearing difficulty in UK Biobank"
+
+[[research_score]]
+pgs_id = "PGS002168"  # portability-ldpred2_log_fat_free_mass, 966,825 variants, LDpred2 (bigsnpr)
+condition = "whole body fat-free mass"
+trait_efo = "EFO_0004995"  # lean body mass
+publication = "Privé F et al., Am J Hum Genet 2022, doi:10.1016/j.ajhg.2021.11.008"
+development_ancestry = "development EUR 100%"
+evaluations = [["PPM012191", "EUR"], ["PPM012192", "EUR"], ["PPM012193", "EUR"], ["PPM012194", "mixed"], ["PPM012195", "CSA"], ["PPM012196", "EAS"], ["PPM012197", "AFR"], ["PPM012198", "AFR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "trained and evaluated only in UK Biobank on whole body fat-free mass (partial r 0.45 in held-out Europeans, 0.19 to 0.38 in other ancestries; Prive 2022), so no independent evaluation; also on hearing difficulty"
+
+[[research_score]]
+pgs_id = "PGS002193"  # portability-ldpred2_log_pulse_rate, 858,487 variants, LDpred2 (bigsnpr)
+condition = "pulse rate"
+trait_efo = "OBA_1001087"  # heart rate
+publication = "Privé F et al., Am J Hum Genet 2022, doi:10.1016/j.ajhg.2021.11.008"
+development_ancestry = "development EUR 100%"
+evaluations = [["PPM012391", "EUR"], ["PPM012392", "EUR"], ["PPM012393", "EUR"], ["PPM012394", "mixed"], ["PPM012395", "CSA"], ["PPM012396", "EAS"], ["PPM012397", "AFR"], ["PPM012398", "AFR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "trained and evaluated only in UK Biobank on pulse rate (partial r 0.27 in held-out Europeans, 0.14 to 0.27 in other ancestries; Prive 2022) and on heart-rate response to beta blockers (2,157 UK Biobank Europeans; Sadler), so no independent evaluation"
+
+[[research_score]]
+pgs_id = "PGS002133"  # portability-ldpred2_fat_perc, 995,419 variants, LDpred2 (bigsnpr)
+condition = "body fat percentage"
+trait_efo = "EFO_0007800"  # body fat percentage
+publication = "Privé F et al., Am J Hum Genet 2022, doi:10.1016/j.ajhg.2021.11.008"
+development_ancestry = "development EUR 100%"
+evaluations = [["PPM011919", "EUR"], ["PPM011920", "EUR"], ["PPM011921", "EUR"], ["PPM011922", "mixed"], ["PPM011923", "CSA"], ["PPM011924", "EAS"], ["PPM011925", "AFR"], ["PPM011926", "AFR"], ["PPM020899", "AFR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "trained and evaluated only in UK Biobank on body fat percentage (partial r 0.34 in held-out Europeans, 0.15 to 0.29 in other ancestries; Prive 2022), so no independent evaluation; outside it only raised coronary lesions in PDAY and hearing difficulty"
+
+[[research_score]]
+pgs_id = "PGS003485"  # LDPred2_WHRadjBMI, 785,126 variants, LDpred2
+condition = "BMI-adjusted waist-hip ratio"
+trait_efo = "EFO_0007788"  # BMI-adjusted waist-hip ratio
+publication = "Zhang Y et al., EBioMedicine 2022, doi:10.1016/j.ebiom.2022.104288"
+development_ancestry = "GWAS EUR 100%"
+evaluations = [["PPM017294", "AMR"], ["PPM017317", "AMR"], ["PPM017358", "AMR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "evaluated only on sleep apnoea outcomes (respiratory event index, obstructive sleep apnoea) in 1,115 Hispanic or Latin American people of HCHS/SOL (Zhang 2022), never on waist-hip ratio and not in Europeans"
+
+[[research_score]]
+pgs_id = "PGS002201"  # portability-ldpred2_log_waist_circ, 984,035 variants, LDpred2 (bigsnpr)
+condition = "waist circumference"
+trait_efo = "OBA_1001085"  # waist circumference
+publication = "Privé F et al., Am J Hum Genet 2022, doi:10.1016/j.ajhg.2021.11.008"
+development_ancestry = "development EUR 100%"
+evaluations = [["PPM012455", "EUR"], ["PPM012456", "EUR"], ["PPM012457", "EUR"], ["PPM012458", "mixed"], ["PPM012459", "CSA"], ["PPM012460", "EAS"], ["PPM012461", "AFR"], ["PPM012462", "AFR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "trained and evaluated only in UK Biobank on waist circumference (partial r 0.32 in held-out Europeans, 0.13 to 0.26 in other ancestries; Prive 2022), so no independent evaluation; also on hearing difficulty"
+
+[[research_score]]
+pgs_id = "PGS002813"  # VATadjbmi3_weights_select, 1,125,301 variants, LDpred2
+condition = "visceral adipose tissue volume"
+trait_efo = "OBA_2045224"  # visceral adipose tissue quantity
+publication = "Agrawal S et al., Nat Commun 2022, doi:10.1038/s41467-022-30931-2"
+development_ancestry = "GWAS MAE 100%"
+evaluations = [["PPM015586", "mixed"], ["PPM015592", "EUR"], ["PPM015599", "mixed"], ["PPM015600", "mixed"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "evaluated on visceral fat adjusted for BMI and height only in UK Biobank (a mixed-ancestry sample, OR 2.41 for the top 5%; Agrawal 2022), with triglycerides in ARIC and type 2 diabetes, coronary artery disease and hypertension in UK Biobank, never on visceral fat in an independent cohort"
+
+[[research_score]]
+pgs_id = "PGS002033"  # portability-ldpred2_278, 846,292 variants, LDpred2 (bigsnpr)
+condition = "overweight and obesity"
+trait_efo = "MONDO_0011122"  # obesity disorder
+publication = "Privé F et al., Am J Hum Genet 2022, doi:10.1016/j.ajhg.2021.11.008"
+development_ancestry = "development EUR 100%"
+evaluations = [["PPM011135", "EUR"], ["PPM011136", "EUR"], ["PPM011137", "EUR"], ["PPM011138", "mixed"], ["PPM011139", "CSA"], ["PPM011140", "EAS"], ["PPM011141", "AFR"], ["PPM011142", "AFR"]]
+licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
+why = "trained and evaluated only in UK Biobank on its phecode for overweight, obesity and other hyperalimentation (partial r 0.08 in held-out Europeans, 0.01 to 0.08 in other ancestries; Prive 2022), so no independent evaluation; also on hearing difficulty"

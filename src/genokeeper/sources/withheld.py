@@ -12,11 +12,12 @@ Each source hands over what its tools measured as typed data beside the statemen
 a value exists is never read off display text, and that data reaches the store only inside
 the entry. No measured value (no call, a tool not run): the item stays as it was. `reveal`
 grades the source a second time with nothing withheld, so the entry says what the statement
-would be were the value true, in the source's own words, whatever its rules. Four
+would be were the value true, in the source's own words, whatever its rules. Five
 values have no unassessed statement to reveal, and their sources write the entry themselves:
 an HLA gene in the `hla:table` finding, a large depth event in the `cnv:screen` statement,
-a call of a band no table measured (deletions, depth events, insertions, named loci) and
-UGT1A1*28's call beside PharmCAT's gene result, which is never given it (`sources.pgx`).
+a call of a band no table measured (deletions, depth events, insertions, named loci),
+UGT1A1*28's call beside PharmCAT's gene result, which is never given it (`sources.pgx`), and
+a polygenic score below the overlap (`sources.prs`), which no table withheld.
 """
 
 import json

@@ -305,6 +305,13 @@ PGS019980 PGS001794 PGS012555 PGS004873 PGS000754 PGS002726
 PGS004254 PGS004253 PGS000820 PGS001787 PGS002755 PGS001788
 PGS000705 PGS004614 PGS019967 PGS019973 PGS019983 PGS004885
 PGS000134 PGS002802 PGS000882"
+# The research scores (genokeeper.prs.scores.load_research_scores): scores that do not pass the
+# selection rule, a separate step so that adding one never re-fetches a chosen file.
+pgs_research_ids="PGS002746 PGS003753 PGS002790 PGS003724 PGS004427 PGS003573
+PGS002231 PGS002786 PGS000133 PGS002342 PGS004451 PGS002209
+PGS000205 PGS000908 PGS004161 PGS003492 PGS004799 PGS002143
+PGS002254 PGS002255 PGS002168 PGS002193 PGS002133 PGS003485
+PGS002201 PGS002813 PGS002033"
 # The HGDP+1kGP reference panel (15,953,388,718 B, 2023-10-05), md5 as the PGS Catalog's
 # resources/md5s.txt publishes it (read 2026-10-21).
 pgs_panel_name='pgsc_HGDP+1kGP_v1.tar.zst'
@@ -1253,18 +1260,19 @@ step_pgs_tools() {
 # this disk before they are filed. It is no defence against EBI's own server serving other
 # bytes (the .md5 comes from it too); a re-harmonised file is filed, and the run records
 # each file's sha256 (run.inputs.prs.scores), so the change is never silent.
-step_pgs_scores() {
-  local dir id name url outputs=()
+# pgs_fetch_scores STEP WHAT IDS: those scoring files, under their own step in the manifest.
+pgs_fetch_scores() {
+  local step=$1 what=$2 ids=$3 dir id name url outputs=()
   dir=$lab/pgs/scores
-  for id in $pgs_ids; do outputs+=("$dir/${id}_hmPOS_GRCh38.txt.gz"); done
-  step_done pgs_scores "${outputs[@]}" && return
+  for id in $ids; do outputs+=("$dir/${id}_hmPOS_GRCh38.txt.gz"); done
+  step_done "$step" "${outputs[@]}" && return
   if [ "$check" = 1 ]; then
-    missing "${#outputs[@]} PGS Catalog scoring files ($pgs_scores_base/)"
+    missing "${#outputs[@]} $what ($pgs_scores_base/)"
     return
   fi
   rm -rf "$dir/.download"
   mkdir -p "$dir/.download"
-  for id in $pgs_ids; do
+  for id in $ids; do
     name=${id}_hmPOS_GRCh38.txt.gz
     url=$pgs_scores_base/$id/ScoringFiles/Harmonized/$name
     say "downloading $url"
@@ -1275,12 +1283,20 @@ step_pgs_scores() {
       die "md5 mismatch for $url against $url.md5"
     }
   done
-  for id in $pgs_ids; do
+  for id in $ids; do
     mv "$dir/.download/${id}_hmPOS_GRCh38.txt.gz" "$dir/${id}_hmPOS_GRCh38.txt.gz"
   done
   rm -rf "$dir/.download"
-  record pgs_scores "${outputs[@]}"
-  say "${#outputs[@]} PGS Catalog scoring files -> $dir"
+  record "$step" "${outputs[@]}"
+  say "${#outputs[@]} $what -> $dir"
+}
+
+step_pgs_scores() {
+  pgs_fetch_scores pgs_scores "PGS Catalog scoring files" "$pgs_ids"
+}
+
+step_pgs_research_scores() {
+  pgs_fetch_scores pgs_research_scores "PGS Catalog research scoring files" "$pgs_research_ids"
 }
 
 # pgs_ancestry_build PANEL OUT_DIR: the panel's ancestry positions, by plink2 offline in
@@ -1322,6 +1338,7 @@ step_pgs_panel() {
 step_pgs() {
   step_pgs_tools
   step_pgs_scores
+  step_pgs_research_scores
   step_pgs_panel
 }
 

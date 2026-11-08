@@ -7,8 +7,11 @@ name added here."""
 from genokeeper.sources.gwas import GWAS_TOOL
 from genokeeper.sources.hla import HLA_ASSOCIATION_TOOL
 from genokeeper.sources.pharmgkb import PHARMGKB_RESEARCH_TOOL
+from genokeeper.sources.prs import PRS_RESEARCH_TOOL
 
-RESEARCH_LAYERS = frozenset({GWAS_TOOL, PHARMGKB_RESEARCH_TOOL, HLA_ASSOCIATION_TOOL})
+RESEARCH_LAYERS = frozenset(
+    {GWAS_TOOL, PHARMGKB_RESEARCH_TOOL, HLA_ASSOCIATION_TOOL, PRS_RESEARCH_TOOL}
+)
 
 
 def is_research_layer(source: str | None) -> bool:

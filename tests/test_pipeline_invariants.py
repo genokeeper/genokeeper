@@ -16,6 +16,7 @@ import subprocess
 import sys
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Literal, NoReturn
@@ -146,6 +147,7 @@ from genokeeper.call.deepvariant import (
     deepvariant_args,
 )
 from genokeeper.carrier import genotype
+from genokeeper.changes import report as changes_report
 from genokeeper.checksum import sha256_cached, sha256_file
 from genokeeper.cnv import callers as cnv_callers
 from genokeeper.cnv.screen import LARGE_FILTERED
@@ -194,7 +196,11 @@ from genokeeper.phasing import IN_TRANS_REASON
 from genokeeper.pipeline import STORE_NAME, RunRefused
 from genokeeper.pipeline import pgx_inputs as read_pgx_inputs
 from genokeeper.prs import pgsc
-from genokeeper.prs.scores import load_not_covered, load_scores
+from genokeeper.prs.scores import (
+    load_not_covered,
+    load_research_scores,
+    load_scores,
+)
 from genokeeper.query import Filters, query, show
 from genokeeper.regions import read_bed, subtract
 from genokeeper.repeats import expansionhunter
@@ -979,6 +985,8 @@ def test_run_genome_end_to_end(genome: Genome) -> None:
         "pharmcat",
         "prs_genotypes",
         "pgsc",
+        "prs_genotypes_research",
+        "pgsc_research",
         "haplogroup",
         "gwas_alleles",
         "gwas_genotypes",
@@ -1027,7 +1035,7 @@ def test_run_genome_end_to_end(genome: Genome) -> None:
     assert genome.pgx.runs == dict.fromkeys(
         ("bcyrius", "aldy", "optitype", "t1k", "pharmcat"), 1
     ) | {"aldy": 2}  # CYP2D6 and CYP2B6
-    assert genome.nextflow.runs == 1
+    assert genome.nextflow.runs == 2  # the chosen scores' run and the research scores'
     assert genome.haplogrep.runs == 1
     # No HG002 allele is above its normal range, so REViewer draws nothing.
     # Parascopy's depth is the shared step's (`FakeSlice3d`), run once for SMN1 and the
@@ -2857,7 +2865,13 @@ def test_run_writes_polygenic_scores(genome: Genome) -> None:
 
 @pytest.mark.parametrize(
     "missing",
-    ["scoring file", "reference panel", "ancestry positions", "Nextflow"],
+    [
+        "scoring file",
+        "research scoring file",
+        "reference panel",
+        "ancestry positions",
+        "Nextflow",
+    ],
 )
 def test_missing_prs_inputs_refused_before_any_step(
     genome: Genome, missing: str
@@ -2867,6 +2881,9 @@ def test_missing_prs_inputs_refused_before_any_step(
     lab = genome.lab.paths.lab
     {
         "scoring file": pgsc.scoring_file(lab, "PGS000018"),
+        "research scoring file": pgsc.scoring_file(
+            lab, load_research_scores()[0].pgs_id
+        ),
         "reference panel": pgsc.panel_path(lab),
         "ancestry positions": pgsc.ancestry_pvar(lab),
         "Nextflow": pgsc.nextflow_path(lab),
@@ -2874,6 +2891,146 @@ def test_missing_prs_inputs_refused_before_any_step(
     _refused_before_any_step(
         genome, rf"missing input: .*{missing}.*scripts/bootstrap\.sh"
     )
+
+
+def _steps(genome: Genome, run_id: str) -> dict[str, Any]:
+    with connect(genome.store) as con:
+        return _inputs_json(con, run_id)["steps"]
+
+
+def test_research_scores_leave_the_chosen_steps_keys_alone(
+    genome: Genome, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The chosen `prs_genotypes` and `pgsc` steps key on the chosen scoring files alone:
+    the same keys with the research scores as without them, so a run reuses that cache."""
+    first = _steps(genome, _run_genome(genome))
+    assert genome.nextflow.scored == [
+        {s.pgs_id for s in load_scores()},
+        {s.pgs_id for s in load_research_scores()},
+    ]
+    for step in ("prs_genotypes_research", "pgsc_research"):
+        assert first[step]["key"]
+    monkeypatch.setattr(pipeline, "load_research_scores", lambda: ())
+    without = _steps(genome, _run_genome(genome))
+    assert "pgsc_research" not in without
+    for step in ("prs_genotypes", "pgsc"):
+        assert without[step]["key"] == first[step]["key"], step
+        assert without[step]["reused"], step
+    assert genome.nextflow.runs == 2  # the empty research list runs nothing
+
+
+def _research_rows(genome: Genome, run_id: str) -> dict[str, tuple[Any, ...]]:
+    with connect(genome.store) as con:
+        return {
+            row[0]: row[1:]
+            for row in con.execute(
+                "SELECT source_id, kind, validity, reason, topic, actionable, effect"
+                " FROM statement WHERE run_id = ? AND source = 'pgsc_calc_research'",
+                [run_id],
+            ).fetchall()
+        }
+
+
+def test_a_run_stores_one_statement_per_research_score(genome: Genome) -> None:
+    """One statement per research score, from the second pgsc_calc run, a low overlap
+    shown with its overlap; the run records the research scoring files."""
+    research = load_research_scores()
+    low = research[0].pgs_id
+    genome.nextflow.rates[low] = 0.5
+    run_id = _run_genome(genome)
+    rows = _research_rows(genome, run_id)
+    assert set(rows) == {s.pgs_id for s in research}
+    kind, validity, reason, topic, actionable, effect = rows[low]
+    assert (kind, validity, topic, actionable) == (
+        "finding",
+        "limited",
+        "research",
+        False,
+    )
+    assert reason.startswith("score overlap 0.50, below 0.75; ")
+    assert json.loads(effect)["score"]["percentile"] == 90.0
+    with connect(genome.store) as con:
+        inputs = _inputs_json(con, run_id)
+        accounting = con.execute(
+            "SELECT input_rows, findings FROM accounting"
+            " WHERE run_id = ? AND tool = 'pgsc_calc_research'",
+            [run_id],
+        ).fetchone()
+    assert accounting == (len(research), len(research))
+    lab = genome.lab.paths.lab
+    assert inputs["prs_research"]["scores"][low] == {
+        "path": str(pgsc.scoring_file(lab, low)),
+        "sha256": sha256_file(pgsc.scoring_file(lab, low)),
+    }
+    assert Path(inputs["steps"]["pgsc_research"]["path"]).is_relative_to(
+        genome.lab.paths.reports / "work" / "pgsc_research"
+    )
+
+
+def test_a_failing_research_run_refuses_and_keeps_its_own_log(genome: Genome) -> None:
+    """A failed research run is refused with its output under its own step's name; the
+    chosen run's step stays cached."""
+    work = genome.lab.paths.reports / "work"
+    genome.nextflow.fail_research = "ERROR ~ Missing"
+    with pytest.raises(pipeline.RunRefused, match="exit status 1") as refused:
+        _run_genome(genome)
+    kept = work / "pgsc_research-failed"
+    assert str(refused.value).endswith(str(kept / "nextflow.stdout"))
+    assert (kept / "nextflow.stdout").read_text() == "ERROR ~ Missing"
+    assert not (work / "pgsc-failed").exists()
+    assert not [p for p in (work / "pgsc_research").iterdir()]
+    assert [p for p in (work / "pgsc").iterdir() if not p.name.startswith(".")]
+
+
+def test_a_refresh_carries_the_research_scores(
+    genome: Genome, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`genokeeper refresh` grades through `run_genome`, so its new run holds the research
+    statements, and `changes` counts a changed one under research and lists it when
+    named, as any research statement."""
+    paths = genome.lab.paths
+    first = _run_genome(genome)
+    pgs_id = next(
+        s.pgs_id for s in load_research_scores() if s.condition == "chronotype"
+    )
+    genome.nextflow.rates[pgs_id] = 0.6
+    shutil.rmtree(paths.reports / "work" / "pgsc_research")
+    # The analyser differs, so a refresh runs even with every fetch failing.
+    monkeypatch.setattr(refresh, "analyser_identity", lambda: "another")
+    runs: list[str] = []
+
+    def run() -> str:
+        runs.append(_run_genome(genome))
+        return runs[-1]
+
+    record = refresh.refresh(
+        paths,
+        fetch=lambda name: subprocess.CompletedProcess(["fetch", name], 1, "", "no\n"),
+        run=run,
+        explain=None,
+        dashboard=lambda run_id: None,
+        now=lambda: datetime.now(UTC),
+    )
+    assert runs and record.run == runs[-1] != first
+    rows = _research_rows(genome, runs[-1])
+    assert set(rows) == {s.pgs_id for s in load_research_scores()}
+    assert rows[pgs_id][2].startswith("score overlap 0.60, below 0.75; ")
+    args: dict[str, Any] = {
+        "base": first,
+        "run": None,
+        "f": Filters(),
+        "every": True,
+        "gene": None,
+        "marker": None,
+        "text": None,
+    }
+    shown = changes_report(paths.reports, paths.lab, **args)
+    assert shown["research"] == {"details": 1}
+    assert not [c for c in shown["changes"] if c["id"].startswith("pgsc_calc:research")]
+    named = changes_report(paths.reports, paths.lab, **{**args, "text": "chronotype"})
+    assert [(c["id"], c["kind"]) for c in named["changes"]] == [
+        (f"pgsc_calc:research:{pgs_id}", "details")
+    ]
 
 
 def test_run_exports_its_snapshot_and_query_carries_the_contract(

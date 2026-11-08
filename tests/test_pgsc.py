@@ -30,14 +30,24 @@ from genokeeper.panel.build import Claim
 from genokeeper.phasing import Phase
 from genokeeper.prs import pgsc
 from genokeeper.prs.pgsc import APOE_E2, APOE_E4, ScoreResult
-from genokeeper.prs.scores import load_not_covered, load_scores
+from genokeeper.prs.scores import ResearchScore, load_not_covered, load_scores
 from genokeeper.query import Filters, query
-from genokeeper.sources import RunContext, write_collected
+from genokeeper.sources import RunContext, Source, write_collected
 from genokeeper.sources.panel import CLAIM_SCHEMA
-from genokeeper.sources.prs import DECILE_REASON, WEAK_REASON, PrsSource, decile
+from genokeeper.sources.prs import (
+    DECILE_REASON,
+    PRS_RESEARCH_TOOL,
+    RESEARCH_REASON,
+    WEAK_REASON,
+    WITHHELD_SIGNIFICANCE,
+    PrsSource,
+    ResearchScoreSource,
+    decile,
+)
 from genokeeper.store.db import (
     Level,
     RowType,
+    Topic,
     Validity,
     connect,
     start_run,
@@ -438,7 +448,7 @@ def _context(tmp_path: Path, run_id: str) -> RunContext:
     )
 
 
-def _store(tmp_path: Path, source: PrsSource) -> tuple[duckdb.DuckDBPyConnection, str]:
+def _store(tmp_path: Path, source: Source) -> tuple[duckdb.DuckDBPyConnection, str]:
     con = connect(tmp_path / "genomelab.duckdb")
     run_id = start_run(con, {}, {"pgsc_calc": pgsc.PGSC_CALC_VERSION})
     collected = source.collect(_context(tmp_path, run_id))
@@ -793,3 +803,150 @@ def test_scored_pgs_shows_decile_and_z_norm2(tmp_path: Path) -> None:
         "shown in deciles: one genome's score is less precise than its percentile"
         " (Ding et al., Nat Genet 2022)"
     )
+
+
+# --- a low overlap's computed values, kept for the agent (`sources.withheld`) ----------------
+
+
+def test_low_overlap_keeps_what_was_computed_under_withheld(tmp_path: Path) -> None:
+    """The computed decile, percentile, match rate and population go under the claim's
+    `withheld`: the statement stays unassessed, with nothing else moved."""
+    source = PrsSource(scores=[CAD], results={CAD.pgs_id: _result(0.6)}, apoe=())
+    con, _ = _store(tmp_path, source)
+    row = _statement(con, f"pgsc_calc:{CAD.pgs_id}")
+    assert (row["kind"], row["reason"]) == (
+        "unassessed",
+        "score overlap 0.60, below 0.75",
+    )
+    assert json.loads(row["effect"])["score"]["percentile"] is None
+    assert json.loads(row["claim"])["withheld"] == [
+        {
+            "reliability": "low",
+            "reason": "score overlap 0.60, below 0.75",
+            "value": {
+                "decile": 10,
+                "percentile": 90.0,
+                "match_rate": 0.6,
+                "population": "EUR",
+            },
+            "would_be": "finding",
+            "significance": WITHHELD_SIGNIFICANCE,
+            "confirm": None,
+        }
+    ]
+    (accounting,) = con.execute(
+        "SELECT input_rows, findings, unassessed FROM accounting"
+        " WHERE tool = 'pgsc_calc'"
+    ).fetchall()
+    assert accounting == (2, 0, 1)  # the score and APOE, which is dropped
+
+
+@pytest.mark.parametrize(
+    "result",
+    [
+        _result(0.9),  # a passing rate: a finding, nothing withheld
+        ScoreResult(CAD.pgs_id, None, None, "EUR", False, 0.6),  # nothing computed
+    ],
+)
+def test_nothing_is_withheld_without_a_computed_low_overlap_value(
+    tmp_path: Path, result: ScoreResult
+) -> None:
+    source = PrsSource(scores=[CAD], results={CAD.pgs_id: result}, apoe=())
+    con, _ = _store(tmp_path, source)
+    row = _statement(con, f"pgsc_calc:{CAD.pgs_id}")
+    assert "withheld" not in json.loads(row["claim"])
+
+
+# --- the research layer ----------------------------------------------------------------------
+
+_ADHD = ResearchScore(
+    pgs_id="PGS002746",
+    evaluations=(("PPM014922", "EUR"),),
+    condition="ADHD",
+    trait_efo="MONDO_0007743",
+    topic=Topic.RISKS,  # a statement's topic is research, whatever the trait's
+    publication="Lahey BB et al., J Psychiatr Res 2022, doi:10.1016/j.x",
+    development_ancestry="GWAS EUR 96.2%",
+    licence="the catalog's",
+    why="evaluated only on behaviour scales",
+)
+
+
+def _research(rate: float, percentile: float | None = 90.0) -> ResearchScoreSource:
+    result = ScoreResult(_ADHD.pgs_id, percentile, 1.28, "EUR", False, rate, 0.4)
+    return ResearchScoreSource(scores=[_ADHD], results={_ADHD.pgs_id: result})
+
+
+def test_a_research_score_is_one_labelled_statement(tmp_path: Path) -> None:
+    """Its id, a limited validity, a source level naming the failed rule, a reason with
+    its `why`, the deciles wording and that it says little about one person; topic
+    research, never actionable, its score in `effect`."""
+    con, _ = _store(tmp_path, _research(0.9))
+    row = _statement(con, f"pgsc_calc:research:{_ADHD.pgs_id}")
+    assert {
+        k: row[k]
+        for k in (
+            "kind",
+            "vid",
+            "gene",
+            "validity",
+            "source_level",
+            "topic",
+            "actionable",
+            "source",
+            "source_id",
+            "source_version",
+        )
+    } == {
+        "kind": "finding",
+        "vid": None,
+        "gene": None,
+        "validity": "limited",
+        "source_level": "research score: did not pass the selection rule",
+        "topic": "research",
+        "actionable": False,
+        "source": PRS_RESEARCH_TOOL,
+        "source_id": _ADHD.pgs_id,
+        "source_version": pgsc.PGSC_CALC_VERSION,
+    }
+    assert row["reason"].split("; ") == [_ADHD.why, DECILE_REASON, RESEARCH_REASON]
+    assert json.loads(row["effect"]) == {
+        "relative": None,
+        "absolute": None,
+        "score": {
+            "percentile": 90.0,
+            "z": 1.28,
+            "population": "EUR",
+            "match_rate": 0.9,
+            "z_norm2": 0.4,
+            "decile": 10,
+        },
+    }
+    claim = json.loads(row["claim"])
+    assert claim["type"] == "pgs_research"
+    assert (claim["condition"], claim["why"]) == ("ADHD", _ADHD.why)
+    assert "withheld" not in claim
+    (accounting,) = con.execute(
+        "SELECT input_rows, findings, unassessed FROM accounting WHERE tool = ?",
+        [PRS_RESEARCH_TOOL],
+    ).fetchall()
+    assert accounting == (1, 1, 0)
+
+
+def test_a_research_score_below_the_overlap_is_shown_with_it(tmp_path: Path) -> None:
+    """Nothing is hidden from the agent: a low overlap only says so, first in the reason."""
+    con, _ = _store(tmp_path, _research(0.6))
+    row = _statement(con, f"pgsc_calc:research:{_ADHD.pgs_id}")
+    assert row["kind"] == "finding"
+    assert row["reason"].split("; ")[0] == "score overlap 0.60, below 0.75"
+    assert json.loads(row["effect"])["score"]["percentile"] == 90.0
+
+
+def test_a_research_score_pgsc_calc_could_not_score_is_unassessed(
+    tmp_path: Path,
+) -> None:
+    con, _ = _store(tmp_path, _research(0.9, percentile=None))
+    row = _statement(con, f"pgsc_calc:research:{_ADHD.pgs_id}")
+    assert (row["kind"], row["validity"]) == ("unassessed", "limited")
+    assert row["reason"].startswith("pgsc_calc gave no percentile")
+    assert json.loads(row["effect"])["score"]["decile"] is None

@@ -123,7 +123,7 @@ from genokeeper.prs.pgsc import (
     pgsc_calc_dir,
     scoring_file,
 )
-from genokeeper.prs.scores import load_scores
+from genokeeper.prs.scores import load_research_scores, load_scores
 from genokeeper.regions import QC_AUTOSOMES, SEX_REGIONS, giab38_dir
 from genokeeper.sample_identity import DELIVERED_HEADER
 from genokeeper.tools import ToolFailed
@@ -1389,7 +1389,7 @@ def write_prs(lab: GenomeLab, scored: Sequence[int], ancestry: Sequence[int]) ->
     rows = "".join(
         f"rs{p}\t{alleles(p)[1]}\t{alleles(p)[0]}\t0.1\t1\t{p}\n" for p in scored
     )
-    for score in load_scores():
+    for score in (*load_scores(), *load_research_scores()):
         path = scoring_file(home, score.pgs_id)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(
@@ -1422,8 +1422,10 @@ class FakeNextflow:
     """Stands in for `run_tool` in `genokeeper.prs.pgsc`: Nextflow running pgsc_calc keeps
     the target VCF's rows (`vcf`), leaves one task launched with the pinned image
     (`image`, None for an unpinned one) and writes the results at each score's match rate
-    (`rates`, 0.9 by default); `fail`, when set, is what a failing run prints on stdout,
-    beside its `.nextflow.log`. `runs` counts its runs."""
+    (`rates`, 0.9 by default) for the scoring files it was given (`scored`, per run);
+    `vcf` is the chosen scores' run's; `fail`, when set, is what a failing run prints on
+    stdout, beside its `.nextflow.log` (`fail_research`: the research scores' run alone).
+    `runs` counts its runs."""
 
     def __init__(self) -> None:
         self.runs = 0
@@ -1431,6 +1433,8 @@ class FakeNextflow:
         self.vcf: list[str] = []
         self.rates: dict[str, float] = {}
         self.image: str | None = PINNED["plink2"]
+        self.fail_research: str | None = None
+        self.scored: list[set[str]] = []
 
     def __call__(
         self,
@@ -1441,17 +1445,27 @@ class FakeNextflow:
     ) -> str:
         assert env is not None and env["NXF_OFFLINE"] == "true" and cwd is not None
         self.runs += 1
-        if self.fail is not None:
-            (cwd / ".nextflow.log").write_text("log\n")
-            raise ToolFailed(1, args, self.fail, "")
         given = dict(itertools.pairwise(args))
+        scored = {
+            p.name.split("_")[0]
+            for p in Path(given["--scorefile"]).parent.glob("*_hmPOS_GRCh38.txt.gz")
+        }
+        self.scored.append(scored)
+        chosen = scored <= {s.pgs_id for s in load_scores()}
+        fail = self.fail if chosen else self.fail_research or self.fail
+        if fail is not None:
+            (cwd / ".nextflow.log").write_text("log\n")
+            raise ToolFailed(1, args, fail, "")
         sheet = Path(given["--input"]).read_text().splitlines()[1]
         target = Path(f"{sheet.split(',')[1]}.vcf.gz")
-        with gzip.open(target, "rt") as handle:
-            self.vcf = [line for line in handle.read().splitlines() if line[0] != "#"]
+        if chosen:
+            with gzip.open(target, "rt") as handle:
+                self.vcf = [
+                    line for line in handle.read().splitlines() if line[0] != "#"
+                ]
         image = self.image or PINNED["plink2"].split("@")[0] + ":2.00a5.10"
         write_task(Path(given["-w"]), image)
-        rates = {s.pgs_id: self.rates.get(s.pgs_id, 0.9) for s in load_scores()}
+        rates = {pgs_id: self.rates.get(pgs_id, 0.9) for pgs_id in scored}
         write_results(Path(given["--outdir"]), rates)
         return ""
 

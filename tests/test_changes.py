@@ -188,6 +188,27 @@ def test_level_3_never_enters_change_feed(tmp_path: Path) -> None:
     ]
 
 
+def test_research_scores_are_counted_unless_named(tmp_path: Path) -> None:
+    """A new research score, like any research statement: no row, one counted; named by
+    its condition or its id, listed as new."""
+    lab = tmp_path / "lab"
+    research = {
+        "gene": None,
+        "validity": "limited",
+        "source": "pgsc_calc_research",
+        "topic": "research",
+        "claim": {"type": "pgs_research", "condition": "ADHD"},
+    }
+    sid = "pgsc_calc:research:PGS002746"
+    write(tmp_path, D1, [at("clinvar:1", 1001)], [1001])
+    write(tmp_path, D2, [at("clinvar:1", 1001), at(sid, 1002, **research)], [1001])
+    r = changes_of(tmp_path, lab)
+    assert (r["changes"], r["research"]) == ([], {"new": 1})
+    for name in ({"text": "adhd"}, {"text": "PGS002746"}):
+        r = changes_of(tmp_path, lab, **name)
+        assert [(c["id"], c["kind"]) for c in r["changes"]] == [(sid, "new")], name
+
+
 def test_publications_first_list_is_a_baseline(tmp_path: Path) -> None:
     lab = tmp_path / "lab"
     for rid in (D1, D2):

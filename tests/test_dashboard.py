@@ -607,6 +607,33 @@ def test_level_3_never_enters_change_feed(tmp_path: Path) -> None:
     assert [(r["kind"], r["count"]) for r in compared["research"]] == [("new", 1)]
 
 
+def test_a_research_score_is_counted_never_listed_on_the_changes_tab(
+    tmp_path: Path,
+) -> None:
+    reports, lab = tmp_path / "reports", tmp_path / "lab"
+    reports.mkdir(parents=True)
+    research = _at(
+        "pgsc_calc:research:PGS002746",
+        1002,
+        gene=None,
+        validity="limited",
+        source="pgsc_calc_research",
+        topic="research",
+    )
+    unchanged = [_at("clinvar:1", 1001)]
+    calls = [sm.call(_vid(1001)), sm.call(_vid(1002))]
+    con = sm.store(reports / "genomelab.duckdb")
+    try:
+        root = reports / "snapshots"
+        _snapshot(con, root, D1, "20261001", unchanged, calls[:1], [])
+        _snapshot(con, root, D2, "20261001", [*unchanged, research], calls, [])
+    finally:
+        con.close()
+    compared = _changes(reports, lab)["bases"][D1]
+    assert compared["rows"] == {}
+    assert [(r["kind"], r["count"]) for r in compared["research"]] == [("new", 1)]
+
+
 def test_banner_names_failed_sources_with_their_before(tmp_path: Path) -> None:
     reports, lab = tmp_path / "reports", tmp_path / "lab"
     _history(reports)

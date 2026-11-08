@@ -49,7 +49,9 @@ HGDP+1kGP panel's ancestry positions (`prs_genotypes_step`), graded and written 
 pgsc_calc's target VCF, and pgsc_calc on it (`pgsc_step`, `genokeeper.prs.pgsc`), whose
 results a task it cannot show ran offline in a pinned image refuses; stored by `PrsSource`
 with APOE's diplotype from the graded ClinVar claims at its two SNPs (a double
-heterozygote phased with the candidate pairs). The mitochondrial haplogroup comes from
+heterozygote phased with the candidate pairs). The research scores (`research_inputs`) run
+through the same two steps under their own names, keyed apart so the chosen run keeps its
+cache, and are stored by `ResearchScoreSource`. The mitochondrial haplogroup comes from
 Haplogrep3 on mutserve's homoplasmic chrM calls (`genokeeper.haplogroup`), stored by
 `MitoSource`; the research associations from the GWAS Catalog's download, located on the
 panel's variants (`gwas_alleles_step`) and our calls there (`genotypes_step`),
@@ -464,6 +466,7 @@ from genokeeper.prs.pgsc import (
     ContainmentRefused,
     PgscFailed,
     PopSimilarity,
+    ScoreResult,
     ancestry_pvar,
     java_home,
     nextflow_path,
@@ -478,7 +481,12 @@ from genokeeper.prs.pgsc import (
     target_positions,
     write_target_vcf,
 )
-from genokeeper.prs.scores import Score, load_not_covered, load_scores
+from genokeeper.prs.scores import (
+    Score,
+    load_not_covered,
+    load_research_scores,
+    load_scores,
+)
 from genokeeper.qc import judge, mosdepth, run_qc, vcf_stats
 from genokeeper.query import GENOTYPE_UNKNOWN
 from genokeeper.regions import (
@@ -564,7 +572,7 @@ from genokeeper.sources.paralogs import (
 from genokeeper.sources.pgx import PgxSource, ugt1a1_read
 from genokeeper.sources.pharmgkb import PHARMGKB_RESEARCH_TOOL, PharmGkbSource
 from genokeeper.sources.predicted import PredictedSource, clinvar_truncations
-from genokeeper.sources.prs import PrsSource
+from genokeeper.sources.prs import PrsSource, ResearchScoreSource
 from genokeeper.sources.repeats import CFTR_GENE, REPEATS_TOOL, RepeatSource, XDosage
 from genokeeper.sources.roh import RohSource
 from genokeeper.sources.smn import SMN_TOOL, SmnSource
@@ -1710,6 +1718,17 @@ class PrsInputs:
         }
 
 
+def research_inputs(lab: Path, prs: PrsInputs, scores: tuple[Score, ...]) -> PrsInputs:
+    """The research scores' `PrsInputs` beside the chosen scores' `prs`: their own
+    scoring files, the same panel and ancestry positions; refuse (`RunRefused`) a
+    scoring file that is missing, naming the bootstrap."""
+    files = {s.pgs_id: scoring_file(lab, s.pgs_id) for s in scores}
+    for path in files.values():
+        if not path.is_file():
+            raise _bootstrap_missing(f"no PGS Catalog research scoring file {path}")
+    return PrsInputs(scores, files, prs.panel, prs.ancestry)
+
+
 def prs_inputs(lab: Path) -> PrsInputs:
     """The lab's slice-1d inputs (`PrsInputs`); refuse (`RunRefused`) one that is missing,
     naming the bootstrap."""
@@ -1743,11 +1762,12 @@ def prs_genotypes_step(
     fasta_sha: str,
     haploid: Callable[[str, int], bool],
     bcftools: str,
+    step: str = "prs_genotypes",
 ) -> _Step:
     """Our calls at every target position (`target_positions`: each score's and each
     ancestry position), read one chromosome at a time (`calls_at` keeps every record near
-    its alleles in memory), cached by the call step's key and the scoring files', ancestry
-    positions' and FASTA's sha256."""
+    its alleles in memory), cached under `step` by the call step's key and the scoring
+    files', ancestry positions' and FASTA's sha256."""
 
     def build(out: Path) -> None:
         positions = target_positions(
@@ -1766,12 +1786,27 @@ def prs_genotypes_step(
 
     return _cached(
         work,
-        "prs_genotypes",
+        step,
         PRS_GENOTYPES_STEP_VERSION,
         [call.key, *prs.shas.values(), fasta_sha, bcftools],
         PRS_GENOTYPES,
         build,
     )
+
+
+def _pgsc_results(step: _Step, scores: Mapping[str, Path]) -> dict[str, ScoreResult]:
+    """pgsc_calc's results of `step` for each of `scores`; refuse (`RunRefused`) what
+    is unreadable or a score it did not report."""
+    try:
+        results = parse_results(step.path)
+    except (PgscFailed, KeyError, ValueError) as e:
+        raise RunRefused(f"unreadable pgsc_calc results: {_one_line(e)}") from e
+    unreported = sorted(set(scores) - set(results))
+    if unreported:
+        raise RunRefused(
+            f"pgsc_calc reported nothing of {', '.join(unreported)} ({step.path})"
+        )
+    return results
 
 
 def _prs_sites(genotypes: Path, grade: Grade) -> Iterator[tuple[Allele, Called, Level]]:
@@ -1792,16 +1827,17 @@ def pgsc_step(
     prs: PrsInputs,
     panel_sha: str,
     lab: Path,
+    step: str = "pgsc",
 ) -> _Step:
     """pgsc_calc's run (`run_pgsc_calc`) on its target VCF, written from our calls at every
     target position (`genotypes`) graded by `grade` (`write_target_vcf`: an unknown or
-    low call goes in as a no-call), cached under `<work>/pgsc/<key>/` with its results.
+    low call goes in as a no-call), cached under `<work>/<step>/<key>/` with its results.
     The key holds the target VCF's, the scoring files' and the panel's sha256, pgsc_calc's
     commit, Nextflow's version and the images: a grade the calibration table moved
     rebuilds it. Docker not running, pgsc_calc failing, or a task
     the containment check cannot verify refuses the run (`RunRefused`), and nothing of the
     step is kept: a failed Nextflow's stdout and `.nextflow.log` go to
-    `<work>/pgsc-failed/`, which the next failure replaces and the refusal names."""
+    `<work>/<step>-failed/`, which the next failure replaces and the refusal names."""
     with tempfile.TemporaryDirectory(dir=work, prefix=".pgsc-input-") as tmp:
         target = write_target_vcf(
             _prs_sites(genotypes, grade), Path(tmp) / "target.vcf.gz"
@@ -1815,7 +1851,7 @@ def pgsc_step(
             try:
                 run_pgsc_calc(given / target.name, scores, prs.panel, out, lab=lab)
             except ToolFailed as e:
-                kept = work / "pgsc-failed"
+                kept = work / f"{step}-failed"
                 shutil.rmtree(kept, ignore_errors=True)
                 kept.mkdir()
                 (kept / "nextflow.stdout").write_text(e.stdout or "")
@@ -1833,7 +1869,7 @@ def pgsc_step(
             *(IMAGES[name] for name in PGSC_LABELS.values()),
         ]
         try:
-            return _cached(work, "pgsc", PGSC_STEP_VERSION, parts, "results", build)
+            return _cached(work, step, PGSC_STEP_VERSION, parts, "results", build)
         except (DockerUnavailable, ToolFailed, ContainmentRefused) as e:
             raise RunRefused(_one_line(e)) from e
 
@@ -3978,6 +4014,8 @@ def run_genome(
         raise RunRefused(_one_line(e)) from e
     pgx = pgx_inputs(lab)
     prs = prs_inputs(lab)
+    research_scores = load_research_scores()
+    prs_research = research_inputs(lab, prs, research_scores)
     catalog, variants = gwas_inputs(lab)
     annotation, dosage_list = predicted_inputs(lab)
     try:
@@ -4563,16 +4601,32 @@ def run_genome(
         panel_sha=shas["pgs_panel"],
         lab=lab,
     )
-    try:
-        prs_results = parse_results(steps["pgsc"].path)
-    except (PgscFailed, KeyError, ValueError) as e:
-        raise RunRefused(f"unreadable pgsc_calc results: {_one_line(e)}") from e
-    unreported = sorted(set(prs.files) - set(prs_results))
-    if unreported:
-        raise RunRefused(
-            f"pgsc_calc reported nothing of {', '.join(unreported)}"
-            f" ({steps['pgsc'].path})"
+    prs_results = _pgsc_results(steps["pgsc"], prs.files)
+    # The research scores, a second pgsc_calc run on their own positions and steps: the
+    # chosen run's keys do not depend on them.
+    research_results: dict[str, ScoreResult] = {}
+    if prs_research.scores:
+        steps["prs_genotypes_research"] = prs_genotypes_step(
+            work,
+            gvcf=gvcf,
+            call=steps["call"],
+            prs=prs_research,
+            fasta=fasta,
+            fasta_sha=shas["fasta"],
+            haploid=haploid,
+            bcftools=bcftools,
+            step="prs_genotypes_research",
         )
+        steps["pgsc_research"] = pgsc_step(
+            work,
+            genotypes=steps["prs_genotypes_research"].path,
+            grade=grade,
+            prs=prs_research,
+            panel_sha=shas["pgs_panel"],
+            lab=lab,
+            step="pgsc_research",
+        )
+        research_results = _pgsc_results(steps["pgsc_research"], prs_research.files)
     # The superpopulation pgsc_calc finds the user closest to: ROH's AF file, slice 3f's
     # similarity statement.
     similarity: PopSimilarity | None = None
@@ -5031,6 +5085,10 @@ def run_genome(
         apoe_phase=phases.get((APOE_E4, APOE_E2)),
         not_covered=load_not_covered(),
     )
+    prs_research_source = ResearchScoreSource(
+        scores=research_scores,
+        results=research_results,
+    )
     inputs: dict[str, object] = {
         "fastq1": {**_file(fastq1, shas["fastq1"]), "size": fastq1.stat().st_size},
         "fastq2": {**_file(fastq2, shas["fastq2"]), "size": fastq2.stat().st_size},
@@ -5060,6 +5118,7 @@ def run_genome(
             "ugt1a1_28_trusted": bool(trusted),
         },
         "prs": prs.record(shas["pgs_panel"]),
+        "prs_research": prs_research.record(shas["pgs_panel"]),
         "gwas": {
             **_file(catalog, shas["gwas"]),
             "release": gwas["release"],
@@ -5253,6 +5312,7 @@ def run_genome(
                     research_source,
                     pgx_source,
                     prs_source,
+                    prs_research_source,
                     mito_source,
                     gwas_source,
                     predicted_source,
