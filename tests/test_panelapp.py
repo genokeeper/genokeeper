@@ -333,6 +333,17 @@ def test_rare_is_one_limit_at_any_inheritance(
     assert _dropped(collected) == ({} if kept else {"population_frequency": 1})
 
 
+def test_a_genes_own_limit_still_applies(tmp_path: Path) -> None:
+    """Under 0.01 is not enough: a gene's `[bs1_by_gene]` limit (SMAD4's 1e-06) applies too,
+    through the frequency rule `grade_predicted` uses."""
+    assert GRADING.bs1_by_gene["SMAD4"] == 1e-06
+    genes = [("SMAD4", "3", MONO, "ENSG05")]
+    record = _record(gene="SMAD4", gene_id="ENSG05")
+    collected = _collect(tmp_path, record, faf={VID: 5e-06}, genes=genes)
+    assert collected.rows == []
+    assert _dropped(collected) == {"population_frequency": 1}
+
+
 def test_an_unknown_genotype_is_unassessed(tmp_path: Path) -> None:
     unknown = Called(None, "unknown", RowType.PASS, 40, 30, None, None, ("lowq",))
     s = _one(tmp_path, _record(), called=unknown)

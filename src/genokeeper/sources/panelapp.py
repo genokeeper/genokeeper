@@ -10,7 +10,7 @@ only the listed genes (`genelists.LISTED`), which a splice change's statement sa
 A statement (`panelapp:<vid>:<transcript>`, as a variant can have records on two, `predicted:`'s
 convention) stands for a record in a panel gene that `predicted_rule` calls a loss of function
 that passes every LoF gate, or a missense at its calibrated REVEL or AlphaMissense score;
-that `grade_predicted` found carried, and rare by this layer's own limit (`MAX_FAF`); every
+that `grade_predicted` found carried and did not drop for frequency, and under `MAX_FAF`; every
 other record is counted under why. A variant a `predicted:` statement already states keeps it alone
 (`without_repeats`, which runs after the compound-heterozygote promotion, as that can make a
 statement of one). Limited, under research and never actionable: a computer's prediction on
@@ -28,7 +28,7 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from genokeeper.annotate.vep import VepRecord, locus
-from genokeeper.evidence.clinvar import GENOTYPE_REASON
+from genokeeper.evidence.clinvar import BA1_REASON, BS1_REASON, GENOTYPE_REASON
 from genokeeper.evidence.predicted import (
     GENETICIST_NOTE,
     LOF,
@@ -52,10 +52,10 @@ CLASSIFICATION = "predicted, not classified"
 PANEL_SOURCE_LEVEL = "Genomics England PanelApp"
 # The one statement of a layer that could not run.
 FAILED_STATEMENT = "panelapp:panel"
-# This layer's one rarity limit, whatever the gene's inheritance: gnomAD's filtering allele
-# frequency below 1%. `grade_predicted`'s rule (BS1, and BA1's 0.05 alone for a recessive
-# gene, where a pathogenic allele may be common) answers another question, and would call
-# an allele at 4% rare.
+# The rarity limit this layer adds, whatever the gene's inheritance: gnomAD's filtering
+# allele frequency below 1%. `grade_predicted`'s rule still applies beside it, for a gene's
+# own lower limit ([bs1_by_gene]); alone it would call an allele in a recessive gene rare
+# up to BA1's 0.05.
 MAX_FAF = 0.01
 NOT_A_DIAGNOSIS = "this is not a diagnosis"
 ONE_COPY_NOTE = "one copy of a variant in a recessive gene is not a diagnosis"
@@ -155,9 +155,12 @@ def _dropped_reason(
     rule: str, site: Site, grade_reason: str, ctx: RunContext
 ) -> str | None:
     """Why a record under a panel rule is no statement, or None when it qualifies:
-    `grade_predicted`'s carried test, this layer's rarity limit, and the LoF filter."""
+    `grade_predicted`'s carried and frequency tests, this layer's rarity limit, and the
+    LoF filter."""
     if grade_reason == NOT_CARRIED:
         return ABSENT
+    if grade_reason in (BA1_REASON, BS1_REASON):
+        return POPULATION_FREQUENCY
     if site.faf is not None and site.faf >= MAX_FAF:
         return POPULATION_FREQUENCY
     if rule == LOF and failed_gate(site, ctx.grading.predicted) is not None:

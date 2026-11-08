@@ -1064,8 +1064,8 @@ splice change at SpliceAI 0.2 or above. Each one is `limited`, so add
 Rare, probably damaging variants the user carries in Genomics England PanelApp's
 Intellectual disability panel (`panelapp:<vid>:<transcript>`, source `panelapp`, panel 285 at
 version 11.93, `claim.panel_version`): each a PASS variant ClinVar does not classify germline,
-rare (gnomAD's filtering allele frequency below 0.01, at any inheritance, or absent from
-gnomAD), that VEP predicts a loss of function passing every gate of the LoF filter, or a
+rare (gnomAD's filtering allele frequency under 1%, and under the gene's own limit where
+it has one, or absent from gnomAD), that VEP predicts a loss of function passing every gate of the LoF filter, or a
 missense at or above its calibrated REVEL or AlphaMissense score, in one of the panel's
 2,867 genes. A variant that is already a predicted finding (`predicted:<vid>:<transcript>`)
 stays that and is not repeated here, so a rare high-score missense usually appears as a

@@ -1953,15 +1953,16 @@ def _panelapp_layer(
     try:
         gene_panel = load_panel(path)
         collected = collect_panel(gene_panel, predicted, pending)
+        record: dict[str, object] = {
+            **_file(path, sha256_file(path)),
+            "version": gene_panel.version,
+            "genes": len(gene_panel.genes),
+            "failed": None,
+        }
     except Exception as e:  # noqa: BLE001 - the layer's one boundary: recorded, the run goes on
         failed = _one_line(e) or type(e).__name__
         return PanelAppSource(failed_panel(pending, failed)), {"failed": failed}
-    return PanelAppSource(collected), {
-        **_file(path, sha256_file(path)),
-        "version": gene_panel.version,
-        "genes": len(gene_panel.genes),
-        "failed": None,
-    }
+    return PanelAppSource(collected), record
 
 
 # --- research associations (slice 1d) ----------------------------------------------------
