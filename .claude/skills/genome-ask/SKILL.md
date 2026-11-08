@@ -967,8 +967,8 @@ can have several (ADHD has two; `claim.why` tells them apart).
 - A chosen score (`pgsc_calc:<PGS ID>`) is not one of these, and a `not-covered` statement
   may stand beside a research score for the same condition: the rule still says the condition
   is not covered.
-- One the research run could not compute is unassessed, its `validity.reason` saying what
-  failed (found with `--list-unassessed`); give that, never a decile.
+- If the research run failed, every research score is unassessed, its `validity.reason`
+  saying what failed (found with `--list-unassessed`); give that, never a decile.
 - A store from a run before this layer holds none: say that run did not compute
   them.
 

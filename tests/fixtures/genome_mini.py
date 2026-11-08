@@ -114,6 +114,7 @@ from genokeeper.pgx.pharmcat import positions_path
 from genokeeper.pipeline import DYSGU_INS
 from genokeeper.prs.pgsc import (
     NF_SCHEMA_VERSION,
+    SAMPLESET,
     ancestry_pvar,
     java_home,
     nextflow_path,
@@ -1425,7 +1426,8 @@ class FakeNextflow:
     (`rates`, 0.9 by default) for the scoring files it was given (`scored`, per run);
     `vcf` is the chosen scores' run's; `fail`, when set, is what a failing run prints on
     stdout, beside its `.nextflow.log` (`fail_research`: the research scores' run alone);
-    `omit` the scores left out of its results.
+    `omit` the scores left out of its results; `damage_research` writes the research run's
+    score table as bytes no gzip reader takes.
     `runs` counts its runs."""
 
     def __init__(self) -> None:
@@ -1437,6 +1439,7 @@ class FakeNextflow:
         self.fail_research: str | None = None
         self.scored: list[set[str]] = []
         self.omit: set[str] = set()
+        self.damage_research = False
 
     def __call__(
         self,
@@ -1469,6 +1472,11 @@ class FakeNextflow:
         write_task(Path(given["-w"]), image)
         rates = {pgs_id: self.rates.get(pgs_id, 0.9) for pgs_id in scored - self.omit}
         write_results(Path(given["--outdir"]), rates)
+        if self.damage_research and not chosen:
+            table = (
+                Path(given["--outdir"]) / SAMPLESET / "score" / "genomelab_pgs.txt.gz"
+            )
+            table.write_bytes(b"not gzip")
         return ""
 
 

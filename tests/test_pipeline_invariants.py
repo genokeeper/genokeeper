@@ -2953,6 +2953,7 @@ def test_a_run_stores_one_statement_per_research_score(genome: Genome) -> None:
             [run_id],
         ).fetchone()
     assert accounting == (len(research), len(research))
+    assert inputs["prs_research"]["failed"] is None
     lab = genome.lab.paths.lab
     assert inputs["prs_research"]["scores"][low] == {
         "path": str(pgsc.scoring_file(lab, low)),
@@ -2963,30 +2964,24 @@ def test_a_run_stores_one_statement_per_research_score(genome: Genome) -> None:
     )
 
 
-def _chosen_findings(genome: Genome, run_id: str) -> int:
-    with connect(genome.store) as con:
-        row = con.execute(
-            "SELECT count(*) FROM statement"
-            " WHERE run_id = ? AND source = 'pgsc_calc' AND kind = 'finding'",
-            [run_id],
-        ).fetchone()
-    assert row is not None
-    return row[0]
-
-
-def _research_failed(genome: Genome, run_id: str) -> dict[str, str]:
+def _research_failed(genome: Genome, run_id: str) -> str | None:
     with connect(genome.store) as con:
         return _inputs_json(con, run_id)["prs_research"]["failed"]
 
 
-def test_a_failed_research_run_leaves_the_chosen_run_intact(genome: Genome) -> None:
-    """A failed research run is no refusal: every research score is unassessed and says
-    what failed, the failure is in `run.inputs` and its output kept under its own step."""
-    work = genome.lab.paths.reports / "work"
-    genome.nextflow.fail_research = "ERROR ~ Missing"
-    run_id = _run_genome(genome)
+def _chosen_statements(genome: Genome, run_id: str) -> list[tuple[Any, ...]]:
+    with connect(genome.store) as con:
+        return con.execute(
+            "SELECT statement_id, kind, validity, reason, effect, claim FROM statement"
+            " WHERE run_id = ? AND source = 'pgsc_calc' ORDER BY statement_id",
+            [run_id],
+        ).fetchall()
+
+
+def _every_research_score_unassessed(genome: Genome, run_id: str) -> dict[str, Any]:
     rows = _research_rows(genome, run_id)
     assert set(rows) == {s.pgs_id for s in load_research_scores()}
+    assert len(rows) == 27
     for row in rows.values():
         assert (row[0], row[1], row[3], row[4], row[5]) == (
             "unassessed",
@@ -2995,10 +2990,55 @@ def test_a_failed_research_run_leaves_the_chosen_run_intact(genome: Genome) -> N
             False,
             None,
         )
-        assert row[2].startswith("pgsc_research failed: ")
-        assert "exit status 1" in row[2]
-    assert _chosen_findings(genome, run_id) == len(load_scores())
-    assert set(_research_failed(genome, run_id)) == {"pgsc_research"}
+        assert row[2].startswith("research run failed: ")
+    return rows
+
+
+def _damage_truncated(genome: Genome) -> None:
+    path = pgsc.scoring_file(genome.lab.paths.lab, load_research_scores()[3].pgs_id)
+    path.write_bytes(path.read_bytes()[:20])
+
+
+def _damage_unreadable(genome: Genome) -> None:
+    pgsc.scoring_file(genome.lab.paths.lab, load_research_scores()[3].pgs_id).chmod(0)
+
+
+def _damage_results(genome: Genome) -> None:
+    genome.nextflow.damage_research = True
+
+
+@pytest.mark.parametrize(
+    "damage", [_damage_truncated, _damage_unreadable, _damage_results]
+)
+def test_anything_wrong_in_the_research_layer_leaves_the_chosen_run(
+    genome: Genome, damage: Any
+) -> None:
+    """One boundary, one rule: whatever goes wrong inside, the run completes, the chosen
+    statements do not move, all 27 research scores are unassessed with the error's text
+    and the failure is in `run.inputs`."""
+    first = _run_genome(genome)
+    before = _chosen_statements(genome, first)
+    assert not _research_failed(genome, first)
+    work = genome.lab.paths.reports / "work"
+    for step in ("prs_genotypes_research", "pgsc_research"):
+        shutil.rmtree(work / step)
+    damage(genome)
+    run_id = _run_genome(genome)
+    assert _chosen_statements(genome, run_id) == before
+    _every_research_score_unassessed(genome, run_id)
+    failed = _research_failed(genome, run_id)
+    assert failed
+    assert "\n" not in failed
+
+
+def test_a_failed_research_run_leaves_the_chosen_run_intact(genome: Genome) -> None:
+    """A failed research run is no refusal; its output is kept under its own step."""
+    work = genome.lab.paths.reports / "work"
+    genome.nextflow.fail_research = "ERROR ~ Missing"
+    run_id = _run_genome(genome)
+    rows = _every_research_score_unassessed(genome, run_id)
+    assert all("exit status 1" in row[2] for row in rows.values())
+    assert "exit status 1" in (_research_failed(genome, run_id) or "")
     kept = work / "pgsc_research-failed"
     assert (kept / "nextflow.stdout").read_text() == "ERROR ~ Missing"
     assert not (work / "pgsc-failed").exists()
@@ -3023,66 +3063,25 @@ def test_docker_not_running_still_refuses_at_the_research_run(
         _run_genome(genome)
 
 
-def test_a_missing_research_scoring_file_leaves_that_score_unassessed(
-    genome: Genome,
-) -> None:
-    """Only that score: it names the bootstrap, the others are computed."""
+def test_a_missing_research_scoring_file_runs_no_research_score(genome: Genome) -> None:
     lab = genome.lab.paths.lab
-    research = load_research_scores()
-    gone = research[0].pgs_id
-    pgsc.scoring_file(lab, gone).unlink()
+    pgsc.scoring_file(lab, load_research_scores()[0].pgs_id).unlink()
     run_id = _run_genome(genome)
-    rows = _research_rows(genome, run_id)
-    assert rows[gone][0] == "unassessed"
-    assert "scripts/bootstrap.sh" in rows[gone][2]
-    assert all(rows[s.pgs_id][0] == "finding" for s in research[1:])
-    assert set(_research_failed(genome, run_id)) == {gone}
-    assert genome.nextflow.scored[1] == {s.pgs_id for s in research[1:]}
-    assert _chosen_findings(genome, run_id) == len(load_scores())
-
-
-def test_no_research_scoring_file_at_all_runs_nothing(genome: Genome) -> None:
-    lab = genome.lab.paths.lab
-    research = load_research_scores()
-    for score in research:
-        pgsc.scoring_file(lab, score.pgs_id).unlink()
-    run_id = _run_genome(genome)
-    rows = _research_rows(genome, run_id)
-    assert {row[0] for row in rows.values()} == {"unassessed"}
-    assert set(_research_failed(genome, run_id)) == {s.pgs_id for s in research}
+    rows = _every_research_score_unassessed(genome, run_id)
+    assert all("scripts/bootstrap.sh" in row[2] for row in rows.values())
     assert genome.nextflow.runs == 1  # the chosen scores' alone
     assert "pgsc_research" not in _steps(genome, run_id)
 
 
-def test_unreadable_research_results_leave_every_research_score_unassessed(
-    genome: Genome, monkeypatch: pytest.MonkeyPatch
+def test_an_unreported_research_score_leaves_them_all_unassessed(
+    genome: Genome,
 ) -> None:
-    real = pipeline.parse_results
-
-    def parse(path: Path) -> dict[str, pgsc.ScoreResult]:
-        if "pgsc_research" in str(path):
-            raise pgsc.PgscFailed("no such table")
-        return real(path)
-
-    monkeypatch.setattr(pipeline, "parse_results", parse)
-    run_id = _run_genome(genome)
-    rows = _research_rows(genome, run_id)
-    assert {row[0] for row in rows.values()} == {"unassessed"}
-    assert all("no such table" in row[2] for row in rows.values())
-    assert set(_research_failed(genome, run_id)) == {"pgsc_research"}
-    assert _chosen_findings(genome, run_id) == len(load_scores())
-
-
-def test_an_unreported_research_score_is_unassessed_alone(genome: Genome) -> None:
-    research = load_research_scores()
-    gone = research[0].pgs_id
+    gone = load_research_scores()[0].pgs_id
     genome.nextflow.omit = {gone}
     run_id = _run_genome(genome)
-    rows = _research_rows(genome, run_id)
-    assert rows[gone][0] == "unassessed"
-    assert rows[gone][2].startswith("pgsc_calc reported nothing of this score")
-    assert all(rows[s.pgs_id][0] == "finding" for s in research[1:])
-    assert set(_research_failed(genome, run_id)) == {gone}
+    rows = _every_research_score_unassessed(genome, run_id)
+    assert all(gone in row[2] for row in rows.values())
+    assert gone in (_research_failed(genome, run_id) or "")
 
 
 def test_a_refresh_carries_the_research_scores(

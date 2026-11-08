@@ -924,8 +924,8 @@ the bootstrap's MedlinePlus file.
 
 A refresh grades through `genokeeper run`, so each new run carries the research polygenic
 scores and `genokeeper changes` counts them under research, listing one only when named. A
-research score whose scoring file is missing or whose run failed is unassessed, saying why (a
-missing file names `scripts/bootstrap.sh`): the run and the refresh go on without it.
+failure anywhere in the research run (a missing scoring file names `scripts/bootstrap.sh`)
+leaves every research score unassessed, saying what failed: the run and the refresh go on.
 
 ```bash
 uv run genokeeper refresh             # newest releases, a run when one is due, the Changes tab

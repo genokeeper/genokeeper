@@ -1718,31 +1718,14 @@ class PrsInputs:
         }
 
 
-def research_inputs(
-    lab: Path, prs: PrsInputs, scores: tuple[Score, ...]
-) -> tuple[PrsInputs, dict[str, str]]:
-    """The research scores' `PrsInputs` beside the chosen scores' `prs`: those with their
-    scoring file on disk, the same panel and ancestry positions; and each score whose file
-    is missing -> why (it is optional: the run goes on without it)."""
+def research_inputs(lab: Path, prs: PrsInputs, scores: tuple[Score, ...]) -> PrsInputs:
+    """The research scores' `PrsInputs` beside the chosen scores' `prs`: their own scoring
+    files, the same panel and ancestry positions; a missing one names the bootstrap."""
     files = {s.pgs_id: scoring_file(lab, s.pgs_id) for s in scores}
-    present = tuple(s for s in scores if files[s.pgs_id].is_file())
-    missing = {
-        s.pgs_id: (
-            f"no scoring file {files[s.pgs_id]}: run scripts/bootstrap.sh"
-            " (its step_pgs_research_scores)"
-        )
-        for s in scores
-        if s not in present
-    }
-    return (
-        PrsInputs(
-            present,
-            {s.pgs_id: files[s.pgs_id] for s in present},
-            prs.panel,
-            prs.ancestry,
-        ),
-        missing,
-    )
+    for path in files.values():
+        if not path.is_file():
+            raise _bootstrap_missing(f"no PGS Catalog research scoring file {path}")
+    return PrsInputs(scores, files, prs.panel, prs.ancestry)
 
 
 def prs_inputs(lab: Path) -> PrsInputs:
@@ -1810,18 +1793,13 @@ def prs_genotypes_step(
     )
 
 
-def _read_pgsc_results(step: _Step) -> dict[str, ScoreResult]:
-    """pgsc_calc's results of `step`; refuse (`RunRefused`) what is unreadable."""
-    try:
-        return parse_results(step.path)
-    except (PgscFailed, KeyError, ValueError) as e:
-        raise RunRefused(f"unreadable pgsc_calc results: {_one_line(e)}") from e
-
-
 def _pgsc_results(step: _Step, scores: Mapping[str, Path]) -> dict[str, ScoreResult]:
     """pgsc_calc's results of `step` for each of `scores`; refuse (`RunRefused`) what
     is unreadable or a score it did not report."""
-    results = _read_pgsc_results(step)
+    try:
+        results = parse_results(step.path)
+    except (PgscFailed, KeyError, ValueError) as e:
+        raise RunRefused(f"unreadable pgsc_calc results: {_one_line(e)}") from e
     unreported = sorted(set(scores) - set(results))
     if unreported:
         raise RunRefused(
@@ -1895,28 +1873,12 @@ def pgsc_step(
             raise RunRefused(_one_line(e)) from e
 
 
-def _research_attempt(
-    steps: dict[str, _Step],
-    failed: dict[str, str],
-    name: str,
-    make: Callable[[], _Step],
-) -> _Step | None:
-    """`_attempt` for a research step: `pgsc_step` turns a failed or unverified run into
-    `RunRefused`, which here fails that step alone. Docker not running still refuses."""
-    try:
-        return _attempt(steps, failed, name, make)
-    except RunRefused as e:
-        if isinstance(e.__cause__, DockerUnavailable):
-            raise
-        failed[name] = _one_line(e)
-        return None
-
-
-def _research_run(
+def _research_layer(
     work: Path,
     steps: dict[str, _Step],
     *,
-    research: PrsInputs,
+    scores: tuple[Score, ...],
+    prs: PrsInputs,
     gvcf: Path,
     call: _Step,
     grade: Grade,
@@ -1926,58 +1888,44 @@ def _research_run(
     bcftools: str,
     panel_sha: str,
     lab: Path,
-) -> tuple[dict[str, ScoreResult], dict[str, str], dict[str, str]]:
+) -> tuple[dict[str, ScoreResult], str | None, dict[str, object]]:
     """The research scores' second pgsc_calc run, on steps of their own whose keys the
-    chosen run's do not depend on: its results, each score it left without one -> why, and
-    what failed (a step or a PGS ID -> one line, for `run.inputs`). It is optional, so a
-    failure of any kind leaves the chosen run and the store write as they were."""
-    if not research.scores:
-        return {}, {}, {}
-    failed: dict[str, str] = {}
-    genotypes = _research_attempt(
-        steps,
-        failed,
-        "prs_genotypes_research",
-        lambda: prs_genotypes_step(
-            work,
-            gvcf=gvcf,
-            call=call,
-            prs=research,
-            fasta=fasta,
-            fasta_sha=fasta_sha,
-            haploid=haploid,
-            bcftools=bcftools,
-            step="prs_genotypes_research",
-        ),
-    )
-    scored = genotypes and _research_attempt(
-        steps,
-        failed,
-        "pgsc_research",
-        lambda: pgsc_step(
-            work,
-            genotypes=genotypes.path,
-            grade=grade,
-            prs=research,
-            panel_sha=panel_sha,
-            lab=lab,
-            step="pgsc_research",
-        ),
-    )
-    results: dict[str, ScoreResult] = {}
-    if scored is not None:
-        try:
-            results = _read_pgsc_results(scored)
-        except RunRefused as e:
-            failed["pgsc_research"] = _one_line(e)
-    whole = "; ".join(f"{name} failed: {line}" for name, line in failed.items())
-    why: dict[str, str] = {}
-    for score in research.scores:
-        if score.pgs_id not in results:
-            why[score.pgs_id] = whole or "pgsc_calc reported nothing of this score"
-            if not whole:
-                failed[score.pgs_id] = why[score.pgs_id]
-    return results, why, failed
+    chosen run's do not depend on: its results, what failed, and its `run.inputs` record.
+
+    The layer's one boundary, with one rule: it is optional, so anything that goes wrong
+    inside leaves every research score unassessed with the error's one line (no results,
+    the line as what failed) and the chosen run goes on. Docker not running passes through:
+    it refuses the run as every container step does (`_attempt`)."""
+    try:
+        research = research_inputs(lab, prs, scores)
+        results: dict[str, ScoreResult] = {}
+        if scores:
+            steps["prs_genotypes_research"] = prs_genotypes_step(
+                work,
+                gvcf=gvcf,
+                call=call,
+                prs=research,
+                fasta=fasta,
+                fasta_sha=fasta_sha,
+                haploid=haploid,
+                bcftools=bcftools,
+                step="prs_genotypes_research",
+            )
+            steps["pgsc_research"] = pgsc_step(
+                work,
+                genotypes=steps["prs_genotypes_research"].path,
+                grade=grade,
+                prs=research,
+                panel_sha=panel_sha,
+                lab=lab,
+                step="pgsc_research",
+            )
+            results = _pgsc_results(steps["pgsc_research"], research.files)
+        return results, None, research.record(panel_sha)
+    except Exception as e:
+        if isinstance(e.__cause__ or e, DockerUnavailable):
+            raise
+        return {}, _one_line(e) or type(e).__name__, {}
 
 
 # --- research associations (slice 1d) ----------------------------------------------------
@@ -4121,7 +4069,6 @@ def run_genome(
     pgx = pgx_inputs(lab)
     prs = prs_inputs(lab)
     research_scores = load_research_scores()
-    prs_research, research_missing = research_inputs(lab, prs, research_scores)
     catalog, variants = gwas_inputs(lab)
     annotation, dosage_list = predicted_inputs(lab)
     try:
@@ -4708,10 +4655,11 @@ def run_genome(
         lab=lab,
     )
     prs_results = _pgsc_results(steps["pgsc"], prs.files)
-    research_results, research_why, research_failed = _research_run(
+    research_results, research_failed, research_record = _research_layer(
         work,
         steps,
-        research=prs_research,
+        scores=research_scores,
+        prs=prs,
         gvcf=gvcf,
         call=steps["call"],
         grade=grade,
@@ -5183,7 +5131,7 @@ def run_genome(
     prs_research_source = ResearchScoreSource(
         scores=research_scores,
         results=research_results,
-        failed={**research_missing, **research_why},
+        failed=research_failed,
     )
     inputs: dict[str, object] = {
         "fastq1": {**_file(fastq1, shas["fastq1"]), "size": fastq1.stat().st_size},
@@ -5214,10 +5162,7 @@ def run_genome(
             "ugt1a1_28_trusted": bool(trusted),
         },
         "prs": prs.record(shas["pgs_panel"]),
-        "prs_research": {
-            **prs_research.record(shas["pgs_panel"]),
-            "failed": {**research_missing, **research_failed},
-        },
+        "prs_research": {**research_record, "failed": research_failed},
         "gwas": {
             **_file(catalog, shas["gwas"]),
             "release": gwas["release"],

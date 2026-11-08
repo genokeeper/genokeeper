@@ -970,9 +970,7 @@ def test_a_research_score_states_a_low_confidence_population(tmp_path: Path) -> 
 def test_a_research_score_that_could_not_run_is_unassessed_with_what_failed(
     tmp_path: Path,
 ) -> None:
-    source = ResearchScoreSource(
-        scores=[_ADHD], results={}, failed={_ADHD.pgs_id: "the run failed"}
-    )
+    source = ResearchScoreSource(scores=[_ADHD], results={}, failed="exit status 1")
     con, _ = _store(tmp_path, source)
     row = _statement(con, f"pgsc_calc:research:{_ADHD.pgs_id}")
     assert {
@@ -984,4 +982,8 @@ def test_a_research_score_that_could_not_run_is_unassessed_with_what_failed(
         "actionable": False,
         "effect": None,
     }
-    assert row["reason"].split("; ") == ["the run failed", _ADHD.why, RESEARCH_REASON]
+    assert row["reason"].split("; ") == [
+        "research run failed: exit status 1",
+        _ADHD.why,
+        RESEARCH_REASON,
+    ]
