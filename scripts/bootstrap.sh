@@ -147,6 +147,11 @@
 #               ancestry/ and the ROH allele-frequency files in roh/, built from the HGDP+1kGP
 #               panel in pgsc_calc's plink2 image and fastmixture's
 #               (python -m genokeeper.typing_files build-panel, build-af). After images, pgs.
+#   panelapp    Genomics England PanelApp's Intellectual disability panel (285, 2.8 MB),
+#               one JSON file, version- and sha256-pinned, in panelapp/285/<version>/. Its
+#               URL serves the panel's current version: a newer one fails the pin and
+#               is not filed, and neither that nor a failed fetch stops the bootstrap, as
+#               the run then records the layer as not run;
 #   gnomad_faf  no manifest row: the table keeps its own manifest. Only with --with-gnomad,
 #               `genokeeper build-faf` streams gnomAD v4.1 joint (0.88 TB, keeps a few GB)
 #               into gnomad/4.1/ for the chromosomes the table lacks or whose bucket md5
@@ -357,6 +362,12 @@ gencc_url=https://thegencc.org/download/action/submissions-export-tsv?format=new
 gencc_file=gencc-submissions.tsv
 gencc_size=25164448
 gencc_sha256=6b099f2497837c8bb0b62930bcfff13c952869dd52635511da181521ce1cde17
+# Genomics England PanelApp's Intellectual disability panel (genokeeper.sources.panelapp):
+# version 11.93, 2,867 genes, its sha256 computed on its download of 2026-11-08 (approved by
+# the user).
+panelapp_version=11.93
+panelapp_url='https://panelapp.genomicsengland.co.uk/api/v1/panels/285/?format=json'
+panelapp_sha256=e62f08807f0c94d6337626116b800f55b3c67e6b3bd0a29ba4b8285220edd97d
 # Slice 1e's downloads, one per line: name, prefetch/1e/ subfolder, size, sha256, URL. Each
 # sha256 was computed on the download of 2026-10-21 to 2026-10-23 that matched what its
 # publisher gives: the size Ensembl's FTP lists and its CHECKSUMS (BSD sum 56036 26996736)
@@ -1725,6 +1736,36 @@ print(gencc_date(path))' "$work/$gencc_file" 2> /dev/null) || {
   refreshed gencc "$dest"
 }
 
+# PanelApp's panel, filed only with the sha256 pinned above: its anchor is that pin, which
+# another version of the panel or a cut download cannot pass, as the comparison runs on the
+# bytes on this disk before the rename. Its URL serves the panel's current version, so a miss
+# there is expected once the panel moves on: it warns and leaves the rest of the bootstrap
+# running, and the run reports the research layer as not run.
+step_panelapp() {
+  local dir=$lab/panelapp/285/$panelapp_version part
+  local dest=$dir/panel.json
+  step_done panelapp "$dest" && return
+  if [ "$check" = 1 ]; then
+    missing "PanelApp's Intellectual disability panel $panelapp_version ($panelapp_url)"
+    return
+  fi
+  mkdir -p "$dir"
+  part=$dest.part
+  if ! download -o "$part" "$panelapp_url"; then
+    rm -f "$part"
+    say "could not fetch $panelapp_url: the PanelApp research layer stays not run"
+    return
+  fi
+  if [ "$(sha "$part")" != "$panelapp_sha256" ]; then
+    rm -f "$part"
+    say "sha256 mismatch for $panelapp_url, not panel $panelapp_version: the PanelApp research layer stays not run"
+    return
+  fi
+  mv "$part" "$dest"
+  record panelapp "$dest"
+  say "PanelApp panel $panelapp_version -> $dest"
+}
+
 # A publication source, fetched whole and never resumed (-C - would splice two builds: LitVar2
 # is rebuilt in place), filed under the server's Last-Modified date in UTC, which curl -R
 # puts on the file. Only a file genokeeper.evidence.publications reads is recorded: its
@@ -2195,6 +2236,7 @@ main() {
   step_clingen_dosage
   step_clingen_regions
   step_gencc
+  step_panelapp
   if [ "$with_publications" = 1 ]; then
     step_litvar
     step_clinvar_citations

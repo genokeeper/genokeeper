@@ -69,6 +69,12 @@ GWAS_CONTRACT = {
 PREDICTED_CONTRACT = {
     *("claim.consequence", "claim.transcript", "claim.hgvsc", "claim.hgvsp"),
 }
+# The research layer of PanelApp's Intellectual disability genes: the keys a panel
+# statement's claim adds (the predicted finding's keys are above).
+PANELAPP_CONTRACT = {
+    *("claim.panel", "claim.panel_version", "claim.panel_confidence"),
+    "claim.panel_inheritance",
+}
 # Slice 3a: the keys a repeat locus's, SMN1's and the Y haplogroup's claims add (their
 # `gene`, `haplogroup` and `tree` are the keys above).
 STAGE3_CONTRACT = {
@@ -126,6 +132,7 @@ SLICE3F_FINDING_CONTRACT = {
 }
 CONTRACT |= PGX_CONTRACT | PHARMGKB_CONTRACT | PRS_CONTRACT
 CONTRACT |= HAPLOGROUP_CONTRACT | GWAS_CONTRACT | PREDICTED_CONTRACT | STAGE3_CONTRACT
+CONTRACT |= PANELAPP_CONTRACT
 CONTRACT |= DOSAGE_CONTRACT | COVERAGE_CONTRACT | SLICE3F_CONTRACT
 CONTRACT |= SLICE3F_FINDING_CONTRACT
 # What a calibration table withheld (`sources.withheld`), under any claim.

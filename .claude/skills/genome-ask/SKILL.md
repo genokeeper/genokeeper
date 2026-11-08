@@ -1,6 +1,6 @@
 ---
 name: genome-ask
-description: Use when the user asks anything about their own genome — a gene, a variant or rsid, a disease risk, a polygenic score or APOE, a GWAS risk variant, the mitochondrial or Y haplogroup, SMN1, a repeat expansion, a deletion, a copy-number change or an insertion in a gene, a paralog locus's copies (STRC, GBA1, RhD, AMY1), Lp(a), an HLA type or coeliac risk, a blood group, ancestry or the Neanderthal share, a trait such as lactose tolerance, carrier status, how they respond to a drug (CYP2D6, HLA-B, …), "what did my DNA show", "am I a carrier of …", "do I have this variant", "what changed since the last update". Answers in the language the user asks in, from the local findings store through `uv run genokeeper query --json` and, for carrier and "do I have" questions, `uv run genokeeper genotype --json`, with genotype reliability, clinical validity, effect and sources for every claim.
+description: Use when the user asks anything about their own genome — a gene, a variant or rsid, a disease risk, a polygenic score or APOE, a GWAS risk variant, the mitochondrial or Y haplogroup, SMN1, a repeat expansion, a deletion, a copy-number change or an insertion in a gene, a paralog locus's copies (STRC, GBA1, RhD, AMY1), Lp(a), an HLA type or coeliac risk, a blood group, ancestry or the Neanderthal share, a trait such as lactose tolerance, rare variants in neurodevelopment genes, carrier status, how they respond to a drug (CYP2D6, HLA-B, …), "what did my DNA show", "am I a carrier of …", "do I have this variant", "what changed since the last update". Answers in the language the user asks in, from the local findings store through `uv run genokeeper query --json` and, for carrier and "do I have" questions, `uv run genokeeper genotype --json`, with genotype reliability, clinical validity, effect and sources for every claim.
 ---
 
 # genome-ask
@@ -98,6 +98,7 @@ Fit the filters to the question:
 | "Do I carry the PPARG diabetes risk variant?" | `--gene PPARG --min-validity limited` or `--marker rs1801282 --min-validity limited` (see Research associations) |
 | "Do I have a deletion in BRCA1?" | `--gene BRCA1 --min-validity limited --min-reliability low` (see Stage 3b screening: deletions) |
 | "Is my X/Y normal? Any sex-chromosome anomaly?" | `show dosage:sex-chromosomes --json` (see Stage 3c) |
+| "Anything in my neurodevelopment genes? Rare variants in autism or intellectual disability genes?" | `--text panelapp: --min-validity limited`, one gene with `--gene <gene> --min-validity limited` (see Rare variants in neurodevelopment genes) |
 | "How many AMY1 copies do I have?" | `--gene AMY1 --min-validity limited --min-reliability low` (see Stage 3d screening) |
 | "What is my RhD?" | `--gene RHD --min-validity limited --min-reliability low` (see Stage 3d screening) |
 | "My HLA? Coeliac? Blood group? Neanderthal? Lactose?" | `--gene HLA-B`, `show hla:coeliac --json`, `--topic traits --min-validity limited`, `--topic ancestry --min-validity limited` (see Slice 3f) |
@@ -444,6 +445,17 @@ Each finding has these keys:
     or null;
   - `hgvsp`: the protein change in HGVS, e.g. `ENSP00000350283.3:p.Gln412Ter`, or null;
 
+  for a rare variant in a PanelApp panel gene (`panelapp_variant`, id
+  `panelapp:<vid>:<transcript>`, source `panelapp`, at a marker), a research statement with
+  `classification` always `predicted, not classified` and the predicted finding's
+  `consequence`, `transcript`, `hgvsc` and `hgvsp` (see Rare variants in neurodevelopment
+  genes):
+  - `panel`: the panel's name, `Intellectual disability`;
+  - `panel_version`: the panel's version, e.g. `11.93`;
+  - `panel_confidence`: `green` (diagnostic grade), `amber` or `red` (neither is);
+  - `panel_inheritance`: the gene's mode of inheritance as the panel writes it, or `not
+    stated by the panel`;
+
   for a repeat locus (`repeat_expansion`, id `expansionhunter:<gene>`, CFTR's poly-T/TG
   `expansionhunter:CFTR-polyT-TG`, no marker), with its
   `gene` and `condition` as above (the disease the expansion causes; a not-covered locus's
@@ -698,7 +710,8 @@ Each finding has these keys:
   - `source`: `clinvar` (APOE's too), `pharmcat`, `pharmgkb`, `pharmgkb_research` (a
     level-3 PharmGKB annotation, a research association), `pgsc_calc`, `pgsc_calc_research`
     (a research polygenic score), `haplogrep3`,
-    `gwas_catalog`, `vep` (a predicted finding), `smn` (SMN1 copy number), `expansionhunter`
+    `gwas_catalog`, `vep` (a predicted finding), `panelapp` (a variant in a PanelApp panel
+    gene, research), `smn` (SMN1 copy number), `expansionhunter`
     (a repeat locus, FMR1's included), `yleaf` (the Y haplogroup), `deletions` (a deletion
     of 50 bp or more), `dosage` (the sex-chromosome dosage, a screening result), `cnv`,
     `insertions`, `paralogs`, `lpa` (see Stage 3d screening), `hla` (an HLA allele, the
@@ -1043,6 +1056,46 @@ splice change at SpliceAI 0.2 or above. Each one is `limited`, so add
 - One variant can give two predicted findings, on two transcripts of a gene or in two
   overlapping genes: they share a `vid`. Present them as one variant, never as two variants
   or a compound heterozygote.
+
+## Rare variants in neurodevelopment genes
+
+Rare, probably damaging variants the user carries in Genomics England PanelApp's
+Intellectual disability panel (`panelapp:<vid>:<transcript>`, source `panelapp`, panel 285 at
+version 11.93, `claim.panel_version`): each a PASS variant ClinVar does not classify germline,
+rare by the same gnomAD rule as a predicted finding, that VEP predicts a loss of function
+passing every gate of the LoF filter, or a missense at or above its calibrated REVEL or
+AlphaMissense score, in one of the panel's 2,867 genes. A variant that is already a predicted
+finding (`predicted:<vid>:<transcript>`) stays that and is not repeated here. Every one is
+`limited`, topic `research`, never actionable, hidden from every query that names no gene,
+marker or text and from the dashboard's feed; `--text panelapp: --min-validity limited` lists
+them all and `--gene` finds one gene's.
+
+- It is a computer's prediction on a broad panel: most people carry something on it. Say so
+  first, in those words, before any variant. Never a diagnosis, and never pathogenic: label
+  every one "predicted, not classified", and say it would need confirmation by a clinical
+  lab.
+- The panel is about intellectual disability. Never present one of these as ADHD or autism or
+  as an explanation of either: a gene on this panel is not an ADHD or autism gene for
+  that reason, and the panel says nothing about ADHD. Asked about ADHD or autism, say that, and
+  that for those the polygenic research scores say what little there is (see Research
+  polygenic scores).
+- Give the gene's confidence from `claim.panel_confidence`: `green` is diagnostic grade,
+  `amber` and `red` are not. Say so for each. Give `claim.panel_inheritance` as the panel
+  writes it, and that one copy of a variant in a recessive gene is not a diagnosis
+  (`validity.reason` says it too): a recessive condition needs two.
+- Every one carries "discuss with a geneticist" in `validity.reason`: say so, and that this
+  is the conversation to have about it.
+- SpliceAI scored only the ACMG SF and carrier genes. A splice change in another panel gene was
+  not scored by it, and `validity.reason` says so on one at a canonical splice site; no
+  statement about a gene does not mean no splice change there, and a splice change outside
+  those genes that no tool scored is not stated at all. The panel's mitochondrial genes
+  are not read here (chrM's calls are mutserve's, see the mitochondrial findings).
+- One variant can have two statements, on two transcripts: they share a `vid`. Present them as
+  one variant.
+- If the layer could not run (`panelapp:panel`, unassessed, found with `--list-unassessed`),
+  `validity.reason` says what failed: give that, and that these variants were not assessed,
+  never that the user has none. A store from a run before this layer holds no such statement:
+  say that run did not compute them.
 
 ## The haplogroup
 

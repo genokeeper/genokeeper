@@ -21,7 +21,12 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from genokeeper.annotate.vep import VEP_VERSION, VepRecord, locus
-from genokeeper.evidence.clinvar import BA1_REASON, BS1_REASON, clnsig_class
+from genokeeper.evidence.clinvar import (
+    BA1_REASON,
+    BS1_REASON,
+    ValidityGrade,
+    clnsig_class,
+)
 from genokeeper.evidence.predicted import (
     BELOW_THRESHOLDS,
     NOT_CARRIED,
@@ -76,18 +81,12 @@ class PredictedSource:
     version: str = VEP_VERSION
     tool: str = PREDICTED_TOOL
 
-    def collect(self, ctx: RunContext) -> Collected:
-        """One variant, call and statement per site graded a statement (one recessive
-        copy included); the rest, and the input variants without a candidate, counted by
-        reason."""
+    def graded(
+        self, ctx: RunContext
+    ) -> list[tuple[VepRecord, Called, Reliability, Site, ValidityGrade]]:
+        """Every site with what its grade read and the grade (`grade_predicted`)."""
         faf = ctx.faf.lookup([r.vid for r, _, _, _ in self.sites])
-        dropped = dict.fromkeys(sorted(set(DROP_REASONS.values())), 0)
-        # A variant can have records on two transcripts or genes (`parse_vep`): each graded
-        # record is counted once, each variant with none once.
-        dropped[NO_PREDICTED_EFFECT] = self.input_rows - len(
-            {r.vid for r, _, _, _ in self.sites}
-        )
-        rows: list[Row] = []
+        graded = []
         for record, called, reliability, run in self.sites:
             chrom, pos, _, _ = locus(record.vid)
             transcript = record.transcript.split(".")[0]
@@ -114,9 +113,25 @@ class PredictedSource:
                 male=ctx.male,
                 haploid=ctx.haploid(chrom, pos),
             )
+            graded.append((record, called, reliability, site, grade))
+        return graded
+
+    def collect(self, ctx: RunContext) -> Collected:
+        """One variant, call and statement per site graded a statement (one recessive
+        copy included); the rest, and the input variants without a candidate, counted by
+        reason."""
+        dropped = dict.fromkeys(sorted(set(DROP_REASONS.values())), 0)
+        # A variant can have records on two transcripts or genes (`parse_vep`): each graded
+        # record is counted once, each variant with none once.
+        dropped[NO_PREDICTED_EFFECT] = self.input_rows - len(
+            {r.vid for r, _, _, _ in self.sites}
+        )
+        rows: list[Row] = []
+        for record, called, reliability, _, grade in self.graded(ctx):
             if grade.reason in DROP_REASONS:
                 dropped[DROP_REASONS[grade.reason]] += 1
                 continue
+            transcript = record.transcript.split(".")[0]
             claim = {
                 "schema": panel.CLAIM_SCHEMA,
                 "type": "predicted_variant",

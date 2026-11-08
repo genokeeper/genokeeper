@@ -563,6 +563,13 @@ from genokeeper.sources.hla import HlaSource
 from genokeeper.sources.mito import MitoSource
 from genokeeper.sources.mitomap import MitomapSource
 from genokeeper.sources.panel import ClaimsSource
+from genokeeper.sources.panelapp import (
+    GenePanel,
+    PanelAppSource,
+    load_panel,
+    panelapp_path,
+    without_repeats,
+)
 from genokeeper.sources.paralogs import (
     GBA1_CONTRADICTED,
     LpaSource,
@@ -889,13 +896,15 @@ def store_sources(
     calibration table withheld kept in their claims (`sources.withheld`), the statements
     Gauchian's GBA1 call contradicts become unassessed (`gba1_unassessed`), the
     compound-heterozygote promotion runs across all of them with the candidate pairs'
-    read-backed `phases` (none: every pair unphased), and they are written with one
-    accounting row per tool. A new source is one more item in `sources`."""
+    read-backed `phases` (none: every pair unphased), the PanelApp layer's statements of
+    variants a `predicted:` statement states are dropped (`panelapp.without_repeats`), and
+    they are written with one accounting row per tool. A new source is one more item in
+    `sources`."""
     collected = gba1_unassessed([reveal(source, ctx) for source in sources], gauchian)
     promoted = promote.promote_compound_hets(
         collected, ctx.lists, ctx.inheritance, ctx.haploid, phases
     )
-    write_collected(writer, con, ctx.run_id, promoted)
+    write_collected(writer, con, ctx.run_id, without_repeats(promoted))
 
 
 def _tool_version(tool: str) -> str:
@@ -1926,6 +1935,33 @@ def _research_layer(
         if isinstance(e.__cause__ or e, DockerUnavailable):
             raise
         return {}, _one_line(e) or type(e).__name__, {}
+
+
+def _panelapp_layer(
+    lab: Path, *, predicted: PredictedSource, pending: RunContext
+) -> tuple[PanelAppSource, dict[str, object]]:
+    """The PanelApp research layer (`sources.panelapp`): its source and its `run.inputs`
+    record.
+
+    The layer's one boundary, with `_research_layer`'s rule: it is optional, so anything
+    wrong inside (the file missing or damaged, a bug in the grading) leaves the one unassessed
+    statement saying what failed, and the run goes on. Its statements are collected here
+    under the placeholder run id, as the phasing's are, so nothing they read can first
+    fail inside the store phase."""
+    path = panelapp_path(lab)
+    try:
+        gene_panel: GenePanel = load_panel(path)
+        source = PanelAppSource(gene_panel=gene_panel, predicted=predicted)
+        source.collect(pending)
+    except Exception as e:  # noqa: BLE001 - the layer's one boundary: recorded, the run goes on
+        failed = _one_line(e) or type(e).__name__
+        return PanelAppSource(None, None, failed), {"failed": failed}
+    return source, {
+        **_file(path, sha256_file(path)),
+        "version": gene_panel.version,
+        "genes": len(gene_panel.genes),
+        "failed": None,
+    }
 
 
 # --- research associations (slice 1d) ----------------------------------------------------
@@ -5133,6 +5169,9 @@ def run_genome(
         results=research_results,
         failed=research_failed,
     )
+    panelapp_source, panelapp_record = _panelapp_layer(
+        lab, predicted=predicted_source, pending=pending
+    )
     inputs: dict[str, object] = {
         "fastq1": {**_file(fastq1, shas["fastq1"]), "size": fastq1.stat().st_size},
         "fastq2": {**_file(fastq2, shas["fastq2"]), "size": fastq2.stat().st_size},
@@ -5163,6 +5202,7 @@ def run_genome(
         },
         "prs": prs.record(shas["pgs_panel"]),
         "prs_research": {**research_record, "failed": research_failed},
+        "panelapp": panelapp_record,
         "gwas": {
             **_file(catalog, shas["gwas"]),
             "release": gwas["release"],
@@ -5360,6 +5400,7 @@ def run_genome(
                     mito_source,
                     gwas_source,
                     predicted_source,
+                    panelapp_source,
                     repeat_source,
                     smn_source,
                     yleaf_source,

@@ -1171,6 +1171,37 @@ def test_research_scores_hidden_until_named(con: duckdb.DuckDBPyConnection) -> N
         assert ids(con, replace(limited, text=text)) == ["pgsc_calc:research:PGS002746"]
 
 
+def test_panel_variants_hidden_until_named(con: duckdb.DuckDBPyConnection) -> None:
+    """A PanelApp panel statement is a research layer's: counted, not returned, until a
+    gene, marker or text names it; `--text panelapp:` lists them all at
+    `--min-validity limited`."""
+    sid = "panelapp:GRCh38:chr17:1000:C:T:ENST01"
+    seed(
+        con,
+        [
+            Row(
+                sid,
+                gene="GENEZ",
+                validity="limited",
+                topic="research",
+                claim={"type": "panelapp_variant", "classification": "predicted"},
+            )
+        ],
+    )
+    con.execute("UPDATE statement SET source = 'panelapp'")
+    loosest = Filters(min_reliability=Level.LOW, min_validity=Validity.CONFLICTING)
+    for f in (Filters(), loosest, replace(loosest, topic=Topic.RESEARCH)):
+        result = query(con, None, f)
+        assert (result.findings, result.hidden) == ([], {"research_association": 1})
+    limited = Filters(min_validity=Validity.LIMITED)
+    for named in (
+        replace(limited, gene="genez"),
+        replace(limited, text="panelapp:"),
+        replace(limited, marker="GRCh38:chr17:1000:C:T"),
+    ):
+        assert ids(con, named) == [sid], named
+
+
 def test_level_3_hidden_by_default(con: duckdb.DuckDBPyConnection) -> None:
     """A level-3 annotation is a research association: counted, not returned, until a gene,
     marker or text (its drug or its phenotype) names it."""

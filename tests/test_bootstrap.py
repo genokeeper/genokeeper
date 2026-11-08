@@ -77,12 +77,14 @@ from genokeeper.regions import (
     giab38_dir,
     giab38_downloads,
 )
+from genokeeper.sources.panelapp import PANEL_VERSION, panelapp_path
 from genokeeper.typing_files import ARCHAIC, HMMIX_HELPERS, TypingFiles, typing_files
 
 REPO = Path(__file__).resolve().parents[1]
 SCRIPT = REPO / "scripts" / "bootstrap.sh"
 LITVAR_FIXTURE = REPO / "tests" / "fixtures" / "litvar_head.jsonl.gz"
 CITATIONS_FIXTURE = REPO / "tests" / "fixtures" / "var_citations_head.txt"
+PANELAPP_URL = "https://panelapp.genomicsengland.co.uk/api/v1/panels/285/?format=json"
 # Copies $CLINGEN_CSV to the -o file and logs the URL (the last argument).
 FAKE_CLINGEN_CURL = """#!/usr/bin/env bash
 out=
@@ -1866,6 +1868,55 @@ def _gencc_row(gene: str, title: str, run_date: str) -> str:
         "submitted_run_date": run_date,
     }
     return "\t".join(values.get(column, "") for column in header) + "\n"
+
+
+PANELAPP_NAME = "?format=json"  # the URL's last segment, the fake curl's file
+
+
+def test_panelapp_panel_pinned_by_sha256(lab: dict[str, str], tmp_path: Path) -> None:
+    """One file, kept only when its sha256 is the pin; another version of the panel, or a
+    failed fetch, is not filed and leaves the bootstrap running, and a done step fetches
+    nothing again."""
+    env, serve = _serving(lab, tmp_path)
+    served = serve / PANELAPP_NAME
+    served.write_text('{"version": "other"}')
+    home = Path(lab["GENOKEEPER_HOME"])
+    dest = panelapp_path(home)
+    listed = _run(env, "check=1; step_panelapp")
+    assert listed.stdout == (
+        "missing: PanelApp's Intellectual disability panel"
+        f" {PANEL_VERSION} ({PANELAPP_URL})\n"
+    )
+    refused = _run(env, "step_panelapp")
+    assert refused.returncode == 0, refused.stderr
+    assert f"sha256 mismatch for {PANELAPP_URL}" in refused.stderr
+    assert not dest.exists()
+    assert not (home / "bootstrap-manifest.tsv").exists()
+    assert (home / "panelapp" / "285" / PANEL_VERSION).is_dir()
+    assert not [p.name for p in dest.parent.iterdir()]
+    down = _run(env, "panelapp_url=https://no.where/x; step_panelapp")
+    assert down.returncode == 0, down.stderr
+    assert "could not fetch https://no.where/x" in down.stderr
+    pin = f"panelapp_sha256={_sha256(served)}"
+    done = _run(env, f"{pin}; step_panelapp")
+    assert done.returncode == 0, done.stderr
+    assert dest.read_bytes() == served.read_bytes()
+    manifest = (home / "bootstrap-manifest.tsv").read_text().splitlines()
+    assert manifest == [f"panelapp\t{dest}\t{_sha256(served)}"]
+    calls = len(Path(env["CURL_LOG"]).read_text().splitlines())
+    again = _run(env, f"{pin}; step_panelapp; check=1; step_panelapp")
+    assert (again.returncode, again.stdout) == (0, "")
+    assert len(Path(env["CURL_LOG"]).read_text().splitlines()) == calls
+
+
+def test_panelapp_pin_matches_genokeeper(lab: dict[str, str]) -> None:
+    """The version the script pins is the one `genokeeper.sources.panelapp` reads, its
+    sha256 is a whole digest, and the step is one of the bootstrap's."""
+    shown = _run(lab, 'echo "$panelapp_version"; echo "$panelapp_sha256"')
+    version, sha = shown.stdout.splitlines()
+    assert version == PANEL_VERSION
+    assert len(sha) == 64
+    assert "  step_panelapp\n" in SCRIPT.read_text()
 
 
 def test_gencc_filed_only_when_changed(lab: dict[str, str], tmp_path: Path) -> None:

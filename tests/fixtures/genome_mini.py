@@ -42,6 +42,7 @@ from fixtures.grch38_mini import (
     write_regions,
 )
 from fixtures.gvcf_mini import HEADER
+from fixtures.panelapp_mini import write_lab_panel
 from fixtures.pgsc_mini import PINNED, write_results, write_task
 from fixtures.pharmgkb_mini import Ann, write_annotations
 from genokeeper import pipeline
@@ -247,6 +248,7 @@ def write_lab(
     )
     table = write_cgd(paths.lab / "cgd" / CGD_DATE / "CGD.txt.gz", cgd)
     write_vep(paths.lab)
+    write_lab_panel(paths.lab)
     write_parascopy(paths.lab)
     paths.raw.mkdir(parents=True)
     fastq1, fastq2 = write_fastq_pair(paths.raw, fasta, pairs=pairs)

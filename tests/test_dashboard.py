@@ -634,6 +634,33 @@ def test_a_research_score_is_counted_never_listed_on_the_changes_tab(
     assert [(r["kind"], r["count"]) for r in compared["research"]] == [("new", 1)]
 
 
+def test_a_panel_variant_is_counted_never_listed_on_the_changes_tab(
+    tmp_path: Path,
+) -> None:
+    reports, lab = tmp_path / "reports", tmp_path / "lab"
+    reports.mkdir(parents=True)
+    panel = _at(
+        f"panelapp:{_vid(1002)}:ENST01",
+        1002,
+        gene="GENEZ",
+        validity="limited",
+        source="panelapp",
+        topic="research",
+    )
+    unchanged = [_at("clinvar:1", 1001)]
+    calls = [sm.call(_vid(1001)), sm.call(_vid(1002))]
+    con = sm.store(reports / "genomelab.duckdb")
+    try:
+        root = reports / "snapshots"
+        _snapshot(con, root, D1, "20261001", unchanged, calls[:1], [])
+        _snapshot(con, root, D2, "20261001", [*unchanged, panel], calls, [])
+    finally:
+        con.close()
+    compared = _changes(reports, lab)["bases"][D1]
+    assert compared["rows"] == {}
+    assert [(r["kind"], r["count"]) for r in compared["research"]] == [("new", 1)]
+
+
 def test_banner_names_failed_sources_with_their_before(tmp_path: Path) -> None:
     reports, lab = tmp_path / "reports", tmp_path / "lab"
     _history(reports)

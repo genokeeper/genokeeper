@@ -629,7 +629,17 @@ calibrated REVEL or AlphaMissense score, or a splice change at SpliceAI 0.2, is 
 at validity limited, "predicted, not classified", with a note to discuss it with a
 geneticist (`config/grading.toml` [predicted]); outside the listed genes, or failing a
 gate, it is research. A predicted finding never outranks a ClinVar-classified one in the
-feed. The store keeps no dosing text; PharmCAT's HTML report, whose path the run prints,
+feed. Rare, probably damaging variants in the genes of Genomics England PanelApp's
+Intellectual disability panel (panel 285, version 11.93, 2,867 genes, one pinned file from
+the bootstrap) are stated from the same VEP records, as research: validity limited,
+topic research, never actionable, returned only to `--gene`, `--marker` or `--text` and
+never on the dashboard's feed, each `predicted, not classified`, naming the panel, the
+gene's confidence level and its inheritance, and repeating no predicted finding. SpliceAI
+scores only the listed genes, so a splice change in another panel gene is not scored by
+it; a panel file that is missing or damaged leaves one unassessed statement and the
+rest of the run as it is. It is a computer's prediction on a broad panel, which most
+people carry something on, and never a diagnosis, of intellectual disability, ADHD or
+autism alike. The store keeps no dosing text; PharmCAT's HTML report, whose path the run prints,
 stays under `reports/work/pharmcat/` for you. `--sex male|female` overrides the sex
 inferred from the X copy count (chrX non-PAR depth over the autosomes: one X male, two female);
 `--threads` defaults to this machine's CPUs. Each slow step is cached under `reports/work/`

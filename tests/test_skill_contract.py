@@ -374,6 +374,33 @@ def test_contract_list_matches_the_query_and_show_output(tmp_path: Path) -> None
     con.execute(
         "UPDATE statement SET source = 'vep' WHERE statement_id LIKE 'predicted:%'"
     )
+    seed(
+        con,
+        [
+            Row(
+                "panelapp:GRCh38:chr17:1009:C:T:ENST00000357654",
+                validity="limited",
+                topic="research",
+                pos=1009,
+                claim={
+                    "schema": "genomelab.claim/1",
+                    "type": "panelapp_variant",
+                    "classification": "predicted, not classified",
+                    "consequence": "stop_gained",
+                    "transcript": "ENST00000357654",
+                    "hgvsc": "ENST00000357654.9:c.1234C>T",
+                    "hgvsp": "ENSP00000350283.3:p.Gln412Ter",
+                    "panel": "Intellectual disability",
+                    "panel_version": "11.93",
+                    "panel_confidence": "green",
+                    "panel_inheritance": "BIALLELIC, autosomal or pseudoautosomal",
+                },
+            )
+        ],
+    )
+    con.execute(
+        "UPDATE statement SET source = 'panelapp' WHERE statement_id LIKE 'panelapp:%'"
+    )
     seed(con, [_dosage_row(tmp_path)])
     # One finding per slice 3f claim type, as its source writes the claim.
     claims = _slice3f_claims(tmp_path / "3f")
@@ -392,9 +419,10 @@ def test_contract_list_matches_the_query_and_show_output(tmp_path: Path) -> None
     listed = query(con, None, Filters(), list_unassessed=True).to_json()
     assert listed["unassessed_sites"] and listed["unassessed"]["by_gene"]
     _, predicted = show(con, None, "predicted:GRCh38:chr17:1008:C:T:ENST00000357654")
+    _, panel = show(con, None, "panelapp:GRCh38:chr17:1009:C:T:ENST00000357654")
     gene = query(con, None, Filters(gene="BRCA1")).to_json()
     found = key_paths(listed) | key_paths(shown) | key_paths(predicted)
-    assert found | key_paths(gene) == CONTRACT
+    assert found | key_paths(panel) | key_paths(gene) == CONTRACT
 
 
 def test_every_json_key_is_documented() -> None:

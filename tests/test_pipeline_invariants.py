@@ -24,10 +24,12 @@ from typing import Any, Literal, NoReturn
 import duckdb
 import pysam
 import pytest
+from fixtures.clingen_mini import write_dosage
 from fixtures.clinvar_mini import write_clinvar
 from fixtures.contract import (
     CONTRACT,
     COVERAGE_CONTRACT,
+    PANELAPP_CONTRACT,
     PGX_CONTRACT,
     SLICE3F_FINDING_CONTRACT,
     key_paths,
@@ -36,6 +38,7 @@ from fixtures.genome_mini import (
     CALIBRATED_ERRORS,
     CHRM_LENGTH,
     CLASSIFIED_LOF_POS,
+    DOSAGE_DATE,
     LARGE_REGION,
     MINI_QC,
     PHARMGKB_DATE,
@@ -74,6 +77,7 @@ from fixtures.genome_mini import variant as genome_variant
 from fixtures.grch38_mini import CONTIGS as GRCH38_CONTIGS
 from fixtures.grch38_mini import READ
 from fixtures.gwas_mini import EFO, Assoc, write_gwas
+from fixtures.panelapp_mini import AR, write_panel
 from fixtures.pgsc_mini import PINNED
 from fixtures.pharmgkb_mini import Ann, write_annotations
 
@@ -209,6 +213,7 @@ from genokeeper.repeats.loci import Rule
 from genokeeper.repeats.not_covered import NOT_COVERED
 from genokeeper.sample_identity import IDENTITY_TOOL
 from genokeeper.sources import panel as panel_source
+from genokeeper.sources import panelapp as panelapp_module
 from genokeeper.sources import prs as prs_source
 from genokeeper.sources.bloodgroups import HPA_REASON, MNS_REASON, RH_REASON
 from genokeeper.sources.deletions import CONSEQUENCE_WARNING
@@ -217,6 +222,7 @@ from genokeeper.sources.hhv6 import BELOW as HHV6_BELOW
 from genokeeper.sources.hhv6 import BETWEEN as HHV6_BETWEEN
 from genokeeper.sources.hla import KIR_REASON
 from genokeeper.sources.mitomap import load_mitomap
+from genokeeper.sources.panelapp import PANEL_VERSION, panelapp_path
 from genokeeper.sources.paralogs import GBA1_CONTRADICTED
 from genokeeper.sources.paralogs import NOT_COVERED as PARALOG_NOT_COVERED
 from genokeeper.sources.repeats import (
@@ -3084,6 +3090,160 @@ def test_an_unreported_research_score_leaves_them_all_unassessed(
     assert gone in (_research_failed(genome, run_id) or "")
 
 
+# --- the PanelApp research layer ---------------------------------------------------------
+
+
+def _panel_finding(genome: Genome) -> None:
+    """BRCA1 no longer haploinsufficient: the fake stop-gain is no `predicted:` finding, and
+    only the panel's statement stands for it."""
+    lab = genome.lab.paths.lab
+    write_dosage(lab / "clingen-dosage" / DOSAGE_DATE / DOSAGE_FILE, [("GENEX", "3")])
+
+
+def _panel_rows(genome: Genome, run_id: str) -> dict[str, tuple[Any, ...]]:
+    with connect(genome.store) as con:
+        return {
+            row[0]: row[1:]
+            for row in con.execute(
+                "SELECT statement_id, kind, validity, topic, actionable, gene, reason"
+                " FROM statement WHERE run_id = ? AND source = 'panelapp'",
+                [run_id],
+            ).fetchall()
+        }
+
+
+def _other_statements(genome: Genome, run_id: str) -> list[tuple[Any, ...]]:
+    with connect(genome.store) as con:
+        return con.execute(
+            "SELECT statement_id, kind, validity, reason, effect, claim FROM statement"
+            " WHERE run_id = ? AND source IS DISTINCT FROM 'panelapp'"
+            " ORDER BY statement_id",
+            [run_id],
+        ).fetchall()
+
+
+def test_a_run_states_a_panel_genes_variant(genome: Genome) -> None:
+    """A rare loss of function in a panel gene that no `predicted:` statement states is one
+    `panelapp:` statement: limited, under research, not actionable, hidden until a gene,
+    marker or text names it, and counted; the panel file is in `run.inputs`."""
+    _panel_finding(genome)
+    run_id = _run_genome(genome)
+    ((statement, row),) = _panel_rows(genome, run_id).items()
+    vid_part = f"GRCh38:chr1:{PREDICTED_POS}:"
+    assert statement.startswith(f"panelapp:{vid_part}")
+    assert row[:5] == ("finding", "limited", "research", False, "BRCA1")
+    assert "Intellectual disability" in row[5]
+    panel = panelapp_path(genome.lab.paths.lab)
+    with connect(genome.store) as con:
+        inputs = _inputs_json(con, run_id)["panelapp"]
+        accounting = con.execute(
+            "SELECT findings FROM accounting WHERE run_id = ? AND tool = 'panelapp'",
+            [run_id],
+        ).fetchall()
+        default = query(con, run_id, Filters())
+        named = query(con, run_id, Filters(gene="BRCA1", min_validity=Validity.LIMITED))
+    assert inputs == {
+        "path": str(panel),
+        "sha256": sha256_file(panel),
+        "version": PANEL_VERSION,
+        "genes": 5,
+        "failed": None,
+    }
+    assert accounting == [(1,)]
+    assert default.hidden.get("research_association", 0) >= 1
+    assert statement not in [f["id"] for f in default.findings]
+    assert statement in [f["id"] for f in named.findings]
+
+
+def test_a_predicted_finding_keeps_its_statement_in_a_run(genome: Genome) -> None:
+    """The fake stop-gain is a `predicted:` finding in BRCA1: the panel lists BRCA1, its
+    statement is counted out, and the predicted one stands."""
+    run_id = _run_genome(genome)
+    assert _panel_rows(genome, run_id) == {}
+    with connect(genome.store) as con:
+        row = con.execute(
+            "SELECT dropped FROM accounting WHERE run_id = ? AND tool = 'panelapp'",
+            [run_id],
+        ).fetchone()
+    assert row is not None
+    assert json.loads(row[0])["already_predicted"] == 1
+
+
+def test_the_panel_layer_leaves_every_steps_key_alone(genome: Genome) -> None:
+    """No step depends on the panel file: every step's key is the same without it, VEP's
+    is reused, and the layer adds no step of its own."""
+    first = _steps(genome, _run_genome(genome))
+    assert first["vep"]["key"]
+    assert not [
+        name for name in first if "panel" in name.lower() and name != "pgs_panel"
+    ]
+    panelapp_path(genome.lab.paths.lab).unlink()
+    without = _steps(genome, _run_genome(genome))
+    assert without["vep"]["reused"]
+    assert {name: step["key"] for name, step in without.items()} == {
+        name: step["key"] for name, step in first.items()
+    }
+
+
+def _panel_missing(genome: Genome) -> None:
+    panelapp_path(genome.lab.paths.lab).unlink()
+
+
+def _panel_truncated(genome: Genome) -> None:
+    path = panelapp_path(genome.lab.paths.lab)
+    path.write_bytes(path.read_bytes()[:20])
+
+
+def _panel_unreadable(genome: Genome) -> None:
+    panelapp_path(genome.lab.paths.lab).chmod(0)
+
+
+def _panel_newer(genome: Genome) -> None:
+    write_panel(panelapp_path(genome.lab.paths.lab), version="11.94")
+
+
+@pytest.mark.parametrize(
+    "damage", [_panel_missing, _panel_truncated, _panel_unreadable, _panel_newer]
+)
+def test_a_damaged_panel_leaves_the_run(genome: Genome, damage: Any) -> None:
+    """One boundary: the run completes, no other statement moves, one unassessed statement
+    says what failed, and `run.inputs` records it."""
+    _panel_finding(genome)
+    first = _run_genome(genome)
+    before = _other_statements(genome, first)
+    assert _panel_rows(genome, first)
+    damage(genome)
+    run_id = _run_genome(genome)
+    assert _other_statements(genome, run_id) == before
+    ((statement, row),) = _panel_rows(genome, run_id).items()
+    assert statement == "panelapp:panel"
+    assert row[:4] == ("unassessed", "limited", "research", False)
+    with connect(genome.store) as con:
+        failed = _inputs_json(con, run_id)["panelapp"]["failed"]
+    assert failed
+    assert failed in row[5]
+    assert "\n" not in failed
+
+
+def test_anything_wrong_inside_the_panel_layer_is_held_at_its_boundary(
+    genome: Genome, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Not only the file: a bug in the grading reaches the same one statement, and the
+    store phase never meets it."""
+    _panel_finding(genome)
+    first = _run_genome(genome)
+    before = _other_statements(genome, first)
+
+    def broken(*_: Any) -> None:
+        raise RuntimeError("panel grading broke")
+
+    monkeypatch.setattr(panelapp_module, "predicted_rule", broken)
+    run_id = _run_genome(genome)
+    assert _other_statements(genome, run_id) == before
+    (row,) = _panel_rows(genome, run_id).values()
+    assert row[0] == "unassessed" and "panel grading broke" in row[5]
+
+
 def test_a_refresh_carries_the_research_scores(
     genome: Genome, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -3133,6 +3293,57 @@ def test_a_refresh_carries_the_research_scores(
     assert [(c["id"], c["kind"]) for c in named["changes"]] == [
         (f"pgsc_calc:research:{pgs_id}", "details")
     ]
+
+
+def test_a_refresh_carries_the_panel_statements(
+    genome: Genome, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`genokeeper refresh` grades through `run_genome`, so its run states the panel's
+    variants again: counted under research in `changes`, listed only when named."""
+    _panel_finding(genome)
+    paths = genome.lab.paths
+    first = _run_genome(genome)
+    before = _panel_rows(genome, first)
+    assert before
+    # A newer confidence for BRCA1 gives the statement a new reason, so the run changes it.
+    amended = [
+        ("BRCA1", "2", AR, "ENSG00000012048"),
+    ]
+    write_panel(panelapp_path(paths.lab), amended)
+    monkeypatch.setattr(refresh, "analyser_identity", lambda: "another")
+    runs: list[str] = []
+
+    def run() -> str:
+        runs.append(_run_genome(genome))
+        return runs[-1]
+
+    record = refresh.refresh(
+        paths,
+        fetch=lambda name: subprocess.CompletedProcess(["fetch", name], 1, "", "no\n"),
+        run=run,
+        explain=None,
+        dashboard=lambda run_id: None,
+        now=lambda: datetime.now(UTC),
+    )
+    assert runs and record.run == runs[-1] != first
+    after = _panel_rows(genome, runs[-1])
+    assert set(after) == set(before)
+    ((statement, row),) = after.items()
+    assert "confidence amber, not diagnostic grade" in row[5]
+    args: dict[str, Any] = {
+        "base": first,
+        "run": None,
+        "f": Filters(),
+        "every": True,
+        "gene": None,
+        "marker": None,
+        "text": None,
+    }
+    shown = changes_report(paths.reports, paths.lab, **args)
+    assert not [c for c in shown["changes"] if c["id"].startswith("panelapp:")]
+    assert shown["research"] == {"details": 1}
+    named = changes_report(paths.reports, paths.lab, **{**args, "text": "panelapp:"})
+    assert [(c["id"], c["kind"]) for c in named["changes"]] == [(statement, "details")]
 
 
 def test_run_exports_its_snapshot_and_query_carries_the_contract(
@@ -3192,6 +3403,8 @@ def test_run_exports_its_snapshot_and_query_carries_the_contract(
     similarity = {"claim.population", "claim.low_confidence", "claim.probabilities"}
     expected = CONTRACT - COVERAGE_CONTRACT - effect_keys
     expected -= SLICE3F_FINDING_CONTRACT - similarity
+    # The panel layer's claim keys appear only on its statements, which this run has none of.
+    expected -= PANELAPP_CONTRACT
     expected -= finding_only | (smn_keys - {"claim.callers"})
     assert key_paths(keyed) == expected
     assert PGX_CONTRACT <= key_paths(result)
