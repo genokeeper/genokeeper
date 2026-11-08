@@ -49,10 +49,10 @@ documents it links to.
   rule at the new loci, FMR1 and AFF2 by the X dosage, and 22 loci named not covered; every
   graded repeat statement reads "not calibrated" until a follow-up pull request runs
   `genokeeper calibrate --only stage3` on HG002, HG003 and HG004.
-- Stage 3, slice 3f code delivered (2026-11-01): HLA typing and the coeliac screen, MITOMAP's
-  chrM variants, integrated HHV-6, runs of homozygosity, blood groups, ancestry and five
-  traits, gated by the `slice3f` table; until a follow-up PR runs `genokeeper calibrate --only
-  slice3f` and a first run on real data, each gated item reads "not calibrated".
+- Stage 3, slice 3f delivered, its `slice3f` table built (2026-11-06, the GIAB trio): HLA, MITOMAP's
+  chrM variants, HHV-6, runs of homozygosity, blood groups, ancestry, traits. Withheld, so not graded,
+  the value kept: ABO, C4A, C4B, CTL2, FUT3, MAM, PIGG, XG (measurable on no library) and chrM
+  heteroplasmy. UGT1A1\*28 is trusted; PharmCAT's read-backed phase sets are not (BR-036).
 - Roadmap: [docs/roadmap.md](docs/roadmap.md).
 - Questions about the user's genome: the `genome-ask` skill
   ([.claude/skills/genome-ask/SKILL.md](.claude/skills/genome-ask/SKILL.md)) answers from

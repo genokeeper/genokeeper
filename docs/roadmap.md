@@ -11,15 +11,17 @@ Stage 3, closing the genome. Slices 3a (SMN1/SMN2, eleven repeat loci, the Y hap
 (deletions of 50 bp or more in the ACMG SF and carrier genes) are delivered and calibrated on
 HG002's two libraries. The code of slices 3c (the masked reference, `realign`, HG004, four
 run-time checks), 3d (depth copy number, insertions, paralog loci, GBA1, Lp(a), the Tier 4
-carrier list), 3e (thirteen more repeat loci, RFC1, CFTR's poly-T/TG) and 3f (HLA typing, chrM,
-HHV-6, ancestry, blood groups, traits) is delivered; their calibrations on the PCR, HG003 and
-HG004 libraries follow in their own pull requests, and until then each of their rows reads "not
-calibrated". Slice 3g added 34 polygenic scores, named 24 conditions not covered and added six
-single-gene traits.
+carrier list) and 3e (thirteen more repeat loci, RFC1, CFTR's poly-T/TG) is delivered; their
+calibrations on the PCR, HG003 and HG004 libraries follow in their own pull requests, and until
+then each of their rows reads "not calibrated". Slice 3f (HLA typing, chrM, HHV-6, ancestry,
+blood groups, traits) is delivered and its table built on the GIAB trio: eight blood group
+systems and chrM heteroplasmy are withheld, so not graded, and PharmCAT's read-backed phase sets
+are not trusted. Slice 3g added 34 polygenic scores, named 24 conditions not covered and added
+six single-gene traits.
 
 ## Next
 
-The calibrations of 3c–3f. A third CYP2D6 caller, StellarPGx, so two of three callers agreeing
+The calibrations of 3c–3e. A third CYP2D6 caller, StellarPGx, so two of three callers agreeing
 on the activity score gives a high-reliability call where BCyrius and Aldy disagree. No open
 short-read caller was found for HBA1/HBA2, CYP21A2 or the F8 inversions; they stay named not
 covered.

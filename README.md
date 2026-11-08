@@ -615,6 +615,47 @@ join the GWAS Catalog as research associations, returned only to a query that na
 gene-disease validity; and a polygenic score is shown as its decile. Nothing in 3f is
 actionable.
 
+**What the `slice3f` table measured** (`genokeeper calibrate --report` prints it). It was built
+on 2026-11-06 from the GIAB trio's three called libraries (HG002 PCR-free, HG003, HG004).
+Withheld means not graded, not dropped: the statement stays unassessed, and the claim keeps the
+tool's value under `withheld`, at the lowest reliability, with the table's reason (a chrM
+heteroplasmy may keep its level in the claim's `level` or its warnings instead). Two things are
+withheld:
+
+- **Eight blood group systems: ABO, C4A, C4B, CTL2, FUT3, MAM, PIGG and XG.** Each is measurable
+  on no library: on each of the three, a position the system reads is a no-call in our calls or
+  in the truth's, so RBCeq2's genotype on one could not be set against its genotype on the
+  other. That is a missing measurement, not a wrong genotype. The other 37 of the 45 packaged
+  systems were compared on at least one library, and no genotype differed.
+- **chrM heteroplasmy.** The highest call below `[mito] min_homoplasmy` (0.9) in the unmixed
+  libraries was 0.58. One at 0.20 or above leaves the table with no floor, so a MITOMAP or
+  ClinVar statement on a chrM call below homoplasmy stays unassessed, with the reason "false
+  heteroplasmy at 0.58 in calibration". The gate counts every call below homoplasmy in the
+  unmixed libraries as false, and no truth set for chrM heteroplasmy was compared, so a real
+  heteroplasmy in one of these cell lines would withhold it too: "false" is the gate's
+  assumption, not a finding. Homoplasmic chrM calls and the haplogroup are not touched.
+
+PharmCAT's read-backed phase sets are not trusted: one pair of sites was compared with HG002's
+phased truth and agreed, and the table needs 20 (BR-036). PharmCAT therefore runs without them,
+as before 3f; the phasing of compound-heterozygote candidates and of APOE is not gated by this
+table. The other measures:
+
+- UGT1A1\*28 is trusted: its TA repeat matched the truth on all three libraries, each inside
+  its benchmark, and HG003 carries TA7.
+- HLA: no gene with a published type is withheld. OptiType (class I) and T1K gave HG002's type
+  at all six that have one (HLA-A, -B, -C, -DRB1, -DQA1, -DQB1), and each parent carries the
+  allele HG002 got from it; T1K's other genes have no truth here. No coeliac DQ tag SNP
+  differed from a truth; all six are graded on HG003 and HG004, four on HG002.
+- haplocheck, which is no gate here because the table has no floor, flagged all four mixtures
+  of HG003's chrM reads into HG002's (2% to 20%) and none of the three unmixed libraries.
+- HHV-6: background ratios of 0, 0 and 4.0×10⁻⁵, a non-finding ceiling of 1.2×10⁻⁴ against the
+  band's 0.5. The trio offers no positive, so this measures the background only.
+- Runs of homozygosity: no run of 5 Mb or more is false or missed on any library, and the 12 Mb
+  isodisomy spiked into chr2 was found on all three.
+- The Neanderthal share: 1.06% to 1.15%, inside ±30% of the 1.18% published for NA20810.
+- Ancestry: HG002's fastmixture proportions are within 0.45 percentage points of its parents'
+  mean in every group. That is a consistency check with no gate, so ancestry stays information.
+
 **Aldy's terms.** CYP2D6 (with BCyrius) and CYP2B6 are called by Aldy 4.8.3, whose licence
 from the Indiana University Research and Technology Corporation (IURTC) permits use solely
 for non-commercial research, excludes clinical trials and diagnostic use involving human
