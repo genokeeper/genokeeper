@@ -265,7 +265,7 @@ def test_contract_list_matches_the_query_and_show_output(tmp_path: Path) -> None
                 },
             ),
             Row(
-                "expansionhunter:CFTR",
+                "expansionhunter:CFTR-polyT-TG",
                 gene="CFTR",
                 level=None,
                 topic="carrier",
@@ -723,7 +723,7 @@ def test_skill_covers_stage3e() -> None:
     )
     for needed in (
         "`expansionhunter:RFC1`",
-        "`expansionhunter:CFTR`",
+        "`expansionhunter:CFTR-polyT-TG`",
         "flagged `exclusion`",
         '"possible"',
         "validity limited",
@@ -1092,7 +1092,7 @@ def _claim_doc(text: str, claim_type: str) -> set[str]:
     [
         ("expansionhunter:HTT", "repeat_expansion"),
         ("expansionhunter:RFC1", "repeat_expansion"),
-        ("expansionhunter:CFTR", "repeat_expansion"),
+        ("expansionhunter:CFTR-polyT-TG", "repeat_expansion"),
         ("smn:SMN1", "smn_copy_number"),
         ("yleaf:haplogroup", "y_haplogroup"),
     ],

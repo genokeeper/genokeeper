@@ -1222,7 +1222,7 @@ How to answer:
 ## Stage 3e screening: repeats beyond the eleven loci
 
 Slice 3e adds thirteen repeat loci to stage 3a's eleven, RFC1's motif call
-(`expansionhunter:RFC1`), CFTR's poly-T/TG (`expansionhunter:CFTR`) and 22 loci stated as
+(`expansionhunter:RFC1`), CFTR's poly-T/TG (`expansionhunter:CFTR-polyT-TG`) and 22 loci stated as
 not covered. Every non-normal result stays a "screening result, needs confirmation"; none is
 actionable and none of the new ones is a watch item (TCF4's intermediate and PABPN1's single
 11 stay 3a's).

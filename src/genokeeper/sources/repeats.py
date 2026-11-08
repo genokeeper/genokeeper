@@ -123,6 +123,9 @@ CFTR_5T_BOTH = (
 CFTR_TG11 = "information: 5T with TG11, a CFTR allele of low penetrance{both}"
 CFTR_UNREAD = "not assessed: the CFTR TG/T tract was not read across in full"
 CFTR_GENE = "CFTR"
+# The tracts' statement and `gene_call` go by this name, not the gene's: PharmCAT calls CFTR
+# too, and `gene_call` holds one row per run and name. The statement's `gene` stays CFTR.
+CFTR_CALL = "CFTR-polyT-TG"
 CFTR_TG, CFTR_T = "CFTR_TG", "CFTR_T"
 CFTR_CONDITION = (
     "CFTR-related disorders (variable-penetrance intron 9 poly-T/TG alleles)"
@@ -684,8 +687,10 @@ class RepeatSource:
         source_level: str,
         source_id: str,
         rfc1: Rfc1Call | None = None,
+        name: str | None = None,
     ) -> Fields:
-        """The statement of one graded repeat claim: `claim` holds its locus's keys."""
+        """The statement of one graded repeat claim: `claim` holds its locus's keys, and
+        its id ends with `name` (default `gene`), the name of its gene call."""
         full = {
             "schema": CLAIM_SCHEMA,
             "type": "repeat_expansion",
@@ -699,7 +704,7 @@ class RepeatSource:
         }
         return {
             "run_id": ctx.run_id,
-            "statement_id": f"{REPEATS_TOOL}:{gene}",
+            "statement_id": f"{REPEATS_TOOL}:{name or gene}",
             "kind": str(graded.kind),
             "vid": None,
             "gene": gene,
@@ -854,6 +859,7 @@ class RepeatSource:
         statement = self._statement(
             ctx,
             gene=CFTR_GENE,
+            name=CFTR_CALL,
             condition=CFTR_CONDITION,
             graded=graded,
             claim=claim,
@@ -874,7 +880,7 @@ class RepeatSource:
         callers = {f"ExpansionHunter {EH_VERSION}": "; ".join(tracts)} if tracts else {}
         gene_call = self._gene_call(
             ctx,
-            CFTR_GENE,
+            CFTR_CALL,
             graded,
             diplotype=diplotype if graded.kind is not Kind.UNASSESSED else None,
             callers=callers,

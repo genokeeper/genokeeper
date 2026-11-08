@@ -1300,7 +1300,11 @@ def _assert_stage3_unassessed(genome: Genome, run_id: str, reason: str) -> None:
     assert NOT_COVERED_IDS <= set(rows)
     assert all(rows[i]["reason"].startswith("not covered:") for i in NOT_COVERED_IDS)
     graded = set(rows) - NOT_COVERED_IDS
-    assert {"expansionhunter:RFC1", "expansionhunter:CFTR", *X_LINKED} <= graded
+    assert {
+        "expansionhunter:RFC1",
+        "expansionhunter:CFTR-polyT-TG",
+        *X_LINKED,
+    } <= graded
     assert {rows[i]["reason"] for i in graded} == {reason}
     assert {i for i, r in rows.items() if r["source"] != "expansionhunter"} == {
         "smn:SMN1",
@@ -1379,7 +1383,7 @@ def test_calibrated_stage3_statements(
         if r["source"] == "expansionhunter"
     }
     kinds = {g: r["kind"] for g, r in repeats.items()}
-    normal = ELEVEN_NORMAL | NEW_NORMAL | {"RFC1", "CFTR"}
+    normal = ELEVEN_NORMAL | NEW_NORMAL | {"RFC1", "CFTR-polyT-TG"}
     assert {g for g, k in kinds.items() if k == "non_finding"} == normal
     assert {g for g, k in kinds.items() if k == "watch"} == {"ATXN2", "CACNA1A"}
     assert {g for g, k in kinds.items() if k == "watch"} <= ELEVEN | {"TCF4", "PABPN1"}
@@ -1397,7 +1401,7 @@ def test_calibrated_stage3_statements(
         "call": "normal",
         "description": "no expanded allele",
     }
-    assert repeats["CFTR"]["reason"] == "no 5T allele: T 7/7, TG 10/12"
+    assert repeats["CFTR-polyT-TG"]["reason"] == "no 5T allele: T 7/7, TG 10/12"
     # A finding at a non-standard locus, RFC1 or CFTR would be a possible one at validity
     # limited; HG002 has none.
     loci = load_grading().repeats.loci
@@ -1455,7 +1459,7 @@ def test_rfc1_failure_unassessed_rest_written(genome: Genome, tmp_path: Path) ->
     assert "repeats" in inputs["steps"]
     assert rows["expansionhunter:HTT"]["kind"] == "non_finding"
     assert rows["expansionhunter:CNBP"]["kind"] == "non_finding"
-    assert rows["expansionhunter:CFTR"]["kind"] == "non_finding"
+    assert rows["expansionhunter:CFTR-polyT-TG"]["kind"] == "non_finding"
     # The calibrated run's counts, under the shipped [dosage]: AFF2 unassessed by the X
     # dosage, RFC1 by the failure.
     assert accounting["expansionhunter"] == (48, 0, 2, 15, 31)
@@ -1575,7 +1579,7 @@ def test_run_passes_min_spanning(
         row = rows[f"expansionhunter:{gene}"]
         assert row["kind"] == "unassessed", gene
         assert "an allele has fewer than 50 spanning reads" in row["reason"], gene
-    assert rows["expansionhunter:CFTR"]["reason"] == CFTR_UNREAD
+    assert rows["expansionhunter:CFTR-polyT-TG"]["reason"] == CFTR_UNREAD
 
 
 def test_repeats_step_keyed_on_what_its_build_reads(genome: Genome) -> None:

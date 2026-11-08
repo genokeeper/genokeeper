@@ -285,8 +285,7 @@ def _select(root: Path, run_id: str, *, owner_only: bool) -> str:
         f" LEFT JOIN read_parquet({path['call']}) AS c ON c.vid = s.vid"
         f" LEFT JOIN read_parquet({path['variant']}) AS v ON v.vid = s.vid"
         f" LEFT JOIN read_parquet({path['gene_call']}) AS g"
-        f" ON s.vid IS NULL AND g.gene = s.gene AND {OWNS_GENE_CALL.format(s='s')}"
-        + where
+        f" ON s.vid IS NULL AND {OWNS_GENE_CALL.format(s='s')}" + where
     )
 
 

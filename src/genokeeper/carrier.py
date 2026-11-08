@@ -71,7 +71,7 @@ from genokeeper.sources.cnv import CNV_TOOL, GAIN_WORDING, LOSS_WORDING, WHOLE_G
 from genokeeper.sources.deletions import DELETIONS_TOOL
 from genokeeper.sources.paralogs import LPA_TOOL, PARALOGS_TOOL
 from genokeeper.sources.predicted import PREDICTED_TOOL
-from genokeeper.sources.repeats import CFTR_GENE, REPEATS_TOOL
+from genokeeper.sources.repeats import CFTR_CALL, REPEATS_TOOL
 from genokeeper.sources.smn import SMN_TOOL
 from genokeeper.store.db import Kind, Level, Topic, Validity
 
@@ -118,8 +118,8 @@ NOT_COVERED = (
 # CFTR's poly-T/TG statement (slice 3e) is a variable-penetrance allele, never cystic-fibrosis
 # carrier status: whatever its kind, it answers neither carrier nor not a carrier, so a
 # "no 5T allele" never reads as a negative CF test. The anchor is the statement id, which
-# `sources.repeats` writes from `REPEATS_TOOL` and `CFTR_GENE` and no claim text can move.
-CFTR_REPEAT_ID = f"{REPEATS_TOOL}:{CFTR_GENE}"
+# `sources.repeats` writes from `REPEATS_TOOL` and `CFTR_CALL` and no claim text can move.
+CFTR_REPEAT_ID = f"{REPEATS_TOOL}:{CFTR_CALL}"
 CFTR_REPEAT_LINE = (
     "CFTR poly-T/TG: not cystic-fibrosis carrier status (a variable-penetrance allele"
     " or its absence); see its reason"

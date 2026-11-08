@@ -60,13 +60,13 @@ def test_cftr_5t_is_not_cf_carrier(
     tmp_path: Path,
     kind: str,
 ) -> None:
-    """CFTR's poly-T/TG statement (`expansionhunter:CFTR`) is never cystic-fibrosis carrier
-    status: with no CF-causing call in the store, the CF sites and the gene's counts are
+    """CFTR's poly-T/TG statement (`expansionhunter:CFTR-polyT-TG`) is never cystic-fibrosis
+    carrier status: with no CF-causing call in the store, the CF sites and the gene's counts are
     what they are without it, and the statement answers neither carrier nor not a carrier;
     the text prints it as its own line."""
     cf = Row("clinvar:41", gene="CFTR", kind="non_finding", dosage="0", level="high")
     repeat = Row(
-        "expansionhunter:CFTR",
+        "expansionhunter:CFTR-polyT-TG",
         kind=kind,
         gene="CFTR",
         level=None,
@@ -85,11 +85,11 @@ def test_cftr_5t_is_not_cf_carrier(
     )
     seed(con, [cf, repeat])
     con.execute(
-        "UPDATE statement SET source = 'expansionhunter' WHERE source_id = 'CFTR'"
+        "UPDATE statement SET source = 'expansionhunter' WHERE source_id = 'CFTR-polyT-TG'"
     )
     result = genotype(con, None, gene="CFTR").to_json()
     [lead, site] = result["sites"]
-    assert lead["id"] == "expansionhunter:CFTR" and site["id"] == "clinvar:41"
+    assert lead["id"] == "expansionhunter:CFTR-polyT-TG" and site["id"] == "clinvar:41"
     assert site["answer"] == Answer.NOT_A_CARRIER
     assert lead["answer"] == Answer.UNKNOWN
     assert "not cystic-fibrosis carrier status" in str(lead["not_a_finding_because"])

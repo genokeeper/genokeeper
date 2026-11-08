@@ -1239,3 +1239,79 @@ def test_a_gene_call_joins_only_the_statement_standing_for_its_gene(
     }
     found = {f["id"]: f["gene_call"] for f in result.findings}
     assert found["pharmcat:HLA-B"] is not None and found["pharmcat:G6PD"] is not None
+
+
+def test_two_tools_on_one_gene_read_their_own_gene_calls(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    """PharmCAT's CFTR result and CFTR's poly-T/TG tracts are two statements on one gene:
+    each reads its own call, by the name its statement id ends with."""
+    seed(
+        con,
+        [
+            Row(
+                "pharmcat:CFTR",
+                gene="CFTR",
+                level=None,
+                topic="drugs",
+                gene_call=_gene_call("high", diplotype="drug response"),
+                claim=PGX_CLAIM,
+            ),
+            Row(
+                "expansionhunter:CFTR-polyT-TG",
+                gene="CFTR",
+                level=None,
+                gene_call=_gene_call(
+                    "high", diplotype="tract lengths", gene="CFTR-polyT-TG"
+                ),
+                claim={"schema": "genomelab.claim/1", "type": "repeat_expansion"},
+            ),
+        ],
+    )
+    found = {f["id"]: f for f in query(con, None, Filters()).findings}
+    assert found["pharmcat:CFTR"]["gene_call"]["diplotype"] == "drug response"
+    assert (
+        found["expansionhunter:CFTR-polyT-TG"]["gene_call"]["diplotype"]
+        == "tract lengths"
+    )
+
+
+@pytest.mark.parametrize("kind", ["unassessed", "finding"])
+def test_a_statement_without_a_gene_reads_no_gene_call(
+    con: duckdb.DuckDBPyConnection, kind: str
+) -> None:
+    """RBCeq2's ABCG2 system (`bloodgroup:ABCG2`, no gene) shares its last word with
+    PharmCAT's ABCG2 and is not its result: read as PharmCAT's, an unassessed one raises
+    and a finding shows another tool's call."""
+    seed(
+        con,
+        [
+            Row(
+                "pharmcat:ABCG2",
+                gene="ABCG2",
+                level=None,
+                topic="drugs",
+                gene_call=_gene_call("high"),
+                claim=PGX_CLAIM,
+            ),
+            Row(
+                "bloodgroup:ABCG2",
+                kind=kind,
+                gene=None,
+                level=None,
+                validity="limited",
+                claim={"schema": "genomelab.claim/1", "type": "blood_group"},
+                reason="not calibrated",
+            ),
+        ],
+    )
+    result = query(
+        con,
+        None,
+        Filters(min_reliability=Level.LOW, min_validity=Validity.LIMITED),
+        list_unassessed=True,
+    )
+    assert result.unassessed_sites is not None
+    shown = {s["id"]: s for s in [*result.findings, *result.unassessed_sites]}
+    assert shown["bloodgroup:ABCG2"]["gene_call"] is None
+    assert shown["pharmcat:ABCG2"]["gene_call"] is not None

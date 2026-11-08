@@ -319,7 +319,7 @@ def _screened(
     rows = con.execute(
         "SELECT s.statement_id, s.kind, s.gene, g.diplotype, s.reason"
         " FROM statement AS s LEFT JOIN gene_call AS g"
-        " ON g.run_id = s.run_id AND g.gene = s.gene"
+        " ON g.run_id = s.run_id"
         f" AND {OWNS_GENE_CALL.format(s='s')}"
         " WHERE s.run_id = ? AND s.vid IS NULL AND s.kind IN (?, ?) AND NOT s.exclusion"
         f" AND s.source IN ({marks}) AND s.statement_id <> ?"

@@ -3,12 +3,14 @@ statement and gene call of a locus from ExpansionHunter calls built by hand."""
 
 import json
 from dataclasses import replace
+from itertools import combinations
 from pathlib import Path
 from typing import Any
 
 from fixtures.run_context import run_context
 
 from genokeeper.config import load_grading
+from genokeeper.pgx.pharmcat import PHARMCAT_GENES
 from genokeeper.repeats.expansionhunter import EH_VERSION, read_calls
 from genokeeper.repeats.loci import (
     Allele,
@@ -20,12 +22,14 @@ from genokeeper.repeats.loci import (
     classify,
 )
 from genokeeper.repeats.not_covered import NOT_COVERED
-from genokeeper.repeats.rfc1 import RFC1_PAIRS
+from genokeeper.repeats.rfc1 import RFC1_LOCUS, RFC1_PAIRS
 from genokeeper.smn import ParascopyCall, SmnCaller
 from genokeeper.sources import Collected
+from genokeeper.sources.paralogs import LOCI as PARALOG_LOCI
 from genokeeper.sources.repeats import (
     BETWEEN,
     BEYOND_FRAGMENT,
+    CFTR_CALL,
     CFTR_UNREAD,
     FINDING_REASON,
     FINDING_REASONS,
@@ -43,7 +47,7 @@ from genokeeper.sources.repeats import (
     grade,
     rfc1_grade,
 )
-from genokeeper.sources.smn import SmnSource
+from genokeeper.sources.smn import SMN_GENE, SmnSource
 from genokeeper.store.db import Kind, Level, Validity
 
 LOCI = load_grading().repeats.loci
@@ -479,8 +483,8 @@ def test_inrepeat_reads_from_the_json(tmp_path: Path) -> None:
         None,
         "not assessed",
     )
-    assert _statement(clean, "CFTR")["kind"] == str(Kind.NON_FINDING)
-    assert _statement(hidden, "CFTR")["reason"] == CFTR_UNREAD
+    assert _statement(clean, CFTR_CALL)["kind"] == str(Kind.NON_FINDING)
+    assert _statement(hidden, CFTR_CALL)["reason"] == CFTR_UNREAD
 
 
 def test_exclusion_too_few_spanning_unassessed(tmp_path: Path) -> None:
@@ -914,7 +918,7 @@ def _cftr_calls(
 def _cftr_statement(
     tmp_path: Path, tg: tuple[int, int], t: tuple[int, int], **kw: Any
 ) -> dict[str, Any]:
-    return _statement(_collect(tmp_path, _source(*_cftr_calls(tg, t, **kw))), "CFTR")
+    return _statement(_collect(tmp_path, _source(*_cftr_calls(tg, t, **kw))), CFTR_CALL)
 
 
 def test_cftr_grades(tmp_path: Path) -> None:
@@ -936,7 +940,7 @@ def test_cftr_grades(tmp_path: Path) -> None:
     assert "not determined" in five["reason"]
     assert "on both copies" not in five["reason"]
     collected = _collect(tmp_path, _source(*_cftr_calls((11, 12), (5, 7))))
-    gene_call = _gene_call(collected, "CFTR")
+    gene_call = _gene_call(collected, CFTR_CALL)
     assert (gene_call["level"], gene_call["diplotype"]) == ("low", "TG 11/12 T 5/7")
     claim = json.loads(five["claim"])
     assert [a["repeats"] for a in claim["alleles"]["tg"]] == [11, 12]
@@ -987,10 +991,10 @@ def test_cftr_unassessed(tmp_path: Path) -> None:
             else calls
         )
         kw = {k: v for k, v in kw.items() if k != "low_depth"}
-        statement = _statement(_collect(tmp_path, _source(*found, **kw)), "CFTR")
+        statement = _statement(_collect(tmp_path, _source(*found, **kw)), CFTR_CALL)
         assert (statement["kind"], statement["reason"]) == ("unassessed", reason)
     capped = _gene_call(
-        _collect(tmp_path, _source(*calls, caps={"CFTR": Level.MEDIUM})), "CFTR"
+        _collect(tmp_path, _source(*calls, caps={"CFTR": Level.MEDIUM})), CFTR_CALL
     )
     assert capped["level"] == "medium"
 
@@ -1017,3 +1021,28 @@ def test_not_covered_statements(tmp_path: Path) -> None:
     assert cstb["topic"] == "carrier"
     samd12 = _statement(_collect(tmp_path, _source()), "SAMD12")
     assert "(TTTCA)" in samd12["reason"]
+
+
+def test_no_two_sources_write_one_gene_call() -> None:
+    """`gene_call` holds one row per run and gene, so the names its five writers use are
+    disjoint: PharmCAT's genes, the repeat loci with RFC1 and CFTR's poly-T/TG, the paralog
+    loci, SMN1 and APOE. PharmCAT also calls CFTR, so the tracts' call has its own name, and
+    a run that wrote both under "CFTR" failed at the store after every step had finished."""
+    writers = {
+        "pharmcat": set(PHARMCAT_GENES),
+        "repeats": {*load_grading().repeats.loci, RFC1_LOCUS, CFTR_CALL},
+        "paralogs": set(PARALOG_LOCI),
+        "smn": {SMN_GENE},
+        "apoe": {"APOE"},
+    }
+    for (a, one), (b, other) in combinations(writers.items(), 2):
+        assert not one & other, (a, b)
+
+
+def test_cftr_call_is_named_apart_and_stays_under_the_gene(tmp_path: Path) -> None:
+    """The tracts' statement and gene call share `CFTR_CALL`; the statement stays under
+    the gene, so a question about CFTR still finds it."""
+    collected = _collect(tmp_path, _source(*_cftr_calls((11, 12), (7, 9))))
+    assert _statement(collected, CFTR_CALL)["gene"] == "CFTR"
+    assert _gene_call(collected, CFTR_CALL)["gene"] == CFTR_CALL
+    assert "CFTR" not in {g["gene"] for g in collected.extra["gene_call"]}

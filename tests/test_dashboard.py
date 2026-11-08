@@ -1244,7 +1244,7 @@ SCREENED_ROWS = [
         claim=REPEAT,
     ),
     Row(
-        "expansionhunter:CFTR",
+        "expansionhunter:CFTR-polyT-TG",
         kind="non_finding",
         gene="CFTR",
         level=None,

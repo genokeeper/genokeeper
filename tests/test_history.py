@@ -584,6 +584,29 @@ def test_a_gene_level_result_change_is_a_change(tmp_path: Path) -> None:
         assert found[sid].last_changed == date(2026, 10, 2), sid
 
 
+def test_two_tools_on_one_gene_change_apart(tmp_path: Path) -> None:
+    """CFTR's poly-T/TG call moved under PharmCAT's unchanged one: the tracts' statement
+    alone is a change, with its own result."""
+    pgx = statement("pharmcat:CFTR", vid=None, gene="CFTR", source="pharmcat")
+    tracts = statement(
+        "expansionhunter:CFTR-polyT-TG",
+        vid=None,
+        gene="CFTR",
+        source="expansionhunter",
+    )
+    before = {
+        **gene_call("CFTR-polyT-TG"),
+        "diplotype": "TG 11/12 T 7/9",
+        "phenotype": "no 5T",
+    }
+    moved = {**before, "diplotype": "TG 11/12 T 5/9", "phenotype": "5T"}
+    write(tmp_path, D1, [pgx, tracts], gene_calls=[gene_call("CFTR"), before])
+    write(tmp_path, D2, [pgx, tracts], gene_calls=[gene_call("CFTR"), moved])
+    (change,) = diff(tmp_path, D1, D2)
+    assert change.statement_id == "expansionhunter:CFTR-polyT-TG"
+    assert change.after is not None and change.after.result == "TG 11/12 T 5/9 5T"
+
+
 def test_a_change_and_back_is_no_change(tmp_path: Path) -> None:
     calls = [call(vid(1001)), call(vid(1002))]
     write(tmp_path, D1, [at("clinvar:1", 1001), at("clinvar:2", 1002)], calls)

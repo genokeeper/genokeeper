@@ -101,11 +101,15 @@ NO_CALL_REASON = "no call row"
 # A gene-level unassessed claim's reason: its gene call's first warning that starts with
 # `GENE_UNRESOLVED`; without a gene call, the reason it carries, else `NO_GENE_CALL`.
 NO_GENE_CALL = "no gene call"
-# A gene call is the result of the one gene-level statement that stands for its gene,
-# `<tool>:<gene>` (PharmCAT's gene result, APOE, SMN1, a repeat locus): another gene-level
-# statement on that gene (an HLA allele's, PharmCAT's G6PD gap, slice 3f) is not joined to
-# it. `{s}` is the statement's alias.
-OWNS_GENE_CALL = "ends_with({s}.statement_id, ':' || {s}.gene)"
+# A gene call is the result of the one gene-level statement whose id is `<tool>:<its name>`
+# (PharmCAT's gene result, APOE, SMN1, a repeat locus): another gene-level statement on that
+# gene (an HLA allele's, PharmCAT's G6PD gap, slice 3f) is not joined to it. The name is the
+# gene's, or starts with it where two tools answer one gene (`sources.repeats.CFTR_CALL`), so
+# a statement without a gene owns none (RBCeq2's `bloodgroup:ABCG2` is not PharmCAT's ABCG2).
+# `{s}` is the statement's alias, `g` the gene call's.
+OWNS_GENE_CALL = (
+    "ends_with({s}.statement_id, ':' || g.gene) AND starts_with(g.gene, {s}.gene)"
+)
 
 _COLUMNS = (
     "f.statement_id, f.kind, f.topic, f.gene, f.vid, f.claim, f.validity, f.source_level,"
@@ -128,7 +132,7 @@ def _select(kinds: Collection[Kind]) -> str:
         f" WHERE s.kind IN ({listed})) AS f"
         " LEFT JOIN variant AS v ON v.run_id = f.run_id AND v.vid = f.vid"
         " LEFT JOIN gene_call AS g"
-        " ON f.vid IS NULL AND g.run_id = f.run_id AND g.gene = f.gene"
+        " ON f.vid IS NULL AND g.run_id = f.run_id"
         f" AND {OWNS_GENE_CALL.format(s='f')}"
     )
 

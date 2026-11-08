@@ -29,7 +29,7 @@ files, not this one. How to file, close and reference an entry:
 | [BR-020](bugs/BR-020.md) | low | calibrate | An INSurVeyor insertion of unknown length might take the short band's chance of being false, though the insertion calibration never measures such a call | 2026-11-02 |
 | [BR-028](bugs/BR-028.md) | low | annotate | SpliceAI's annotation lacks PCDH15's last coding exon and TNNT2's intron 1, so a splice change there gets no score | 2026-11-02 |
 
-## Fixed (24)
+## Fixed (25)
 
 | ID | Title | Fixed in |
 |---|---|---|
@@ -57,6 +57,7 @@ files, not this one. How to file, close and reference an entry:
 | [BR-032](bugs/BR-032.md) | a resource allele inside a masked false duplication stopped the whole step at bcftools norm | `genokeeper/genokeeper#22` |
 | [BR-033](bugs/BR-033.md) | the ancestry target merged the panel's split rows, and plink2 refused the bed | `genokeeper/genokeeper#23` |
 | [BR-034](bugs/BR-034.md) | ROH's calibration passed -T beside --AF-file, which bcftools roh refuses | `genokeeper/genokeeper#24` |
+| [BR-035](bugs/BR-035.md) | Two sources wrote one gene_call row, and a run failed at the store after every step | `genokeeper/genokeeper#25` |
 
 ## Void identifiers (0)
 
