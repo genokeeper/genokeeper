@@ -2867,7 +2867,6 @@ def test_run_writes_polygenic_scores(genome: Genome) -> None:
     "missing",
     [
         "scoring file",
-        "research scoring file",
         "reference panel",
         "ancestry positions",
         "Nextflow",
@@ -2881,9 +2880,6 @@ def test_missing_prs_inputs_refused_before_any_step(
     lab = genome.lab.paths.lab
     {
         "scoring file": pgsc.scoring_file(lab, "PGS000018"),
-        "research scoring file": pgsc.scoring_file(
-            lab, load_research_scores()[0].pgs_id
-        ),
         "reference panel": pgsc.panel_path(lab),
         "ancestry positions": pgsc.ancestry_pvar(lab),
         "Nextflow": pgsc.nextflow_path(lab),
@@ -2967,19 +2963,126 @@ def test_a_run_stores_one_statement_per_research_score(genome: Genome) -> None:
     )
 
 
-def test_a_failing_research_run_refuses_and_keeps_its_own_log(genome: Genome) -> None:
-    """A failed research run is refused with its output under its own step's name; the
-    chosen run's step stays cached."""
+def _chosen_findings(genome: Genome, run_id: str) -> int:
+    with connect(genome.store) as con:
+        row = con.execute(
+            "SELECT count(*) FROM statement"
+            " WHERE run_id = ? AND source = 'pgsc_calc' AND kind = 'finding'",
+            [run_id],
+        ).fetchone()
+    assert row is not None
+    return row[0]
+
+
+def _research_failed(genome: Genome, run_id: str) -> dict[str, str]:
+    with connect(genome.store) as con:
+        return _inputs_json(con, run_id)["prs_research"]["failed"]
+
+
+def test_a_failed_research_run_leaves_the_chosen_run_intact(genome: Genome) -> None:
+    """A failed research run is no refusal: every research score is unassessed and says
+    what failed, the failure is in `run.inputs` and its output kept under its own step."""
     work = genome.lab.paths.reports / "work"
     genome.nextflow.fail_research = "ERROR ~ Missing"
-    with pytest.raises(pipeline.RunRefused, match="exit status 1") as refused:
-        _run_genome(genome)
+    run_id = _run_genome(genome)
+    rows = _research_rows(genome, run_id)
+    assert set(rows) == {s.pgs_id for s in load_research_scores()}
+    for row in rows.values():
+        assert (row[0], row[1], row[3], row[4], row[5]) == (
+            "unassessed",
+            "limited",
+            "research",
+            False,
+            None,
+        )
+        assert row[2].startswith("pgsc_research failed: ")
+        assert "exit status 1" in row[2]
+    assert _chosen_findings(genome, run_id) == len(load_scores())
+    assert set(_research_failed(genome, run_id)) == {"pgsc_research"}
     kept = work / "pgsc_research-failed"
-    assert str(refused.value).endswith(str(kept / "nextflow.stdout"))
     assert (kept / "nextflow.stdout").read_text() == "ERROR ~ Missing"
     assert not (work / "pgsc-failed").exists()
     assert not [p for p in (work / "pgsc_research").iterdir()]
     assert [p for p in (work / "pgsc").iterdir() if not p.name.startswith(".")]
+
+
+def test_docker_not_running_still_refuses_at_the_research_run(
+    genome: Genome, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """As every container step does (`_attempt`): Docker going away is no research failure."""
+    answers = iter([64 * 2**30])
+
+    def memory() -> int:
+        answer = next(answers, None)
+        if answer is None:
+            raise DockerUnavailable("Docker is not running")
+        return answer
+
+    monkeypatch.setattr(pgsc, "docker_memory", memory)
+    with pytest.raises(pipeline.RunRefused, match="not running"):
+        _run_genome(genome)
+
+
+def test_a_missing_research_scoring_file_leaves_that_score_unassessed(
+    genome: Genome,
+) -> None:
+    """Only that score: it names the bootstrap, the others are computed."""
+    lab = genome.lab.paths.lab
+    research = load_research_scores()
+    gone = research[0].pgs_id
+    pgsc.scoring_file(lab, gone).unlink()
+    run_id = _run_genome(genome)
+    rows = _research_rows(genome, run_id)
+    assert rows[gone][0] == "unassessed"
+    assert "scripts/bootstrap.sh" in rows[gone][2]
+    assert all(rows[s.pgs_id][0] == "finding" for s in research[1:])
+    assert set(_research_failed(genome, run_id)) == {gone}
+    assert genome.nextflow.scored[1] == {s.pgs_id for s in research[1:]}
+    assert _chosen_findings(genome, run_id) == len(load_scores())
+
+
+def test_no_research_scoring_file_at_all_runs_nothing(genome: Genome) -> None:
+    lab = genome.lab.paths.lab
+    research = load_research_scores()
+    for score in research:
+        pgsc.scoring_file(lab, score.pgs_id).unlink()
+    run_id = _run_genome(genome)
+    rows = _research_rows(genome, run_id)
+    assert {row[0] for row in rows.values()} == {"unassessed"}
+    assert set(_research_failed(genome, run_id)) == {s.pgs_id for s in research}
+    assert genome.nextflow.runs == 1  # the chosen scores' alone
+    assert "pgsc_research" not in _steps(genome, run_id)
+
+
+def test_unreadable_research_results_leave_every_research_score_unassessed(
+    genome: Genome, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    real = pipeline.parse_results
+
+    def parse(path: Path) -> dict[str, pgsc.ScoreResult]:
+        if "pgsc_research" in str(path):
+            raise pgsc.PgscFailed("no such table")
+        return real(path)
+
+    monkeypatch.setattr(pipeline, "parse_results", parse)
+    run_id = _run_genome(genome)
+    rows = _research_rows(genome, run_id)
+    assert {row[0] for row in rows.values()} == {"unassessed"}
+    assert all("no such table" in row[2] for row in rows.values())
+    assert set(_research_failed(genome, run_id)) == {"pgsc_research"}
+    assert _chosen_findings(genome, run_id) == len(load_scores())
+
+
+def test_an_unreported_research_score_is_unassessed_alone(genome: Genome) -> None:
+    research = load_research_scores()
+    gone = research[0].pgs_id
+    genome.nextflow.omit = {gone}
+    run_id = _run_genome(genome)
+    rows = _research_rows(genome, run_id)
+    assert rows[gone][0] == "unassessed"
+    assert rows[gone][2].startswith("pgsc_calc reported nothing of this score")
+    assert all(rows[s.pgs_id][0] == "finding" for s in research[1:])
+    assert set(_research_failed(genome, run_id)) == {gone}
 
 
 def test_a_refresh_carries_the_research_scores(

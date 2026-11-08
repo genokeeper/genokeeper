@@ -603,7 +603,7 @@ panel's ancestry positions (an unknown or low call goes in as a no-call), each s
 its percentile against the population you are closest to (one below 0.75 overlap is
 unassessed, what pgsc_calc computed kept under `claim.withheld`), and APOE's diplotype from our
 calls at rs429358 and rs7412. Docker needs at least 32 GB of memory for it (Docker Desktop,
-Settings, Resources). 27 more scores that do not pass the selection rule (`[[research_score]]`
+Settings, Resources). 27 more scores outside the chosen set (`[[research_score]]`
 in `src/genokeeper/resources/pgs/scores.toml`, each with `why`) run in a second pgsc_calc run of
 their own, so the chosen scores' cache stays as it was, and are stored as research: validity
 limited, topic research, never actionable, returned only to `--gene`, `--marker` or `--text`
@@ -922,10 +922,10 @@ the bootstrap's MedlinePlus file.
 
 ## Refreshing
 
-**After the research polygenic scores land, run `scripts/bootstrap.sh` once**: a run without
-their scoring files is refused, naming the bootstrap, so a refresh fails until they are
-fetched. A refresh grades through `genokeeper run`, so each new run carries the research
-statements and `genokeeper changes` counts them under research, listing one only when named.
+A refresh grades through `genokeeper run`, so each new run carries the research polygenic
+scores and `genokeeper changes` counts them under research, listing one only when named. A
+research score whose scoring file is missing or whose run failed is unassessed, saying why (a
+missing file names `scripts/bootstrap.sh`): the run and the refresh go on without it.
 
 ```bash
 uv run genokeeper refresh             # newest releases, a run when one is due, the Changes tab

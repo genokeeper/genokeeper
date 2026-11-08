@@ -663,8 +663,8 @@ why = "evaluated only in UK Biobank or for COPD"
 
 # --- research scores -----------------------------------------------------------------------
 #
-# Scores that do not pass the selection rule above, computed and shown anyway (the owner's
-# request, 2026-11-08) with the reason in `why`, in pgsc_calc:research:<PGS ID> statements
+# Scores outside the chosen set (not reviewed under the selection rule above, or not passing
+# it), computed and shown anyway (the owner's request, 2026-11-08) with which in `why`, in pgsc_calc:research:<PGS ID> statements
 # (genokeeper.sources.prs). Fields as a score's, plus `why`; a condition may hold several, and
 # none repeats a chosen score. Adding one needs only a table here and its id in
 # scripts/bootstrap.sh's pgs_research_ids. Metadata and evaluations from the PGS Catalog REST
@@ -711,7 +711,7 @@ publication = "Hatoum AS et al., Biol Psychiatry 2022, doi:10.1016/j.biopsych.20
 development_ancestry = "GWAS EUR 100%"
 evaluations = [["PPM018418", "EUR"]]
 licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
-why = "its only evaluation is of IQ in 916 Colorado twins (R2 0.12; Hatoum 2022), one small cohort whose independence from the training GWAS is not established here; the selection review did not cover intelligence"
+why = "the selection review did not cover intelligence, so the rule has not been applied to it: the catalog lists a UK Biobank GWAS (216,381 Europeans) and one evaluation outside it, on IQ in 916 Colorado twins (Hatoum 2022), whose R2 of 0.12 is a model's with a second polygenic score (cEF) among its covariates, so not this score's own"
 
 [[research_score]]
 pgs_id = "PGS004427"  # X20016.score, 1,059,939 variants, LDpred2
@@ -861,7 +861,7 @@ publication = "Kujala UM et al., Med Sci Sports Exerc 2020, doi:10.1249/mss.0000
 development_ancestry = "GWAS EUR 100%"
 evaluations = [["PPM012823", "EUR"], ["PPM012824", "EUR"], ["PPM021392", "EUR"]]
 licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
-why = "the selection review did not cover physical activity; evaluated on leisure-time physical activity in Finnish cohorts (delta R2 0.25% in FTC, 0.24% in NFBC; Kujala 2020) and in HUNT (R2 1.4%), and on waist, BMI, HDL cholesterol, stroke, hypertension and type 2 diabetes in HUNT (Tynkkynen)"
+why = "the selection review did not cover physical activity, so the rule has not been applied to it: the catalog lists a UK Biobank GWAS (321,309 Europeans) and evaluations outside it on leisure-time physical activity in Finnish cohorts (delta R2 0.25% in FTC, 0.24% in NFBC; Kujala 2020) and in HUNT (R2 1.4%, a model's with age, sex and 10 principal components; Tynkkynen), and on waist, BMI, HDL cholesterol, stroke, hypertension and type 2 diabetes in HUNT"
 
 [[research_score]]
 pgs_id = "PGS002255"  # PRS_measured, 1,140,182 variants, LDpred
@@ -871,7 +871,7 @@ publication = "Kujala UM et al., Med Sci Sports Exerc 2020, doi:10.1249/mss.0000
 development_ancestry = "GWAS EUR 100%"
 evaluations = [["PPM012825", "EUR"], ["PPM012826", "EUR"], ["PPM012827", "EUR"]]
 licence = "PGS obtained from the Catalog should be cited appropriately, and used in accordance with any licensing restrictions set by the authors. See EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/) for additional details."
-why = "the selection review did not cover physical activity; evaluated on leisure-time activity, moderate-to-vigorous activity and daily steps in Finnish cohorts (delta R2 0.07% to 1.44%; Kujala 2020) and on hearing difficulty in UK Biobank"
+why = "the selection review did not cover physical activity, so the rule has not been applied to it: the catalog lists a UK Biobank GWAS of accelerometer-measured activity (91,105 Europeans) and evaluations outside it on leisure-time activity, moderate-to-vigorous activity and daily steps in Finnish cohorts (delta R2 0.07% to 1.44%; Kujala 2020), and on hearing difficulty in UK Biobank"
 
 [[research_score]]
 pgs_id = "PGS002168"  # portability-ldpred2_log_fat_free_mass, 966,825 variants, LDpred2 (bigsnpr)

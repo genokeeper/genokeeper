@@ -305,8 +305,8 @@ PGS019980 PGS001794 PGS012555 PGS004873 PGS000754 PGS002726
 PGS004254 PGS004253 PGS000820 PGS001787 PGS002755 PGS001788
 PGS000705 PGS004614 PGS019967 PGS019973 PGS019983 PGS004885
 PGS000134 PGS002802 PGS000882"
-# The research scores (genokeeper.prs.scores.load_research_scores): scores that do not pass the
-# selection rule, a separate step so that adding one never re-fetches a chosen file.
+# The research scores (genokeeper.prs.scores.load_research_scores): scores outside the chosen
+# set, a separate step so that adding one never re-fetches a chosen file.
 pgs_research_ids="PGS002746 PGS003753 PGS002790 PGS003724 PGS004427 PGS003573
 PGS002231 PGS002786 PGS000133 PGS002342 PGS004451 PGS002209
 PGS000205 PGS000908 PGS004161 PGS003492 PGS004799 PGS002143

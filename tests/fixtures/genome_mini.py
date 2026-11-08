@@ -1424,7 +1424,8 @@ class FakeNextflow:
     (`image`, None for an unpinned one) and writes the results at each score's match rate
     (`rates`, 0.9 by default) for the scoring files it was given (`scored`, per run);
     `vcf` is the chosen scores' run's; `fail`, when set, is what a failing run prints on
-    stdout, beside its `.nextflow.log` (`fail_research`: the research scores' run alone).
+    stdout, beside its `.nextflow.log` (`fail_research`: the research scores' run alone);
+    `omit` the scores left out of its results.
     `runs` counts its runs."""
 
     def __init__(self) -> None:
@@ -1435,6 +1436,7 @@ class FakeNextflow:
         self.image: str | None = PINNED["plink2"]
         self.fail_research: str | None = None
         self.scored: list[set[str]] = []
+        self.omit: set[str] = set()
 
     def __call__(
         self,
@@ -1465,7 +1467,7 @@ class FakeNextflow:
                 ]
         image = self.image or PINNED["plink2"].split("@")[0] + ":2.00a5.10"
         write_task(Path(given["-w"]), image)
-        rates = {pgs_id: self.rates.get(pgs_id, 0.9) for pgs_id in scored}
+        rates = {pgs_id: self.rates.get(pgs_id, 0.9) for pgs_id in scored - self.omit}
         write_results(Path(given["--outdir"]), rates)
         return ""
 

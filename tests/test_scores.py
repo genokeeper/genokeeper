@@ -213,7 +213,7 @@ def test_not_covered_unknown_topic_refused() -> None:
         parse_not_covered(_not_covered("d", topic="health"))
 
 
-# --- the research layer: scores that do not pass the rule ------------------------------------
+# --- the research layer: scores outside the chosen set ---------------------------------------
 
 _RESEARCH = """
 [[score]]

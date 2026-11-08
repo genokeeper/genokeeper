@@ -16,7 +16,7 @@ and each condition no score qualifies for is one unassessed `pgsc_calc:not-cover
 A research score (`ResearchScoreSource`, a research layer: `sources.research`) is one
 `pgsc_calc:research:<PGS ID>` statement, limited and under the research topic, whatever its
 overlap (given first in its reason): nothing is hidden from the agent, and its reliability
-is stated.
+is stated. One the research run could not compute is unassessed, saying what failed.
 
 APOE is one gene-level statement (`apoe:APOE`, gene APOE, under risks) from our calls at
 the ClinVar claims of rs429358 C and rs7412 T, with a gene call (the diplotype, at the
@@ -29,7 +29,7 @@ drops it, counted as `apoe_no_clinvar_claim`.
 import json
 import math
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from genokeeper.genotype.gvcf import Allele, Called
 from genokeeper.genotype.reliability import Reliability
@@ -55,9 +55,12 @@ from genokeeper.store.db import Kind, Level, Topic, Validity
 
 PRS_TOOL = "pgsc_calc"
 PRS_RESEARCH_TOOL = "pgsc_calc_research"
-RESEARCH_SOURCE_LEVEL = "research score: did not pass the selection rule"
+RESEARCH_SOURCE_LEVEL = (
+    "research score: outside the chosen set (not reviewed, or not passing the selection"
+    " rule)"
+)
 RESEARCH_REASON = (
-    "this score says little about one person: it did not pass the selection rule and is"
+    "this score says little about one person: it is outside the chosen set and is"
     " shown for research only"
 )
 WITHHELD_SIGNIFICANCE = (
@@ -200,12 +203,29 @@ def _research_row(ctx: RunContext, score: ResearchScore, result: ScoreResult) ->
         for r in (
             overlap,
             None if scored else "pgsc_calc gave no percentile",
+            prs_validity(score, result)[1],
             score.why,
             DECILE_REASON if scored else None,
             RESEARCH_REASON,
         )
         if r
     ]
+    return _research_statement(
+        ctx,
+        score,
+        Kind.FINDING if scored else Kind.UNASSESSED,
+        reasons,
+        json.dumps(_score_effect(result, scored)),
+    )
+
+
+def _research_statement(
+    ctx: RunContext,
+    score: ResearchScore,
+    kind: Kind,
+    reasons: Sequence[str],
+    effect: str | None,
+) -> Row:
     claim = {
         "schema": CLAIM_SCHEMA,
         "type": "pgs_research",
@@ -221,14 +241,14 @@ def _research_row(ctx: RunContext, score: ResearchScore, result: ScoreResult) ->
     statement: Fields = {
         "run_id": ctx.run_id,
         "statement_id": f"{PRS_TOOL}:research:{score.pgs_id}",
-        "kind": str(Kind.FINDING if scored else Kind.UNASSESSED),
+        "kind": str(kind),
         "vid": None,
         "gene": None,
         "claim": json.dumps(claim, ensure_ascii=False),
         "validity": str(Validity.LIMITED),
         "source_level": RESEARCH_SOURCE_LEVEL,
         "reason": "; ".join(reasons),
-        "effect": json.dumps(_score_effect(result, scored)),
+        "effect": effect,
         "actionable": False,
         "topic": str(Topic.RESEARCH),
         "source": PRS_RESEARCH_TOOL,
@@ -268,16 +288,28 @@ def _not_covered_row(ctx: RunContext, entry: NotCovered) -> Row:
 
 @dataclass(frozen=True)
 class ResearchScoreSource:
-    """pgsc_calc's result for each research score (`pgsc.parse_results`, pgs_id -> result,
-    one for every score)."""
+    """pgsc_calc's result for each research score (`pgsc.parse_results`, pgs_id -> result)
+    and, for one with none, what failed (`failed`, pgs_id -> reason)."""
 
     scores: Sequence[ResearchScore]
     results: Mapping[str, ScoreResult]
+    failed: Mapping[str, str] = field(default_factory=dict[str, str])
     tool: str = PRS_RESEARCH_TOOL
 
     def collect(self, ctx: RunContext) -> Collected:
-        """One statement per research score."""
-        rows = [_research_row(ctx, s, self.results[s.pgs_id]) for s in self.scores]
+        """One statement per research score; one that could not run is unassessed."""
+        rows = [
+            _research_statement(
+                ctx,
+                s,
+                Kind.UNASSESSED,
+                [self.failed[s.pgs_id], s.why, RESEARCH_REASON],
+                None,
+            )
+            if s.pgs_id in self.failed
+            else _research_row(ctx, s, self.results[s.pgs_id])
+            for s in self.scores
+        ]
         return Collected(
             tool=self.tool, rows=rows, extra={}, input_rows=len(rows), dropped={}
         )

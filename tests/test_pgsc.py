@@ -38,6 +38,7 @@ from genokeeper.sources.prs import (
     DECILE_REASON,
     PRS_RESEARCH_TOOL,
     RESEARCH_REASON,
+    RESEARCH_SOURCE_LEVEL,
     WEAK_REASON,
     WITHHELD_SIGNIFICANCE,
     PrsSource,
@@ -902,7 +903,7 @@ def test_a_research_score_is_one_labelled_statement(tmp_path: Path) -> None:
         "vid": None,
         "gene": None,
         "validity": "limited",
-        "source_level": "research score: did not pass the selection rule",
+        "source_level": RESEARCH_SOURCE_LEVEL,
         "topic": "research",
         "actionable": False,
         "source": PRS_RESEARCH_TOOL,
@@ -950,3 +951,37 @@ def test_a_research_score_pgsc_calc_could_not_score_is_unassessed(
     assert (row["kind"], row["validity"]) == ("unassessed", "limited")
     assert row["reason"].startswith("pgsc_calc gave no percentile")
     assert json.loads(row["effect"])["score"]["decile"] is None
+
+
+def test_a_research_score_states_a_low_confidence_population(tmp_path: Path) -> None:
+    """As a chosen score's reason does (`prs_validity`), in the same place."""
+    result = ScoreResult(_ADHD.pgs_id, 90.0, 1.28, "EUR", True, 0.9, 0.4)
+    source = ResearchScoreSource(scores=[_ADHD], results={_ADHD.pgs_id: result})
+    con, _ = _store(tmp_path, source)
+    row = _statement(con, f"pgsc_calc:research:{_ADHD.pgs_id}")
+    assert row["reason"].split("; ") == [
+        "closest population EUR assigned with low confidence",
+        _ADHD.why,
+        DECILE_REASON,
+        RESEARCH_REASON,
+    ]
+
+
+def test_a_research_score_that_could_not_run_is_unassessed_with_what_failed(
+    tmp_path: Path,
+) -> None:
+    source = ResearchScoreSource(
+        scores=[_ADHD], results={}, failed={_ADHD.pgs_id: "the run failed"}
+    )
+    con, _ = _store(tmp_path, source)
+    row = _statement(con, f"pgsc_calc:research:{_ADHD.pgs_id}")
+    assert {
+        k: row[k] for k in ("kind", "validity", "topic", "actionable", "effect")
+    } == {
+        "kind": "unassessed",
+        "validity": "limited",
+        "topic": "research",
+        "actionable": False,
+        "effect": None,
+    }
+    assert row["reason"].split("; ") == ["the run failed", _ADHD.why, RESEARCH_REASON]

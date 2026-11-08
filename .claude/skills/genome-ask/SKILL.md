@@ -93,7 +93,7 @@ Fit the filters to the question:
 | "What about cancer / cardiomyopathy?" | `--text cancer` (gene, condition, classification, id, drug) |
 | "Anything on clopidogrel? My CYP2D6?" | `--topic drugs --text clopidogrel`, `--topic drugs --gene CYP2D6` (see Drugs) |
 | "My genetic risk of diabetes? My APOE?" | `--text diabetes --min-validity limited`, `--gene APOE` (see Polygenic scores and APOE) |
-| "My ADHD score? My IQ? A polygenic score for autism?" | `--text ADHD --min-validity limited` (see Research polygenic scores) |
+| "My ADHD score? My IQ? A polygenic score for autism?" | `--text ADHD --min-validity limited`, `--text intelligence --min-validity limited`, `--text autism --min-validity limited` (see Research polygenic scores) |
 | "My haplogroup? My maternal line?" | `--topic ancestry --min-validity limited` (see The haplogroup) |
 | "Do I carry the PPARG diabetes risk variant?" | `--gene PPARG --min-validity limited` or `--marker rs1801282 --min-validity limited` (see Research associations) |
 | "Do I have a deletion in BRCA1?" | `--gene BRCA1 --min-validity limited --min-reliability low` (see Stage 3b screening: deletions) |
@@ -387,7 +387,7 @@ Each finding has these keys:
 
   for a research polygenic score (`pgs_research`, id `pgsc_calc:research:<PGS ID>`, no
   marker and no gene, see Research polygenic scores), the keys of a `pgs` claim below but
-  `weak`, and `why`: why the score does not pass the selection rule.
+  `weak`, and `why`: why the score is outside the chosen set.
 
   for a polygenic score (`pgs`, id `pgsc_calc:<PGS ID>`, no marker and no gene), with its
   `condition` as above (the condition it stands for; a condition no score covers is a
@@ -833,8 +833,8 @@ floor) keeps what it has in the claim's own keys (`claim.alleles`, `claim.caller
   statement of its own: `show hla:table --json` (a withheld gene), `show cnv:screen --json`
   (a large event in a withheld band) and `pharmcat:UGT1A1` (UGT1A1*28's call, which PharmCAT
   was not given: its diplotype does not read it, and `significance` says what that means). A
-  polygenic score below the overlap also carries one: no table withheld it, its `reason` is
-  the overlap.
+  polygenic score below the overlap also carries one: no calibration table withheld it, its
+  `reason` is the overlap, and it is not a result (see Polygenic scores and APOE).
 - **Report all of it, in this order.** That the calibration withheld the result, quoting
   `reason`; the value (for a repeat the repeats, their intervals and the reads behind them);
   its reliability, in these words: "the lowest", and why in `reason`'s own terms: "failed its
@@ -926,10 +926,11 @@ polygenic scores); most are `limited`, so add `--min-validity limited`:
 - `validity.level` `moderate` means the score was evaluated in the PGS Catalog in the
   user's closest population; `limited` means it was not (or the population was assigned
   with low confidence, `validity.reason`): say the percentile is less certain there.
-- Quote `match_rate`. A score below 0.75 is unassessed: say it could not be computed and
-  why, never a percentile. What pgsc_calc computed anyway is under `claim.withheld` (`value`:
-  `decile`, `percentile`, `match_rate`, `population`; reliability `low`; see Withheld values):
-  report it as withheld, at the lowest reliability, never as the score's decile.
+- Quote `match_rate`. A score below 0.75 is unassessed, its `reason` the overlap. The value
+  pgsc_calc computed is kept under `claim.withheld` (`value`: `decile`, `percentile`,
+  `match_rate`, `population`; reliability `low`): it is not a result, and no calibration
+  table withheld it, the overlap did. Give it only as that, at the lowest reliability, never
+  as the score's decile.
 - Alzheimer's score is built without the APOE region: APOE stands beside it, never in it.
 
 APOE (`apoe:APOE`) is the ε2/ε3/ε4 diplotype from the user's calls at rs429358 and rs7412,
@@ -940,17 +941,19 @@ two SNPs), never a number for the user's risk of dementia. An unphased double he
 
 ## Research polygenic scores
 
-Scores that do not pass the selection rule (27 of them, `pgsc_calc:research:<PGS ID>`, from
+Scores outside the chosen set, not reviewed under the selection rule or not passing it
+(27 of them, `claim.why` says which, `pgsc_calc:research:<PGS ID>`, from
 `[[research_score]]` in `src/genokeeper/resources/pgs/scores.toml`) are computed in a second
 pgsc_calc run and stored as research: `limited`, topic `research`, never actionable, hidden
 from every query that names no gene, marker or text and from the dashboard's feed. Find one
 with `--text <condition> --min-validity limited` (`ADHD`, `autism`, `intelligence`, `bipolar`,
-`schizophrenia`, `neuroticism`, ...); `--text pgsc_calc:research:` lists them all. A condition
+`schizophrenia`, `neuroticism`, ...); `--text pgsc_calc:research: --min-validity limited` lists
+them all. A condition
 can have several (ADHD has two; `claim.why` tells them apart).
 
 - Never present one as a risk, an IQ or a diagnosis, and never as a finding about the person.
   A research score says little about one person: say so, in those words, before anything
-  else, and quote `claim.why`: why it does not pass the rule.
+  else, and quote `claim.why`: why it is outside the chosen set.
 - `validity.reason` holds `claim.why`, the deciles wording and that sentence; it starts with
   the overlap when the score's overlap is below 0.75. A low-overlap research score is still
   shown, with that overlap: give it, and say the number is less reliable for it.
@@ -964,6 +967,8 @@ can have several (ADHD has two; `claim.why` tells them apart).
 - A chosen score (`pgsc_calc:<PGS ID>`) is not one of these, and a `not-covered` statement
   may stand beside a research score for the same condition: the rule still says the condition
   is not covered.
+- One the research run could not compute is unassessed, its `validity.reason` saying what
+  failed (found with `--list-unassessed`); give that, never a decile.
 - A store from a run before this layer holds none: say that run did not compute
   them.
 

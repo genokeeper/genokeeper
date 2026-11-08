@@ -12,9 +12,10 @@ comparison, where it would never match and leave the grade silently limited.
 A score may carry `weak` (slice 3g), and the same file names the conditions no score
 qualifies for (`load_not_covered`), each refused if a chosen score also names it.
 
-The same file's `research_score` tables (`load_research_scores`) are scores that do not pass
-the selection rule and are computed anyway: each has the fields of a score and a required
-`why`, none repeats a chosen score, and a condition can hold several.
+The same file's `research_score` tables (`load_research_scores`) are scores outside the
+chosen set (not reviewed under the selection rule, or not passing it) and are computed anyway:
+each has the fields of a score and a required `why`, none repeats a chosen score, and a
+condition can hold several.
 """
 
 import functools
@@ -121,7 +122,7 @@ def load_scores() -> tuple[Score, ...]:
 
 @dataclass(frozen=True, kw_only=True)
 class ResearchScore(Score):
-    """A score that does not pass the selection rule, and `why`."""
+    """A score outside the chosen set, and `why`."""
 
     why: str
 
