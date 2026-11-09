@@ -75,6 +75,12 @@ LOF_CONSEQUENCES = frozenset(
 )
 START_LOST = "start_lost"
 MISSENSE = "missense_variant"
+# HGVS's three-letter amino acids as REVEL's one-letter `aaalt`.
+AMINO_ACIDS = {
+    "Ala": "A", "Arg": "R", "Asn": "N", "Asp": "D", "Cys": "C", "Gln": "Q", "Glu": "E",
+    "Gly": "G", "His": "H", "Ile": "I", "Leu": "L", "Lys": "K", "Met": "M", "Phe": "F",
+    "Pro": "P", "Ser": "S", "Thr": "T", "Trp": "W", "Tyr": "Y", "Val": "V",
+}  # fmt: skip
 # The columns VEP writes (its --fields).
 FIELDS = (
     "Uploaded_variation",
@@ -157,7 +163,8 @@ class VepRecord:
     SpliceAI's largest delta score on the variant's gene, `splicevault_in_frame` whether
     any of SpliceVault's top four events at a lost splice site keeps the frame (None: no
     SpliceVault data at the site), and `pext` the base's mean pext over its gene's
-    largest (None: gnomAD has no pext there)."""
+    largest (None: gnomAD has no pext there). `revel_other_transcript` says `revel` is
+    REVEL's score for the allele and protein change on another transcript (`revel_by_allele`)."""
 
     vid: str
     gene: str
@@ -175,6 +182,7 @@ class VepRecord:
     spliceai: float | None
     splicevault_in_frame: bool | None
     pext: float | None
+    revel_other_transcript: bool = False
 
     @property
     def terms(self) -> frozenset[str]:
@@ -332,6 +340,49 @@ def locus(vid: str) -> tuple[str, int, str, str]:
     """A vid's (chrom, pos, ref, alt)."""
     _, chrom, pos, ref, alt = vid.split(":")
     return chrom, int(pos), ref, alt
+
+
+def _allele_revel(record: VepRecord, tabix: pysam.TabixFile) -> float | None:
+    """REVEL's score for the record's allele and protein change on any transcript, or None
+    when REVEL holds none or its rows disagree."""
+    chrom, pos, ref, alt = locus(record.vid)
+    contig = chrom.removeprefix("chr")
+    change = re.search(r"p\.[A-Za-z]{3}\d+([A-Za-z]{3})$", record.hgvsp or "")
+    if change is None or change[1] not in AMINO_ACIDS or contig not in tabix.contigs:
+        return None
+    rows = (line.split("\t") for line in tabix.fetch(contig, pos - 1, pos))
+    scores = {
+        row[7]
+        for row in rows
+        if (row[2], row[3], row[4], row[6])
+        == (str(pos), ref, alt, AMINO_ACIDS[change[1]])
+        and row[7] != "."
+    }
+    return float(scores.pop()) if len(scores) == 1 else None
+
+
+def revel_by_allele(records: Sequence[VepRecord], path: Path) -> list[VepRecord]:
+    """`records` with REVEL's score, read by allele and protein change, on each missense VEP
+    left without one (BR-042). VEP's plugin matches REVEL by transcript, and REVEL v1.3
+    predates many MANE Select transcripts. Not the plugin's `no_match`, which would take the
+    first row at every variant: REVEL scores one change differently on different transcripts
+    (0.91 and 0.35), so a transcript's own score stays, and rows that disagree give none."""
+    if not any(MISSENSE in r.terms and r.revel is None for r in records):
+        return list(records)
+    with pysam.TabixFile(str(path)) as tabix:
+        filled = []
+        for record in records:
+            score = (
+                _allele_revel(record, tabix)
+                if MISSENSE in record.terms and record.revel is None
+                else None
+            )
+            filled.append(
+                record
+                if score is None
+                else replace(record, revel=score, revel_other_transcript=True)
+            )
+    return filled
 
 
 class PextTable:
@@ -508,7 +559,8 @@ def annotate(
     threads: int,
 ) -> list[VepRecord]:
     """VEP's records (`parse_vep`) for the sites-only VCF `out_dir/VEP_INPUT`
-    (`vep_input`), VEP writing its output beside it; each loss-of-function record's
+    (`vep_input`), VEP writing its output beside it; REVEL by allele where VEP matched none
+    on the transcript (`revel_by_allele`); each loss-of-function record's
     `pext`; and SpliceAI's score on the records of `genes_for_spliceai`, under the gene's
     old name where SpliceAI keeps one (`SPLICEAI_NAMES`). SpliceAI is not run when there
     are no such records. `out_dir` holds the user's variants: the caller puts it
@@ -524,7 +576,9 @@ def annotate(
         mounts=mounts,
         label=LABEL,
     )
-    records = parse_vep(out_dir / VEP_OUTPUT, keep=genes_for_spliceai)
+    records = revel_by_allele(
+        parse_vep(out_dir / VEP_OUTPUT, keep=genes_for_spliceai), files.revel
+    )
     pext = PextTable(files.pext, files.pext_max)
     records = [
         replace(r, pext=pext.relative(*locus(r.vid)[:2], r.gene_id)) if r.lof else r

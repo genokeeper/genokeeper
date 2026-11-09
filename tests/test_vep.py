@@ -87,7 +87,21 @@ def _files(lab: Path) -> VepFiles:
     plain.write_text("chr1\t199\t200\tENSG01\t0.4\nchr1\t401\t402\tENSG01\t0.8\n")
     pysam.tabix_index(str(plain), preset="bed", force=True)
     files.pext_max.write_text("ENSG01\t0.8\n")
+    _revel_file(files.revel, [("300", "G", "A", "R", "H", "0.81", "ENST09")])
     return files
+
+
+REVEL_HEADER = (
+    "#chr\thg19_pos\tgrch38_pos\tref\talt\taaref\taaalt\tREVEL\ttranscripts\n"
+)
+
+
+def _revel_file(path: Path, rows: Sequence[tuple[str, ...]]) -> None:
+    """REVEL's file as the bootstrap indexes it, its rows on chr `1` at their GRCh38 base."""
+    plain = path.with_suffix("")
+    body = "".join(f"1\t{r[0]}\t" + "\t".join(r) + "\n" for r in rows)
+    plain.write_text(REVEL_HEADER + body)
+    pysam.tabix_index(str(plain), seq_col=0, start_col=2, end_col=2, force=True)
 
 
 class FakeContainers:
@@ -438,3 +452,92 @@ def test_vep_step_key_holds_the_spliceai_names(
     renamed = step()
     assert (again.key, again.reused) == (first.key, True)
     assert renamed.key != first.key
+
+
+def _missense_record(
+    vid: str, hgvsp: str = "ENSP9.1:p.Ala5Val", **kw: object
+) -> vep.VepRecord:
+    fields: dict[str, object] = {
+        "vid": vid,
+        "gene": "GENEZ",
+        "gene_id": "ENSG-Z",
+        "transcript": "ENST01",
+        "consequence": MISSENSE_TERM,
+        "mane": True,
+        "hgvsc": None,
+        "hgvsp": hgvsp,
+        "exon": None,
+        "cds_length": None,
+        "lof": False,
+        "revel": None,
+        "alphamissense": None,
+        "spliceai": None,
+        "splicevault_in_frame": None,
+        "pext": None,
+    }
+    return vep.VepRecord(**(fields | kw))  # type: ignore[arg-type]
+
+
+REVEL_ROWS = [
+    ("100", "C", "T", "A", "V", "0.85", "ENST08"),
+    # One allele and protein change, scored differently on two transcripts: no single score.
+    ("200", "C", "T", "A", "V", "0.90", "ENST08"),
+    ("200", "C", "T", "A", "V", "0.30", "ENST09"),
+    ("300", "C", "T", "A", "V", "0.50", "ENST08"),
+    ("300", "C", "T", "A", "V", "0.50", "ENST09"),
+    ("400", "C", "T", "A", "V", "0.85", "ENST08"),
+    ("500", "C", "G", "A", "V", "0.85", "ENST08"),
+]
+
+
+@pytest.mark.parametrize(
+    ("vid", "hgvsp", "expected"),
+    [
+        ("GRCh38:chr1:100:C:T", "ENSP9.1:p.Ala5Val", 0.85),
+        ("GRCh38:chr1:200:C:T", "ENSP9.1:p.Ala5Val", None),
+        ("GRCh38:chr1:300:C:T", "ENSP9.1:p.Ala5Val", 0.50),
+        # Another protein change at the same allele is not this one's score.
+        ("GRCh38:chr1:400:C:T", "ENSP9.1:p.Ala5Thr", None),
+        # Another allele at the base.
+        ("GRCh38:chr1:500:C:T", "ENSP9.1:p.Ala5Val", None),
+        # A contig REVEL does not hold.
+        ("GRCh38:chrUn_KI270742v1:100:C:T", "ENSP9.1:p.Ala5Val", None),
+    ],
+)
+def test_revel_by_allele(
+    tmp_path: Path, vid: str, hgvsp: str, expected: float | None
+) -> None:
+    """BR-042: a missense VEP gave no REVEL takes REVEL's score for its allele and protein
+    change on another transcript, and only when every such row agrees."""
+    path = tmp_path / "revel.tsv.gz"
+    _revel_file(path, REVEL_ROWS)
+    record = vep.revel_by_allele([_missense_record(vid, hgvsp)], path)[0]
+    assert (record.revel, record.revel_other_transcript) == (
+        expected,
+        expected is not None,
+    )
+
+
+@pytest.mark.parametrize(
+    "kw",
+    [{"revel": 0.2}, {"consequence": "stop_gained", "hgvsp": "ENSP9.1:p.Ala5Ter"}],
+)
+def test_revel_by_allele_leaves_the_others(
+    tmp_path: Path, kw: dict[str, object]
+) -> None:
+    """A score VEP matched on the transcript stays; only a missense is looked up."""
+    path = tmp_path / "revel.tsv.gz"
+    _revel_file(path, REVEL_ROWS)
+    record = _missense_record("GRCh38:chr1:100:C:T", **kw)
+    assert vep.revel_by_allele([record], path) == [record]
+
+
+def test_annotate_fills_revel_by_allele(
+    fake: FakeContainers, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`annotate` gives a missense VEP left without REVEL its score by allele."""
+    monkeypatch.setitem(
+        globals(), "ROWS", [r.replace("\t0.812\t", "\t-\t") for r in ROWS]
+    )
+    found = {r.vid: r for r in _annotate(tmp_path, [])}[MISSENSE]
+    assert (found.revel, found.revel_other_transcript) == (0.81, True)

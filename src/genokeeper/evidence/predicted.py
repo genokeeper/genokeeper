@@ -260,7 +260,8 @@ def predicted_rule(record: VepRecord, t: PredictedThresholds) -> tuple[str, str]
     if "missense_variant" in record.terms:
         if record.revel is not None:
             if record.revel >= t.revel:
-                return MISSENSE, f"missense, REVEL {record.revel:g}"
+                elsewhere = " (from another transcript)" * record.revel_other_transcript
+                return MISSENSE, f"missense, REVEL {record.revel:g}{elsewhere}"
         elif (
             record.alphamissense is not None and record.alphamissense >= t.alphamissense
         ):

@@ -735,3 +735,21 @@ def test_predicted_never_outranks_classified(tmp_path: Path) -> None:
     )
     found = query(con, None, Filters(min_validity=Validity.LIMITED)).findings
     assert [f["id"] for f in found] == ["clinvar:2", "predicted:1"]
+
+
+def test_a_revel_score_from_another_transcript_says_so() -> None:
+    """BR-042: the source level names a REVEL score read by allele, not on the transcript."""
+    from genokeeper.config import PredictedThresholds
+    from genokeeper.evidence.predicted import MISSENSE, predicted_rule
+
+    t = PredictedThresholds(revel=0.7, alphamissense=0.9, spliceai=0.2)
+    found = predicted_rule(
+        _record(
+            consequence="missense_variant",
+            lof=False,
+            revel=0.8,
+            revel_other_transcript=True,
+        ),
+        t,
+    )
+    assert found == (MISSENSE, "missense, REVEL 0.8 (from another transcript)")
