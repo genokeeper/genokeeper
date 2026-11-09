@@ -76,7 +76,7 @@ def canonical_diplotype(diplotype: str) -> str | None:
     return "/".join(name for _, name in sorted(named))
 
 
-def _shown(call: CallerCall) -> str:
+def shown_call(call: CallerCall) -> str:
     if call.diplotype is None:
         return "no call"
     if call.activity_score is None:
@@ -89,7 +89,7 @@ def agree(a: CallerCall, b: CallerCall, gene: str) -> OutsideCall:
     scores are known and equal; the one stated score, not agreed, when the other caller
     named a diplotype without a score; otherwise unresolved, with why and both calls."""
     calls = (a, b)
-    callers = {c.caller: _shown(c) for c in calls}
+    callers = {c.caller: shown_call(c) for c in calls}
     silent = [c.caller for c in calls if c.diplotype is None]
     filtered = [
         f"{c.caller} filtered its {c.diplotype} as {c.filtered}"

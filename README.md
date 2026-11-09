@@ -591,7 +591,7 @@ calls it with DeepVariant into a gVCF and chrM with mutserve, and grades every c
 ClinVar GRCh38 release on our own call at its allele; candidate compound heterozygotes are
 phased from the reads. Then the pharmacogenes: PharmCAT 3.4.0 on our calls at each of its
 positions (a call graded low or unknown goes in as a no-call), given the outside callers'
-calls (CYP2D6 where BCyrius and Aldy agree on the activity score, CYP2B6 from Aldy, HLA-A and
+calls (CYP2D6 where BCyrius and Aldy agree on the activity score, or where StellarPGx's score equals one of theirs when they do not, CYP2B6 from Aldy, HLA-A and
 HLA-B where OptiType and T1K agree on the drug alleles, MT-RNR1 from mutserve), each gene
 stored as a gene call under drugs; and PharmGKB's level 1B, 2A and 2B clinical annotations
 in genes PharmCAT's report gives no drug (F2 and F5 among them), located at their rsID's ClinVar allele and graded on our call

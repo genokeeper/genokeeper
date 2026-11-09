@@ -8,14 +8,22 @@ its first two rows. `fixtures/bcyrius_nocall.tsv` is BCyrius 2.2.0's output on t
 which holds only the CYP2D6 region, so its depth normalisation finds nothing: a no-call.
 """
 
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
 import pytest
 
-from genokeeper.pgx import cyp2d6
+from genokeeper.pgx import cyp2d6, stellarpgx
 from genokeeper.pgx.cyp2d6 import agree, read_aldy, read_bcyrius, run_aldy, run_bcyrius
-from genokeeper.pgx.outside import CallerCall, cpic_score, outside_lines
+from genokeeper.pgx.outside import (
+    CallerCall,
+    CallerFailed,
+    OutsideCall,
+    cpic_score,
+    outside_lines,
+)
+from genokeeper.pgx.stellarpgx import read_stellarpgx, run_stellarpgx, vote
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -297,3 +305,140 @@ def test_a_filtered_bcyrius_call_is_no_agreeing_caller(tmp_path: Path) -> None:
     assert (called.agreed, called.activity_score) == (False, None)
     assert called.unresolved_reason == "BCyrius filtered its *1/*1x3 as LowQ_high_CN"
     assert outside_lines([called]) == ""
+
+
+# --- StellarPGx, the third caller -----------------------------------------------------------
+
+
+def _pair(first: CallerCall, second: CallerCall) -> OutsideCall:
+    return agree(first, second, "CYP2D6")
+
+
+def test_read_stellarpgx_on_its_test_sample() -> None:
+    """`fixtures/stellarpgx_hg03130.alleles` is StellarPGx's report on its own test sample
+    (public HG03130) from a run of the pinned image, offline, on 2026-11-09."""
+    call = read_stellarpgx(FIXTURES / "stellarpgx_hg03130.alleles")
+    assert (call.diplotype, call.activity_score, call.abstained) == (
+        "*17/*29",
+        "1.0",
+        False,
+    )
+
+
+@pytest.mark.parametrize(
+    ("result", "score", "expected"),
+    [
+        ("Possible novel allele or suballele present: interpret with caution", "Indeterminate", (None, None, False)),
+        ("No_call", "Indeterminate", (None, None, False)),
+        ("*1/*40", "Indeterminate", ("*1/*40", None, True)),
+    ],
+)  # fmt: skip
+def test_read_stellarpgx_without_a_score(
+    tmp_path: Path, result: str, score: str, expected: tuple[str | None, None, bool]
+) -> None:
+    report = tmp_path / "x.alleles"
+    report.write_text(f"Result:\n{result}\n\nActivity score:\n{score}\n")
+    call = read_stellarpgx(report)
+    assert (call.diplotype, call.activity_score, call.abstained) == expected
+
+
+def test_read_stellarpgx_refuses_another_file(tmp_path: Path) -> None:
+    report = tmp_path / "x.alleles"
+    report.write_text("nothing here\n")
+    with pytest.raises(CallerFailed, match="not a StellarPGx report"):
+        read_stellarpgx(report)
+
+
+def test_vote_settles_a_score_difference() -> None:
+    """Two of three on the score: agreed, the dissent named, the diplotype only if both
+    who agree name the same."""
+    first, second = _call("BCyrius", "*1/*4", "1.0"), _call("Aldy", "*1/*1", "2.0")
+    voted = vote(
+        _pair(first, second), first, second, _call("StellarPGx", "*2/*4", "1.0")
+    )
+    assert (voted.agreed, voted.activity_score, voted.unresolved_reason) == (
+        True,
+        "1.0",
+        None,
+    )
+    assert voted.diplotype is None
+    assert voted.note is not None and "Aldy called *1/*1" in voted.note
+    assert set(voted.callers) == {"BCyrius", "Aldy", "StellarPGx"}
+
+
+def test_vote_checks_the_one_score_an_abstainer_left() -> None:
+    first, second = (
+        _call("BCyrius", "*1/*4", "1.0"),
+        _call("Aldy", "*1/*4", abstained=True),
+    )
+    pair = _pair(first, second)
+    assert not pair.agreed
+    voted = vote(pair, first, second, _call("StellarPGx", "*1/*4", "1.0"))
+    assert (voted.agreed, voted.diplotype) == (True, "*1/*4")
+
+
+def test_a_filtered_caller_has_no_vote() -> None:
+    first = replace(_call("BCyrius", "*1/*4", "1.0"), filtered="LowQ_high_CN")
+    second = _call("Aldy", "*1/*1", "2.0")
+    voted = vote(
+        _pair(first, second), first, second, _call("StellarPGx", "*1/*4", "1.0")
+    )
+    assert not voted.agreed
+    assert voted.unresolved_reason is not None
+
+
+def test_three_different_scores_stay_unresolved() -> None:
+    first, second = _call("BCyrius", "*1/*4", "1.0"), _call("Aldy", "*1/*1", "2.0")
+    voted = vote(
+        _pair(first, second), first, second, _call("StellarPGx", "*4/*4", "0.0")
+    )
+    assert (voted.agreed, voted.activity_score) == (False, None)
+    assert voted.callers["StellarPGx"] == "*4/*4 (activity score 0.0)"
+
+
+def test_an_agreed_pair_stands_and_a_dissent_is_said() -> None:
+    first, second = _call("BCyrius", "*1/*4", "1.0"), _call("Aldy", "*2/*4", "1.0")
+    pair = _pair(first, second)
+    voted = vote(pair, first, second, _call("StellarPGx", "*1/*1", "2.0"))
+    assert (voted.agreed, voted.activity_score) == (True, "1.0")
+    assert voted.note == "StellarPGx states 2.0 against the agreed 1.0"
+    same = vote(pair, first, second, _call("StellarPGx", "*2/*4", "1.0"))
+    assert same.note is None
+
+
+def test_a_failed_third_caller_changes_nothing_but_says_so() -> None:
+    first, second = _call("BCyrius", "*1/*4", "1.0"), _call("Aldy", "*1/*1", "2.0")
+    pair = _pair(first, second)
+    voted = vote(pair, first, second, None)
+    assert voted.callers["StellarPGx"] == "failed"
+    assert (voted.agreed, voted.unresolved_reason) == (
+        pair.agreed,
+        pair.unresolved_reason,
+    )
+
+
+def test_run_stellarpgx_needs_its_install(tmp_path: Path) -> None:
+    with pytest.raises(CallerFailed, match="not installed"):
+        run_stellarpgx(tmp_path / "a.cram", tmp_path / "a.fa", tmp_path / "o", tmp_path)
+
+
+def test_run_stellarpgx_without_a_report_failed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Its last task ignores its own errors, so a run that exits 0 may have written nothing
+    (it crashed so on HG002's PCR library), and it reads a BAM cut from the CRAM."""
+    (stellarpgx.stellarpgx_dir(tmp_path)).mkdir(parents=True)
+    (stellarpgx.stellarpgx_dir(tmp_path) / "main.nf").write_text("workflow {}\n")
+    ran: list[list[str]] = []
+
+    def fake_run(args: list[str], **_: Any) -> str:
+        ran.append(args)
+        return ""
+
+    monkeypatch.setattr(stellarpgx, "run_tool", fake_run)
+    monkeypatch.setattr(stellarpgx, "check_containment", lambda *_a, **_k: None)
+    with pytest.raises(CallerFailed, match="0 reports"):
+        run_stellarpgx(tmp_path / "a.cram", tmp_path / "a.fa", tmp_path / "o", tmp_path)
+    assert ran[0][:2] == ["samtools", "view"]
+    assert "--in_bam" in ran[2]
+    assert ran[2][ran[2].index("--in_bam") + 1].endswith("/sample*{bam,bai}")

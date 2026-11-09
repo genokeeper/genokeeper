@@ -49,6 +49,7 @@ from genokeeper.evidence.pgx import CPIC_FILES as CPIC_FILE_NAMES
 from genokeeper.masking import MASKED_SHA256, masked_bed
 from genokeeper.pgx.hla import IMGT_HLA_VERSION, t1k_index
 from genokeeper.pgx.pharmcat import PHARMCAT_VERSION, positions_path
+from genokeeper.pgx.stellarpgx import STELLARPGX_COMMIT, stellarpgx_dir
 from genokeeper.prs.pgsc import (
     NEXTFLOW_VERSION,
     NF_SCHEMA_VERSION,
@@ -1686,6 +1687,28 @@ def test_pgs_tools_pinned_by_sha256(lab: dict[str, str], tmp_path: Path) -> None
     again = _run(env, f"{pins}; step_pgs_tools; check=1; step_pgs_tools")
     assert (again.returncode, again.stdout) == (0, "")
     assert len(Path(env["CURL_LOG"]).read_text().splitlines()) == len(calls)
+
+
+def test_stellarpgx_is_unpacked_only_with_its_pin(
+    lab: dict[str, str], tmp_path: Path
+) -> None:
+    """StellarPGx's archive is kept only with the sha256 pinned in the script, and the commit
+    pinned there is the one `genokeeper.pgx.stellarpgx` reads."""
+    env, serve = _serving(lab, tmp_path)
+    (serve / f"{STELLARPGX_COMMIT}.tar.gz").write_bytes(
+        _tar_gz(f"StellarPGx-{STELLARPGX_COMMIT}", {"main.nf": "workflow {}\n"})
+    )
+    home = Path(lab["GENOKEEPER_HOME"])
+    refused = _run(env, "step_stellarpgx")
+    assert refused.returncode == 1
+    assert "sha256 mismatch for https://github.com/SBIMB/" in refused.stderr
+    assert _run(env, "check=1; step_stellarpgx").stdout == (
+        f"missing: StellarPGx ({STELLARPGX_COMMIT})\n"
+    )
+    pin = f"stellarpgx_sha256={_sha256(serve / f'{STELLARPGX_COMMIT}.tar.gz')}"
+    assert _run(env, f"{pin}; step_stellarpgx").returncode == 0
+    assert (stellarpgx_dir(home) / "main.nf").read_text() == "workflow {}\n"
+    assert _run(env, f"{pin}; check=1; step_stellarpgx").stdout == ""
 
 
 def test_pgs_pins_match_genokeeper(lab: dict[str, str]) -> None:

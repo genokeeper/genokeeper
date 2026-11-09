@@ -25,8 +25,9 @@ not covered and added six single-gene traits.
 
 ## Next
 
-A third CYP2D6 caller, StellarPGx, so two of three callers agreeing
-on the activity score gives a high-reliability call where BCyrius and Aldy disagree. No open
+The third CYP2D6 caller, StellarPGx, is delivered: two of three callers agreeing on the activity
+score give a high-reliability call where BCyrius and Aldy do not agree. That rule's error rate is
+not measured: the GIAB samples give no CYP2D6 truth here. No open
 short-read caller was found for HBA1/HBA2, CYP21A2 or the F8 inversions; they stay named not
 covered.
 

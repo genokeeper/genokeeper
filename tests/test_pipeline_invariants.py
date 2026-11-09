@@ -2528,7 +2528,7 @@ def test_run_writes_gene_calls(genome: Genome) -> None:
     assert (calls["F2"]["kind"], calls["F2"]["level"]) == ("finding", "medium")
     cyp2d6_call = calls["CYP2D6"]
     assert (cyp2d6_call["agreed"], cyp2d6_call["level"]) == (True, "high")
-    assert set(json.loads(cyp2d6_call["callers"])) == {"BCyrius", "Aldy"}
+    assert set(json.loads(cyp2d6_call["callers"])) == {"BCyrius", "Aldy", "StellarPGx"}
     assert (calls["HLA-B"]["agreed"], calls["HLA-B"]["level"]) == (True, "high")
     assert calls["DPYD"]["level"] == "medium"  # PharmCAT alone, nothing missing
     assert calls["CYP2C19"]["level"] == "low"  # a defining position missing

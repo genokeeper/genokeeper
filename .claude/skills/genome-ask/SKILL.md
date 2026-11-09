@@ -886,7 +886,9 @@ clopidogrel?", "what is my CYP2D6?") is answered with `--topic drugs` (add `--ge
 - `pharmcat:<gene>` — PharmCAT's result for one pharmacogene: a gene-level finding with no
   marker, its call in `gene_call`. CYP2D6 comes from BCyrius and Aldy agreeing on the
   activity score, or, at medium with the warning "one caller's score", from one of them when
-  the other named a diplotype but stated no score — say so, never call it agreed; CYP2B6
+  the other named a diplotype but stated no score — say so, never call it agreed. A warning
+  starting "two of three callers" means StellarPGx's score settled it where the two did not agree:
+  say which callers agreed and what the third called; that rule's error rate was not measured; CYP2B6
   from Aldy alone, HLA-A and HLA-B from OptiType and T1K agreeing on
   each drug allele (A\*31:01, B\*15:02, B\*57:01, B\*58:01), MT-RNR1 from mutserve, and the
   other genes from the user's own calls at PharmCAT's positions. A normal metabolizer is a

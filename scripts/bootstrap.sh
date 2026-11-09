@@ -299,6 +299,10 @@ pgsc_calc_commit=72ee54f2119d2fe65ac671327342dfc412bd0a3b
 pgsc_calc_url=https://github.com/PGScatalog/pgsc_calc/archive/$pgsc_calc_commit.tar.gz
 pgsc_calc_sha256=88c354e24ff383d5955386e6f8dee8ee2772ef4277388c64aa8bcbcaaf848ce3
 nextflow_java=openjdk@21
+# StellarPGx (MIT), GitHub's archive of master on 2026-11-09, the sha256 of those bytes.
+stellarpgx_commit=1952a4494fd6e9f809be87baa0a56c379e1d757b
+stellarpgx_url=https://github.com/SBIMB/StellarPGx/archive/$stellarpgx_commit.tar.gz
+stellarpgx_sha256=dc7df7667861f94977f4ec29221e76e1d7f60b3684de1e05a0b6abb3f214b97b
 # The chosen scores (genokeeper.prs.scores), whose harmonised GRCh38 scoring files the PGS
 # Catalog re-harmonises in place, each with its md5 beside it (<file>.md5).
 pgs_scores_base=https://ftp.ebi.ac.uk/pub/databases/spot/pgs/scores
@@ -1266,6 +1270,28 @@ step_pgs_tools() {
   say "Nextflow $nextflow_version, nf-schema $nf_schema_version, pgsc_calc $pgsc_calc_version -> $dir"
 }
 
+# StellarPGx, CYP2D6's third caller, fetched whole and unpacked only with the sha256 pinned above.
+step_stellarpgx() {
+  local dir archive
+  dir=$lab/stellarpgx/$stellarpgx_commit
+  step_done stellarpgx "$dir/main.nf" && return
+  if [ "$check" = 1 ]; then
+    missing "StellarPGx ($stellarpgx_commit)"
+    return
+  fi
+  mkdir -p "$lab/stellarpgx"
+  archive=$lab/stellarpgx/.download.tar.gz
+  say "downloading $stellarpgx_url"
+  download -o "$archive" "$stellarpgx_url"
+  [ "$(sha "$archive")" = "$stellarpgx_sha256" ] || { rm -f "$archive"; die "sha256 mismatch for $stellarpgx_url"; }
+  rm -rf "$dir"
+  mkdir -p "$dir"
+  tar -xzf "$archive" -C "$dir" --strip-components 1
+  rm -f "$archive"
+  record stellarpgx "$dir/main.nf"
+  say "StellarPGx -> $dir"
+}
+
 # The chosen scores' scoring files, fetched whole (never resumed) and kept only with the md5
 # the PGS Catalog publishes beside each, fetched with it: their anchor comes from that md5,
 # which a cut or garbled transfer cannot pass because the comparison runs on the bytes on
@@ -1349,6 +1375,7 @@ step_pgs_panel() {
 
 step_pgs() {
   step_pgs_tools
+  step_stellarpgx
   step_pgs_scores
   step_pgs_research_scores
   step_pgs_panel

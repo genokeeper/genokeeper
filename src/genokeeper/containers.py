@@ -87,6 +87,9 @@ IMAGES: dict[str, str] = {
     "61121bdf3ef0411eaf135a9de48b7129035dd73036cb6c8e54641e85b7572aab",
     "bcyrius": "genomelab/bcyrius:2.2.0-"
     "e7d4c07589c8e635c7724c68574a08b8949de7b72a26c7e9cc007862e42a0b3e",
+    # StellarPGx 1.2.8: its upstream image, linux/amd64 only (Docker Hub, read 2026-11-09).
+    "stellarpgx": "twesigomwedavid/stellarpgx-dev@sha256:"
+    "5d00b360e93627e8dbfca1641f4f98df1c63cfe5ef6ac6831ebde15cfc72668e",
     # Haplogrep3 3.3.2: upstream publishes a release tarball, no image, and BioContainers
     # builds 3.2.2 at newest (quay.io, read 2026-10-21); built here, with its tree baked in
     # (docker/haplogrep3.Dockerfile).
@@ -250,6 +253,7 @@ PLATFORMS: dict[str, str] = {
         "optitype",
         "t1k",
         "ucsc_bigbedtobed",
+        "stellarpgx",
     )
 } | {name: "linux/arm64" for name in IMAGES if name.startswith("pgsc_")}
 # SpliceAI's TensorFlow is published for linux/arm64 as tensorflow-cpu-aws, which its list

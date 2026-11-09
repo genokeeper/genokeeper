@@ -58,7 +58,7 @@ import sys
 import tarfile
 import tempfile
 from collections import defaultdict
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
 from compression import zstd
 from dataclasses import dataclass
 from pathlib import Path
@@ -426,13 +426,13 @@ def run_pgsc_calc(
     return out_dir / "results"
 
 
-def check_containment(work_dir: Path) -> None:
+def check_containment(work_dir: Path, *, pinned: Collection[str] | None = None) -> None:
     """Raise `ContainmentRefused` unless every task in Nextflow's `work_dir` has a
     `.command.run` whose every `docker run` line sets the network to `none` (and to nothing
-    else) and names its image by a digest among pgsc_calc's pinned ones. A work dir with no
+    else) and names its image by a digest among `pinned` (default: pgsc_calc's). A work dir with no
     task, a task without a launcher, and a launcher with no docker line are refused too:
     they verify nothing."""
-    pinned = {IMAGES[name] for name in PGSC_LABELS.values()}
+    pinned = pinned or {IMAGES[name] for name in PGSC_LABELS.values()}
     tasks = sorted(
         d
         for d in work_dir.glob("*/*")

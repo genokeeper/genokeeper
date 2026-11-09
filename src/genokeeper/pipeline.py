@@ -455,6 +455,15 @@ from genokeeper.pgx.pharmcat import (
     run_pharmcat,
     write_pharmcat_vcf,
 )
+from genokeeper.pgx.stellarpgx import (
+    ALLELES,
+    STELLARPGX,
+    STELLARPGX_COMMIT,
+    STELLARPGX_VERSION,
+    read_stellarpgx,
+    run_stellarpgx,
+    vote,
+)
 from genokeeper.phasing import Pair, Phase, phase_candidates, phase_pairs, phase_sites
 from genokeeper.prs.pgsc import (
     APOE_E2,
@@ -639,6 +648,7 @@ PGX_ALLELES_STEP_VERSION = "2"  # 2: the level-3 annotations' rsIDs (slice 3f)
 PGX_GENOTYPES_STEP_VERSION = "2"  # 2: the level-3 annotations' alleles (slice 3f)
 PGX_PHASES_STEP_VERSION = "1"
 BCYRIUS_STEP_VERSION = "1"
+STELLARPGX_STEP_VERSION = "1"
 ALDY_STEP_VERSION = "1"
 HLA_READS_STEP_VERSION = "1"
 OPTITYPE_STEP_VERSION = "1"
@@ -1492,6 +1502,7 @@ def outside_steps(
     samtools: str,
     index: Path,
     hla_only: bool = False,
+    lab: Path | None = None,
 ) -> tuple[dict[str, _Step], dict[str, str]]:
     """The outside callers' cached steps on the `aligned` CRAM: BCyrius (`bcyrius`), Aldy
     on CYP2D6 and CYP2B6 (`aldy`), the MHC-region and unmapped reads (`hla_reads`, keyed by
@@ -1517,7 +1528,7 @@ def outside_steps(
     ) -> None:
         try:
             steps[name] = _cached(work, name, version, parts, result, build)
-        except DockerUnavailable as e:
+        except (DockerUnavailable, ContainmentRefused) as e:
             raise RunRefused(_one_line(e)) from e
         except (ToolFailed, CallerFailed, ValueError, KeyError, IndexError) as e:
             failed[caller] = _failure(e)
@@ -1528,6 +1539,10 @@ def outside_steps(
     def build_aldy(out: Path) -> None:
         for gene in ("CYP2D6", "CYP2B6"):
             run_aldy(cram, fasta, out, gene)
+
+    def build_stellarpgx(out: Path) -> None:
+        assert lab is not None
+        run_stellarpgx(cram, fasta, out, lab)
 
     def build_hla_reads(out: Path) -> None:
         extract_hla_reads(cram, fasta, out)
@@ -1549,6 +1564,15 @@ def outside_steps(
             "CYP2B6.aldy",
             build_aldy,
         )
+        if lab is not None:
+            step(
+                STELLARPGX,
+                "stellarpgx",
+                STELLARPGX_STEP_VERSION,
+                [aligned.key, IMAGES["stellarpgx"], STELLARPGX_COMMIT, fasta_sha],
+                ALLELES,
+                build_stellarpgx,
+            )
     step(
         MHC_READS,
         "hla_reads",
@@ -1598,6 +1622,18 @@ def _failed(gene: str, failed: Mapping[str, str], *callers: str) -> OutsideCall 
     )
 
 
+def cyp2d6_outside(steps: Mapping[str, _Step], aldy: CallerCall) -> OutsideCall:
+    """CYP2D6 from BCyrius and `aldy`, with StellarPGx's vote where its step succeeded."""
+    bcyrius = read_bcyrius(steps["bcyrius"].path)
+    third = steps.get("stellarpgx")
+    return vote(
+        agree(bcyrius, aldy, "CYP2D6"),
+        bcyrius,
+        aldy,
+        None if third is None else read_stellarpgx(third.path),
+    )
+
+
 def outside_calls(
     steps: Mapping[str, _Step],
     failed: Mapping[str, str],
@@ -1609,7 +1645,7 @@ def outside_calls(
 ) -> list[OutsideCall]:
     """The outside calls PharmCAT is given (track design, slice 1b, "Outside calls"), one
     per gene, from the callers' cached results (`outside_steps`) and mutserve's: CYP2D6
-    agreed by BCyrius and Aldy, CYP2B6 from Aldy, HLA-A and HLA-B where OptiType and T1K
+    agreed by BCyrius and Aldy or two of them and StellarPGx, CYP2B6 from Aldy, HLA-A and HLA-B where OptiType and T1K
     agree, MT-RNR1 from mutserve's levels. A gene whose caller `failed` is unresolved with
     the failure as its reason."""
 
@@ -1621,7 +1657,7 @@ def outside_calls(
     ]
     return [
         _failed("CYP2D6", failed, BCYRIUS, ALDY)
-        or agree(read_bcyrius(steps["bcyrius"].path), aldy("CYP2D6"), "CYP2D6"),
+        or cyp2d6_outside(steps, aldy("CYP2D6")),
         _failed("CYP2B6", failed, ALDY) or cyp2b6_outside(aldy("CYP2B6")),
         *(
             hla
@@ -4585,6 +4621,7 @@ def run_genome(
         fasta_sha=shas["fasta"],
         samtools=versions["samtools"],
         index=pgx.t1k_index,
+        lab=lab,
     )
     steps |= callers
     outside = outside_calls(
@@ -5282,6 +5319,8 @@ def run_genome(
         "pharmcat_image": IMAGES["pharmcat"],
         "bcyrius": BCYRIUS_VERSION,
         "bcyrius_image": IMAGES["bcyrius"],
+        "stellarpgx": STELLARPGX_VERSION,
+        "stellarpgx_image": IMAGES["stellarpgx"],
         "aldy": ALDY_VERSION,
         "aldy_image": IMAGES["aldy"],
         "optitype_image": IMAGES["optitype"],
