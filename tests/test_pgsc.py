@@ -10,6 +10,7 @@ from collections.abc import Sequence
 from compression import zstd
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import duckdb
@@ -18,7 +19,7 @@ import pytest
 from fixtures.faf_mini import write_faf_table
 from fixtures.pgsc_mini import CONTAINED, PINNED, write_results, write_task
 
-from genokeeper import tools
+from genokeeper import pipeline, tools
 from genokeeper.config import load_grading
 from genokeeper.containers import IMAGES, PLATFORMS
 from genokeeper.evidence.frequency import FafTable
@@ -196,8 +197,6 @@ def test_write_target_vcf_one_row_per_alt(tmp_path: Path) -> None:
         (("chr1", 100, "A", "G"), _called("1", "0/1"), Level.HIGH),
         (("chr1", 100, "A", "T"), other, Level.HIGH),
         (("chr1", 200, "C", "T"), _called("2", "1/1"), Level.HIGH),
-        (("chr1", 300, "A", "G"), _called("1", "1/2"), Level.HIGH),
-        (("chr1", 300, "A", "T"), _called("1", "1/2"), Level.HIGH),
     ]
     out = pgsc.write_target_vcf(sites, tmp_path / "t.vcf.gz", one_row_per_alt=True)
     with gzip.open(out, "rt") as handle:
@@ -206,9 +205,33 @@ def test_write_target_vcf_one_row_per_alt(tmp_path: Path) -> None:
         ("100", "A", "G", "0/1"),
         ("100", "A", "T", "./."),
         ("200", "C", "T", "1/1"),
-        ("300", "A", "G", "./."),
-        ("300", "A", "T", "./."),
     ]
+
+
+def test_a_two_alt_heterozygote_is_a_no_call_on_each_research_row(
+    tmp_path: Path,
+) -> None:
+    """`1/2` on a row of one ALT is no REF copy: `0/1` would say it is. Only the research
+    run reads it so: the other targets' cached steps keep their bytes (BR-040)."""
+    genotypes = tmp_path / "genotypes.json.gz"
+    with gzip.open(genotypes, "wt", encoding="utf-8") as handle:
+        for alt in "GT":
+            handle.write(json.dumps(["chr1", 300, "A", alt, {}]) + "\n")
+
+    def grade(allele: object, data: object) -> tuple[Called, SimpleNamespace]:
+        return _called("1", "1/2"), SimpleNamespace(level=Level.HIGH)
+
+    def written(*, research: bool) -> list[str]:
+        out = pgsc.write_target_vcf(
+            pipeline._prs_sites(genotypes, grade, one_row_per_alt=research),  # type: ignore[arg-type]
+            tmp_path / "t.vcf.gz",
+            one_row_per_alt=True,
+        )
+        with gzip.open(out, "rt") as handle:
+            return [r.split("\t")[9] for r in handle.read().splitlines() if r[0] != "#"]
+
+    assert written(research=True) == ["./.", "./."]
+    assert written(research=False) == ["0/1", "0/1"]
 
 
 def test_target_positions_take_their_reference_from_the_fasta(tmp_path: Path) -> None:

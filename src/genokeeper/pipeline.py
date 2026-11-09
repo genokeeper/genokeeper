@@ -332,6 +332,7 @@ from genokeeper.genotype.reliability import (
     guard_allele_fraction,
     on_haploid_contig,
 )
+from genokeeper.genotype.sites import carries_unlisted_alt
 from genokeeper.haplocheck import OUT_NAME as HAPLOCHECK_OUT
 from genokeeper.haplocheck import RAW_SUFFIX as HAPLOCHECK_RAW
 from genokeeper.haplocheck import Haplocheck, demoted, read_haplocheck, run_haplocheck
@@ -1818,14 +1819,19 @@ def _pgsc_results(step: _Step, scores: Mapping[str, Path]) -> dict[str, ScoreRes
     return results
 
 
-def _prs_sites(genotypes: Path, grade: Grade) -> Iterator[tuple[Allele, Called, Level]]:
-    """Each target position's allele, our call there and its level, streamed."""
+def _prs_sites(
+    genotypes: Path, grade: Grade, *, one_row_per_alt: bool = False
+) -> Iterator[tuple[Allele, Called, Level | None]]:
+    """Each target position's allele, our call there and its level, streamed. On a row of
+    its own an ALT beside another one has no level, so it is a no-call: `0/1` would claim
+    a REF copy the person does not have."""
     with gzip.open(genotypes, "rt", encoding="utf-8") as handle:
         for line in handle:
             chrom, pos, ref, alt, data = json.loads(line)
             allele = (chrom, pos, ref, alt)
             called, reliability = grade(allele, data)
-            yield allele, called, reliability.level
+            alone = one_row_per_alt and carries_unlisted_alt(called)
+            yield allele, called, None if alone else reliability.level
 
 
 def pgsc_step(
@@ -1852,7 +1858,7 @@ def pgsc_step(
     position, and plink2 refuses more than 254 ALTs on a row and drops any row with two."""
     with tempfile.TemporaryDirectory(dir=work, prefix=".pgsc-input-") as tmp:
         target = write_target_vcf(
-            _prs_sites(genotypes, grade),
+            _prs_sites(genotypes, grade, one_row_per_alt=one_row_per_alt),
             Path(tmp) / "target.vcf.gz",
             one_row_per_alt=one_row_per_alt,
         )

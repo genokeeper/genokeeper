@@ -41,6 +41,13 @@ def _alt_copies(gt: str | None) -> int:
     return sum(a not in ("0", ".") for a in gt.replace("|", "/").split("/"))
 
 
+def carries_unlisted_alt(called: Called) -> bool:
+    """Whether the call has this ALT beside another one (`1/2` for a row of one of them)."""
+    if called.gt is None or called.dosage == "unknown":
+        return False
+    return 0 < int(called.dosage) < _alt_copies(called.gt)
+
+
 def site_genotype(
     called: Sequence[Called | None], levels: Sequence[Level | None], *, haploid: bool
 ) -> str:
@@ -62,11 +69,9 @@ def site_genotype(
     if total > ploidy:
         return nocall
     if total < ploidy and any(
-        (OTHER_ALLELE_WARNING in c.warnings or c.gt is not None)
-        and _alt_copies(c.gt) > total
-        for c in known
+        OTHER_ALLELE_WARNING in c.warnings and _alt_copies(c.gt) > total for c in known
     ):
-        return nocall  # the rest of the genotype is an ALT this row does not list
+        return nocall
     indices = [0] * (ploidy - total) + [
         i for i, n in enumerate(copies, start=1) for _ in range(n)
     ]
