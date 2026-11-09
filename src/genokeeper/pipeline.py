@@ -1837,6 +1837,7 @@ def pgsc_step(
     panel_sha: str,
     lab: Path,
     step: str = "pgsc",
+    one_row_per_alt: bool = False,
 ) -> _Step:
     """pgsc_calc's run (`run_pgsc_calc`) on its target VCF, written from our calls at every
     target position (`genotypes`) graded by `grade` (`write_target_vcf`: an unknown or
@@ -1846,10 +1847,14 @@ def pgsc_step(
     rebuilds it. Docker not running, pgsc_calc failing, or a task
     the containment check cannot verify refuses the run (`RunRefused`), and nothing of the
     step is kept: a failed Nextflow's stdout and `.nextflow.log` go to
-    `<work>/<step>-failed/`, which the next failure replaces and the refusal names."""
+    `<work>/<step>-failed/`, which the next failure replaces and the refusal names.
+    `one_row_per_alt` is the research run's: the alleles of its 27 files pile up on one
+    position, and plink2 refuses more than 254 ALTs on a row and drops any row with two."""
     with tempfile.TemporaryDirectory(dir=work, prefix=".pgsc-input-") as tmp:
         target = write_target_vcf(
-            _prs_sites(genotypes, grade), Path(tmp) / "target.vcf.gz"
+            _prs_sites(genotypes, grade),
+            Path(tmp) / "target.vcf.gz",
+            one_row_per_alt=one_row_per_alt,
         )
 
         def build(out: Path) -> None:
@@ -1929,6 +1934,7 @@ def _research_layer(
                 panel_sha=panel_sha,
                 lab=lab,
                 step="pgsc_research",
+                one_row_per_alt=True,
             )
             results = _pgsc_results(steps["pgsc_research"], research.files)
         return results, None, research.record(panel_sha)

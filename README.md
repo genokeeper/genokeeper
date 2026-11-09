@@ -609,7 +609,8 @@ their own, so the chosen scores' cache stays as it was, and are stored as resear
 limited, topic research, never actionable, returned only to `--gene`, `--marker` or `--text`
 and never on the dashboard's feed. A research score says little about one person, and one
 below the 0.75 overlap is still shown with its overlap: nothing is hidden, its reliability is
-stated. Then the mitochondrial
+stated. Their target writes each allele on a row of its own: a person who carries another ALT
+of a position reads as a no-call on this one's row. Then the mitochondrial
 haplogroup: Haplogrep3 3.3.2 (offline, in its image) on mutserve's homoplasmic chrM calls,
 on PhyloTree Build 17's rCRS tree (`phylotree-rcrs@17.3`); the chrM positions too few reads
 cover are named beside it, and with more than 1% of chrM uncovered it is unassessed. Then

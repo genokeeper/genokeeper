@@ -278,6 +278,8 @@ def test_config_keeps_arm_options_and_adds_network_none() -> None:
         "docker.runOptions = '-u $(id -u):$(id -g) --platform=linux/arm64 --network none'"
         in text.splitlines()
     )
+    assert f"    errorStrategy = {pgsc.ERROR_STRATEGY}" in text.splitlines()
+    assert "'terminate'" in pgsc.ERROR_STRATEGY
     assert set(pgsc.PGSC_LABELS) == {
         "pgscatalog_utils",
         "plink2",

@@ -3037,6 +3037,24 @@ def test_anything_wrong_in_the_research_layer_leaves_the_chosen_run(
     assert "\n" not in failed
 
 
+def test_only_the_research_run_writes_one_row_per_alt(
+    genome: Genome, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Its 27 files' alleles pile up on one position, past what plink2 reads on a row; the
+    chosen run's target keeps its bytes, and so its cached step."""
+    real = pipeline.write_target_vcf
+    seen: list[bool] = []
+
+    def spy(calls: Any, out: Path, *, one_row_per_alt: bool = False) -> Path:
+        if out.parent.name.startswith(".pgsc-input-"):
+            seen.append(one_row_per_alt)
+        return real(calls, out, one_row_per_alt=one_row_per_alt)
+
+    monkeypatch.setattr(pipeline, "write_target_vcf", spy)
+    _run_genome(genome)
+    assert seen == [False, True]
+
+
 def test_a_failed_research_run_leaves_the_chosen_run_intact(genome: Genome) -> None:
     """A failed research run is no refusal; its output is kept under its own step."""
     work = genome.lab.paths.reports / "work"

@@ -114,6 +114,8 @@ PGSC_LABELS = {
 # The arm profile's `docker.runOptions` (nextflow.config at the pinned commit), and ours.
 ARM_RUN_OPTIONS = "-u $(id -u):$(id -g) --platform=linux/arm64"
 RUN_OPTIONS = f"{ARM_RUN_OPTIONS} --network none"
+# conf/base.config's rule at the pinned commit, `finish` replaced by `terminate`.
+ERROR_STRATEGY = "{ task.exitStatus in ((130..145) + 104) ? 'retry' : 'terminate' }"
 # APOE's two SNPs on GRCh38 (dbSNP): rs429358 T>C (C is ε4's, Arg112) and rs7412 C>T (T is
 # ε2's, Cys158). Copies of each ALT -> the diplotype, where no phase is needed; a double
 # heterozygote is ε2/ε4 in trans and ε1/ε3 in cis.
@@ -347,9 +349,11 @@ def write_target_vcf(
 
 def nextflow_config(digests: Mapping[str, str]) -> str:
     """Our Nextflow config: the arm profile's `docker.runOptions` with `--network none`
-    appended, and each of pgsc_calc's container labels (`PGSC_LABELS`) pinned to its image
-    by digest (`digests`, label -> `repo@sha256:<digest>`). `ValueError` for a label
-    missing, one too many, or an image without a digest."""
+    appended, each of pgsc_calc's container labels (`PGSC_LABELS`) pinned to its image
+    by digest (`digests`, label -> `repo@sha256:<digest>`), and pgsc_calc's retry rule
+    with `terminate` for its `finish`: a task that failed for good while another was out
+    of memory left that one's retry queued and Nextflow waiting for good (BR-039).
+    `ValueError` for a label missing, one too many, or an image without a digest."""
     unpinned = sorted(label for label, ref in digests.items() if "@sha256:" not in ref)
     if unpinned or set(digests) != set(PGSC_LABELS):
         raise ValueError(f"labels {sorted(digests)}, unpinned {unpinned}")
@@ -357,7 +361,10 @@ def nextflow_config(digests: Mapping[str, str]) -> str:
         f"    withLabel: {label} {{\n        container = '{ref}'\n    }}\n"
         for label, ref in digests.items()
     )
-    return f"docker.runOptions = '{RUN_OPTIONS}'\nprocess {{\n{blocks}}}\n"
+    return (
+        f"docker.runOptions = '{RUN_OPTIONS}'\n"
+        f"process {{\n    errorStrategy = {ERROR_STRATEGY}\n{blocks}}}\n"
+    )
 
 
 def run_pgsc_calc(
