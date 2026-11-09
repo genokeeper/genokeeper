@@ -343,19 +343,21 @@ def locus(vid: str) -> tuple[str, int, str, str]:
 
 
 def _allele_revel(record: VepRecord, tabix: pysam.TabixFile) -> float | None:
-    """REVEL's score for the record's allele and protein change on any transcript, or None
-    when REVEL holds none or its rows disagree."""
+    """REVEL's score for the record's allele and protein change (the residue it replaces
+    and the new one) on any transcript, or None when REVEL holds none or its rows disagree."""
     chrom, pos, ref, alt = locus(record.vid)
     contig = chrom.removeprefix("chr")
-    change = re.search(r"p\.[A-Za-z]{3}\d+([A-Za-z]{3})$", record.hgvsp or "")
-    if change is None or change[1] not in AMINO_ACIDS or contig not in tabix.contigs:
+    change = re.search(r"p\.([A-Za-z]{3})\d+([A-Za-z]{3})$", record.hgvsp or "")
+    if change is None or contig not in tabix.contigs:
+        return None
+    residues = AMINO_ACIDS.get(change[1]), AMINO_ACIDS.get(change[2])
+    if None in residues:
         return None
     rows = (line.split("\t") for line in tabix.fetch(contig, pos - 1, pos))
     scores = {
         row[7]
         for row in rows
-        if (row[2], row[3], row[4], row[6])
-        == (str(pos), ref, alt, AMINO_ACIDS[change[1]])
+        if (row[2], row[3], row[4], row[5], row[6]) == (str(pos), ref, alt, *residues)
         and row[7] != "."
     }
     return float(scores.pop()) if len(scores) == 1 else None
@@ -364,9 +366,10 @@ def _allele_revel(record: VepRecord, tabix: pysam.TabixFile) -> float | None:
 def revel_by_allele(records: Sequence[VepRecord], path: Path) -> list[VepRecord]:
     """`records` with REVEL's score, read by allele and protein change, on each missense VEP
     left without one (BR-042). VEP's plugin matches REVEL by transcript, and REVEL v1.3
-    predates many MANE Select transcripts. Not the plugin's `no_match`, which would take the
-    first row at every variant: REVEL scores one change differently on different transcripts
-    (0.91 and 0.35), so a transcript's own score stays, and rows that disagree give none."""
+    predates many MANE Select transcripts. Not the plugin's `no_match`, which compares only the
+    new residue and takes the first row: at one allele, rows in different reading frames are
+    different protein changes (V>G 0.907 and W>G 0.350), so a transcript's own score stays,
+    and rows of one change that disagree give none."""
     if not any(MISSENSE in r.terms and r.revel is None for r in records):
         return list(records)
     with pysam.TabixFile(str(path)) as tabix:

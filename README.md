@@ -627,7 +627,7 @@ loss of function in a gene ClinGen rates haploinsufficient, or in a carrier Tier
 that passes the LoF filter's six gates (homopolymer and low mappability, MANE, NMD on the real stop with ClinVar's downstream
 truncations as rescue, no start-loss, pext, SpliceVault), a missense at or above its
 calibrated REVEL or AlphaMissense score (REVEL read from another transcript of the same protein
-change where REVEL v1.3 does not name the MANE one and its rows agree), or a splice change at SpliceAI 0.2, is a finding
+change where REVEL v1.3 does not name the transcript and its rows agree), or a splice change at SpliceAI 0.2, is a finding
 at validity limited, "predicted, not classified", with a note to discuss it with a
 geneticist (`config/grading.toml` [predicted]); outside the listed genes, or failing a
 gate, it is research. A predicted finding never outranks a ClinVar-classified one in the

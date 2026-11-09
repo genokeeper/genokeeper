@@ -4,6 +4,7 @@ genes' variants only."""
 
 import gzip
 from collections.abc import Sequence
+from dataclasses import replace
 from pathlib import Path
 
 import pysam
@@ -454,9 +455,7 @@ def test_vep_step_key_holds_the_spliceai_names(
     assert renamed.key != first.key
 
 
-def _missense_record(
-    vid: str, hgvsp: str = "ENSP9.1:p.Ala5Val", **kw: object
-) -> vep.VepRecord:
+def _missense_record(vid: str, **kw: object) -> vep.VepRecord:
     fields: dict[str, object] = {
         "vid": vid,
         "gene": "GENEZ",
@@ -465,7 +464,7 @@ def _missense_record(
         "consequence": MISSENSE_TERM,
         "mane": True,
         "hgvsc": None,
-        "hgvsp": hgvsp,
+        "hgvsp": "ENSP9.1:p.Ala5Val",
         "exon": None,
         "cds_length": None,
         "lof": False,
@@ -487,6 +486,10 @@ REVEL_ROWS = [
     ("300", "C", "T", "A", "V", "0.50", "ENST09"),
     ("400", "C", "T", "A", "V", "0.85", "ENST08"),
     ("500", "C", "G", "A", "V", "0.85", "ENST08"),
+    # Another reading frame: the same new residue from another one is another change.
+    ("600", "C", "T", "S", "V", "0.85", "ENST08"),
+    ("700", "C", "T", "A", "V", "0.55", "ENST08"),
+    ("700", "C", "T", "S", "V", "0.91", "ENST09"),
 ]
 
 
@@ -500,6 +503,10 @@ REVEL_ROWS = [
         ("GRCh38:chr1:400:C:T", "ENSP9.1:p.Ala5Thr", None),
         # Another allele at the base.
         ("GRCh38:chr1:500:C:T", "ENSP9.1:p.Ala5Val", None),
+        # The new residue alone is not the change: no row replaces this Ala here.
+        ("GRCh38:chr1:600:C:T", "ENSP9.1:p.Ala5Val", None),
+        # Another frame's row neither scores this change nor disagrees with it.
+        ("GRCh38:chr1:700:C:T", "ENSP9.1:p.Ala5Val", 0.55),
         # A contig REVEL does not hold.
         ("GRCh38:chrUn_KI270742v1:100:C:T", "ENSP9.1:p.Ala5Val", None),
     ],
@@ -511,25 +518,27 @@ def test_revel_by_allele(
     change on another transcript, and only when every such row agrees."""
     path = tmp_path / "revel.tsv.gz"
     _revel_file(path, REVEL_ROWS)
-    record = vep.revel_by_allele([_missense_record(vid, hgvsp)], path)[0]
+    record = vep.revel_by_allele([_missense_record(vid, hgvsp=hgvsp)], path)[0]
     assert (record.revel, record.revel_other_transcript) == (
         expected,
         expected is not None,
     )
 
 
-@pytest.mark.parametrize(
-    "kw",
-    [{"revel": 0.2}, {"consequence": "stop_gained", "hgvsp": "ENSP9.1:p.Ala5Ter"}],
-)
+@pytest.mark.parametrize("kw", [{"revel": 0.2}, {"consequence": "stop_gained"}])
 def test_revel_by_allele_leaves_the_others(
     tmp_path: Path, kw: dict[str, object]
 ) -> None:
-    """A score VEP matched on the transcript stays; only a missense is looked up."""
+    """A score VEP matched on the transcript stays and only a missense is looked up, also
+    beside a record the same call fills."""
     path = tmp_path / "revel.tsv.gz"
     _revel_file(path, REVEL_ROWS)
-    record = _missense_record("GRCh38:chr1:100:C:T", **kw)
-    assert vep.revel_by_allele([record], path) == [record]
+    kept = _missense_record("GRCh38:chr1:100:C:T", **kw)
+    filled = _missense_record("GRCh38:chr1:300:C:T")
+    assert vep.revel_by_allele([kept, filled], path) == [
+        kept,
+        replace(filled, revel=0.5, revel_other_transcript=True),
+    ]
 
 
 def test_annotate_fills_revel_by_allele(

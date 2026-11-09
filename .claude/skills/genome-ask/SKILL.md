@@ -1028,8 +1028,9 @@ splice change at SpliceAI 0.2 or above. Each one is `limited`, so add
   ClinVar submitter has classified. Never present it as a diagnosis or as pathogenic.
 - Every one carries "discuss with a geneticist" in `validity.reason`: say so, and that
   this is the conversation to have about it.
-- A `source_level` ending `(from another transcript)` is REVEL's score for this protein change
-  on another transcript, as REVEL v1.3 does not score the MANE transcript: say so.
+- A `source_level` ending `(from another transcript)`, on a `predicted:` or `panelapp:` statement,
+  is REVEL's score for this protein change on another transcript, as REVEL v1.3 does not name this
+  one: say so.
 - Name the rule and its score from `validity.source_level` (e.g. `missense, REVEL 0.81`,
   `stop_gained on ENST00000357654`) and the change from `claim.hgvsp`.
 - Under `research` (`topic`), a loss of function that failed a gate of the filter says
