@@ -33,7 +33,7 @@ files, not this one. How to file, close and reference an entry:
 | [BR-020](bugs/BR-020.md) | low | calibrate | An INSurVeyor insertion of unknown length might take the short band's chance of being false, though the insertion calibration never measures such a call | 2026-11-02 |
 | [BR-028](bugs/BR-028.md) | low | annotate | SpliceAI's annotation lacks PCDH15's last coding exon and TNNT2's intron 1, so a splice change there gets no score | 2026-11-02 |
 
-## Fixed (26)
+## Fixed (27)
 
 | ID | Title | Fixed in |
 |---|---|---|
@@ -63,6 +63,7 @@ files, not this one. How to file, close and reference an entry:
 | [BR-034](bugs/BR-034.md) | ROH's calibration passed -T beside --AF-file, which bcftools roh refuses | `genokeeper/genokeeper#24` |
 | [BR-035](bugs/BR-035.md) | Two sources wrote one gene_call row, and a run failed at the store after every step | `genokeeper/genokeeper#25` |
 | [BR-039](bugs/BR-039.md) | The research scores' target wrote every allele of 27 files on one VCF row, so plink2 refused the run and a failed task stalled Nextflow for hours | `fix/research-one-row-per-alt` |
+| [BR-041](bugs/BR-041.md) | PanelApp's API lists evidence in no fixed order, so a byte sha256 of the panel refuses the very version it pins | `fix/panelapp-canonical-hash` |
 
 ## Void identifiers (0)
 

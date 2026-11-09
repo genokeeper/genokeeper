@@ -1874,9 +1874,9 @@ PANELAPP_NAME = "?format=json"  # the URL's last segment, the fake curl's file
 
 
 def test_panelapp_panel_pinned_by_sha256(lab: dict[str, str], tmp_path: Path) -> None:
-    """One file, kept only when its sha256 is the pin; another version of the panel, or a
-    failed fetch, is not filed and leaves the bootstrap running, and a done step fetches
-    nothing again."""
+    """One file, kept only when its sha256 is the pin, taken with its `evidence` lists
+    sorted (BR-041); another version of the panel, or a failed fetch, is not filed and
+    leaves the bootstrap running, and a done step fetches nothing again."""
     env, serve = _serving(lab, tmp_path)
     served = serve / PANELAPP_NAME
     served.write_text('{"version": "other"}')
@@ -1897,12 +1897,15 @@ def test_panelapp_panel_pinned_by_sha256(lab: dict[str, str], tmp_path: Path) ->
     down = _run(env, "panelapp_url=https://no.where/x; step_panelapp")
     assert down.returncode == 0, down.stderr
     assert "could not fetch https://no.where/x" in down.stderr
-    pin = f"panelapp_sha256={_sha256(served)}"
+    served.write_text('{"version": "x", "genes": [{"evidence": ["b", "a"]}]}')
+    sorted_panel = '{"genes": [{"evidence": ["a", "b"]}], "version": "x"}'
+    digest = hashlib.sha256(sorted_panel.encode()).hexdigest()
+    pin = f"panelapp_sha256={digest}"
     done = _run(env, f"{pin}; step_panelapp")
     assert done.returncode == 0, done.stderr
-    assert dest.read_bytes() == served.read_bytes()
+    assert dest.read_text() == sorted_panel
     manifest = (home / "bootstrap-manifest.tsv").read_text().splitlines()
-    assert manifest == [f"panelapp\t{dest}\t{_sha256(served)}"]
+    assert manifest == [f"panelapp\t{dest}\t{digest}"]
     calls = len(Path(env["CURL_LOG"]).read_text().splitlines())
     again = _run(env, f"{pin}; step_panelapp; check=1; step_panelapp")
     assert (again.returncode, again.stdout) == (0, "")

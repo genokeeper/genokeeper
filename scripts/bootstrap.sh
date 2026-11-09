@@ -363,11 +363,12 @@ gencc_file=gencc-submissions.tsv
 gencc_size=25164448
 gencc_sha256=6b099f2497837c8bb0b62930bcfff13c952869dd52635511da181521ce1cde17
 # Genomics England PanelApp's Intellectual disability panel (genokeeper.sources.panelapp):
-# version 11.93, 2,867 genes, its sha256 computed on its download of 2026-11-08 (approved by
-# the user).
+# version 11.93, 2,867 genes (approved by the user on 2026-11-08). The API lists an entity's
+# `evidence` in no fixed order, so one version differs byte for byte between two fetches: the
+# sha256 is of the file sorted (`step_panelapp`), as two fetches of 2026-11-09 agree.
 panelapp_version=11.93
 panelapp_url='https://panelapp.genomicsengland.co.uk/api/v1/panels/285/?format=json'
-panelapp_sha256=e62f08807f0c94d6337626116b800f55b3c67e6b3bd0a29ba4b8285220edd97d
+panelapp_sha256=99bc5d75640874c78b2a932caedfb4a689db8b6ba5fe97923763104dd3436c8e
 # Slice 1e's downloads, one per line: name, prefetch/1e/ subfolder, size, sha256, URL. Each
 # sha256 was computed on the download of 2026-10-21 to 2026-10-23 that matched what its
 # publisher gives: the size Ensembl's FTP lists and its CHECKSUMS (BSD sum 56036 26996736)
@@ -1754,6 +1755,20 @@ step_panelapp() {
   if ! download -o "$part" "$panelapp_url"; then
     rm -f "$part"
     say "could not fetch $panelapp_url: the PanelApp research layer stays not run"
+    return
+  fi
+  if ! genokeeper_python -c '
+import json, sys
+with open(sys.argv[1], encoding="utf-8") as handle:
+    panel = json.load(handle)
+for kind in ("genes", "strs", "regions"):
+    for entity in panel.get(kind, []):
+        entity["evidence"].sort()
+with open(sys.argv[1], "w", encoding="utf-8") as handle:
+    json.dump(panel, handle, sort_keys=True, ensure_ascii=False)
+' "$part"; then
+    rm -f "$part"
+    say "could not read $panelapp_url as a panel: the PanelApp research layer stays not run"
     return
   fi
   if [ "$(sha "$part")" != "$panelapp_sha256" ]; then
