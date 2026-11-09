@@ -351,8 +351,10 @@ def nextflow_config(digests: Mapping[str, str]) -> str:
     """Our Nextflow config: the arm profile's `docker.runOptions` with `--network none`
     appended, each of pgsc_calc's container labels (`PGSC_LABELS`) pinned to its image
     by digest (`digests`, label -> `repo@sha256:<digest>`), and pgsc_calc's retry rule
-    with `terminate` for its `finish`: a task that failed for good while another was out
-    of memory left that one's retry queued and Nextflow waiting for good (BR-039).
+    with `terminate` for its `finish`, by a selector because two of its processes set
+    `finish` themselves and a process's own setting outranks a plain `process` one: a
+    task that failed for good while another was out of memory left that one's retry
+    queued and Nextflow waiting for good (BR-039).
     `ValueError` for a label missing, one too many, or an image without a digest."""
     unpinned = sorted(label for label, ref in digests.items() if "@sha256:" not in ref)
     if unpinned or set(digests) != set(PGSC_LABELS):
@@ -363,7 +365,9 @@ def nextflow_config(digests: Mapping[str, str]) -> str:
     )
     return (
         f"docker.runOptions = '{RUN_OPTIONS}'\n"
-        f"process {{\n    errorStrategy = {ERROR_STRATEGY}\n{blocks}}}\n"
+        "process {\n"
+        f"    withName: '.*' {{\n        errorStrategy = {ERROR_STRATEGY}\n    }}\n"
+        f"{blocks}}}\n"
     )
 
 

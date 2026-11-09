@@ -196,6 +196,8 @@ def test_write_target_vcf_one_row_per_alt(tmp_path: Path) -> None:
         (("chr1", 100, "A", "G"), _called("1", "0/1"), Level.HIGH),
         (("chr1", 100, "A", "T"), other, Level.HIGH),
         (("chr1", 200, "C", "T"), _called("2", "1/1"), Level.HIGH),
+        (("chr1", 300, "A", "G"), _called("1", "1/2"), Level.HIGH),
+        (("chr1", 300, "A", "T"), _called("1", "1/2"), Level.HIGH),
     ]
     out = pgsc.write_target_vcf(sites, tmp_path / "t.vcf.gz", one_row_per_alt=True)
     with gzip.open(out, "rt") as handle:
@@ -204,6 +206,8 @@ def test_write_target_vcf_one_row_per_alt(tmp_path: Path) -> None:
         ("100", "A", "G", "0/1"),
         ("100", "A", "T", "./."),
         ("200", "C", "T", "1/1"),
+        ("300", "A", "G", "./."),
+        ("300", "A", "T", "./."),
     ]
 
 
@@ -278,8 +282,12 @@ def test_config_keeps_arm_options_and_adds_network_none() -> None:
         "docker.runOptions = '-u $(id -u):$(id -g) --platform=linux/arm64 --network none'"
         in text.splitlines()
     )
-    assert f"    errorStrategy = {pgsc.ERROR_STRATEGY}" in text.splitlines()
-    assert "'terminate'" in pgsc.ERROR_STRATEGY
+    assert (
+        "    withName: '.*' {\n"
+        "        errorStrategy = { task.exitStatus in ((130..145) + 104)"
+        " ? 'retry' : 'terminate' }\n"
+        "    }\n"
+    ) in text
     assert set(pgsc.PGSC_LABELS) == {
         "pgscatalog_utils",
         "plink2",

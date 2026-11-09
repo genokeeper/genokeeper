@@ -62,9 +62,11 @@ def site_genotype(
     if total > ploidy:
         return nocall
     if total < ploidy and any(
-        OTHER_ALLELE_WARNING in c.warnings and _alt_copies(c.gt) > total for c in known
+        (OTHER_ALLELE_WARNING in c.warnings or c.gt is not None)
+        and _alt_copies(c.gt) > total
+        for c in known
     ):
-        return nocall
+        return nocall  # the rest of the genotype is an ALT this row does not list
     indices = [0] * (ploidy - total) + [
         i for i, n in enumerate(copies, start=1) for _ in range(n)
     ]
