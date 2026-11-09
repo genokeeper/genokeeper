@@ -13,12 +13,11 @@ files, not this one. How to file, close and reference an entry:
 | [BR-038](bugs/BR-038.md) | low | calibration | RFC1's withhold reason says the motif call was not a clear normal; it was a clear normal that missed a known allele | 2026-11-08 |
 | [BR-040](bugs/BR-040.md) | low | genotype | A heterozygote of two ALTs writes 0/1 on a target row that lists only one of them, a REF copy the person does not have | 2026-11-09 |
 
-## Partially fixed (4)
+## Partially fixed (3)
 
 | ID | Sev | Area | Title | Found |
 |---|---|---|---|---|
 | [BR-009](bugs/BR-009.md) | low | sources | A repeat statement's words contradict its grading: a watch's class reads normal, a watch says the expansion is reliable, a finding answers carrier, AR reads GCA | 2026-10-28 |
-| [BR-012](bugs/BR-012.md) | medium | annotate | One VEP row per variant lets a non-MANE LoF hide a MANE Plus Clinical missense in a listed gene | 2026-11-02 |
 | [BR-027](bugs/BR-027.md) | medium | evidence | SLC37A4 has no MANE model on the primary assembly, so its predicted LoFs fail gate 2 and read as doubtful | 2026-11-02 |
 | [BR-031](bugs/BR-031.md) | high | cnv | delly cnv ran as per-chromosome shards, each a whole-genome run, and a failed shard did not stop the shards behind it | 2026-11-06 |
 
@@ -33,7 +32,7 @@ files, not this one. How to file, close and reference an entry:
 | [BR-020](bugs/BR-020.md) | low | calibrate | An INSurVeyor insertion of unknown length might take the short band's chance of being false, though the insertion calibration never measures such a call | 2026-11-02 |
 | [BR-028](bugs/BR-028.md) | low | annotate | SpliceAI's annotation lacks PCDH15's last coding exon and TNNT2's intron 1, so a splice change there gets no score | 2026-11-02 |
 
-## Fixed (27)
+## Fixed (28)
 
 | ID | Title | Fixed in |
 |---|---|---|
@@ -43,6 +42,7 @@ files, not this one. How to file, close and reference an entry:
 | [BR-005](bugs/BR-005.md) | Deletion wording: the depth line reads as evidence against short deletions, and a flank-only overlap reads like an exon hit | `claude/bugs-deletions-b004e0` |
 | [BR-008](bugs/BR-008.md) | The stage-3 calibration keeps a low-depth HG002 locus, lets an unrelated record in the slop void a truth, and min_allele_reads predates the Illumina regions | `claude/bugs-repeats-dashboard-2cd3e6` |
 | [BR-010](bugs/BR-010.md) | The dashboard and explain show no stage-3 watch item or non-finding | `claude/bugs-repeats-dashboard-2cd3e6`, `claude/explain-stage3-watch` |
+| [BR-012](bugs/BR-012.md) | One VEP row per variant lets a non-MANE LoF hide a MANE Plus Clinical missense in a listed gene | `genokeeper/genokeeper#4`, `genokeeper/genokeeper#8` |
 | [BR-013](bugs/BR-013.md) | One VEP row per variant: a MANE Select missense outranks a LoF on MANE Plus Clinical or in an overlapping listed gene | `genokeeper/genokeeper#4` |
 | [BR-014](bugs/BR-014.md) | The gate-3 rescue counts ClinVar truncations by genomic span, not in the stop transcript's coding bases | `genokeeper/genokeeper#4` |
 | [BR-015](bugs/BR-015.md) | genokeeper refresh never runs again after a new calibration or FAF table: run_needed reads only the downloaded grading inputs | `genokeeper/genokeeper#6` |
