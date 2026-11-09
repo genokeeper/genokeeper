@@ -10,7 +10,7 @@ tasks use, cut with our samtools (`_REGIONS`). A third caller that fails changes
 what the two callers made of it.
 
 Only StellarPGx's activity score is voted, as for the other two. Its score comes from the
-function table it bundles, so a table that drifted from CPIC's makes it dissent, never agree.
+function table it bundles, which is not compared with CPIC's here.
 """
 
 import shutil
@@ -26,7 +26,13 @@ from genokeeper.pgx.outside import (
     OutsideCall,
     cpic_score,
 )
-from genokeeper.prs.pgsc import check_containment, java_home, nextflow_path, nxf_home
+from genokeeper.prs.pgsc import (
+    ContainmentRefused,
+    check_containment,
+    java_home,
+    nextflow_path,
+    nxf_home,
+)
 from genokeeper.tools import gated, run_tool
 
 STELLARPGX = "StellarPGx"
@@ -99,6 +105,18 @@ def vote(
         if score is not None and c.activity_score == score and c.filtered is None
     ]
     if len(backing) != 1:
+        if score is not None and pair.activity_score is not None:
+            reason = (
+                f"{third.caller} states {score} against the one score"
+                f" {pair.activity_score} the other two left"
+            )
+            return replace(
+                pair,
+                activity_score=None,
+                callers=callers,
+                unresolved_reason=reason,
+                note=None,
+            )
         return replace(pair, callers=callers)
     (one,) = backing
     other = second if one is first else first
@@ -178,7 +196,10 @@ def run_stellarpgx(cram: Path, fasta: Path, out_dir: Path, lab: Path) -> CallerC
         "NXF_TEMP": str(out_dir),
     }
     run_tool(gated(LABEL, command), env=env, cwd=out_dir)
-    check_containment(out_dir / "work", pinned={IMAGES["stellarpgx"]})
+    try:
+        check_containment(out_dir / "work", pinned={IMAGES["stellarpgx"]})
+    except ContainmentRefused as refused:  # its report is not used; the run goes on
+        raise CallerFailed(str(refused)) from refused
     reports = list((results / "cyp2d6" / "alleles").glob("*.alleles"))
     if len(reports) != 1:
         raise CallerFailed(

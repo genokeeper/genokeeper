@@ -442,3 +442,31 @@ def test_run_stellarpgx_without_a_report_failed(
     assert ran[0][:2] == ["samtools", "view"]
     assert "--in_bam" in ran[2]
     assert ran[2][ran[2].index("--in_bam") + 1].endswith("/sample*{bam,bai}")
+
+
+def test_a_third_score_against_the_one_left_unresolves() -> None:
+    """One caller abstained and the third contradicts the other: two scores that differ, as
+    in `agree`, and no claim that the score went unchecked."""
+    first, second = (
+        _call("BCyrius", "*1/*4", "1.0"),
+        _call("Aldy", "*1/*4", abstained=True),
+    )
+    pair = _pair(first, second)
+    assert pair.activity_score == "1.0"
+    voted = vote(pair, first, second, _call("StellarPGx", "*1/*1", "2.0"))
+    assert (voted.agreed, voted.activity_score, voted.note) == (False, None, None)
+    assert voted.unresolved_reason is not None and "2.0" in voted.unresolved_reason
+
+
+def test_a_refused_containment_only_loses_the_third_vote(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def refuse(*_a: Any, **_k: Any) -> None:
+        raise stellarpgx.ContainmentRefused("no --network none")
+
+    stellarpgx.stellarpgx_dir(tmp_path).mkdir(parents=True)
+    (stellarpgx.stellarpgx_dir(tmp_path) / "main.nf").write_text("workflow {}\n")
+    monkeypatch.setattr(stellarpgx, "run_tool", lambda *_a, **_k: "")
+    monkeypatch.setattr(stellarpgx, "check_containment", refuse)
+    with pytest.raises(CallerFailed, match="network none"):
+        run_stellarpgx(tmp_path / "a.cram", tmp_path / "a.fa", tmp_path / "o", tmp_path)

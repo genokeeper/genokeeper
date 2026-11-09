@@ -1511,8 +1511,8 @@ def outside_steps(
     `typing_steps`). Each caller's key holds its image.
 
     A step that fails (exit non-zero, no result, or one its reader cannot take) is left
-    out, and its failure returned (caller -> why), so the genes it serves are unresolved and
-    the run goes on; `_cached` keeps nothing of it, so a rerun runs it again. Docker not
+    out, and its failure returned (caller -> why), so the genes it serves are unresolved (but
+    StellarPGx's: CYP2D6 stays what BCyrius and Aldy made of it) and the run goes on; `_cached` keeps nothing of it, so a rerun runs it again. Docker not
     running or an image missing refuses the run (`RunRefused`)."""
     cram = aligned.path
     steps: dict[str, _Step] = {}
@@ -1528,7 +1528,7 @@ def outside_steps(
     ) -> None:
         try:
             steps[name] = _cached(work, name, version, parts, result, build)
-        except (DockerUnavailable, ContainmentRefused) as e:
+        except DockerUnavailable as e:
             raise RunRefused(_one_line(e)) from e
         except (ToolFailed, CallerFailed, ValueError, KeyError, IndexError) as e:
             failed[caller] = _failure(e)
@@ -1569,7 +1569,14 @@ def outside_steps(
                 STELLARPGX,
                 "stellarpgx",
                 STELLARPGX_STEP_VERSION,
-                [aligned.key, IMAGES["stellarpgx"], STELLARPGX_COMMIT, fasta_sha],
+                [
+                    aligned.key,
+                    IMAGES["stellarpgx"],
+                    STELLARPGX_COMMIT,
+                    NEXTFLOW_VERSION,
+                    samtools,
+                    fasta_sha,
+                ],
                 ALLELES,
                 build_stellarpgx,
             )
