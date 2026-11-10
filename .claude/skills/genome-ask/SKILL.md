@@ -1041,13 +1041,13 @@ splice change at SpliceAI 0.2 or above. Each one is `limited`, so add
 - A predicted finding never outranks a ClinVar-classified one: answer from the ClinVar
   findings first.
 - The exception to the gate-failure rule above: a reason `failed LoF gate 2 transcript: no
-  MANE transcript of the gene at the site on the primary assembly, so the prediction cannot be
-  judged` is no reason to call the prediction doubtful. VEP holds no MANE transcript of the
-  gene there, so the gate cannot tell the main transcript from a minor one: say the
-  prediction cannot be judged on the primary assembly and a clinical lab can assess it. Such
-  a prediction is never paired with a second variant in the gene as a possible compound
-  heterozygote. SLC37A4 always reads so: its only MANE transcript lies on a GRC fix patch, off
-  the primary assembly the callers run on. With no MANE row, a variant's most severe
+  MANE transcript of the gene on the primary assembly, so the prediction cannot be judged` is
+  no reason to call the prediction doubtful. VEP holds no MANE transcript of the gene on the
+  primary assembly the callers run on, so the gate cannot tell the main transcript from a
+  minor one: say the prediction cannot be judged on the primary assembly and a clinical lab
+  can assess it. Such a prediction is never paired with a second variant in the gene as a
+  possible compound heterozygote. A loss of function in SLC37A4 past gate 1 always reads so:
+  its only MANE transcript lies on a GRC fix patch. With no MANE row, a variant's most severe
   consequence on any of the gene's transcripts is the one graded, so a missense on the main
   transcript can sit behind another transcript's loss of function.
 - In SLC37A4's exon the primary assembly carries an extra C (chr11:119027726-7). Nearly every

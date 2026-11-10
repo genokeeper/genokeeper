@@ -78,10 +78,10 @@ FAILED_GATE = "failed LoF gate"
 GATE_HOMOPOLYMER = "1 technical: an indel in a homopolymer"
 GATE_MAPPABILITY = "1 technical: in GIAB's low-mappability regions"
 GATE_TRANSCRIPT = "2 transcript: not on MANE Select or MANE Plus Clinical"
-# VEP holds no MANE transcript of the gene at the site (BR-027: SLC37A4's only one lies on a
+# VEP holds no MANE transcript of the gene in the run (BR-027: SLC37A4's only one lies on a
 # GRC fix patch, off the primary assembly): the gate fails closed, the variant unjudged.
 GATE_NO_MANE = (
-    "2 transcript: no MANE transcript of the gene at the site on the primary assembly,"
+    "2 transcript: no MANE transcript of the gene on the primary assembly,"
     " so the prediction cannot be judged"
 )
 GATE_NO_STOP = "3 NMD: no new stop found on the transcript"

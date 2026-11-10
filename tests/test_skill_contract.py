@@ -644,9 +644,10 @@ def test_skill_labels_predicted() -> None:
 
 def test_skill_names_the_annotation_limits() -> None:
     """BR-027, BR-028: the predicted findings say a LoF gate 2 failure for a gene with no
-    MANE transcript at the site (`GATE_NO_MANE`, SLC37A4's always: its only MANE transcript is
-    on a GRC fix patch) is no reason alone to call it doubtful, and name PCDH15, whose last
-    coding exon SpliceAI's annotation lacks; Coverage names what SLC37A4 lacks."""
+    MANE transcript on the primary assembly (`GATE_NO_MANE`, SLC37A4's past gate 1: its
+    only MANE transcript is on a GRC fix patch) is no reason alone to call it doubtful, and
+    name PCDH15, whose last coding exon SpliceAI's annotation lacks; Coverage names what
+    SLC37A4 lacks."""
     text = SKILL.read_text()
     section = _section_named(text, "## Predicted findings")
     flat = " ".join(section.split())
@@ -654,7 +655,7 @@ def test_skill_names_the_annotation_limits() -> None:
         f"failed LoF gate {GATE_NO_MANE}",
         "is no reason to call the prediction doubtful",
         "never paired with a second variant in the gene",
-        "SLC37A4 always reads so",
+        "A loss of function in SLC37A4 past gate 1 always reads so",
         "GRCh38:chr11:119027725:AC:A",
         "it restores MANE's sequence",
         "never graded as a missense",

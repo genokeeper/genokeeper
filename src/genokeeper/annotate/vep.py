@@ -158,9 +158,9 @@ class VepRecord:
     have records on two).
 
     `consequence` is VEP's `&`-joined terms; `mane` says the transcript is MANE Select or
-    MANE Plus Clinical, `gene_mane` that some row of the gene at the variant is (False: VEP
-    holds no MANE transcript of the gene there, as for SLC37A4, whose only one lies on a GRC
-    fix patch, BR-027); `exon` is VEP's `n/total` and `cds_length` the transcript's CDS
+    MANE Plus Clinical, `gene_mane` that some row of the gene in the run is (False: VEP
+    holds no MANE transcript of the gene on the primary assembly, as for SLC37A4, whose only
+    one lies on a GRC fix patch, BR-027); `exon` is VEP's `n/total` and `cds_length` the transcript's CDS
     (stop codon included). `revel` and `alphamissense` score a missense allele, `spliceai` is
     SpliceAI's largest delta score on the variant's gene, `splicevault_in_frame` whether
     any of SpliceVault's top four events at a lost splice site keeps the frame (None: no
@@ -263,49 +263,41 @@ def _rows(path: Path) -> Iterator[dict[str, str]]:
 type _Row = tuple[
     int, bool, bool, dict[str, str]
 ]  # rank, MANE Select, MANE Plus Clinical
-type _Held = tuple[_Row | None, _Row | None, _Row, bool]
 
 
 def _candidates(
     rows: Iterable[dict[str, str]], keep: Collection[str]
-) -> dict[tuple[str, str], _Held]:
+) -> tuple[dict[tuple[str, str], tuple[_Row | None, _Row | None, _Row]], set[str]]:
     """Per (variant, Ensembl gene), the only rows `parse_vep` can choose, kept as VEP's
     rows stream by: its first MANE Select row of rank above 0, its first MANE Plus Clinical
     row of the highest rank, and its first row of the highest (rank, MANE Select, MANE Plus
-    Clinical); and whether any row of it is MANE Select or MANE Plus Clinical. A rank-0 row
-    of a gene outside `keep` is never chosen and never held, so memory follows the variants
-    with a graded or listed row, not VEP's every row; its MANE flag is held for the current
-    variant only, as VEP writes a variant's rows together."""
-    found: dict[tuple[str, str], _Held] = {}
-    variant, mane_genes = "", set[str]()
+    Clinical). A rank-0 row of a gene outside `keep` is never chosen and never held, so
+    memory follows the variants with a graded or listed row, not VEP's every row. With them,
+    the Ensembl genes of every row that is MANE Select or MANE Plus Clinical, at any variant
+    (one id per gene)."""
+    found: dict[tuple[str, str], tuple[_Row | None, _Row | None, _Row]] = {}
+    mane_genes: set[str] = set()
     for row in rows:
         if row["Feature_type"] != "Transcript" or _value(row["SYMBOL"]) is None:
             continue
-        key = (row["Uploaded_variation"], row["Gene"])
-        if key[0] != variant:
-            variant, mane_genes = key[0], set()
         select = _value(row["MANE_SELECT"]) is not None
         plus = _value(row["MANE_PLUS_CLINICAL"]) is not None
         if select or plus:
-            mane_genes.add(key[1])
+            mane_genes.add(row["Gene"])
         rank = _rank(frozenset(row["Consequence"].split("&")))
         if rank == 0 and row["SYMBOL"] not in keep:
-            if key in found and (select or plus):
-                found[key] = (*found[key][:3], True)
             continue
         new: _Row = (rank, select, plus, row)
-        first_select, top_plus, best, any_mane = found.get(
-            key, (None, None, new, False)
-        )
+        key = (row["Uploaded_variation"], row["Gene"])
+        first_select, top_plus, best = found.get(key, (None, None, new))
         if select and rank > 0 and first_select is None:
             first_select = new
         if plus and (top_plus is None or rank > top_plus[0]):
             top_plus = new
         if new[:3] > best[:3]:
             best = new
-        any_mane = any_mane or key[1] in mane_genes
-        found[key] = (first_select, top_plus, best, any_mane)
-    return found
+        found[key] = (first_select, top_plus, best)
+    return found, mane_genes
 
 
 def parse_vep(path: Path, *, keep: Collection[str]) -> list[VepRecord]:
@@ -317,14 +309,19 @@ def parse_vep(path: Path, *, keep: Collection[str]) -> list[VepRecord]:
     among equals. So a minor isoform's LoF never hides a MANE missense (design decision,
     2026-10-28) yet a LoF only on a minor isoform still reaches gate 2, and no row of one
     gene hides another gene's (BR-012, BR-013). A gene with no row of rank above 0 is kept
-    only in `keep`, for SpliceAI."""
+    only in `keep`, for SpliceAI. `gene_mane` is whether any row of the record's gene, at
+    any of the run's variants, is MANE: on a genome's calls, a gene with a MANE transcript on
+    the primary assembly has rows on it, so a False is a gene VEP holds none of there
+    (BR-027)."""
     records: list[VepRecord] = []
-    for select, plus, best, gene_mane in _candidates(_rows(path), keep).values():
+    found, mane_genes = _candidates(_rows(path), keep)
+    for select, plus, best in found.values():
         floor = select[0] if select else 0
         mane = [select] if select else []
         mane += [plus] if plus and plus[0] > floor else []
         chosen = mane or [best]
         if chosen[0][0] > 0 or best[3]["SYMBOL"] in keep:
+            gene_mane = best[3]["Gene"] in mane_genes
             records += [_record(r[3], gene_mane=gene_mane) for r in chosen]
     return records
 

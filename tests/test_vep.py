@@ -316,55 +316,67 @@ def test_vep_records_per_gene(
 
 
 NO_MANE_STOP = "GRCh38:chr1:1700:C:T"
-MANE_BEFORE_STOP = "GRCh38:chr1:1800:C:T"
-MANE_AFTER_STOP = "GRCh38:chr1:1900:C:T"
+MINOR_STOP = "GRCh38:chr1:1800:C:T"
+MANE_ELSEWHERE = "GRCh38:chr1:1900:C:T"
 
 
 @pytest.mark.parametrize(
     ("rows", "vid", "gene_mane"),
     [
-        # BR-027: no transcript of the gene at the site is MANE (SLC37A4's only one lies on a
-        # GRC fix patch), and another gene's MANE row there is not the gene's.
+        # BR-027: no row of the gene is MANE (SLC37A4's only MANE transcript lies on a GRC
+        # fix patch), and another gene's MANE row at the site is not the gene's.
         (
             [
                 _choice_row(NO_MANE_STOP, "GENEN", "ENST40", "stop_gained"),
                 _choice_row(
-                    NO_MANE_STOP, "GENEZ", "ENST09", "intron_variant", mane="NM_9.1"
+                    NO_MANE_STOP, "GENEZ", "ENST09", "intron_variant", mane="NM_9"
                 ),
             ],
             NO_MANE_STOP,
             False,
         ),
-        # The gene's MANE row is rank 0 and outside `keep`, never held, before or after the
-        # stop on its minor isoform: the gene has a MANE transcript at the site.
+        # The gene's MANE row is rank 0 and outside `keep`, never held, at the stop's site,
+        # before or after the stop on its minor isoform.
         (
             [
                 _choice_row(
-                    MANE_BEFORE_STOP, "GENEZ", "ENST09", "intron_variant", mane="NM_9.1"
+                    MINOR_STOP, "GENEZ", "ENST09", "intron_variant", mane="NM_9"
                 ),
-                _choice_row(MANE_BEFORE_STOP, "GENEZ", "ENST10", "stop_gained"),
+                _choice_row(MINOR_STOP, "GENEZ", "ENST10", "stop_gained"),
             ],
-            MANE_BEFORE_STOP,
+            MINOR_STOP,
             True,
         ),
         (
             [
-                _choice_row(MANE_AFTER_STOP, "GENEZ", "ENST10", "stop_gained"),
+                _choice_row(MINOR_STOP, "GENEZ", "ENST10", "stop_gained"),
                 _choice_row(
-                    MANE_AFTER_STOP, "GENEZ", "ENST09", "intron_variant", plus="NM_9.1"
+                    MINOR_STOP, "GENEZ", "ENST09", "intron_variant", plus="NM_9"
                 ),
             ],
-            MANE_AFTER_STOP,
+            MINOR_STOP,
+            True,
+        ),
+        # The stop is on a minor isoform's exon beyond VEP's reach of the MANE transcript:
+        # the gene's MANE row at another of the run's variants counts.
+        (
+            [
+                _choice_row(
+                    MANE_ELSEWHERE, "GENEZ", "ENST09", "intron_variant", mane="NM_9"
+                ),
+                _choice_row(MINOR_STOP, "GENEZ", "ENST10", "stop_gained"),
+            ],
+            MINOR_STOP,
             True,
         ),
     ],
 )
-def test_vep_record_says_whether_its_gene_has_mane_at_the_site(
+def test_vep_record_says_whether_its_gene_has_mane(
     tmp_path: Path, rows: list[str], vid: str, gene_mane: bool
 ) -> None:
-    """A record off MANE says whether any row of its gene at the variant is MANE Select or
+    """A record off MANE says whether any row of its gene in the run is MANE Select or
     MANE Plus Clinical, so gate 2 can tell a minor isoform's LoF from a gene VEP holds no
-    MANE transcript of there (BR-027)."""
+    MANE transcript of on the primary assembly (BR-027)."""
     path = _write_vep_output(tmp_path / VEP_OUTPUT, rows)
     (record,) = [r for r in parse_vep(path, keep=set()) if r.vid == vid and r.lof]
     assert (record.mane, record.gene_mane) == (False, gene_mane)
@@ -384,7 +396,7 @@ def test_vep_parse_holds_only_rows_it_can_choose() -> None:
         for i in range(50)
     ]
     header = FIELDS.split("\t")
-    held = vep._candidates(
+    held, _ = vep._candidates(
         (dict(zip(header, line.split("\t"), strict=True)) for line in lines),
         keep={"BRCA1"},
     )
