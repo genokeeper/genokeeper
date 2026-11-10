@@ -31,6 +31,7 @@ from genokeeper.evidence.predicted import (
     GATE_HOMOPOLYMER,
     GATE_MAPPABILITY,
     GATE_NMD,
+    GATE_NO_MANE,
     GATE_NO_NMD,
     GATE_NO_PEXT,
     GATE_NO_SPLICEVAULT,
@@ -225,6 +226,19 @@ SINGLE_EXON = [EscapeRegion("chr17", 10000, 11500, "+")]
         ),
         ({}, {"flags": ("low_mappability",)}, GATE_MAPPABILITY),
         ({"mane": False}, {}, GATE_TRANSCRIPT),
+        # BR-027: VEP holds no MANE transcript of the gene at the site; gate 2 says so.
+        ({"mane": False, "gene_mane": False}, {}, GATE_NO_MANE),
+        # A start-loss there is never a finding, as everywhere (gate 4).
+        (
+            {
+                "mane": False,
+                "gene_mane": False,
+                "consequence": "start_lost",
+                "lof": False,
+            },
+            {},
+            GATE_START_LOSS,
+        ),
         (STOP_IN_LAST_EXON, {}, GATE_NMD),
         (STOP_NEAR_JUNCTION, {}, GATE_NMD),
         (STOP_EARLY, {}, GATE_NMD),

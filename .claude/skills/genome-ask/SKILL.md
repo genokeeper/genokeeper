@@ -1040,16 +1040,16 @@ splice change at SpliceAI 0.2 or above. Each one is `limited`, so add
   doubtful for that reason. A prediction outside the listed genes is research too.
 - A predicted finding never outranks a ClinVar-classified one: answer from the ClinVar
   findings first.
-- SLC37A4 is the exception to the gate-failure rule above, for a loss of function. Its only
-  MANE transcript lies on a GRC fix patch, off the primary assembly the callers run on, so
-  none of its chr11 transcripts is MANE: a predicted loss of function there that passes gate
-  1 always fails LoF gate 2, and that gate alone is no reason to call it doubtful: say the
+- The exception to the gate-failure rule above: a reason `failed LoF gate 2 transcript: no
+  MANE transcript of the gene at the site on the primary assembly, so the prediction cannot be
+  judged` is no reason to call the prediction doubtful. VEP holds no MANE transcript of the
+  gene there, so the gate cannot tell the main transcript from a minor one: say the
   prediction cannot be judged on the primary assembly and a clinical lab can assess it. Such
   a prediction is never paired with a second variant in the gene as a possible compound
-  heterozygote. A start-loss there fails gate 2 too, but is never a finding anywhere (gate
-  4): word it as everywhere else. With no MANE row, a variant's most severe consequence on
-  any SLC37A4 transcript is the one graded, so a missense on the main transcript can sit
-  behind another transcript's loss of function.
+  heterozygote. SLC37A4 always reads so: its only MANE transcript lies on a GRC fix patch, off
+  the primary assembly the callers run on. With no MANE row, a variant's most severe
+  consequence on any of the gene's transcripts is the one graded, so a missense on the main
+  transcript can sit behind another transcript's loss of function.
 - In SLC37A4's exon the primary assembly carries an extra C (chr11:119027726-7). Nearly every
   genome is called homozygous for the deletion `GRCh38:chr11:119027725:AC:A`, which ClinVar
   classifies Benign ("no sequence alteration"): it restores MANE's sequence, so say it is the

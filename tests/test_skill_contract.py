@@ -27,6 +27,7 @@ from genokeeper.calibrate.tables import NOT_CALIBRATED as DOSAGE_NOT_CALIBRATED
 from genokeeper.carrier import genotype
 from genokeeper.changes import report
 from genokeeper.config import load_grading
+from genokeeper.evidence.predicted import GATE_NO_MANE
 from genokeeper.genotype.gvcf import Called
 from genokeeper.genotype.reliability import AF_CLONAL, AF_LOW, Reliability
 from genokeeper.hhv6 import Hhv6Call
@@ -642,26 +643,26 @@ def test_skill_labels_predicted() -> None:
 
 
 def test_skill_names_the_annotation_limits() -> None:
-    """BR-027, BR-028: the predicted findings name the two genes the annotation cannot grade
-    in full: SLC37A4, whose only MANE transcript is on a GRC fix patch (its LoF always fails
-    gate 2 past gate 1, no reason alone to call it doubtful), and PCDH15, whose last coding
-    exon SpliceAI's annotation lacks; Coverage names what SLC37A4 lacks."""
+    """BR-027, BR-028: the predicted findings say a LoF gate 2 failure for a gene with no
+    MANE transcript at the site (`GATE_NO_MANE`, SLC37A4's always: its only MANE transcript is
+    on a GRC fix patch) is no reason alone to call it doubtful, and name PCDH15, whose last
+    coding exon SpliceAI's annotation lacks; Coverage names what SLC37A4 lacks."""
     text = SKILL.read_text()
     section = _section_named(text, "## Predicted findings")
     flat = " ".join(section.split())
     for needed in (
-        "SLC37A4 is the exception to the gate-failure rule above, for a loss of function",
+        f"failed LoF gate {GATE_NO_MANE}",
+        "is no reason to call the prediction doubtful",
         "never paired with a second variant in the gene",
-        "A start-loss there fails gate 2 too, but is never a finding anywhere",
+        "SLC37A4 always reads so",
         "GRCh38:chr11:119027725:AC:A",
         "it restores MANE's sequence",
         "never graded as a missense",
         "TNNT2's intron 1",
         "GRC fix patch",
-        "passes gate 1 always fails LoF gate 2",
         (
-            "that gate alone is no reason to call it doubtful: say the prediction cannot be"
-            " judged on the primary assembly and a clinical lab can assess it"
+            "say the prediction cannot be judged on the primary assembly and a clinical lab"
+            " can assess it"
         ),
         "PCDH15's last coding exon",
         "no SpliceAI score",

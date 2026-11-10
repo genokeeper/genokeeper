@@ -315,6 +315,61 @@ def test_vep_records_per_gene(
     assert {(r.gene, r.transcript) for r in records if r.vid == vid} == expected
 
 
+NO_MANE_STOP = "GRCh38:chr1:1700:C:T"
+MANE_BEFORE_STOP = "GRCh38:chr1:1800:C:T"
+MANE_AFTER_STOP = "GRCh38:chr1:1900:C:T"
+
+
+@pytest.mark.parametrize(
+    ("rows", "vid", "gene_mane"),
+    [
+        # BR-027: no transcript of the gene at the site is MANE (SLC37A4's only one lies on a
+        # GRC fix patch), and another gene's MANE row there is not the gene's.
+        (
+            [
+                _choice_row(NO_MANE_STOP, "GENEN", "ENST40", "stop_gained"),
+                _choice_row(
+                    NO_MANE_STOP, "GENEZ", "ENST09", "intron_variant", mane="NM_9.1"
+                ),
+            ],
+            NO_MANE_STOP,
+            False,
+        ),
+        # The gene's MANE row is rank 0 and outside `keep`, never held, before or after the
+        # stop on its minor isoform: the gene has a MANE transcript at the site.
+        (
+            [
+                _choice_row(
+                    MANE_BEFORE_STOP, "GENEZ", "ENST09", "intron_variant", mane="NM_9.1"
+                ),
+                _choice_row(MANE_BEFORE_STOP, "GENEZ", "ENST10", "stop_gained"),
+            ],
+            MANE_BEFORE_STOP,
+            True,
+        ),
+        (
+            [
+                _choice_row(MANE_AFTER_STOP, "GENEZ", "ENST10", "stop_gained"),
+                _choice_row(
+                    MANE_AFTER_STOP, "GENEZ", "ENST09", "intron_variant", plus="NM_9.1"
+                ),
+            ],
+            MANE_AFTER_STOP,
+            True,
+        ),
+    ],
+)
+def test_vep_record_says_whether_its_gene_has_mane_at_the_site(
+    tmp_path: Path, rows: list[str], vid: str, gene_mane: bool
+) -> None:
+    """A record off MANE says whether any row of its gene at the variant is MANE Select or
+    MANE Plus Clinical, so gate 2 can tell a minor isoform's LoF from a gene VEP holds no
+    MANE transcript of there (BR-027)."""
+    path = _write_vep_output(tmp_path / VEP_OUTPUT, rows)
+    (record,) = [r for r in parse_vep(path, keep=set()) if r.vid == vid and r.lof]
+    assert (record.mane, record.gene_mane) == (False, gene_mane)
+
+
 def test_vep_parse_holds_only_rows_it_can_choose() -> None:
     """VEP writes a row per variant and transcript, millions on a genome: a rank-0 row of a
     gene outside `keep` is never held, so memory follows the variants with a graded or
