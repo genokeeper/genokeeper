@@ -106,6 +106,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from collections.abc import (
     Callable,
     Collection,
@@ -124,7 +125,7 @@ from typing import TYPE_CHECKING, Any, Concatenate, cast
 import duckdb
 import pysam
 
-from genokeeper import __version__
+from genokeeper import __version__, timings
 from genokeeper import coverage as gene_coverage
 from genokeeper.align import Platform, PlatformRefused, align, check_platform
 from genokeeper.ancestry.admixture import (
@@ -723,6 +724,7 @@ def _cached(
         shutil.rmtree(final)
     staging = work / step / f".building-{secrets.token_hex(4)}"
     staging.mkdir(parents=True)
+    began = time.monotonic()
     try:
         build(staging)
         if not (staging / name).exists():
@@ -738,6 +740,7 @@ def _cached(
     except BaseException:
         shutil.rmtree(staging, ignore_errors=True)
         raise
+    timings.record(work, time.monotonic() - began, step=step)
     return _Step(key=key, path=final / name, reused=False)
 
 
@@ -4095,6 +4098,7 @@ def run_genome(
     VEP or SpliceAI failing (the finished steps stay cached). Raises `CallMismatch`, rolling the run back, if
     a statement's kind contradicts its stored call (a bug).
     """
+    began = time.monotonic()
     grading_input: dict[str, object] = (
         {"given": True}
         if grading is not None
@@ -5488,6 +5492,7 @@ def run_genome(
         export_snapshots(con, paths.reports / "snapshots")
     finally:
         con.close()
+    timings.record(paths.reports / "work", time.monotonic() - began, run=run_id)
     return run_id
 
 

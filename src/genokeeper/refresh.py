@@ -614,6 +614,11 @@ def _finish(
 
 def _command(args: argparse.Namespace) -> int:
     paths = load_paths()
+    if args.plan:
+        from genokeeper.refresh_plan import plan  # it imports this module
+
+        print("\n".join(plan(paths)))
+        return 0
     script = paths.repo / "scripts" / "bootstrap.sh"
 
     def fetch(name: str) -> subprocess.CompletedProcess[str]:
@@ -705,5 +710,11 @@ def register(subparsers: Subparsers) -> None:
         action="store_true",
         help="also explain new findings and stage-3 watch items: sends their data to"
         " Anthropic, as `genokeeper explain` does",
+    )
+    r.add_argument(
+        "--plan",
+        action="store_true",
+        help="print what the next refresh would do, a forecast of its time on this machine"
+        " from past runs, and how complete the lab is; changes nothing",
     )
     r.set_defaults(handler=_command)
