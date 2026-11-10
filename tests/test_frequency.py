@@ -25,7 +25,8 @@ from fixtures.gnomad_mini import (
     vcf_bytes,
     write_reference,
 )
-from fixtures.grch38_mini import write_fastq_pair, write_reference
+from fixtures.grch38_mini import write_fastq_pair
+from fixtures.grch38_mini import write_reference as write_grch38
 
 from genokeeper import tools
 from genokeeper.checksum import sha256_file
@@ -601,7 +602,7 @@ def test_a_run_refuses_a_table_that_misses_a_bs1(tmp_path: Path) -> None:
     grading = _grading({"BRCA1": 0.0001})
     folder = write_faf_table(tmp_path / "faf", floor=0.001)
     # T7 reads, which the run checks before any table.
-    fastq1, fastq2 = write_fastq_pair(tmp_path, write_reference(tmp_path / "ref.fa"))
+    fastq1, fastq2 = write_fastq_pair(tmp_path, write_grch38(tmp_path / "ref.fa"))
     with pytest.raises(RunRefused, match=r"floor 0\.001 .*genokeeper build-faf"):
         run_genome(
             load_paths(tmp_path),
