@@ -15,8 +15,10 @@ and the GWAS Catalog and grades your calls on them again. An optional daily chec
 when a newer release is out. It never runs the refresh for you.
 
 **Nothing leaves your machine unless you ask.** Genokeeper has no telemetry, no analytics and
-no crash reporting. The pipeline never uploads your reads, genotypes or findings: every tool
-that reads them runs in a container with no network, and a run opens no connection at all.
+no crash reporting. The pipeline never uploads your reads, genotypes or findings. The
+aligner and its helpers (bwa, samtools, bcftools, mosdepth) run on your Mac and open no
+connection of their own; every other tool that reads your data runs in a container with no
+network; and a run opens no connection at all.
 Two optional features send finding data to Anthropic, and only when you use them: the
 `genome-ask` skill in your own Claude Code session, and `genokeeper explain`.
 [Privacy and network](#privacy-and-network) lists every connection the tool makes and how to
@@ -173,7 +175,9 @@ bash scripts/bootstrap.sh --with-gnomad --with-vep --with-masked-reference --wit
 ```
 
 `--check` lists every missing file of every step, whatever `--with-…` flags you give it, and
-exits 0. A line that ends "(run with --with-vep)" says which flag fetches the file; it reads
+exits 0. The one exception is the two publication sources (LitVar2's variants file and
+ClinVar's citations, about 2.2 GB, used for no grading): they are listed and fetched only with
+`--with-publications`. A line that ends "(run with --with-vep)" says which flag fetches the file; it reads
 the same when you gave that flag. The lines for the reference samples (HG002, HG003, HG004 and
 their truth sets) name no flag: they belong to step 7. It checks the container images only
 while Docker is running.
@@ -183,8 +187,9 @@ bases, so before step 6 they only wait for that run (the bootstrap says so and g
 
 **6. First run: alignment and QC.** Step 5 must be complete: `run` refuses without the gnomAD
 table that `--with-gnomad` builds, and names the flag. The run checks that the reads come from
-a T7, aligns them with bwa to GRCh38 (about 5 to 6 hours), refuses a sample that fails the QC
-gate, and records your run's bases. With no calibration table yet it then stops with exit code
+a T7, aligns them with bwa to GRCh38 (about 5 to 6 hours), refuses a sample whose alignment
+fails the QC gate (depth, mapping, duplicates, insert size, contamination), and records your
+run's bases. With no calibration table yet it then stops with exit code
 2. That is expected: "this run has recorded its … bases, which `genokeeper calibrate`
 downsamples HG003 to; the calibration table at … is not calibrated". The alignment is cached,
 and step 9 does not repeat it.
@@ -316,7 +321,9 @@ ClinPGx's annotations; [Licence](#licence) lists them, and
 **The knowledge bases.** Run `uv run genokeeper refresh` when you want new releases, for example
 when the daily check notifies you. It fetches each source's newest file, runs `genokeeper run`
 only when a grading input, a calibration table or Genokeeper's own code changed, and shows the result in the dashboard's Changes tab and in
-`genokeeper changes`. It never re-aligns or re-calls your reads. The pinned tools and data
+`genokeeper changes`. For a new ClinVar release it never re-aligns or re-calls your reads, nor
+runs VEP and SpliceAI again. After Genokeeper's own code changed, its run redoes every step the
+change touched, which can be any of them, VEP and SpliceAI included. The pinned tools and data
 (gnomAD, the PGS Catalog, VEP, PharmCAT and others) are reported when newer, never applied: they
 change only with a new version of Genokeeper.
 
@@ -338,21 +345,37 @@ table for another kind of call leaves those statements unassessed. `genokeeper c
 rebuilds only the stale tables and says "current" for the rest. If the change touched your own
 steps, the run redoes only those; a changed aligner re-aligns.
 
+One known gap ([BR-043](docs/bugs/BR-043.md), open): the `small_variants` and `hg002_cells`
+tables are rebuilt from the calls already recorded for HG003 and HG002 PCR-free. After a change
+to the variant caller (DeepVariant's image, its checkpoint or its flags), a rebuilt table reads
+current while its error rates were measured on the old caller's calls. Until that is fixed,
+call those two samples again after such a change. Move each one's record aside, then let the
+commands call it again from its cut-down reads (which must still be there):
+
+```bash
+mv "$LAB/calibration/hg003/aligned.json" "$LAB/calibration/hg003/aligned.json.old"
+mv "$LAB/calibration/hg002/pcrfree/aligned.json" "$LAB/calibration/hg002/pcrfree/aligned.json.old"
+uv run python -m genokeeper.calibrate.hg002 align pcrfree   # calls HG002 PCR-free again
+uv run genokeeper calibrate                                 # calls HG003 again, then rebuilds
+```
+
+`$LAB` is your lab: `$GENOKEEPER_HOME`, or `~/genome-lab`.
+
 ## Freeing disk
 
 Where the space goes. The numbers are approximate; each names its source.
 
 | What | Where | About | Source |
 |---|---|---|---|
-| tools, references, knowledge bases (step 5) | the lab | 100 GB | the earlier README's estimate |
+| tools, references, knowledge bases (step 5) | the lab | 100 GB | a rough estimate, not measured by the code |
 | the 37 container images | Docker's virtual disk | 50 GB | their sizes as `docker image inspect` reports them on a built lab |
 | your FASTQ pair | `data/raw/` | its own size, F below | |
-| your run: alignment, cached steps, store | `reports/` | 100 GB, 45 GB of it the alignment | the earlier README's estimate |
+| your run: alignment, cached steps, store | `reports/` | 100 GB, 45 GB of it the alignment | a rough estimate, not measured by the code |
 | HG003's download (steps 7 to 8) | the lab | 147 GB | the bootstrap |
 | HG004's download (step 7, while it is cut down) | the lab | 144 GB | the bootstrap |
 | HG002's cut-down reads | the lab | 170 GB | the bootstrap |
 | HG003's and HG004's cut-down reads | the lab | F each | they hold your run's bases |
-| four aligned reference libraries | the lab | 45 GB each | the earlier README's estimate |
+| four aligned reference libraries | the lab | 45 GB each | a rough estimate, not measured by the code |
 
 HG002's 170 GB for two cut-down pairs suggests F is about 85 GB for a 30x run.
 
@@ -367,9 +390,11 @@ May be deleted once `genokeeper calibrate` says every table is current:
 - HG004's cut-down reads: `uv run python -m genokeeper.calibrate.hg002 clean hg004`.
 - HG002's and HG003's cut-down reads, by hand: the lab's
   `calibration/hg002/pcrfree/downsampled/`, `calibration/hg002/pcr/downsampled/` and
-  `calibration/hg003/downsampled/`. No command reads them again: the
-  bootstrap fetches nothing for a library that has an alignment record, and a re-alignment
-  writes the reads back from the library's alignment.
+  `calibration/hg003/downsampled/`. While a library keeps its alignment record nothing reads
+  them: the bootstrap fetches nothing for such a library, and a re-alignment writes the reads
+  back from its alignment. But while [BR-043](docs/bugs/BR-043.md) is open, keep HG003's and
+  HG002 PCR-free's if you can: calling them again after a variant-caller change (see
+  [Keeping it up to date](#keeping-it-up-to-date)) needs them, or their reads downloaded again.
 - After a re-alignment, `clean <library>` deletes what it replaced.
 - Docker's build cache: `docker builder prune`. Keep the images: a run never pulls one.
 
@@ -415,20 +440,25 @@ binned to four levels), Illumina and other platforms are refused, naming what wa
 version has no path for them: the variant caller's model and every calibration sample are the
 original T7's.
 
-**A QC refusal.** The run refuses before calling when a sample fails the QC gate: mean depth,
-the share of bases at 20x, mapped reads, duplicates, insert size, contamination, Ti/Tv or the
-het/hom ratio. The message names the metric. The bounds and their sources are in
+**A QC refusal.** The QC gate judges a sample twice. After alignment, before calling, it reads
+mean depth, the share of bases at 20x, mapped reads, duplicates, insert size and contamination;
+a refusal there comes in step 6. After DeepVariant has called, it reads Ti/Tv and the het/hom
+ratio as well; a refusal on those comes only in step 9, because the first run stops before
+calling. The message names the metric. The bounds and their sources are in
 `config/grading.toml` under `[qc]`. A sample that fails is a question for your sequencing
 provider. Changing a bound is your own decision, and it changes what the next refresh re-runs.
 
-**Disk running out.** Fetching, cutting down or re-aligning a reference sample checks the free
-space first. It refuses with "… needs N GB free in …, M GB is", keeping 20 GB to spare. Other
-steps fail with their tool's own error when the disk fills. Free space as
+**Disk running out.** Three steps check the free space first and refuse with "… needs N GB free
+in …, M GB is", keeping 20 GB to spare: downloading HG002's and HG004's libraries, cutting
+HG002's down, and re-aligning a reference library from its alignment. The others do not check:
+HG003's 147 GB download, cutting HG003 and HG004 down, and every other step fail with their
+tool's own error when the disk fills. Free space as
 [Freeing disk](#freeing-disk) says, then run the same command again: downloads resume where they
 stopped, and finished steps are not redone.
 
 **`bootstrap --check` still lists the reference samples after step 5.** That is expected. It
-lists every input of every step whatever flags you give it, and the reference samples (HG002,
+lists the inputs of every step whatever `--with-…` flags you give it (only LitVar2's file and
+ClinVar's citations wait for `--with-publications`), and the reference samples (HG002,
 HG003, HG004 and their truth sets) come in step 7. Their lines go once step 7 has fetched them.
 HG002's and HG004's cut-down reads stay listed until a first run has recorded your bases.
 
@@ -439,11 +469,15 @@ every connection it makes, followed by the evidence that the rest of it makes no
 
 **Offline by construction.** Once the bootstrap has built the lab, these commands work with the
 network off: `genokeeper run`, `query`, `show`, `genotype`, `changes` and `dashboard`.
-- Every tool that reads your reads or calls runs in a pinned container started with
-  `--network none --pull never`. There is one place where a container starts:
+- bwa, samtools, bcftools and mosdepth read your reads and calls on the host, as installed by
+  Homebrew; none of them makes a network call of its own.
+- Every other tool that reads them runs in a pinned container started with
+  `--network none --pull never`. Genokeeper starts each such container in one place:
   `run_container` in `src/genokeeper/containers.py`, tested in `tests/test_containers.py`.
-- The pgsc_calc tasks that Nextflow starts get the same flag, with `NXF_OFFLINE` set, and each
-  task's launch line is checked for the flag after the run (`src/genokeeper/prs/pgsc.py`).
+- The two Nextflow pipelines, pgsc_calc and StellarPGx, start their tasks' containers
+  themselves. Each task gets `--network none`, Nextflow runs with `NXF_OFFLINE` set, and
+  `check_containment` reads every task's launch line after the run and refuses results whose
+  container lacked the flag (`src/genokeeper/prs/pgsc.py`, `src/genokeeper/pgx/stellarpgx.py`).
 - VEP runs with `--offline` on its local cache.
 - `test_a_run_opens_no_network_connection` (in `tests/test_pipeline_invariants.py`) runs the
   whole pipeline on a mini genome with every name lookup and socket connection refused. The

@@ -35,7 +35,7 @@ the user guide; read it first. A "stage" or a "slice" below is a step of the bui
 ## Building the store
 
 In the order that works on a new lab (the README's [Quick start](../README.md#quick-start)
-gives sizes and times):
+walks through it step by step):
 
 ```bash
 bash scripts/bootstrap.sh --check          # list what is missing; changes nothing
@@ -65,7 +65,10 @@ container images (pulled by digest; Aldy's,
 BCyrius's and Haplogrep3's, which no registry publishes at their pinned versions, built from
 `docker/` with every input pinned, Haplogrep3's with its PhyloTree tree baked in), and
 slice 1d's polygenic scores under `pgs/`: Nextflow 25.10.0 with its nf-schema plugin (it runs
-offline, on Homebrew's openjdk@21), pgsc_calc at the commit its tag v2.3.0 points to, the
+offline, on Homebrew's openjdk@21), pgsc_calc at the commit its tag v2.3.0 points to,
+StellarPGx at commit `1952a4494f` (GitHub's archive of SBIMB/StellarPGx, sha256-pinned, under
+`stellarpgx/<commit>/`, run by the same Nextflow in its upstream image
+`twesigomwedavid/stellarpgx-dev`, pinned by digest), the
 chosen scores' harmonised GRCh38 scoring files and the research scores' (a separate step,
 so that fetching one never re-fetches a chosen file; all md5-checked against the PGS
 Catalog's; slice 3g's 34 new files are 677,577,718 bytes, fetched once they were approved), the
@@ -453,6 +456,9 @@ party or distributing the software (its `LICENSE.rst`, shown by `aldy license`).
 accepts that licence for their own non-commercial research on their own genome; running the
 lab on someone else's genome for them is processing for a third party. Its pharmacogenomic
 results are not a diagnosis.
+StellarPGx, the third CYP2D6 caller, is MIT-licensed (github.com/SBIMB/StellarPGx, run at
+commit `1952a4494f` in its upstream image `twesigomwedavid/stellarpgx-dev`, pinned by digest);
+it is run here for you, never redistributed.
 ClinPGx's (PharmGKB's) annotations download (`summaryAnnotations.zip`, the one ClinPGx
 serves now) is licensed CC BY-NC-SA 4.0: personal use, as here, is within it, and it asks for
 attribution to ClinPGx. The frozen `clinicalAnnotations.zip` an earlier bootstrap fetched
@@ -644,8 +650,8 @@ uv run genokeeper changes             # what changed since the previous refresh
 **History: once after stage 4 merged, a lab built before it ran `uv run genokeeper run` by
 hand.** VEP's step key and the explanations' prompt version both changed, so that one run
 annotated again with VEP and SpliceAI (about 4.5 h of SpliceAI in one process, about half that
-in its shards: the README's figure, which no measurement in the code records) and `genokeeper explain` then asked every explanation
-again. The refreshes after it reuse VEP's cache. `SPLICEAI_CORES` in
+in its shards, a figure no measurement in the code records) and `genokeeper explain` then
+asked every explanation again. The refreshes after it reuse VEP's cache. `SPLICEAI_CORES` in
 `src/genokeeper/annotate/vep.py` records the measurement the shards are sized by: on 1,757 of
 HG003's sites (2026-10-29), one SpliceAI process took 1,224 s and four took 597 s.
 
