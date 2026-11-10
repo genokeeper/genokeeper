@@ -715,6 +715,6 @@ def register(subparsers: Subparsers) -> None:
         "--plan",
         action="store_true",
         help="print what the next refresh would do, a forecast of its time on this machine"
-        " from past runs, and how complete the lab is; changes nothing",
+        " from past runs, and how complete the lab is; fetches and runs nothing",
     )
     r.set_defaults(handler=_command)

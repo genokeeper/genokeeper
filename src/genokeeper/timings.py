@@ -16,15 +16,19 @@ FILE = "timings.jsonl"
 def record(
     work: Path, seconds: float, *, step: str | None = None, run: str | None = None
 ) -> None:
-    """Append one step's (`step`) or one run's (`run`) duration."""
+    """Append one step's (`step`) or one run's (`run`) duration. Best effort: a file that
+    cannot be written (full disk, no permission) never fails the step or run it times."""
     line = {
         "finished": datetime.now(UTC).isoformat(timespec="seconds"),
         "seconds": round(seconds),
     }
     line |= {"step": step} if step is not None else {"run": run}
-    work.mkdir(parents=True, exist_ok=True)
-    with (work / FILE).open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(line) + "\n")
+    try:
+        work.mkdir(parents=True, exist_ok=True)
+        with (work / FILE).open("a", encoding="utf-8") as handle:
+            handle.write("\n" + json.dumps(line) + "\n")  # after a line cut part-way
+    except OSError:
+        return
 
 
 def read(work: Path) -> list[dict[str, Any]]:
@@ -34,6 +38,8 @@ def read(work: Path) -> list[dict[str, Any]]:
         return []
     lines: list[dict[str, Any]] = []
     for text in path.read_text(encoding="utf-8").splitlines():
+        if not text:
+            continue
         try:
             line = json.loads(text)
             if isinstance(line, dict) and isinstance(line.get("seconds"), int):

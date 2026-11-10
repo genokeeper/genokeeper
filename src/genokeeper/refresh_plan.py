@@ -1,6 +1,7 @@
 """`genokeeper refresh --plan`: what the next `genokeeper refresh` would do, how long it
-would take on this machine, and how complete the lab is. It reads only: no fetch, no run,
-no lock.
+would take on this machine, and how complete the lab is. It fetches nothing, runs nothing
+and takes no lock; comparing the inputs with the last run may fill the lab's digest cache
+(`checksum.sha256_cached`), which the first time hashes the reference.
 
 The forecast rests on what this machine measured: the refresh log's past refreshes
 (`refresh_log`) and the step and run durations in `<work>/timings.jsonl` (`timings`). A
@@ -12,7 +13,7 @@ upper bound.
 import statistics
 import subprocess
 from collections.abc import Sequence
-from datetime import timedelta
+from datetime import UTC, datetime
 
 from genokeeper import refresh_log, timings
 from genokeeper.calibrate.tables import TABLES, stale_tables
@@ -42,38 +43,35 @@ def plan(paths: Paths) -> list[str]:
     code_changed = latest is None or latest.tools.get("analyser") != analyser_identity()
     newer = {s["name"]: s["upstream"] for s in summary(read_state(lab))["newer"]}
     lines = ["The next `genokeeper refresh`, in order:"]
+    pre_run = "no"
     if latest is None:
-        lines.append(
-            "  0. no run yet: run `genokeeper run` first; a refresh grades its calls again"
-        )
-    lines.append(
-        "  1. a run on the releases already on disk: "
-        + (
-            "yes, the code changed since the last run"
-            if code_changed and latest
-            else "no"
-        )
-    )
+        pre_run = "yes, a full run from the FASTQ: there is no run yet"
+    elif code_changed:
+        pre_run = "yes, the code changed since the last run"
+    lines.append(f"  1. a run on the releases already on disk: {pre_run}")
     lines.append(f"  2. fetch the newest release of {len(REFRESHED)} sources:")
     for name in REFRESHED:
         dated = _dated(lab / FOLDERS[name])
         here = dated[-1].name if dated else "none"
         upstream = f", newer upstream: {newer[name]}" if name in newer else ""
         lines.append(f"     {name}: on disk {here}{upstream}")
-    due = latest is not None and run_needed(lab, latest, analyser_identity())
+    # After a pre-run, which records the inputs on disk, only a new release makes one due.
+    due = not code_changed and run_needed(lab, latest, analyser_identity())
     lines.append(
         "  3. a run on the new releases: "
-        + ("yes, already due" if due else "only if a fetch brings a new release")
+        + (
+            "yes, an input on disk changed since the last run"
+            if due
+            else "only if a fetch brings a new release"
+        )
     )
     lines.append("  4. the publications, the dashboard, and old dated folders pruned")
 
     lines.append("")
     lines.append("Forecast on this machine:")
     records = [r for r in refresh_log.read(lab) if r.outcome != "failed"]
-    without = [(r.ended - r.started).total_seconds() for r in records if r.run is None]
-    with_run = [
-        (r.ended - r.started).total_seconds() for r in records if r.run is not None
-    ]
+    without = [_seconds(r) for r in records if not _made_a_run(r)]
+    with_run = [_seconds(r) for r in records if _made_a_run(r)]
     lines.append(
         "  a refresh with nothing new: "
         + (_median(without) if without else "not measured yet")
@@ -113,7 +111,9 @@ def plan(paths: Paths) -> list[str]:
     lines.append(
         "  bootstrap: "
         + (
-            f"{len(missing)} items missing (`bash scripts/bootstrap.sh --check`)"
+            "could not check (`bash scripts/bootstrap.sh --check` failed)"
+            if missing is None
+            else f"{len(missing)} items missing (`bash scripts/bootstrap.sh --check`)"
             if missing
             else "nothing missing"
         )
@@ -127,19 +127,44 @@ def plan(paths: Paths) -> list[str]:
         )
     )
     if records:
-        age = records[-1].ended - records[-1].started
+        last = records[-1]
         lines.append(
-            f"  last refresh: {records[-1].started:%Y-%m-%d}, {records[-1].outcome}, took {_duration(age / timedelta(seconds=1))}"
+            f"  last refresh: {last.started:%Y-%m-%d}, {last.outcome},"
+            f" took {_duration(_seconds(last))}"
         )
     return lines
 
 
-def _missing(paths: Paths) -> list[str]:
-    """The bootstrap's `missing:` lines (`--check` reads only)."""
-    done = subprocess.run(
-        ["bash", str(paths.repo / "scripts" / "bootstrap.sh"), "--check"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+def _seconds(record: refresh_log.RefreshRecord) -> float:
+    return (record.ended - record.started).total_seconds()
+
+
+def _made_a_run(record: refresh_log.RefreshRecord) -> bool:
+    """Whether the refresh made a run: a record names the latest run even when it made
+    none, so the run counts only if its id (its start, `%Y%m%dT%H%M%SZ`) falls within it."""
+    made = [r for r in (record.pre_run, record.run) if r is not None]
+    for run_id in made:
+        try:
+            began = datetime.strptime(run_id[:16], "%Y%m%dT%H%M%SZ").replace(tzinfo=UTC)
+        except ValueError:
+            continue
+        if record.started <= began <= record.ended:
+            return True
+    return False
+
+
+def _missing(paths: Paths) -> list[str] | None:
+    """The bootstrap's `missing:` lines (`--check` reads only), None when it failed."""
+    try:
+        done = subprocess.run(
+            ["bash", str(paths.repo / "scripts" / "bootstrap.sh"), "--check"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=600,
+        )
+    except OSError, subprocess.TimeoutExpired:
+        return None
+    if done.returncode != 0:
+        return None
     return [line for line in done.stdout.splitlines() if line.startswith("missing:")]
