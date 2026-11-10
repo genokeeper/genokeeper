@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/genokeeper/genokeeper/actions/workflows/ci.yml/badge.svg)](https://github.com/genokeeper/genokeeper/actions/workflows/ci.yml)
 [![Licence: AGPL v3](https://img.shields.io/badge/licence-AGPL--3.0--or--later-blue.svg)](LICENSE)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/16523/badge)](https://www.bestpractices.dev/projects/16523)
 
 > **Not medical advice, not a medical device.** This is a research tool a person runs on their
 > own genome; nothing it reports is a diagnosis or a basis for a medical decision.
@@ -146,15 +147,16 @@ cat L01_2.fq.gz L02_2.fq.gz > data/raw/genome_2.fq.gz
 ```
 
 Then check, in seconds and before any download, that the reads come from the platform this
-version supports. This runs the same check as `genokeeper run`, on read 1's first 100,000 reads:
+version supports. With nothing else installed yet, the first run checks read 1's first 100,000
+reads and stops:
 
 ```bash
-uv run python -c 'import sys; from pathlib import Path; from genokeeper.align import check_platform; print(check_platform(Path(sys.argv[1])))' data/raw/genome_1.fq.gz
+uv run genokeeper run
 ```
 
-`Platform(flowcell_prefix='E', …)` means a DNBSEQ-T7. An error names what the reads are instead
-(see [Troubleshooting](#troubleshooting)). A first `uv run genokeeper run` does not do this yet:
-it stops first because the gnomAD table of step 5 is missing.
+On a DNBSEQ-T7 it goes on to say the gnomAD table of step 5 is missing, which is expected now.
+Reads from another platform are refused with what they are instead (see
+[Troubleshooting](#troubleshooting)), so you find out before any download.
 
 If the delivery has a 23andMe-format genotype file (`*.txt`, not `*.vc.txt`), put it beside
 the FASTQ: the run checks the sample's identity against it, and records "not checked" without
