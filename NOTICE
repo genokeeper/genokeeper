@@ -4,9 +4,9 @@ Copyright 2026 The Genokeeper authors
 Licensed under the GNU Affero General Public License, version 3 or (at your option) any later
 version (LICENSE). This repository also carries the
 third-party material below, each under its own terms. The tools and data the bootstrap fetches
-at run time (README.md, "Building the store") are not part of this repository and keep their
-own licences; the container images built from docker/ must not be published (README.md,
-"Licence").
+at run time (docs/reference.md, "Building the store") are not part of this repository and
+keep their own licences; the container images built from docker/ must not be published
+(README.md, "Licence").
 
 
 ExpansionHunter variant catalog (Illumina, Inc.)

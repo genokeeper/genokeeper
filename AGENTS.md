@@ -16,10 +16,10 @@ documents it links to.
   calls (bwa, a QC gate, DeepVariant, mutserve, phasing), error rates calibrated on HG003,
   ClinVar claims, pharmacogenomics, polygenic scores, the haplogroups, GWAS research
   associations and, since slice 1e, VEP-predicted findings. `genokeeper dashboard` and
-  `genokeeper explain` show them. Build steps: [README.md](README.md#building-the-store).
+  `genokeeper explain` show them. Build steps: [docs/reference.md](docs/reference.md#building-the-store).
 - Stage 4 (refresh): `genokeeper refresh` fetches the newest releases and grades the calls on
   them again, and the Changes tab and `genokeeper changes` show what changed
-  ([README.md](README.md#refreshing)); `genokeeper check-updates`, run daily by
+  ([docs/reference.md](docs/reference.md#refreshing)); `genokeeper check-updates`, run daily by
   `genokeeper schedule install`'s LaunchAgent, writes `~/genome-lab/refresh/check.json` and
   notifies once per newer set.
 - Stage 3, slice 3a delivered (2026-10-28): SMN1/SMN2 copy number (SMNCopyNumberCaller and
@@ -44,12 +44,12 @@ documents it links to.
   insertions (INSurVeyor, Dysgu, Scramble), paralog loci (Parascopy, Gauchian for GBA1, KILDA for
   Lp(a)) and the Tier 4 carrier list. AMY1 is withheld and a mobile element only Scramble called
   is not measured, each unassessed with its value under `claim.withheld`; no measured class
-  reads "likely" (README.md, slice 3d's limits).
+  reads "likely" (docs/reference.md, slice 3d's limits).
 - Stage 3, slice 3e delivered (2026-11-01; `stage3` table of 2026-11-06 on HG002, HG003, HG004):
   one ExpansionHunter build (Illumina commit 9e93322f4a, htslib 1.22.1) over 24 loci, RFC1 and
   CFTR's poly-T/TG, an exclusion-only rule at the new loci, FMR1 and AFF2 by the X dosage, 22
   loci named not covered. The table withholds 12 items: not graded, each value kept for the
-  agent ([which and why](README.md#building-the-store)).
+  agent ([which and why](docs/reference.md#building-the-store)).
 - Stage 3, slice 3f delivered, its `slice3f` table built (2026-11-06, the GIAB trio): HLA, MITOMAP's
   chrM variants, HHV-6, runs of homozygosity, blood groups, ancestry, traits. Withheld, so not graded,
   the value kept: ABO, C4A, C4B, CTL2, FUT3, MAM, PIGG, XG (measurable on no library) and chrM

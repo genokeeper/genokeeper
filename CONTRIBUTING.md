@@ -19,9 +19,22 @@ uv sync
 git config core.hooksPath .githooks
 ```
 
-The hooks run the genome-data guard before every commit and push. Developing needs no genome and
-no lab: the test suite runs on fixtures. Running the pipeline itself needs the bootstrap
-(README, "Building the store").
+The hooks run the genome-data guard before every commit and push. Developing needs no genome: the
+test suite runs on fixtures it builds at test time. It does run some real tools, the ones CI
+installs (`.github/workflows/ci.yml`):
+
+- bcftools 1.24, samtools 1.24, htslib 1.24 (bgzip, tabix), seqtk 1.5, bwa 0.7.19 and mosdepth
+  0.3.14 on `PATH`: `brew install bcftools samtools htslib seqtk bwa mosdepth` on a Mac;
+- rtg-tools 3.13 at `<lab>/tools/rtg-tools-3.13/rtg`, where `<lab>` is `$GENOKEEPER_HOME` or
+  `~/genome-lab`, with an `rtg.cfg` that turns off its crash reports and usage logging.
+  `bash scripts/bootstrap.sh` installs it there (with everything else); CI unpacks the release
+  zip by hand. Without it, the five tests in `tests/test_calibrate_measure.py` that run
+  `rtg vcfeval` error;
+- WhatsHap's pinned image in Docker, for the phasing tests (CI pulls it at the digest
+  `genokeeper.containers` pins).
+
+Running the pipeline itself needs the whole bootstrap
+([docs/reference.md](docs/reference.md#building-the-store)).
 
 To keep private IDs (your kit or sample ID) out of every commit, list them, one extended regular
 expression per line, in `.git/info/genome-private-ids`. That file is never committed.
@@ -43,8 +56,9 @@ bash scripts/check_no_genome_data.sh --tracked
 - A new download is pinned by checksum, and a new tool runs in a container started with
   `--network none` (`run_container` in `src/genokeeper/containers.py`). Anything that sends data off
   the machine needs a row in README, "Privacy and network", and a reason it cannot run locally.
-- A new data source or tool states its licence in the README and, if the repository carries any of
-  its data, in NOTICE.
+- A new data source or tool states its licence in `docs/reference.md`; terms a user must
+  accept (non-commercial ones among them) also go in the README's "Terms you accept" and
+  "Licence"; and if the repository carries any of its data, in NOTICE.
 
 ## Reviewing
 
