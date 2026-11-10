@@ -13,12 +13,11 @@ files, not this one. How to file, close and reference an entry:
 | [BR-038](bugs/BR-038.md) | low | calibration | RFC1's withhold reason says the motif call was not a clear normal; it was a clear normal that missed a known allele | 2026-11-08 |
 | [BR-040](bugs/BR-040.md) | low | genotype | A heterozygote of two ALTs writes 0/1 on a target row that lists only one of them, a REF copy the person does not have | 2026-11-09 |
 
-## Partially fixed (3)
+## Partially fixed (2)
 
 | ID | Sev | Area | Title | Found |
 |---|---|---|---|---|
 | [BR-009](bugs/BR-009.md) | low | sources | A repeat statement's words contradict its grading: a watch's class reads normal, a watch says the expansion is reliable, a finding answers carrier, AR reads GCA | 2026-10-28 |
-| [BR-027](bugs/BR-027.md) | medium | evidence | SLC37A4 has no MANE model on the primary assembly, so its predicted LoFs fail gate 2 and read as doubtful | 2026-11-02 |
 | [BR-031](bugs/BR-031.md) | high | cnv | delly cnv ran as per-chromosome shards, each a whole-genome run, and a failed shard did not stop the shards behind it | 2026-11-06 |
 
 ## Rejected (6)
@@ -32,7 +31,7 @@ files, not this one. How to file, close and reference an entry:
 | [BR-020](bugs/BR-020.md) | low | calibrate | An INSurVeyor insertion of unknown length might take the short band's chance of being false, though the insertion calibration never measures such a call | 2026-11-02 |
 | [BR-028](bugs/BR-028.md) | low | annotate | SpliceAI's annotation lacks PCDH15's last coding exon and TNNT2's intron 1, so a splice change there gets no score | 2026-11-02 |
 
-## Fixed (29)
+## Fixed (30)
 
 | ID | Title | Fixed in |
 |---|---|---|
@@ -56,6 +55,7 @@ files, not this one. How to file, close and reference an entry:
 | [BR-024](bugs/BR-024.md) | Tests that download or re-align read the host's real free disk, so the suite fails on a machine with less than 20 GB free | `genokeeper/genokeeper#11` |
 | [BR-025](bugs/BR-025.md) | `genokeeper explain` writes no explanation of a stage-3 watch item, which the dashboard now lists | `claude/explain-stage3-watch` |
 | [BR-026](bugs/BR-026.md) | Secretor status is stated twice, by the FUT2 trait and the FUT2 blood group, and neither says which one to trust | `genokeeper/genokeeper#10` |
+| [BR-027](bugs/BR-027.md) | SLC37A4 has no MANE model on the primary assembly, so its predicted LoFs fail gate 2 and read as doubtful | `genokeeper/genokeeper#13`, `genokeeper/genokeeper#40` |
 | [BR-029](bugs/BR-029.md) | A no-call at a FUT2 position leaves FUT1 and FUT3 stating a secretor-dependent phenotype read from the reference | `genokeeper/genokeeper#14` |
 | [BR-030](bugs/BR-030.md) | HG003's and HG004's benchmarks count GIAB's v4.2.1 truth on the correct copies of the masked false duplications, where it can lack real variants | `genokeeper/genokeeper#17` |
 | [BR-032](bugs/BR-032.md) | a resource allele inside a masked false duplication stopped the whole step at bcftools norm | `genokeeper/genokeeper#22` |
