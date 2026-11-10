@@ -10,11 +10,18 @@ from genokeeper.dashboard import _sha256  # pyright: ignore[reportPrivateUsage]
 PAGE = Path(__file__).resolve().parents[1] / "docs" / "demo" / "dashboard.html"
 
 
+def _one(page: str, tag: str) -> str:
+    """The text of the page's one `<tag>` element, which the page writes without attributes."""
+    parts = page.split(f"<{tag}>")
+    assert len(parts) == 2, f"{len(parts) - 1} <{tag}> elements"
+    return parts[1].split(f"</{tag}>", 1)[0]
+
+
 def test_the_demo_page_matches_its_csp() -> None:
     html = PAGE.read_text(encoding="utf-8")
     csp = re.search(r'http-equiv="Content-Security-Policy" content="([^"]+)"', html)
-    script = re.search(r"<script>(.*?)</script>", html, re.DOTALL)
-    style = re.search(r"<style>(.*?)</style>", html, re.DOTALL)
-    assert csp and script and style
-    assert f"script-src 'sha256-{_sha256(script[1])}'" in csp[1]
-    assert f"style-src 'sha256-{_sha256(style[1])}'" in csp[1]
+    script = _one(html, "script")
+    style = _one(html, "style")
+    assert csp
+    assert f"script-src 'sha256-{_sha256(script)}'" in csp[1]
+    assert f"style-src 'sha256-{_sha256(style)}'" in csp[1]

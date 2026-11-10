@@ -2,6 +2,7 @@ import os
 import re
 import stat
 from pathlib import Path
+from urllib.parse import urlparse
 
 import pytest
 
@@ -338,8 +339,13 @@ def test_expansionhunter_image_pinned() -> None:
         if re.match(r"ADD --checksum=sha256:[0-9a-f]{64}\b", line)
     ]
     assert len(adds) == 5
-    assert sum("archives.boost.io" in line for line in adds) == 1
-    assert not any("jfrog" in line for line in adds)
+    hosts = [
+        urlparse(url).hostname
+        for line in adds
+        for url in re.findall(r"https://\S+", line)
+    ]
+    assert hosts.count("archives.boost.io") == 1
+    assert not any("jfrog" in (host or "") for host in hosts)
     offline = [line for line in lines if line.startswith("RUN --network=none")]
     assert any("cmake" in line and "make" in line for line in offline)
     assert any("RFC1MotifAnalysis" in line for line in offline)

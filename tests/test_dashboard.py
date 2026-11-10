@@ -98,6 +98,13 @@ def con(tmp_path: Path) -> duckdb.DuckDBPyConnection:
     return con
 
 
+def _one(page: str, tag: str) -> str:
+    """The text of the page's one `<tag>` element, which the page writes without attributes."""
+    parts = page.split(f"<{tag}>")
+    assert len(parts) == 2, f"{len(parts) - 1} <{tag}> elements"
+    return parts[1].split(f"</{tag}>", 1)[0]
+
+
 def test_every_view_is_the_query(con: duckdb.DuckDBPyConnection) -> None:
     data = payload(con, None, NO_CACHE)
     combinations = list(product(Level, Validity, (None, *Topic)))
@@ -154,8 +161,7 @@ def test_csp_first_in_head(con: duckdb.DuckDBPyConnection) -> None:
         page.split("<head>", 1)[1].lstrip(),
     )
     assert csp is not None
-    [script] = re.findall(r"<script>(.*?)</script>", page, re.DOTALL)
-    [style] = re.findall(r"<style>(.*?)</style>", page, re.DOTALL)
+    script, style = _one(page, "script"), _one(page, "style")
     assert (script, style) == (_resource("dashboard.js"), _resource("dashboard.css"))
     assert csp[1] == (
         f"default-src 'none'; script-src 'sha256-{_sha256(script)}';"
@@ -1241,7 +1247,7 @@ def test_excluded_block_rendered(
     data = payload(con, None, NO_CACHE, lang="ru")
     page = render(data)
     assert page.index('id="feed"') < page.index('id="excluded"')
-    [script] = re.findall(r"<script>(.*?)</script>", page, re.DOTALL)
+    script = _one(page, "script")
     [csp] = re.findall(r'http-equiv="Content-Security-Policy" content="([^"]*)"', page)
     assert f"script-src 'sha256-{_sha256(script)}';" in csp
     assert _page_data(page)["excluded"][0]["gene"] == "HLA-DQ"

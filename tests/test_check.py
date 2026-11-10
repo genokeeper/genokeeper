@@ -17,6 +17,7 @@ from email.utils import parsedate_to_datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Self
+from urllib.parse import urlparse
 
 import pytest
 
@@ -354,7 +355,7 @@ def hostile_reply(probe: Probe, text: str) -> Reply:
         probe.name,
         {"tag_name": text, "draft": False, "prerelease": False},
     )
-    if probe.url.startswith("https://api.github.com") or probe.name in by_kind:
+    if urlparse(probe.url).hostname == "api.github.com" or probe.name in by_kind:
         return json.dumps(document).encode(), {"content-type": "application/json"}
     return text.encode(), {"last-modified": text, "content-type": "text/plain"}
 
