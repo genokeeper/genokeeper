@@ -8,6 +8,7 @@ from fixtures.grch38_mini import bwa_index, write_fastq_pair, write_reference
 
 from genokeeper import tools
 from genokeeper.align import Platform, PlatformRefused, align, check_platform
+from genokeeper.cli import main
 from genokeeper.config import Paths
 from genokeeper.pipeline import RunRefused, run_genome
 from genokeeper.tools import ToolFailed
@@ -179,3 +180,15 @@ def test_run_refuses_other_reads_before_any_table(tmp_path: Path) -> None:
             fastq2=fq2,
             clinvar38=tmp_path / "absent.vcf.gz",
         )
+
+
+def test_the_run_command_refuses_other_reads_on_an_empty_lab(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """`genokeeper run` itself, as a newcomer runs it before the bootstrap."""
+    fasta = write_reference(tmp_path / "ref.fa")
+    fq1, fq2 = write_fastq_pair(tmp_path, fasta)
+    monkeypatch.setenv("GENOKEEPER_HOME", str(tmp_path / "lab"))
+    archived = _archived(fq1, tmp_path, original=False)
+    assert main(["run", "--fastq1", str(archived), "--fastq2", str(fq2)]) == 2
+    assert "flowcell prefix SRR" in capsys.readouterr().err

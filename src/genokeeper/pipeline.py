@@ -126,7 +126,7 @@ import pysam
 
 from genokeeper import __version__
 from genokeeper import coverage as gene_coverage
-from genokeeper.align import PlatformRefused, align, check_platform
+from genokeeper.align import Platform, PlatformRefused, align, check_platform
 from genokeeper.ancestry.admixture import (
     pruned_alleles,
     read_groups,
@@ -798,6 +798,16 @@ def _single_writer[**P, R](
 
 
 # --- checks -------------------------------------------------------------------------------
+
+
+def _platform(fastq1: Path, fastq2: Path) -> Platform:
+    """The reads' platform; refuse (`RunRefused`) reads from another one, before any table
+    or download is looked for."""
+    _check_files({"FASTQ 1": fastq1, "FASTQ 2": fastq2})
+    try:
+        return check_platform(fastq1)
+    except PlatformRefused as e:
+        raise RunRefused(_one_line(e)) from e
 
 
 def _check_files(files: Mapping[str, Path]) -> None:
@@ -4096,11 +4106,7 @@ def run_genome(
     )
     # Before any table opens: reads from another platform are refused at once, not after the
     # bootstrap's downloads and hours of alignment.
-    _check_files({"FASTQ 1": fastq1, "FASTQ 2": fastq2})
-    try:
-        platform = check_platform(fastq1)
-    except PlatformRefused as e:
-        raise RunRefused(_one_line(e)) from e
+    platform = _platform(fastq1, fastq2)
     store = paths.reports / STORE_NAME
     _check_store(store)
     faf = faf if faf is not None else open_faf_table(paths.lab)
@@ -5575,6 +5581,7 @@ def _genome(args: argparse.Namespace) -> int:
             raise RunRefused(
                 f"{_one_line(e)}; name the one to compare with --genotypes"
             ) from e
+        _platform(*pair)  # before the FAF table and ClinVar are looked for
         faf = open_faf_table(paths.lab)
         run_id = run_genome(
             paths,
