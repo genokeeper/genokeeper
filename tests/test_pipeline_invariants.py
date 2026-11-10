@@ -111,6 +111,7 @@ from genokeeper.calibrate import (
 )
 from genokeeper.calibrate import build as calibrate_build
 from genokeeper.calibrate import foundation as calibrate_foundation
+from genokeeper.calibrate import records as calibrate_records
 from genokeeper.calibrate.classes import ClassTable
 from genokeeper.calibrate.deletions import DeletionTable, deletions_dir
 from genokeeper.calibrate.hg002_cells import (
@@ -3945,7 +3946,19 @@ def _hg003_record(genome: Genome, reference: str | None = None) -> Path:
     rtg.parent.mkdir(parents=True)
     rtg.write_text("placeholder\n")
     cram = hg003_dir(lab) / "align" / "k" / "sample.cram"
-    gvcf = hg003_dir(lab) / "call" / "c" / "sample.g.vcf.gz"
+    # Where this pipeline's call step puts HG003's calls (BR-043: another folder means
+    # another caller).
+    fasta, checkpoint = pipeline.calling_inputs(lab)
+    identities = calibrate_records.library_dir(lab, "hg003") / pipeline.IDENTITIES
+    key = pipeline.call_key(
+        "k",
+        sha256_cached(fasta, identities),
+        checkpoint,
+        identities,
+        "male",
+        load_grading(),
+    )
+    gvcf = hg003_dir(lab) / "call" / key / "sample.g.vcf.gz"
     for p in (cram, gvcf):
         p.parent.mkdir(parents=True)
         p.write_bytes(b"")
@@ -4016,6 +4029,55 @@ def test_hg003_scored_from_its_record(
     assert scored == [gvcf]
     assert CalibrationTable.read(table_dir(lab)).rate_for(cell).rate == 2 / 1000
     assert table.rate_for(cell).rate == 2 / 1000
+
+
+def test_a_library_called_by_another_caller_is_not_read(
+    genome: Genome, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """BR-043 for the tables that read a library's gVCF through `read_called` (HG002
+    PCR-free's cells, the foundation, HG003): one from another caller is refused, naming
+    the command that calls it again."""
+    lab = genome.lab.paths.lab
+    gvcf = _hg003_record(genome)
+    assert calibrate_records.read_called(lab, "hg003") == gvcf
+    monkeypatch.setitem(
+        pipeline.IMAGES, "deepvariant", "other/deepvariant@sha256:" + "0" * 64
+    )
+    with pytest.raises(RunRefused, match=r"another caller .*BR-043.*realign hg003"):
+        calibrate_records.read_called(lab, "hg003")
+
+
+def test_hg003_called_by_another_caller_is_called_again(
+    genome: Genome, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """BR-043: after the DeepVariant image changed, HG003's recorded gVCF is not scored. With
+    its cut-down reads gone the build refuses naming `realign`; with them it calls them."""
+    lab = genome.lab.paths.lab
+    _hg003_record(genome)
+    monkeypatch.setitem(
+        pipeline.IMAGES, "deepvariant", "other/deepvariant@sha256:" + "0" * 64
+    )
+
+    def never(*_a: object, **_k: object) -> object:
+        raise AssertionError("a gVCF from another caller was scored")
+
+    monkeypatch.setattr(calibrate_build, "count_cells", never)
+    with pytest.raises(RunRefused, match="another caller.*realign hg003"):
+        calibrate_build.build_table(genome.lab.paths, grading=_grading(), threads=2)
+    down = layout(lab)["downsampled"]
+    down.mkdir(parents=True, exist_ok=True)
+    for name in ("hg003_1.fq.gz", "hg003_2.fq.gz"):
+        (down / name).write_bytes(b"")
+    called: list[str] = []
+
+    def run_sample(*_a: object, **kwargs: object) -> object:
+        called.append(str(kwargs["name"]))
+        raise RunRefused("stop after the call was asked for")
+
+    monkeypatch.setattr(calibrate_build, "run_sample", run_sample)
+    with pytest.raises(RunRefused, match="stop after"):
+        calibrate_build.build_table(genome.lab.paths, grading=_grading(), threads=2)
+    assert called
 
 
 @pytest.mark.parametrize(

@@ -23,6 +23,7 @@ from genokeeper.calibrate import (
     hg003_dir,
     hg004_truth,
     layout,
+    records,
 )
 from genokeeper.calibrate.hg002 import (
     HG004,
@@ -639,7 +640,12 @@ def test_read_aligned_refuses_another_reference(tmp_path: Path) -> None:
     assert "python -m genokeeper.calibrate.hg002 realign pcr" in said
 
 
-def test_read_aligned_returns_a_current_record(tmp_path: Path) -> None:
+def test_read_aligned_returns_a_current_record(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        records, "called_here", lambda *_a: True
+    )  # no FASTA in this lab
     lab = tmp_path / "lab"
     record = _current(lab, "pcrfree")
     assert read_aligned(lab, "pcrfree") == (

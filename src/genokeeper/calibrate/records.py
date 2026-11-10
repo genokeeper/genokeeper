@@ -189,9 +189,39 @@ def read_aligned(lab: Path, key: str) -> tuple[Path, str, dict[str, float]]:
 
 
 def read_called(lab: Path, key: str) -> Path:
-    """The gVCF of `key`'s record, refused as `read_aligned` refuses, and when the record
-    has no gVCF (or it is gone), naming `align`."""
+    """The gVCF of `key`'s record, refused as `read_aligned` refuses, when the record has
+    no gVCF (or it is gone), naming `align`, and when this pipeline's caller did not make it
+    (`called_here`), naming `realign`."""
     record = _current(lab, key)
     if record.gvcf is None or not Path(record.gvcf).is_file():
         raise RunRefused(f"{label(key)} is not called; {aside(lab, key)}")
+    if not called_here(lab, key, record):
+        raise RunRefused(
+            f"{label(key)} was called by another caller or with other settings than this"
+            f" pipeline's (BR-043); {realign_hint(lab, key)}"
+        )
     return Path(record.gvcf)
+
+
+def called_here(lab: Path, key: str, record: Record) -> bool:
+    """Whether `record`'s gVCF is what this pipeline's call step would make of its
+    alignment now: the folder it lies in is named by that step's key (`call_key`), which
+    holds the DeepVariant image, the checkpoint, the FASTA, the sex and [par], and
+    `CALL_STEP_VERSION`, which moves with the calling flags."""
+    from genokeeper.calibrate.hg002 import library_sex  # hg002 imports this module
+    from genokeeper.config import load_grading
+    from genokeeper.pipeline import call_key, calling_inputs
+
+    if record.gvcf is None:
+        return False
+    fasta, checkpoint = calling_inputs(lab)
+    identities = library_dir(lab, key) / IDENTITIES
+    expected = call_key(
+        record.key,
+        sha256_cached(fasta, identities),
+        checkpoint,
+        identities,
+        library_sex(key),
+        load_grading(),
+    )
+    return Path(record.gvcf).parent.name == expected

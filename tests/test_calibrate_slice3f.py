@@ -792,6 +792,7 @@ def test_build_measures_three_libraries(
     """With the tools faked, `build_slice3f` reads HG002 PCR-free, HG003 and HG004 (never
     HG002's PCR library), runs the typing steps on each, and writes a table the run's own
     versions open."""
+    monkeypatch.setattr(records, "called_here", lambda *_a: True)  # tools faked
     lab = make_lab(tmp_path / "lab")
     for vcf, bench in slice3f.truths(lab).values():
         Path(f"{vcf}.tbi").write_text("index\n")
@@ -818,6 +819,7 @@ def test_roh_leaves_the_correct_copies_out_of_the_v4_truths(
 ) -> None:
     """HG003's and HG004's ROH truth loses the correct copies, and is read again when they
     change; HG002's v5.0q benchmark is copied as it is and is not."""
+    monkeypatch.setattr(records, "called_here", lambda *_a: True)  # tools faked
     lab = make_lab(tmp_path / "lab")
     whole = "chr2\t0\t242000000\nchr21\t44100000\t44300000\nchr6\t0\t171000000\n"
     for vcf, bench in slice3f.truths(lab).values():
@@ -851,6 +853,7 @@ def test_roh_compares_three_files_cut_to_one_benchmark(
 ) -> None:
     """`ours` and `spiked` come from the sites cut to the bed the truth is cut to, and each
     `bcftools roh` reads its own file (BR-034)."""
+    monkeypatch.setattr(records, "called_here", lambda *_a: True)  # tools faked
     lab = make_lab(tmp_path / "lab")
     for vcf, bench in slice3f.truths(lab).values():
         Path(f"{vcf}.tbi").write_text("index\n")
@@ -887,6 +890,7 @@ def test_build_slice3f_refuses_missing_library(
 ) -> None:
     """A library 3c has not called is refused with 3c's own line naming the command that
     supplies it, before any tool runs; no table is written."""
+    monkeypatch.setattr(records, "called_here", lambda *_a: True)  # tools faked
     lab = make_lab(tmp_path / "lab")
     typed: list[str] = []
     _fake_build(lab, monkeypatch, typed)

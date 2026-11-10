@@ -1198,12 +1198,41 @@ def call_step(
         work,
         "call",
         CALL_STEP_VERSION,
-        [aligned.key, IMAGES["deepvariant"], fasta_sha]
-        + [_checkpoint_id(checkpoint, identities), str(sex)]
-        + [json.dumps(grading.par if male else {}, sort_keys=True)],
+        _call_parts(aligned.key, fasta_sha, checkpoint, identities, sex, grading),
         f"{GENOME_SAMPLE}.g.vcf.gz",
         build,
     )
+
+
+def _call_parts(
+    aligned_key: str,
+    fasta_sha: str,
+    checkpoint: Path,
+    identities: Path,
+    sex: Sex,
+    grading: Grading,
+) -> list[str]:
+    male = sex == "male"
+    return [aligned_key, IMAGES["deepvariant"], fasta_sha] + [
+        _checkpoint_id(checkpoint, identities),
+        str(sex),
+        json.dumps(grading.par if male else {}, sort_keys=True),
+    ]
+
+
+def call_key(
+    aligned_key: str,
+    fasta_sha: str,
+    checkpoint: Path,
+    identities: Path,
+    sex: Sex,
+    grading: Grading,
+) -> str:
+    """The key `call_step` would give these inputs now, which names the folder its gVCF
+    lands in: a recorded gVCF in another folder was called by another caller or with other
+    settings (BR-043)."""
+    parts = _call_parts(aligned_key, fasta_sha, checkpoint, identities, sex, grading)
+    return _key("call", CALL_STEP_VERSION, *parts)
 
 
 def qc_step(

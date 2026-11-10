@@ -345,13 +345,10 @@ table for another kind of call leaves those statements unassessed. `genokeeper c
 rebuilds only the stale tables and says "current" for the rest. If the change touched your own
 steps, the run redoes only those; a changed aligner re-aligns.
 
-One known gap ([BR-043](docs/bugs/BR-043.md), open): the variant-calling step and the
-`small_variants` and `hg002_cells` tables reuse calls already made when only DeepVariant's
-flags changed, and those two tables are rebuilt from the calls recorded for HG003 and HG002
-PCR-free after any change to the caller (its image, checkpoint or flags). A table can then read
-current while its error rates were measured on the old caller's calls. Until that entry is
-fixed there is no safe way around it by hand: if a release notes a change to the variant
-caller, wait for the fix before you calibrate again.
+After a change to the variant caller (DeepVariant's image, checkpoint or calling flags), a
+calibration table never reuses calls the old caller made: HG003 is called again from its
+cut-down reads, and a library whose calls came from another caller is refused with the command
+that calls it again (`realign`) ([BR-043](docs/bugs/BR-043.md)).
 
 ## Freeing disk
 

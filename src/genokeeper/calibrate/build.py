@@ -125,6 +125,7 @@ from genokeeper.calibrate.hg002_cells import (
 from genokeeper.calibrate.measure import Cells, count_cells
 from genokeeper.calibrate.records import (
     RECORDED,
+    called_here,
     label,
     on_this_reference,
     reference_sha256,
@@ -483,10 +484,20 @@ def build_table(
             "HG003 is aligned on another reference; run"
             " `python -m genokeeper.calibrate.hg002 realign hg003`"
         )
-    if record is not None and record.gvcf is not None:
+    if (
+        record is not None
+        and record.gvcf is not None
+        and called_here(lab, "hg003", record)
+    ):
         pair = None  # scored from its record
     elif any(where["downsampled"].glob("*q.gz")):
-        pair = fastq_pair(where["downsampled"])
+        pair = fastq_pair(where["downsampled"])  # its alignment is cached: only called
+    elif record is not None and record.gvcf is not None:
+        raise RunRefused(
+            "HG003 was called by another caller or with other settings than this"
+            " pipeline's (BR-043), and its cut-down reads are gone; run"
+            " `python -m genokeeper.calibrate.hg002 realign hg003`"
+        )
     elif (bases := recorded_bases(paths.reports)) is None:
         raise RunRefused(
             "missing input: no run of your FASTQ has recorded its bases, which"

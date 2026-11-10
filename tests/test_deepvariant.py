@@ -6,12 +6,14 @@ import pytest
 
 from genokeeper.call import deepvariant
 from genokeeper.call.deepvariant import (
+    CALLING_FLAGS,
     CHECKPOINT_FILES,
     deepvariant_args,
     run_deepvariant,
 )
 from genokeeper.config import load_grading
 from genokeeper.containers import IMAGES, PLATFORM, DockerUnavailable
+from genokeeper.pipeline import CALL_STEP_VERSION
 from genokeeper.tools import ToolFailed
 
 CHECKPOINT = "weights-51-0.995354.ckpt"
@@ -250,3 +252,15 @@ def test_image_pinned_by_digest() -> None:
         "google/deepvariant@sha256:"
         "962e5a83b1d76aae6990625d47102785f791603f2138aa1fa9aa4fb6a2eecbe6"
     )
+
+
+# The calling flags decide the calls but are not in the call step's key, so each change of
+# them must come with a new CALL_STEP_VERSION, or every run and calibration reuses calls
+# made with the old flags (BR-043). Add the new pair here when you bump it.
+FLAGS_BY_CALL_STEP = {
+    "1": ("--model_type=WGS", "--make_examples_extra_args=gvcf_gq_binsize=1"),
+}
+
+
+def test_calling_flags_change_only_with_the_call_step_version() -> None:
+    assert FLAGS_BY_CALL_STEP[CALL_STEP_VERSION] == CALLING_FLAGS
