@@ -345,21 +345,13 @@ table for another kind of call leaves those statements unassessed. `genokeeper c
 rebuilds only the stale tables and says "current" for the rest. If the change touched your own
 steps, the run redoes only those; a changed aligner re-aligns.
 
-One known gap ([BR-043](docs/bugs/BR-043.md), open): the `small_variants` and `hg002_cells`
-tables are rebuilt from the calls already recorded for HG003 and HG002 PCR-free. After a change
-to the variant caller (DeepVariant's image, its checkpoint or its flags), a rebuilt table reads
-current while its error rates were measured on the old caller's calls. Until that is fixed,
-call those two samples again after such a change. Move each one's record aside, then let the
-commands call it again from its cut-down reads (which must still be there):
-
-```bash
-mv "$LAB/calibration/hg003/aligned.json" "$LAB/calibration/hg003/aligned.json.old"
-mv "$LAB/calibration/hg002/pcrfree/aligned.json" "$LAB/calibration/hg002/pcrfree/aligned.json.old"
-uv run python -m genokeeper.calibrate.hg002 align pcrfree   # calls HG002 PCR-free again
-uv run genokeeper calibrate                                 # calls HG003 again, then rebuilds
-```
-
-`$LAB` is your lab: `$GENOKEEPER_HOME`, or `~/genome-lab`.
+One known gap ([BR-043](docs/bugs/BR-043.md), open): the variant-calling step and the
+`small_variants` and `hg002_cells` tables reuse calls already made when only DeepVariant's
+flags changed, and those two tables are rebuilt from the calls recorded for HG003 and HG002
+PCR-free after any change to the caller (its image, checkpoint or flags). A table can then read
+current while its error rates were measured on the old caller's calls. Until that entry is
+fixed there is no safe way around it by hand: if a release notes a change to the variant
+caller, wait for the fix before you calibrate again.
 
 ## Freeing disk
 
@@ -392,10 +384,9 @@ May be deleted once `genokeeper calibrate` says every table is current:
   `calibration/hg002/pcrfree/downsampled/`, `calibration/hg002/pcr/downsampled/` and
   `calibration/hg003/downsampled/`. While a library keeps its alignment record nothing reads
   them: the bootstrap fetches nothing for such a library, and a re-alignment writes the reads
-  back from its alignment. But while [BR-043](docs/bugs/BR-043.md) is open, keep HG003's and
-  HG002 PCR-free's if you can: calling them again after a variant-caller change (see
-  [Keeping it up to date](#keeping-it-up-to-date)) needs them, or their reads downloaded again.
-- After a re-alignment, `clean <library>` deletes what it replaced.
+  back from its alignment.
+- After a re-alignment, `clean <library>` deletes the old alignment and the reads the new one
+  was made from.
 - Docker's build cache: `docker builder prune`. Keep the images: a run never pulls one.
 
 Keep:
