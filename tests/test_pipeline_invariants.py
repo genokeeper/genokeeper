@@ -4043,15 +4043,15 @@ def test_a_library_called_by_another_caller_is_not_read(
     monkeypatch.setitem(
         pipeline.IMAGES, "deepvariant", "other/deepvariant@sha256:" + "0" * 64
     )
-    with pytest.raises(RunRefused, match=r"another caller .*BR-043.*realign hg003"):
+    with pytest.raises(RunRefused, match=r"another caller .*BR-043.*recall hg003"):
         calibrate_records.read_called(lab, "hg003")
 
 
-def test_hg003_called_by_another_caller_is_called_again(
+def test_hg003_called_by_another_caller_is_refused_naming_recall(
     genome: Genome, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """BR-043: after the DeepVariant image changed, HG003's recorded gVCF is not scored. With
-    its cut-down reads gone the build refuses naming `realign`; with them it calls them."""
+    """BR-043: after the DeepVariant image changed, HG003's recorded gVCF is not scored, and
+    the build names the command that calls its alignment again."""
     lab = genome.lab.paths.lab
     _hg003_record(genome)
     monkeypatch.setitem(
@@ -4062,22 +4062,14 @@ def test_hg003_called_by_another_caller_is_called_again(
         raise AssertionError("a gVCF from another caller was scored")
 
     monkeypatch.setattr(calibrate_build, "count_cells", never)
-    with pytest.raises(RunRefused, match="another caller.*realign hg003"):
+    monkeypatch.setattr(calibrate_build, "run_sample", never)
+    with pytest.raises(RunRefused, match="another caller.*hg002 recall hg003"):
         calibrate_build.build_table(genome.lab.paths, grading=_grading(), threads=2)
-    down = layout(lab)["downsampled"]
-    down.mkdir(parents=True, exist_ok=True)
-    for name in ("hg003_1.fq.gz", "hg003_2.fq.gz"):
-        (down / name).write_bytes(b"")
-    called: list[str] = []
-
-    def run_sample(*_a: object, **kwargs: object) -> object:
-        called.append(str(kwargs["name"]))
-        raise RunRefused("stop after the call was asked for")
-
-    monkeypatch.setattr(calibrate_build, "run_sample", run_sample)
-    with pytest.raises(RunRefused, match="stop after"):
-        calibrate_build.build_table(genome.lab.paths, grading=_grading(), threads=2)
-    assert called
+    assert calibrate_records.caller_mark(lab, ["hg003", "pcr"]) == {
+        "hg003:called_by": "another caller"
+    }
+    monkeypatch.undo()
+    assert calibrate_records.caller_mark(lab, ["hg003"]) == {}
 
 
 @pytest.mark.parametrize(

@@ -307,3 +307,41 @@ def run_sample(
     return SampleRun(
         cram=a.step.path, key=a.step.key, metrics=metrics, gvcf=called.path
     )
+
+
+def recall_sample(
+    paths: Paths,
+    *,
+    name: str,
+    cram: Path,
+    aligned_key: str,
+    sex: Sex,
+    threads: int | None = None,
+) -> Path:
+    """Call a recorded alignment again with this pipeline's caller, as `run_sample` calls a
+    pair, under `<lab>/calibration/<name>/` and its run lock; the calls pass the run's QC gate
+    on Ti/Tv and het/hom. Returns the new gVCF. Nothing is aligned again (BR-043)."""
+    threads = threads if threads is not None else (os.cpu_count() or 4)
+    versions = genome_tool_versions()
+    fasta, checkpoint = calling_inputs(paths.lab)
+    grading = load_grading()
+    work = calibration_dir(paths.lab) / name
+    with run_lock(work):
+        identities = work / IDENTITIES
+        try:
+            called = call_step(
+                work,
+                aligned=_Step(key=aligned_key, path=cram, reused=True),
+                fasta=fasta,
+                fasta_sha=sha256_cached(fasta, identities),
+                checkpoint=checkpoint,
+                identities=identities,
+                sex=sex,
+                grading=grading,
+                threads=threads,
+            )
+        except DockerUnavailable as e:
+            raise RunRefused(" ".join(str(e).split())) from e
+        stats = call_qc_step(work, called=called, bcftools=versions["bcftools"])
+        qc_gate(json.loads(stats.path.read_text()), grading)
+    return called.path

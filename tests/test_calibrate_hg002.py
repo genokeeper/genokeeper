@@ -1092,3 +1092,40 @@ def test_clean_removes_what_each_record_replaced(
     )
     assert hg002.main(["clean", "pcrfree"]) == 2
     assert Path(own.cram).is_file()
+
+
+def test_recall_calls_the_recorded_alignment_again(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """BR-043's remedy: `recall` calls the record's own CRAM again and rewrites only its
+    gVCF; HG004's acceptance, which scored the old calls, is cleared. A library that is
+    aligned only is refused."""
+    monkeypatch.setenv("GENOKEEPER_HOME", str(tmp_path / "lab"))
+    lab = tmp_path / "lab"
+    seen: list[tuple[str, str, str]] = []
+
+    def recall_sample(
+        _paths: object,
+        *,
+        name: str,
+        cram: Path,
+        aligned_key: str,
+        sex: str,
+        threads: object,
+    ) -> Path:
+        seen.append((name, aligned_key, sex))
+        out = cram.parent / "new.g.vcf.gz"
+        out.write_bytes(b"")
+        return out
+
+    monkeypatch.setattr(hg002, "recall_sample", recall_sample)
+    before = _current(lab, "hg004", gvcf=str(tmp_path / "old.g.vcf.gz"))
+    assert hg002.main(["recall", "hg004"]) == 0
+    after = read_record(lab, "hg004")
+    assert after is not None
+    assert seen == [("hg004-pcrfree", before.key, "female")]
+    assert Path(after.gvcf or "").name == "new.g.vcf.gz"
+    assert (after.accepted, after.snp_f1, after.cram) == (False, None, before.cram)
+    _current(lab, "pcr")
+    assert hg002.main(["recall", "pcr"]) == 2
+    assert "never called" in capsys.readouterr().err

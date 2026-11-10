@@ -63,6 +63,7 @@ from genokeeper.calibrate.sample import (
     SEED,
     align_sample,
     downsample,
+    recall_sample,
     run_sample,
     sample_fraction,
 )
@@ -580,6 +581,33 @@ def _fetch_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def _recall_command(args: argparse.Namespace) -> int:
+    """Call `key`'s recorded alignment again with this pipeline's caller and rewrite its
+    record with the new gVCF, keeping everything else; HG004's acceptance is cleared, since
+    it scored the old calls (BR-043)."""
+    paths = load_paths()
+    key = args.library
+    if not _calls(key):
+        raise RunRefused(
+            f"{label(key)} is aligned only, never called: nothing to call again"
+        )
+    cram, aligned_key, _ = read_aligned(paths.lab, key)
+    gvcf = recall_sample(
+        paths,
+        name=realign.work_name(key),
+        cram=cram,
+        aligned_key=aligned_key,
+        sex=library_sex(key),
+        threads=args.threads,
+    )
+    record = read_record(paths.lab, key)
+    assert record is not None  # read_aligned found it
+    cleared = {"accepted": False, "snp_f1": None} if key == "hg004" else {}
+    write_record(paths.lab, key, replace(record, gvcf=str(gvcf), **cleared))
+    print(f"{label(key)}: called again into {gvcf}")
+    return 0
+
+
 def _calls(key: str) -> bool:
     """Whether DeepVariant calls `key`'s library (HG003 is called; HG002 pcr is aligned
     only)."""
@@ -831,13 +859,14 @@ def main(argv: list[str] | None = None) -> int:
         ("fetch", _fetch_command, SAMPLE_LIBRARIES),
         ("align", _align_command, SAMPLE_LIBRARIES),
         ("realign", _realign_command, [*LIBRARIES, "hg003"]),
+        ("recall", _recall_command, RECORDED),
         ("clean", _clean_command, RECORDED),
     ):
         p = sub.add_parser(name)
         p.add_argument("library", choices=sorted(keys))
         if name == "fetch":
             p.add_argument("--connections", type=int, default=24)
-        if name == "realign":
+        if name in ("realign", "recall"):
             p.add_argument("--threads", type=int, help="default: this machine's CPUs")
         p.set_defaults(handler=handler)
     accept = sub.add_parser("accept")

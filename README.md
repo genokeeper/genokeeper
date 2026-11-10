@@ -345,10 +345,12 @@ table for another kind of call leaves those statements unassessed. `genokeeper c
 rebuilds only the stale tables and says "current" for the rest. If the change touched your own
 steps, the run redoes only those; a changed aligner re-aligns.
 
-After a change to the variant caller (DeepVariant's image, checkpoint or calling flags), a
-calibration table never reuses calls the old caller made: HG003 is called again from its
-cut-down reads, and a library whose calls came from another caller is refused with the command
-that calls it again (`realign`) ([BR-043](docs/bugs/BR-043.md)).
+After a change to the variant caller (DeepVariant's image, checkpoint or command line), no
+calibration table uses calls the old caller made ([BR-043](docs/bugs/BR-043.md)): the tables
+measured on them read stale, and `genokeeper calibrate` refuses naming the library to call
+again. `uv run python -m genokeeper.calibrate.hg002 recall <library>` calls that library's
+recorded alignment again, with nothing re-aligned and no download (hours per library). For
+HG004, run `accept hg004` after it. Then run `genokeeper calibrate` again.
 
 ## Freeing disk
 

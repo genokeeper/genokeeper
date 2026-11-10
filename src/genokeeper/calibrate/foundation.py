@@ -34,6 +34,7 @@ from pathlib import Path
 from genokeeper.calibrate import RTG_VERSION, layout, rtg_path
 from genokeeper.calibrate.measure import true_het_vafs
 from genokeeper.calibrate.records import (
+    caller_mark,
     library_dir,
     read_aligned,
     read_called,
@@ -144,6 +145,7 @@ def foundation_versions(lab: Path) -> dict[str, str]:
     return {
         "fasta": reference_sha256(lab),
         **keys,
+        **caller_mark(lab, list(CONTROLS)),
         "sex_regions": sha256_file(giab38_dir(lab) / SEX_REGIONS),
         "sex_mapq": str(grading.sex.mapq),
         "dosage": json.dumps(

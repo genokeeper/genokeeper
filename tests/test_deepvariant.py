@@ -6,7 +6,6 @@ import pytest
 
 from genokeeper.call import deepvariant
 from genokeeper.call.deepvariant import (
-    CALLING_FLAGS,
     CHECKPOINT_FILES,
     deepvariant_args,
     run_deepvariant,
@@ -254,13 +253,39 @@ def test_image_pinned_by_digest() -> None:
     )
 
 
-# The calling flags decide the calls but are not in the call step's key, so each change of
-# them must come with a new CALL_STEP_VERSION, or every run and calibration reuses calls
-# made with the old flags (BR-043). Add the new pair here when you bump it.
-FLAGS_BY_CALL_STEP = {
-    "1": ("--model_type=WGS", "--make_examples_extra_args=gvcf_gq_binsize=1"),
+# DeepVariant's command line decides the calls but is not in the call step's key, so a change
+# to it must come with a new CALL_STEP_VERSION, or every run and calibration reuses calls the
+# old command made (BR-043). When this test fails: bump CALL_STEP_VERSION in pipeline.py and
+# add the new version's command here; never edit an existing version's entry.
+_BASE = [
+    "/opt/deepvariant/bin/run_deepvariant",
+    "--model_type=WGS",
+    "--customized_model=/model/model.ckpt",
+    "--ref=/ref/ref.fa",
+    "--reads=/reads/s.cram",
+    "--output_vcf=/out/s.vcf.gz",
+    "--output_gvcf=/out/s.g.vcf.gz",
+    "--num_shards=4",
+    "--make_examples_extra_args=gvcf_gq_binsize=1",
+    "--intermediate_results_dir=/out/intermediate",
+]
+ARGS_BY_CALL_STEP = {
+    "1": (
+        [*_BASE, "--haploid_contigs=chrX,chrY", "--par_regions_bed=/par/par.bed"],
+        _BASE,
+    ),
 }
 
 
-def test_calling_flags_change_only_with_the_call_step_version() -> None:
-    assert FLAGS_BY_CALL_STEP[CALL_STEP_VERSION] == CALLING_FLAGS
+@pytest.mark.parametrize("male", [True, False])
+def test_the_command_changes_only_with_the_call_step_version(male: bool) -> None:
+    args = deepvariant_args(
+        Path("/c/s.cram"),
+        Path("/r/ref.fa"),
+        Path("/o"),
+        checkpoint=Path("/k/model.ckpt"),
+        male=male,
+        par_bed=Path("/p/par.bed"),
+        threads=4,
+    )
+    assert args == ARGS_BY_CALL_STEP[CALL_STEP_VERSION][0 if male else 1]

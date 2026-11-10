@@ -198,9 +198,34 @@ def read_called(lab: Path, key: str) -> Path:
     if not called_here(lab, key, record):
         raise RunRefused(
             f"{label(key)} was called by another caller or with other settings than this"
-            f" pipeline's (BR-043); {realign_hint(lab, key)}"
+            f" pipeline's (BR-043); {recall_hint(key)}"
         )
     return Path(record.gvcf)
+
+
+def recall_hint(key: str) -> str:
+    """The command that calls `key`'s recorded alignment again with this pipeline's caller;
+    HG004 is then scored against its truth again before a table may read it."""
+    then = f", then `{_CLI} accept hg004`" if key == "hg004" else ""
+    return f"run `{_CLI} recall {key}`{then}"
+
+
+def caller_mark(lab: Path, keys: tuple[str, ...] | list[str]) -> dict[str, str]:
+    """A versions entry for each of `keys` whose recorded gVCF another caller made, and none
+    otherwise: a table measured on those calls reads stale once the caller changed, while a
+    table whose calls are this pipeline's keeps the versions it was built with (BR-043)."""
+    marks: dict[str, str] = {}
+    for key in keys:
+        record = read_record(lab, key)
+        if record is None or record.gvcf is None:
+            continue
+        try:
+            foreign = not called_here(lab, key, record)
+        except RunRefused:  # no calling inputs here: the run refuses on them itself
+            continue
+        if foreign:
+            marks[f"{key}:called_by"] = "another caller"
+    return marks
 
 
 def called_here(lab: Path, key: str, record: Record) -> bool:
@@ -214,11 +239,11 @@ def called_here(lab: Path, key: str, record: Record) -> bool:
 
     if record.gvcf is None:
         return False
-    fasta, checkpoint = calling_inputs(lab)
-    identities = library_dir(lab, key) / IDENTITIES
+    _, checkpoint = calling_inputs(lab)
+    identities = calibration_dir(lab) / IDENTITIES  # the lab's digest cache
     expected = call_key(
         record.key,
-        sha256_cached(fasta, identities),
+        reference_sha256(lab),
         checkpoint,
         identities,
         library_sex(key),

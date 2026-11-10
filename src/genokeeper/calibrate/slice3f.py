@@ -45,7 +45,7 @@ from typing import Any
 
 from genokeeper.bloodgroups import SystemCall
 from genokeeper.calibrate import BENCH_BED, TRUTH_VCF, hg004_truth, layout, tables
-from genokeeper.calibrate.records import hg002_dir, read_record
+from genokeeper.calibrate.records import caller_mark, hg002_dir, read_record
 from genokeeper.calibrate.stage3 import hg002_truth
 from genokeeper.calibrate.tables import RUN, Current, open_table
 from genokeeper.checksum import sha256_cached, sha256_file
@@ -575,6 +575,7 @@ def slice3f_versions(
         gvcf = None if record is None else record.gvcf
         versions[f"{lib}:cram"] = "" if record is None else record.key
         versions[f"{lib}:calls"] = "" if gvcf is None else calls_key(Path(gvcf))
+    versions |= caller_mark(lab, list(LIBRARIES))
     for lib, files in truths(lab).items():
         for key, path in zip((f"{lib}:truth", f"{lib}:benchmark"), files, strict=True):
             versions[key] = sha(path) if recorded is None else recorded.get(key, "")
