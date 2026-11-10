@@ -4094,6 +4094,13 @@ def run_genome(
             "present": True,
         }
     )
+    # Before any table opens: reads from another platform are refused at once, not after the
+    # bootstrap's downloads and hours of alignment.
+    _check_files({"FASTQ 1": fastq1, "FASTQ 2": fastq2})
+    try:
+        platform = check_platform(fastq1)
+    except PlatformRefused as e:
+        raise RunRefused(_one_line(e)) from e
     store = paths.reports / STORE_NAME
     _check_store(store)
     faf = faf if faf is not None else open_faf_table(paths.lab)
@@ -4214,12 +4221,6 @@ def run_genome(
     slice3f_calibrated, slice3f_table, slice3f_reason = open_slice3f(lab, grading)
     withheld3f = {} if slice3f_table is None else slice3f_table.withheld
     steps: dict[str, _Step] = {}
-
-    # Before hours of alignment: reads from another platform are refused here.
-    try:
-        platform = check_platform(fastq1)
-    except PlatformRefused as e:
-        raise RunRefused(_one_line(e)) from e
 
     steps["align"] = align_step(
         work,

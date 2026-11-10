@@ -8,6 +8,8 @@ from fixtures.grch38_mini import bwa_index, write_fastq_pair, write_reference
 
 from genokeeper import tools
 from genokeeper.align import Platform, PlatformRefused, align, check_platform
+from genokeeper.config import Paths
+from genokeeper.pipeline import RunRefused, run_genome
 from genokeeper.tools import ToolFailed
 
 
@@ -160,3 +162,20 @@ def test_one_gate_wraps_the_whole_pipeline(
     # One slot for bwa | fixmate | sort | markdup and the index: gating each stage of a
     # pipe makes the later ones wait for the slot the first holds while it blocks on them.
     assert gate_log.read_text().splitlines() == ["dna:align -- bash"]
+
+
+def test_run_refuses_other_reads_before_any_table(tmp_path: Path) -> None:
+    """A newcomer's non-T7 reads are refused by an empty lab's first run, before the gnomAD
+    FAF table or a calibration table is looked for: before the bootstrap's downloads."""
+    fasta = write_reference(tmp_path / "ref.fa")
+    fq1, fq2 = write_fastq_pair(tmp_path, fasta)
+    paths = Paths(
+        repo=tmp_path, raw=tmp_path, reports=tmp_path / "reports", lab=tmp_path / "lab"
+    )
+    with pytest.raises(RunRefused, match="flowcell prefix SRR"):
+        run_genome(
+            paths,
+            fastq1=_archived(fq1, tmp_path, original=False),
+            fastq2=fq2,
+            clinvar38=tmp_path / "absent.vcf.gz",
+        )
