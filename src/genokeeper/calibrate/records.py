@@ -86,6 +86,7 @@ class Record:
     accepted: bool
     snp_f1: float | None
     replaced: Replaced | None
+    recalled: bool = False  # its gVCF came from `recall`, not from its alignment's run
 
 
 def write_record(lab: Path, key: str, record: Record) -> Path:
@@ -115,6 +116,7 @@ def read_record(lab: Path, key: str) -> Record | None:
         accepted=data.get("accepted", True),
         snp_f1=data.get("snp_f1"),
         replaced=data.get("replaced"),
+        recalled=data.get("recalled", False),
     )
 
 

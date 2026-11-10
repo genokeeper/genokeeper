@@ -1126,6 +1126,20 @@ def test_recall_calls_the_recorded_alignment_again(
     assert seen == [("hg004-pcrfree", before.key, "female")]
     assert Path(after.gvcf or "").name == "new.g.vcf.gz"
     assert (after.accepted, after.snp_f1, after.cram) == (False, None, before.cram)
+    assert after.recalled
+    # The foundation table, measured on the earlier calls, reads stale once one is recalled.
+    from genokeeper.calibrate.foundation import foundation_versions
+
+    monkeypatch.setattr(records, "reference_sha256", lambda _lab: "f")
+    monkeypatch.setattr(records, "called_here", lambda *_a: True)
+    monkeypatch.setattr(
+        "genokeeper.calibrate.foundation.reference_sha256", lambda _lab: "f"
+    )
+    monkeypatch.setattr("genokeeper.calibrate.foundation.sha256_file", lambda _p: "s")
+    recalled = foundation_versions(lab)
+    write_record(lab, "hg004", replace(after, recalled=False))
+    assert foundation_versions(lab) != recalled
+    assert "hg004_calls" in recalled
     _current(lab, "pcr")
     assert hg002.main(["recall", "pcr"]) == 2
     assert "never called" in capsys.readouterr().err

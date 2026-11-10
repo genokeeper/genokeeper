@@ -142,6 +142,11 @@ def foundation_versions(lab: Path) -> dict[str, str]:
     for control in CONTROLS:
         record = read_record(lab, control)
         keys[f"{control}_key"] = "" if record is None else record.key
+        if record is not None and record.recalled and record.gvcf is not None:
+            # Called again (BR-043): the calls' own key, so a table measured on the earlier
+            # calls reads stale. A record never recalled adds nothing, so no table goes
+            # stale merely because this entry exists.
+            keys[f"{control}_calls"] = Path(record.gvcf).parent.name
     return {
         "fasta": reference_sha256(lab),
         **keys,

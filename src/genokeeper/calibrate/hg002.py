@@ -603,7 +603,9 @@ def _recall_command(args: argparse.Namespace) -> int:
     record = read_record(paths.lab, key)
     assert record is not None  # read_aligned found it
     cleared = {"accepted": False, "snp_f1": None} if key == "hg004" else {}
-    write_record(paths.lab, key, replace(record, gvcf=str(gvcf), **cleared))
+    write_record(
+        paths.lab, key, replace(record, gvcf=str(gvcf), recalled=True, **cleared)
+    )
     print(f"{label(key)}: called again into {gvcf}")
     return 0
 
