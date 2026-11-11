@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Security-Policy" content="{{csp}}">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>genokeeper on HG002</title>
+<meta name="description" content="{{description}}">
+<meta property="og:title" content="{{og_title}}">
+<meta property="og:description" content="{{description}}">
+<meta property="og:image" content="{{og_image}}">
+<meta name="twitter:card" content="summary_large_image">
+<style>{{css}}</style>
+</head>
+<body>
+{{frame}}
+<div class="sheet">
+  <div class="top">
+    <b>genokeeper</b>
+    <nav><a href="dashboard.html">Dashboard</a><a href="calibration.html">Calibration</a><a href="{{repository}}">GitHub</a><a href="https://doi.org/{{doi}}">doi:{{doi}}</a></nav>
+  </div>
+
+  <h1><span>One genome, {{loosest}} candidate findings.</span><span>{{default}} pass at the default thresholds.</span></h1>
+  <p class="lede">Genokeeper takes the raw reads of a 30x genome and calls them on your own Mac. It grades each finding twice: how likely the genotype is wrong, measured on reference genomes, and how strong the evidence behind the claim is. This page is its output for HG002.</p>
+
+  <figure>
+    <div class="wrap">
+    <table class="matrix">
+      <thead>
+        <tr><th class="axis">findings that remain</th><th>any evidence</th><th>limited or more</th><th>moderate or more</th><th>strong</th></tr>
+      </thead>
+      <tbody>
+{{matrix}}
+      </tbody>
+    </table>
+    </div>
+    <figcaption class="sub">Figure 1. Findings left at each pair of thresholds: genotype reliability down the side, strength of evidence across. Each cell opens the dashboard at that view. {{caption}}</figcaption>
+  </figure>
+
+  <h2>What changed in one month</h2>
+  <p>{{changed}}</p>
+{{diff}}
+  <p class="sub"><a href="dashboard.html#tab=changes">All changes, with their sources</a></p>
+
+  <h2>How often it is wrong</h2>
+  <p>Every class of finding has an error rate measured against a truth set. Where nothing could be measured, the tool says so and does not grade.</p>
+{{calibration}}
+  <p class="sub"><a href="calibration.html">Every table as the tool printed it, and the tools' versions</a></p>
+
+  <h2>Ask it yourself</h2>
+  <p>With Claude Code installed, three steps put this genome in a folder you can ask questions about. It downloads the store from GitHub and sends nothing.</p>
+  <ol class="steps">
+    <li><span>Get the folder.<span class="cmd">uvx genokeeper demo</span></span></li>
+    <li><span>Open it.<span class="cmd">cd ~/genokeeper-demo &amp;&amp; claude</span></span></li>
+    <li><span>Ask.<span class="say">Is this person a carrier of anything their children could inherit?</span></span></li>
+  </ol>
+  <p class="sub">The answers go through Claude, so the findings a question needs are sent to Anthropic. For HG002 that is public data. For your own genome it is your choice.</p>
+
+  <h2>What it cannot do</h2>
+  <ul class="plain">
+    <li>It reads only paired FASTQ from a DNBSEQ-T7 run of about 30x. Illumina reads are refused.</li>
+    <li>Your own run needs an Apple silicon Mac with 48 GB, about 1 TB of free disk and several days.</li>
+    <li>It is not a medical device. A finding is a reason to repeat the test in a clinical lab.</li>
+  </ul>
+
+  <h2>Cite</h2>
+  <div class="cite">{{cite}}</div>
+
+  <footer class="sub">This page is one file. It loads nothing else: no fonts, no scripts, no analytics. Licence AGPL-3.0-or-later.</footer>
+</div>
+</body>
+</html>
