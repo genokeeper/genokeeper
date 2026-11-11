@@ -22,6 +22,7 @@ from genokeeper import (
     schedule,
 )
 from genokeeper.calibrate import build as calibrate
+from genokeeper.demo import install as demo
 from genokeeper.evidence import frequency
 
 type Subparsers = argparse._SubParsersAction[argparse.ArgumentParser]
@@ -40,6 +41,7 @@ REGISTRARS: tuple[Registrar, ...] = (
     schedule.register,
     calibrate.register,
     frequency.register,
+    demo.register,
 )
 
 
