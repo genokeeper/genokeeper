@@ -24,12 +24,27 @@ class Paths:
     lab: Path
 
 
-def load_paths(root: Path | None = None) -> Paths:
-    """Paths under `root` (default: this repository); `$GENOKEEPER_HOME`
-    (`$GENOMELAB_HOME` before the rename) moves the lab."""
-    repo = root if root is not None else _REPO
+DEMO_MARKER = "demo.json"
+
+
+def load_paths(root: Path | None = None, *, cwd: Path | None = None) -> Paths:
+    """Paths under `root`; by default this repository when it is a checkout, else `cwd`
+    (the installed tool's working folder). `$GENOKEEPER_HOME` (`$GENOMELAB_HOME` before
+    the rename) moves the lab, except in a demo folder (it holds `DEMO_MARKER`), whose
+    lab is its own `lab/`."""
+    if root is not None:
+        repo = root
+    elif (_REPO / "pyproject.toml").is_file() and (
+        _REPO / "src" / "genokeeper"
+    ).is_dir():
+        repo = _REPO
+    else:
+        repo = cwd if cwd is not None else Path.cwd()
     home = getenv("HOME")
-    lab = Path(home) if home else Path.home() / "genome-lab"
+    if (repo / DEMO_MARKER).is_file():
+        lab = repo / "lab"
+    else:
+        lab = Path(home) if home else Path.home() / "genome-lab"
     return Paths(
         repo=repo, raw=repo / "data" / "raw", reports=repo / "reports", lab=lab
     )

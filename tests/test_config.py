@@ -3,7 +3,9 @@ from pathlib import Path
 
 import pytest
 
+from genokeeper import config
 from genokeeper.config import (
+    DEMO_MARKER,
     AfGuardThresholds,
     CnvThresholds,
     DeletionThresholds,
@@ -511,3 +513,44 @@ def test_config_hhv6_roh_tables(tmp_path: Path) -> None:
         )
     with pytest.raises(ValueError, match=r"missing sections.*'roh'"):
         load_grading(_variant(tmp_path, "[roh]", "[unused_roh]"))
+
+
+def _fake_checkout(path: Path) -> Path:
+    (path / "src" / "genokeeper").mkdir(parents=True)
+    (path / "pyproject.toml").write_text("")
+    return path
+
+
+def test_checkout_keeps_repo_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checkout = _fake_checkout(tmp_path / "checkout")
+    monkeypatch.setattr(config, "_REPO", checkout)
+    cwd = tmp_path / "elsewhere"
+    cwd.mkdir()
+    assert load_paths(cwd=cwd).repo == checkout
+
+
+def test_outside_checkout_uses_cwd(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    empty = tmp_path / "site-packages"
+    empty.mkdir()
+    monkeypatch.setattr(config, "_REPO", empty)
+    paths = load_paths(cwd=tmp_path)
+    assert paths.reports == tmp_path / "reports"
+
+
+def test_demo_folder_lab_wins_over_home(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / DEMO_MARKER).write_text("{}")
+    monkeypatch.setenv("GENOKEEPER_HOME", "/elsewhere")
+    assert load_paths(tmp_path).lab == tmp_path / "lab"
+
+
+def test_home_moves_lab_outside_demo_folder(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("GENOKEEPER_HOME", "/elsewhere")
+    assert load_paths(tmp_path).lab == Path("/elsewhere")
