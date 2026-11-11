@@ -1,7 +1,6 @@
 """The genome-ask skill is one file in the package, linked from `.claude/skills/` and carried
 in the wheel as a regular file."""
 
-import subprocess
 import zipfile
 from pathlib import Path
 
@@ -17,14 +16,7 @@ def test_skill_symlink_points_into_the_package() -> None:
     assert LINK.resolve() == REPO / "src" / PACKAGED
 
 
-def test_wheel_carries_skill(tmp_path: Path) -> None:
-    subprocess.run(
-        ["uv", "build", "--wheel", "--out-dir", str(tmp_path)],
-        cwd=REPO,
-        check=True,
-        capture_output=True,
-    )
-    (wheel,) = tmp_path.glob("*.whl")
+def test_wheel_carries_skill(wheel: Path) -> None:
     with zipfile.ZipFile(wheel) as zf:
         assert zf.read(PACKAGED) == (REPO / "src" / PACKAGED).read_bytes()
 

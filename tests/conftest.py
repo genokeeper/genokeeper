@@ -4,6 +4,7 @@ under `fixtures/hg002/` (ExpansionHunter's VCF is there as `.vcf.txt`)."""
 
 import os
 import shutil
+import subprocess
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -37,3 +38,14 @@ def no_machine_gate(monkeypatch: pytest.MonkeyPatch) -> None:
     runs), so nothing queues behind the machine's core budget."""
     monkeypatch.setenv("GENOKEEPER_GATE", "/nonexistent-gate")
     monkeypatch.setattr(tools, "GATE", Path("/nonexistent-gate"))
+
+
+@pytest.fixture(scope="session")
+def wheel(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """The package's wheel, built once per session (per worker under xdist)."""
+    out = tmp_path_factory.mktemp("wheel")
+    repo = Path(__file__).resolve().parents[1]
+    command = ["uv", "build", "--wheel", "--out-dir", str(out)]
+    subprocess.run(command, cwd=repo, check=True, capture_output=True)
+    (built,) = out.glob("*.whl")
+    return built

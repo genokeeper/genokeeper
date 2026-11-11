@@ -8,7 +8,6 @@ import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
 
 from fixtures.demo_site import GENE, RUN1, RUN2, packaged, serve
 
@@ -16,21 +15,12 @@ from genokeeper import refresh_log
 from genokeeper.demo.install import install
 from genokeeper.refresh_log import RefreshRecord, SourceOutcome, SourceStatus
 
-REPO = Path(__file__).resolve().parents[1]
 # The planted lab's refresh date: it must reach no output.
 PLANTED = datetime(2031, 7, 17, 9, tzinfo=UTC)
 
 
-def _installed(tmp_path: Path) -> Path:
+def _installed(wheel: Path, tmp_path: Path) -> Path:
     """The `genokeeper` of the built wheel in an isolated environment."""
-    wheels = tmp_path / "wheel"
-    subprocess.run(
-        ["uv", "build", "--wheel", "--out-dir", str(wheels)],
-        cwd=REPO,
-        check=True,
-        capture_output=True,
-    )
-    (wheel,) = wheels.glob("*.whl")
     env = tmp_path / "env"
     for command in (
         ["uv", "venv", "--python", sys.executable, str(env)],
@@ -40,8 +30,8 @@ def _installed(tmp_path: Path) -> Path:
     return env / "bin" / "genokeeper"
 
 
-def test_skill_commands_in_demo_folder(tmp_path: Path) -> None:
-    genokeeper = _installed(tmp_path)
+def test_skill_commands_in_demo_folder(wheel: Path, tmp_path: Path) -> None:
+    genokeeper = _installed(wheel, tmp_path)
     with serve(packaged(tmp_path / "site")) as base:
         folder = install(tmp_path / "d", base=base)
     planted = tmp_path / "home-lab"
@@ -55,7 +45,7 @@ def test_skill_commands_in_demo_folder(tmp_path: Path) -> None:
     }
     env["GENOKEEPER_HOME"] = str(planted)
 
-    def run(*args: str) -> Any:
+    def run(*args: str) -> str:
         done = subprocess.run(
             [str(genokeeper), *args],
             cwd=folder,
@@ -66,13 +56,14 @@ def test_skill_commands_in_demo_folder(tmp_path: Path) -> None:
         )
         assert done.returncode == 0, done.stderr
         assert PLANTED.date().isoformat() not in done.stdout + done.stderr
-        return json.loads(done.stdout)
+        return done.stdout
 
-    found = run("query", "--json")
+    found = json.loads(run("query", "--json"))
     assert found["run_id"] == RUN2
     first = found["findings"][0]["id"]
-    assert run("show", first, "--json")["finding"]["id"] == first
-    assert run("genotype", "--gene", GENE, "--json")["sites"]
-    changes = run("changes", "--json")
+    assert json.loads(run("show", first, "--json"))["finding"]["id"] == first
+    assert json.loads(run("genotype", "--gene", GENE, "--json"))["sites"]
+    changes = json.loads(run("changes", "--json"))
     assert changes["run"] == RUN2 and changes["refresh"] is not None
     assert "check" not in changes
+    assert "wrote" in run("dashboard")
