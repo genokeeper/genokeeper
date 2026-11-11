@@ -1,0 +1,68 @@
+name: Pages
+
+# The HG002 demo site: the pages `python -m genokeeper.demo package` wrote, uploaded to the
+# release `hg002` of genokeeper/hg002-demo, checked against the manifest and deployed as they are.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      # Only the share image is wanted from the repository, and only when it is committed.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: docs/demo/site
+      - name: Download the pages and check them against the manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir site
+          gh release download hg002 --repo genokeeper/hg002-demo --dir site \
+            --pattern manifest.json --pattern index.html --pattern dashboard.html \
+            --pattern calibration.html
+          python3 -c '
+          import hashlib, json, sys
+          files = json.load(open("site/manifest.json"))["files"]
+          bad = 0
+          for name in ("index.html", "dashboard.html", "calibration.html"):
+              got = hashlib.sha256(open("site/" + name, "rb").read()).hexdigest()
+              if files.get(name) != got:
+                  print(name + ": sha256 differs from the manifest", file=sys.stderr)
+                  bad = 1
+          sys.exit(bad)
+          '
+          rm site/manifest.json
+          if [ -f docs/demo/site/social.png ]; then
+            cp docs/demo/site/social.png site/social.png
+          fi
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

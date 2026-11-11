@@ -77,6 +77,19 @@ version or a section still marked unreleased, publishes to PyPI by trusted publi
 `pypi` environment) and opens the GitHub release with that section as its notes, which Zenodo
 archives under a DOI.
 
+The HG002 demo is published apart from a release, from the maintainer's machine, and no demo
+file is attached to a release of this repository (Zenodo would archive it):
+
+1. `python -m genokeeper.demo build` runs HG002 twice (ClinVar 20261011, then the lab's
+   newest) into `<lab>/demo/hg002/`; it takes about a day and needs 150 GB free.
+2. `python -m genokeeper.demo package OUT` writes the store, the three pages and
+   `manifest.json`, and refuses when a path of the maintainer's machine is in any of them.
+3. `gh release upload hg002 OUT/* --clobber --repo genokeeper/hg002-demo` replaces the assets
+   of the moving release `hg002`.
+4. `gh workflow run pages.yml --repo genokeeper/genokeeper` checks the pages against the
+   manifest and deploys them to GitHub Pages. The share image `docs/demo/site/social.png`, when
+   committed, is added to the site.
+
 ## Licence
 
 Genokeeper is licensed under the GNU AGPL, version 3 or any later version. By contributing, you
