@@ -30,7 +30,7 @@ sequencer, Illumina included, are refused with the reason, because the variant c
 and every calibration sample are T7's. BAM, CRAM and VCF input are not supported yet.
 
 **Requirements:**
-- a Mac with Apple silicon and 48 GB of memory or more: Docker needs 32 GB of it, and macOS
+- a Mac with Apple silicon and 48 GB of memory or more: Docker needs 36 GB of it, and macOS
   needs the rest. It is the only platform tested so far; Linux, Intel Macs and WSL2 are
   tracked in [#48](https://github.com/genokeeper/genokeeper/issues/48);
 - about 1.5 TB of downloads, and 1 TB of free disk at the peak; about 0.85 TB stays after
@@ -110,7 +110,7 @@ Read [Terms you accept](#terms-you-accept) before step 5.
 - Rosetta (`softwareupdate --install-rosetta`): eight of the pinned images are published for
   Intel (linux/amd64) only.
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/), running for every step
-  below. In Settings, Resources, give it 32 GB of memory or more. In Settings, General, keep
+  below. In Settings, Resources, give it 36 GB of memory or more. In Settings, General, keep
   "Use Rosetta for x86_64/amd64 emulation on Apple Silicon" on.
 - Optional: [Claude Code](https://claude.com/claude-code), for step 10's skill and `explain`.
 
@@ -415,10 +415,12 @@ can go with `brew uninstall` if nothing else needs them.
 
 ## Troubleshooting
 
-**Docker memory.** A run warns when Docker gives its containers less than 32 GiB, and the
-polygenic scores' ancestry step can then fail out of memory. Raise it in Docker Desktop,
-Settings, Resources. DeepVariant also sizes its work to Docker's memory, so less memory makes
-it slower. Docker with 32 GB needs a Mac with 48 GB or more.
+**Docker memory.** A run warns when Docker gives its containers less than 36 GiB: the
+polygenic scores' matching steps (pgsc_calc's FORMAT_SCOREFILES and MATCH_COMBINE) peaked at
+34.6 GB on a 30x genome and can fail out of memory below it. Raise it in Docker Desktop,
+Settings, Resources. DeepVariant sizes its work to Docker's memory, so less memory only makes
+it slower. Docker with 36 GB needs a Mac with 48 GB or more; running the scores in smaller
+batches to lower this is tracked in [#50](https://github.com/genokeeper/genokeeper/issues/50).
 
 **Rosetta.** Eight images (DeepVariant, VerifyBamID2, mutserve, WhatsHap, OptiType, T1K,
 bigBedToBed and StellarPGx) are Intel-only. They need Rosetta installed

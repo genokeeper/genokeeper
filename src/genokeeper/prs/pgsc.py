@@ -93,10 +93,13 @@ _PANEL_MEMBERS = (".pgen", ".psam", ".pvar.zst", ".king.cutoff.out.id")
 # itself runs with `--min_overlap 0` (its schema's minimum), so it scores every score and
 # never fails a run on overlap.
 MIN_OVERLAP = 0.75
-# pgsc_calc's ancestry step needs a 32 GB Docker VM (track design, slice 1d, a user step).
-# Below it a run warns, naming the setting; no adversary, so no refusal: an out-of-memory
-# task fails in Nextflow.
-MIN_DOCKER_MEMORY = 32 * 2**30
+# pgsc_calc's score handling, not its ancestry step, sets the Docker VM a run needs: on a 30x
+# genome with the chosen scores FORMAT_SCOREFILES peaked at 34.6 GB and MATCH_COMBINE at
+# 25.8 GB, each after a first attempt failed at its 16 GB request, while FRAPOSA's PCA and
+# projection stayed under 1.3 GB (Nextflow traces of three runs, read 2026-11-11). Below it a
+# run warns, naming the setting; no adversary, so no refusal: an out-of-memory task fails in
+# Nextflow.
+MIN_DOCKER_MEMORY = 36 * 2**30
 # The target's sampleset (pgsc_calc allows letters and digits only) and its one sample. The
 # sampleset names pgsc_calc's output files, cached under reports/work/pgsc/, so it keeps its
 # name from before the rename to genokeeper.
@@ -389,8 +392,8 @@ def run_pgsc_calc(
     if memory < MIN_DOCKER_MEMORY:
         print(
             f"genokeeper run: Docker gives its containers {memory / 2**30:.1f} GiB of"
-            f" memory, below the {MIN_DOCKER_MEMORY // 2**30} GiB pgsc_calc's ancestry"
-            " step needs: raise it in Docker Desktop (Settings, Resources)",
+            f" memory, below the {MIN_DOCKER_MEMORY // 2**30} GiB pgsc_calc's score"
+            " matching needs: raise it in Docker Desktop (Settings, Resources)",
             file=sys.stderr,
         )
     scored = out_dir / "scores"

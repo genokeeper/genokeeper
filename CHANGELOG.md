@@ -3,12 +3,12 @@
 All notable changes to Genokeeper are listed here. Versions follow [Semantic
 Versioning](https://semver.org); until 1.0, a minor version may change commands and outputs.
 
-## [0.1.0] — unreleased
+## [0.1.0] — 2026-11-11
 
 The first public version.
 
-- From paired DNBSEQ-T7 FASTQ to GRCh38 calls on your Mac: bwa, a QC gate, DeepVariant, chrM
-  with mutserve, read-backed phasing.
+- From paired DNBSEQ-T7 FASTQ to GRCh38 calls on your own machine (tested on Apple-silicon
+  Macs): bwa, a QC gate, DeepVariant, chrM with mutserve, read-backed phasing.
 - Two confidences for every finding: a genotype error rate measured on GIAB's HG002, HG003 and
   HG004, and the strength of the evidence behind the claim.
 - What it reports:

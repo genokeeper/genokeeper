@@ -397,7 +397,7 @@ def test_run_pgsc_calc_offline_on_local_files_inside_its_step(
     the local scoring files (never `--pgs_id`), offline, with our config and the arm
     profile, scoring every score whatever its overlap, with pgsc_calc's default for
     multi-allelic matches and NXF_TEMP created; the results are kept only after the
-    containment check passed. Docker with less than 32 GiB of memory warns, naming the
+    containment check passed. Docker with less than 36 GiB of memory warns, naming the
     user's setting, and the run goes on."""
     lab = tmp_path / "lab"
     scores = [pgsc.scoring_file(lab, i) for i in ("PGS000018", "PGS000903")]
@@ -424,11 +424,11 @@ def test_run_pgsc_calc_offline_on_local_files_inside_its_step(
     gate = tmp_path / "coreslot-gate"
     gate.touch()
     monkeypatch.setattr(tools, "GATE", gate)
-    monkeypatch.setattr(pgsc, "docker_memory", lambda: int(31.9 * 2**30))
+    monkeypatch.setattr(pgsc, "docker_memory", lambda: int(35.9 * 2**30))
     seen["image"] = PINNED["plink2"]
     results = pgsc.run_pgsc_calc(target, scores, pgsc.panel_path(lab), out, lab=lab)
     warned = capsys.readouterr().err
-    assert "31.9 GiB" in warned and "Docker Desktop (Settings, Resources)" in warned
+    assert "35.9 GiB" in warned and "Docker Desktop (Settings, Resources)" in warned
     assert set(pgsc.parse_results(results)) == {"PGS000018", "PGS000903"}
     args = seen["args"]
     assert args[args.index("--") + 1 :][:3] == [

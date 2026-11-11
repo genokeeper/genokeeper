@@ -7,6 +7,7 @@ authors:
 repository-code: "https://github.com/genokeeper/genokeeper"
 license: AGPL-3.0-or-later
 version: 0.1.0
+date-released: 2026-11-11
 keywords:
   - whole-genome sequencing
   - personal genomics

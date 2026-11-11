@@ -298,7 +298,7 @@ which refuses results it cannot verify) on a VCF of our calls at every chosen sc
 panel's ancestry positions (an unknown or low call goes in as a no-call), each score a finding with
 its percentile against the population you are closest to (one below 0.75 overlap is
 unassessed, what pgsc_calc computed kept under `claim.withheld`), and APOE's diplotype from our
-calls at rs429358 and rs7412. Docker needs at least 32 GB of memory for it (Docker Desktop,
+calls at rs429358 and rs7412. Docker needs at least 36 GB of memory for it (Docker Desktop,
 Settings, Resources). 27 more scores outside the chosen set (`[[research_score]]`
 in `src/genokeeper/resources/pgs/scores.toml`, each with `why`) run in a second pgsc_calc run of
 their own, so the chosen scores' cache stays as it was, and are stored as research: validity
