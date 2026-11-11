@@ -83,21 +83,25 @@ def test_install_refuses_schema_mismatch(site: Path, tmp_path: Path) -> None:
     assert not (tmp_path / "d").exists()
 
 
+@pytest.mark.parametrize("marker", [None, '{"name": "a project of its own"}'])
 def test_install_refuses_foreign_folder(
     site: Path,
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
+    marker: str | None,
 ) -> None:
     folder = tmp_path / "d"
     folder.mkdir()
     (folder / "notes.txt").write_text("mine")
+    if marker is not None:  # a `demo.json` that is not a demo manifest
+        (folder / DEMO_MARKER).write_text(marker)
     with serve(site) as base:
         with pytest.raises(DemoRefused, match="not a demo folder"):
             install(folder, base=base)
         monkeypatch.setattr(inst, "DEMO_BASE", base)
         assert cli.main(["demo", "--dir", str(folder)]) == 2
-    assert _files(folder) == ["notes.txt"]
+    assert _files(folder) == sorted(["notes.txt", *([DEMO_MARKER] if marker else [])])
     assert (folder / "notes.txt").read_text() == "mine"
     err = capsys.readouterr().err.splitlines()
     assert len(err) == 1 and "not a demo folder" in err[0]
@@ -140,15 +144,14 @@ def test_install_prints_next_steps(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """D5: the dashboard's path, `cd <folder> && claude` and three questions, last on stdout;
-    the size line on stderr, and no progress line without a terminal."""
+    """The dashboard's path, `cd <folder> && claude` and three questions, last on stdout;
+    the size line on stderr, no progress line without a terminal, no bootstrap to run."""
     folder = tmp_path / "d"
     with serve(site) as base:
         monkeypatch.setattr(inst, "DEMO_BASE", base)
         assert cli.main(["demo", "--dir", str(folder)]) == 0
     out, err = capsys.readouterr()
     lines = out.splitlines()
-    assert len(QUESTIONS) == 3
     assert [line.strip() for line in lines[-3:]] == [
         f"{n}. {q}" for n, q in enumerate(QUESTIONS, 1)
     ]
@@ -158,4 +161,4 @@ def test_install_prints_next_steps(
     assert FRAME_SUMMARY in claude and all(q in claude for q in QUESTIONS)
     size = (site / STORE_FILE).stat().st_size
     assert f"{size / 1e6:.1f} MB" in err
-    assert "\r" not in err
+    assert "\r" not in err and "bootstrap" not in err

@@ -8,8 +8,8 @@ sha256 catches a cut or corrupted download; the anchor for what is downloaded is
 GitHub's release, which a manifest from the same origin cannot add to.
 
 The folder (`install`'s docstring lists it) is marked by `DEMO_MARKER`, so `load_paths` reads
-its own `lab/` whatever `$GENOKEEPER_HOME` says. An existing folder without the marker is
-refused; one with it is updated in place, and files of anyone else's in it stay.
+its own `lab/` whatever `$GENOKEEPER_HOME` says. An existing folder whose marker is not a demo
+manifest is refused; one with it is updated in place, and files of anyone else's in it stay.
 """
 
 import argparse
@@ -29,7 +29,7 @@ from genokeeper.config import DEMO_MARKER, load_paths, skill_resource
 from genokeeper.dashboard import write_dashboard
 from genokeeper.demo import MANIFEST, REFRESH_LOG_FILE, STORE_FILE
 from genokeeper.demo.frame import CALIBRATION_NOTE, FRAME, FRAME_SUMMARY
-from genokeeper.query import open_store
+from genokeeper.query import RunNotFound, open_store
 from genokeeper.store.db import SCHEMA_VERSION, export_snapshots
 
 if TYPE_CHECKING:
@@ -53,10 +53,6 @@ CANNOT = (
         "Plain-language explanations are not generated here: `genokeeper explain` writes"
         " them with Claude from MedlinePlus files this folder does not have, so the"
         " dashboard shows none."
-    ),
-    (
-        "There is no update check here: `changes --json` has no `check` key, and nothing"
-        " is said about newer releases."
     ),
 )
 
@@ -154,6 +150,8 @@ def _claude_md() -> str:
     return f"""\
 # HG002 demo
 
+`genokeeper demo` rewrites this file; keep your own notes in `CLAUDE.local.md`.
+
 {FRAME_SUMMARY}
 
 {FRAME}
@@ -177,6 +175,15 @@ own lab (`lab/`), with the genokeeper version `pyproject.toml` pins.
 """
 
 
+def _ours(folder: Path) -> bool:
+    """`folder`'s `DEMO_MARKER` is a demo manifest (it has `schema_version` and `runs`)."""
+    try:
+        marker = json.loads((folder / DEMO_MARKER).read_bytes())
+    except OSError, ValueError:
+        return False
+    return isinstance(marker, dict) and {"schema_version", "runs"} <= marker.keys()
+
+
 def install(folder: Path, *, base: str = DEMO_BASE) -> Path:
     """Write the demo folder at `folder` from the release at `base`; return `folder`:
     `DEMO_MARKER` (the manifest), `reports/` (the store and its snapshots), `lab/` (the
@@ -185,11 +192,9 @@ def install(folder: Path, *, base: str = DEMO_BASE) -> Path:
     `CLAUDE.md`. Raises `DemoRefused`; nothing is written before the manifest's check, and
     no file is under its final name unless its sha256 matched."""
     holds = folder.is_dir() and any(folder.iterdir())
-    if (folder.exists() and not folder.is_dir()) or (
-        holds and not (folder / DEMO_MARKER).is_file()
-    ):
+    if (folder.exists() and not folder.is_dir()) or (holds and not _ours(folder)):
         raise DemoRefused(
-            f"{folder} holds something else and is not a demo folder (no {DEMO_MARKER});"
+            f"{folder} holds something else and is not a demo folder (no demo {DEMO_MARKER});"
             " choose another with --dir"
         )
     manifest, sums = _manifest(base)
@@ -225,7 +230,7 @@ def _command(args: argparse.Namespace) -> int:
     folder = Path(args.dir).expanduser().absolute()
     try:
         install(folder, base=DEMO_BASE)
-    except DemoRefused as e:
+    except (DemoRefused, RunNotFound, OSError) as e:
         print(f"{_SAY}: {e}", file=sys.stderr)
         return 2
     print(f"{_SAY}: wrote {folder}")

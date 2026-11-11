@@ -1,6 +1,6 @@
 """The demo's frame, in one place: every page, and the demo folder's `CLAUDE.md`, render it
 from here. `FRAME_SUMMARY` is the line always shown, `FRAME` and `CALIBRATION_NOTE` the two
-paragraphs under it (the design's "Decided" frame).
+paragraphs under it.
 
 `TABLE_SAMPLES` says, for each calibration table (`calibrate.tables.TABLES`), what it
 measures and on which libraries, so the calibration page can say which rates are in-sample
@@ -26,7 +26,8 @@ CALIBRATION_NOTE = (
     " deletions, copy number, insertions, paralog loci and the run-time checks, were"
     " measured on HG002's own libraries, this one among them, often beside HG003 and HG004:"
     " they are shown on data they were measured on. This is the one genome where every call"
-    " can be checked against a truth set; the calibration page says which table was"
+    " can be checked against a truth set; the calibration page"
+    " (https://genokeeper.github.io/genokeeper/calibration.html) says which table was"
     " measured on which samples."
 )
 

@@ -482,8 +482,8 @@ def _write(
             con, run_id, cache, medlineplus, reports=reports, lab=lab, lang=lang
         )
     page = render(data, banner)
-    # After the store, so that a refusal stays one line.
-    if warning is not None:
+    # After the store, so that a refusal stays one line; a demo lab has no bootstrap to run.
+    if warning is not None and not (lab / DEMO_MARKER).is_file():
         print(
             f"genokeeper dashboard: {warning}: explanations grounded in MedlinePlus are"
             " not shown; run scripts/bootstrap.sh",
