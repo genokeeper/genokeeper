@@ -803,12 +803,12 @@ def _single_writer[**P, R](
 # --- checks -------------------------------------------------------------------------------
 
 
-def _platform(fastq1: Path, fastq2: Path) -> Platform:
+def _platform(fastq1: Path, fastq2: Path, *, names: bool = True) -> Platform:
     """The reads' platform; refuse (`RunRefused`) reads from another one, before any table
-    or download is looked for."""
+    or download is looked for. `names=False` as `check_platform`'s."""
     _check_files({"FASTQ 1": fastq1, "FASTQ 2": fastq2})
     try:
-        return check_platform(fastq1)
+        return check_platform(fastq1, names=names)
     except PlatformRefused as e:
         raise RunRefused(_one_line(e)) from e
 
@@ -4061,6 +4061,7 @@ def run_genome(
     cgd: Path | None = None,
     threads: int | None = None,
     delivered: Path | None = None,
+    skip_read_names: bool = False,
 ) -> str:
     """Run stage 2a into `paths.reports/genomelab.duckdb` and return the run id: align the
     paired FASTQ to the lab's GRCh38 FASTA, gate the sample on QC, call it with DeepVariant
@@ -4116,7 +4117,9 @@ def run_genome(
     delivered genotype file the sample's identity is checked against (None: "not
     checked", recorded with the reason); below `[identity] min_compared` SNPs compared it
     is not checked either, and below `min_concordance` the run refuses after the call
-    step, before the claims step. Raises `RunRefused`,
+    step, before the claims step. `skip_read_names` skips the platform gate's read-name
+    test (`check_platform(names=False)`), for a pair written back from a calibration CRAM.
+    Raises `RunRefused`,
     before any step, on a store another schema version wrote or another process holds, a
     missing tool or input (each naming the bootstrap; slice 1b's among them), a calibration
     table measured under other pipeline versions (naming `genokeeper calibrate`), or another
@@ -4139,7 +4142,7 @@ def run_genome(
     )
     # Before any table opens: reads from another platform are refused at once, not after the
     # bootstrap's downloads and hours of alignment.
-    platform = _platform(fastq1, fastq2)
+    platform = _platform(fastq1, fastq2, names=not skip_read_names)
     store = paths.reports / STORE_NAME
     _check_store(store)
     faf = faf if faf is not None else open_faf_table(paths.lab)

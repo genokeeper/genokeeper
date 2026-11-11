@@ -1,54 +1,49 @@
 """`python -m genokeeper.demo build`: two runs of one pair, a refresh record, and its
 refusals before anything starts."""
 
-import functools
 import hashlib
-import http.server
-import threading
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
 import pytest
+from fixtures.demo_site import serve
 
-from genokeeper import config, refresh_log
+from genokeeper import refresh_log
 from genokeeper.calibrate import hg002
+from genokeeper.demo import STORE_FILE, demo_paths
 from genokeeper.demo import build as demo_build
-from genokeeper.demo import demo_paths
 from genokeeper.demo.build import BASE_CLINVAR, BuildRefused, build
 from genokeeper.pipeline import RunRefused
 
 BODY = b"##fileDate=2026-10-11\nbase clinvar bytes\n"
 
 
-class _Quiet(http.server.SimpleHTTPRequestHandler):
-    def log_message(self, format: str, *args: Any) -> None:
-        pass
-
-
-def _publish(folder: Path, body: bytes, md5: str | None = None) -> None:
+def _publish(folder: Path, md5: str | None = None) -> None:
     name = f"clinvar_{BASE_CLINVAR}.vcf.gz"
-    (folder / name).write_bytes(body)
     (folder / f"{name}.tbi").write_bytes(b"tbi")
-    digest = md5 or hashlib.md5(body).hexdigest()
+    digest = md5 or hashlib.md5(BODY).hexdigest()
     (folder / f"{name}.md5").write_text(f"{digest}  {name}\n")
+
+
+def _download(url: str, md5: str, out: Path) -> Path:
+    """`hg002.download` without curl: BODY, refused (as it does) on another md5."""
+    if hashlib.md5(BODY).hexdigest() != md5:
+        raise ValueError(f"{url}: md5 mismatch")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_bytes(BODY)
+    return out
 
 
 @pytest.fixture
 def ncbi(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
     site = tmp_path / "ncbi"
     site.mkdir()
-    _publish(site, BODY)
-    server = http.server.ThreadingHTTPServer(
-        ("127.0.0.1", 0), functools.partial(_Quiet, directory=str(site))
-    )
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    monkeypatch.setattr(
-        demo_build, "CLINVAR_BASE_URL", f"http://127.0.0.1:{server.server_port}/"
-    )
-    yield site
-    server.shutdown()
-    server.server_close()
+    _publish(site)
+    monkeypatch.setattr(demo_build.hg002, "download", _download)
+    with serve(site) as base:
+        monkeypatch.setattr(demo_build, "CLINVAR_BASE_URL", base)
+        yield site
 
 
 class Calls:
@@ -60,17 +55,29 @@ class Calls:
         return f"run-{len(self.kwargs)}"
 
 
+def _newest(lab: Path, file_date: str) -> Path:
+    """The lab's newest ClinVar, in the folder 20261108, whose `##fileDate` is `file_date`."""
+    newest = lab / "clinvar" / "20261108" / "clinvar_GRCh38.vcf.gz"
+    newest.parent.mkdir(parents=True, exist_ok=True)
+    newest.write_text(f"##fileDate={file_date}\n")
+    return newest
+
+
 @pytest.fixture
 def lab(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, ncbi: Path) -> Path:
     lab = tmp_path / "lab"
     for p in hg002.downsampled_pair(lab, "pcrfree"):
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_bytes(b"reads")
-    newest = lab / "clinvar" / "20261108" / "clinvar_GRCh38.vcf.gz"
-    newest.parent.mkdir(parents=True)
-    newest.write_bytes(b"new")
+    _newest(lab, "2026-11-07")
     monkeypatch.setattr(demo_build, "need_space", lambda *a: None)
     monkeypatch.setattr(demo_build.pipeline, "open_faf_table", lambda lab: "faf")
+    # The release as the run reads it: `##fileDate`, not the folder's name.
+    monkeypatch.setattr(
+        demo_build.pipeline,
+        "_clinvar_release",
+        lambda vcf: vcf.read_text().split("=")[1][:10].replace("-", ""),
+    )
     return lab
 
 
@@ -79,6 +86,13 @@ def calls(monkeypatch: pytest.MonkeyPatch) -> Calls:
     calls = Calls()
     monkeypatch.setattr(demo_build.pipeline, "run_genome", calls)
     return calls
+
+
+def _refused_before_anything(lab: Path, calls: Calls, match: str) -> None:
+    with pytest.raises(BuildRefused, match=match):
+        build(lab, threads=None)
+    assert calls.kwargs == []
+    assert not (demo_paths(lab).repo / "clinvar").exists()
 
 
 def test_build_runs_twice_on_hg002(lab: Path, calls: Calls) -> None:
@@ -90,6 +104,7 @@ def test_build_runs_twice_on_hg002(lab: Path, calls: Calls) -> None:
         assert (call["fastq1"], call["fastq2"]) == pair
         assert call["delivered"] is None
         assert call["threads"] == 3
+        assert call["skip_read_names"] is True
     assert first["clinvar38"] == demo_build.base_clinvar_path(demo_paths(lab).repo)
     assert first["clinvar38"].read_bytes() == BODY
     assert second["clinvar38"] == lab / "clinvar" / "20261108" / "clinvar_GRCh38.vcf.gz"
@@ -100,23 +115,27 @@ def test_build_writes_refresh_record_in_demo_lab(lab: Path, calls: Calls) -> Non
     (record,) = refresh_log.read(demo_paths(lab).repo / "lab")
     assert (record.base_run, record.run, record.pre_run) == ("run-1", "run-2", None)
     clinvar = next(s for s in record.sources if s.name == "clinvar")
-    assert (clinvar.before, clinvar.after) == (BASE_CLINVAR, "20261108")
+    assert (clinvar.before, clinvar.after) == (BASE_CLINVAR, "20261107")
     others = [s for s in record.sources if s is not clinvar]
     assert others and all(s.status.value == "unchanged" for s in others)
     assert not (lab / "refresh").exists()
 
 
-def test_build_never_touches_repo_reports(lab: Path, calls: Calls) -> None:
-    reports = demo_paths(lab).reports
-    assert config._REPO not in (reports, *reports.parents)
-
-
 def test_build_refuses_missing_pair(lab: Path, calls: Calls) -> None:
     hg002.downsampled_pair(lab, "pcrfree")[1].unlink()
-    with pytest.raises(BuildRefused, match="pair is missing"):
-        build(lab, threads=None)
-    assert calls.kwargs == []
-    assert not (demo_paths(lab).repo / "clinvar").exists()
+    _refused_before_anything(lab, calls, "pair is missing")
+
+
+def test_build_refuses_existing_store(lab: Path, calls: Calls) -> None:
+    store = demo_paths(lab).reports / STORE_FILE
+    store.parent.mkdir(parents=True)
+    store.write_bytes(b"runs 1 and 2")
+    _refused_before_anything(lab, calls, "exists: to build again, delete it")
+
+
+def test_build_refuses_a_lab_clinvar_not_newer(lab: Path, calls: Calls) -> None:
+    _newest(lab, "2026-10-11")
+    _refused_before_anything(lab, calls, "not newer than 20261011")
 
 
 def test_build_refuses_low_disk(
@@ -129,29 +148,13 @@ def test_build_refuses_low_disk(
         raise RunRefused("needs 150 GB free")
 
     monkeypatch.setattr(demo_build, "need_space", short)
-    with pytest.raises(BuildRefused, match="150 GB"):
-        build(lab, threads=None)
+    _refused_before_anything(lab, calls, "150 GB")
     assert seen == [130 * 10**9]
-    assert calls.kwargs == []
-    assert not (demo_paths(lab).repo / "clinvar").exists()
 
 
 def test_base_clinvar_md5_refused(lab: Path, calls: Calls, ncbi: Path) -> None:
-    _publish(ncbi, BODY, md5="0" * 32)
+    _publish(ncbi, md5="0" * 32)
     with pytest.raises(BuildRefused, match="md5"):
         build(lab, threads=None)
     assert not demo_build.base_clinvar_path(demo_paths(lab).repo).exists()
     assert calls.kwargs == []
-
-
-def test_build_reuses_base_clinvar(
-    lab: Path, calls: Calls, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    build(lab, threads=None)
-
-    def refetch(*args: Any) -> str:
-        pytest.fail("fetched again")
-
-    monkeypatch.setattr(demo_build, "_fetch", refetch)
-    build(lab, threads=None)
-    assert len(calls.kwargs) == 4

@@ -10,7 +10,7 @@ from genokeeper import tools
 from genokeeper.align import Platform, PlatformRefused, align, check_platform
 from genokeeper.cli import main
 from genokeeper.config import Paths
-from genokeeper.pipeline import RunRefused, run_genome
+from genokeeper.pipeline import RunRefused, _platform, run_genome
 from genokeeper.tools import ToolFailed
 
 
@@ -107,6 +107,20 @@ def test_names_false_skips_the_flowcell_keeps_the_qualities(tmp_path: Path) -> N
         check_platform(
             _archived(binned, tmp_path / "binned", original=False), names=False
         )
+
+
+def test_run_gate_skips_read_names_only_when_asked(tmp_path: Path) -> None:
+    fasta = write_reference(tmp_path / "ref.fa")
+    fq1, fq2 = write_fastq_pair(tmp_path, fasta)
+    archived = _archived(fq1, tmp_path, original=False)
+    assert _platform(archived, fq2, names=False).flowcell_prefix == "E"
+    with pytest.raises(RunRefused, match="flowcell prefix SRR"):
+        _platform(archived, fq2)
+    (tmp_path / "binned").mkdir()
+    binned, fq2 = write_fastq_pair(tmp_path / "binned", fasta, qualities="#+5?")
+    archived = _archived(binned, tmp_path / "binned", original=False)
+    with pytest.raises(RunRefused, match="4 base quality levels"):
+        _platform(archived, fq2, names=False)
 
 
 @pytest.mark.tools
