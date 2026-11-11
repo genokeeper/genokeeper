@@ -13,7 +13,7 @@ from fixtures.snapshots_mini import call, file, run_id, started, statement
 
 from genokeeper import changes, check
 from genokeeper.changes import NO_BASE, report
-from genokeeper.config import Paths
+from genokeeper.config import DEMO_MARKER, Paths
 from genokeeper.query import Filters
 from genokeeper.refresh_log import (
     LOG,
@@ -411,6 +411,22 @@ def test_missing_check_json_reads_never_ran(tmp_path: Path) -> None:
     assert changes_of(tmp_path, lab)["check"] == never
     # So does a check written for no run: the note and the check are independent.
     write(tmp_path, D1, [at("clinvar:1", 1001)], [1001])
+    assert changes_of(tmp_path, lab)["check"] == never
+
+
+def test_changes_report_demo_lab(tmp_path: Path) -> None:
+    """`changes --json` in a demo lab (it holds `DEMO_MARKER`) has no `check`; in any other
+    lab without a check it reads "never ran"."""
+    lab = tmp_path / "lab"
+    lab.mkdir()
+    (lab / DEMO_MARKER).write_text("{}")
+    write(tmp_path, D1, [at("clinvar:1", 1001, validity="limited")], [1001])
+    write(tmp_path, D2, [at("clinvar:1", 1001)], [1001])
+    document = changes_of(tmp_path, lab)
+    assert "check" not in document
+    assert [c["id"] for c in document["changes"]] == ["clinvar:1"]
+    (lab / DEMO_MARKER).unlink()
+    never = {"ran_at": None, "newer": [], "failed": [], "days": None, "stale": True}
     assert changes_of(tmp_path, lab)["check"] == never
 
 

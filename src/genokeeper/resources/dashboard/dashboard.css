@@ -51,6 +51,12 @@ input[type=range] { width: 100%; }
 #banner:empty, #check:empty { display: none; }
 .banner { border-left: 4px solid var(--bad); background: var(--bad-bg); padding: 8px 12px;
   border-radius: 4px; margin-bottom: 6px; }
+/* The neutral strip a caller's banner sits in (a demo's frame); red stays a failure's. */
+.frame-note { background: var(--sunk); border: 1px solid var(--rule); border-radius: 8px;
+  padding: 8px 12px; font-size: 13px; }
+.frame-note summary { cursor: pointer; }
+.frame-note summary:focus-visible { outline: 2px solid var(--rel); outline-offset: 2px; }
+.frame-note p { margin: 8px 0 0; max-width: 72ch; color: var(--muted); }
 .groups { display: flex; flex-direction: column; gap: 6px; }
 .group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .group > span { font-size: 12.5px; color: var(--muted); min-width: 80px; }

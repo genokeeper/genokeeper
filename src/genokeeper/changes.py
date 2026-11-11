@@ -8,7 +8,7 @@ counted per change kind, never listed, unless a gene, marker or text filter name
 The sources the run's refresh could not fetch are listed first, each with the release its
 rows date from (`before`): theirs were not checked, never "unchanged". `check` says when the
 daily update check last ran, what it found newer and what it could not check, and is `stale`
-when it never ran or not for more than `STALE_DAYS`.
+when it never ran or not for more than `STALE_DAYS`; a demo lab has no check and no `check`.
 
 Publications are kept per refresh (`refresh_log.publications_path`): a PMID in the list of
 the run's refresh and not in that of the refresh before it (no later than the base) is new;
@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING, Any
 import duckdb
 
 from genokeeper import check, history, refresh_log
-from genokeeper.config import load_paths
+from genokeeper.config import DEMO_MARKER, load_paths
 from genokeeper.history import REFERENCE_CAUSE, Change, ChangeKind, Dates, State
 from genokeeper.query import Filters, _marker_matches, _text_matches
 from genokeeper.schedule import STALE_DAYS
@@ -231,12 +231,14 @@ def report(
     if base is None and run is not None:
         base = refresh_log.default_base(lab, root, run)
     refresh = refresh_of(lab, run)
+    # A demo lab (it holds `DEMO_MARKER`) has no update check to report.
+    demo = (lab / DEMO_MARKER).is_file()
     document: dict[str, Any] = {
         "base": base,
         "run": run,
         "refresh": None if refresh is None else refresh_log.as_json(refresh),
         "failed": failed(refresh),
-        "check": check_block(lab, now or datetime.now(UTC)),
+        **({} if demo else {"check": check_block(lab, now or datetime.now(UTC))}),
         "changes": [],
         "research": {},
         "note": None,

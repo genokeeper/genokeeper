@@ -24,7 +24,7 @@ from genokeeper import dashboard, refresh_log
 from genokeeper.carrier import NOT_COVERED, load_mechanisms
 from genokeeper.changes import NO_BASE, report
 from genokeeper.cli import main
-from genokeeper.config import Paths
+from genokeeper.config import DEMO_MARKER, Paths
 from genokeeper.dashboard import payload, render
 from genokeeper.evidence.medlineplus import MEDLINEPLUS_FILE, load_medlineplus
 from genokeeper.explain import MODEL, explain, lookup, watch_items
@@ -155,7 +155,10 @@ def _resource(name: str) -> str:
 
 
 def test_csp_first_in_head(con: duckdb.DuckDBPyConnection) -> None:
-    page = render(payload(con, None, NO_CACHE))
+    _assert_csp_first(render(payload(con, None, NO_CACHE)))
+
+
+def _assert_csp_first(page: str) -> None:
     csp = re.match(
         r'<meta http-equiv="Content-Security-Policy" content="([^"]*)">',
         page.split("<head>", 1)[1].lstrip(),
@@ -167,6 +170,43 @@ def test_csp_first_in_head(con: duckdb.DuckDBPyConnection) -> None:
         f"default-src 'none'; script-src 'sha256-{_sha256(script)}';"
         f" style-src 'sha256-{_sha256(style)}'"
     )
+
+
+def _outside_data(page: str) -> str:
+    return re.sub(
+        r'<script type="application/json" id="data">.*?</script>',
+        "",
+        page,
+        flags=re.DOTALL,
+    )
+
+
+def test_banner_shown_as_text(con: duckdb.DuckDBPyConnection) -> None:
+    """The banner is text: a `<details>` strip, its summary first, then its paragraphs,
+    every string escaped once, the CSP still the inlined script's and style's."""
+    banner = ["Summary <script>alert(1)</script>", "One & two.", "<b>Three</b>"]
+    page = render(payload(con, None, NO_CACHE), banner)
+    _assert_csp_first(page)
+    assert page.count("&lt;script&gt;alert(1)&lt;/script&gt;") == 1
+    assert "<script>alert" not in page and "<b>Three" not in page
+    assert (
+        '<details class="frame-note"><summary>Summary &lt;script&gt;alert(1)'
+        "&lt;/script&gt;</summary><p>One &amp; two.</p><p>&lt;b&gt;Three&lt;/b&gt;</p>"
+        "</details>"
+    ) in page
+
+
+def test_no_banner_page_unchanged(con: duckdb.DuckDBPyConnection) -> None:
+    """Without a banner the page is today's: the slot adds its one element and nothing
+    else, and no `<details>` outside the data."""
+    data = payload(con, None, NO_CACHE)
+    page = render(data)
+    assert render(data, None) == render(data, ()) == page
+    strip = '<details class="frame-note"><summary>S</summary><p>P</p></details>'
+    with_banner = render(data, ["S", "P"])
+    assert with_banner.count(strip) == 1
+    assert with_banner.replace(strip, "", 1) == page
+    assert "<details" not in _outside_data(page)
 
 
 def test_hostile_text_stays_data(con: duckdb.DuckDBPyConnection) -> None:
@@ -891,7 +931,7 @@ class Text {
 }
 class Node {
   constructor(tag) {
-    Object.assign(this, { tag, kids: [], style: {}, className: "", hidden: false, value: "", href: "" });
+    Object.assign(this, { tag, kids: [], style: {}, className: "", hidden: false, value: "", href: "", listeners: {} });
   }
   append(...xs) { for (const x of xs) this.kids.push(typeof x === "string" ? new Text(x) : x); }
   replaceChildren(...xs) { this.kids = []; this.append(...xs); }
@@ -899,7 +939,7 @@ class Node {
   get textContent() { return this.kids.map((k) => k.textContent).join("\n"); }
   links() { return [...(this.tag === "a" ? [this.href] : []), ...this.kids.flatMap((k) => k.links())]; }
   setAttribute() {}
-  addEventListener() {}
+  addEventListener(type, listener) { (this.listeners[type] ??= []).push(listener); }
 }
 const byId = {};
 const document = {
@@ -907,14 +947,32 @@ const document = {
   getElementById: (id) => (byId[id] ??= new Node("div")),
 };
 document.getElementById("data").textContent = fs.readFileSync(process.argv[3], "utf8");
-vm.runInNewContext(fs.readFileSync(process.argv[2], "utf8"), { document });
-const out = {};
-for (const [id, node] of Object.entries(byId)) out[id] = { text: node.textContent, links: node.links() };
+// The URL's hash (argv), and each URL the script gave `history.replaceState`.
+const urls = [];
+const location = { hash: process.argv[4] };
+const history = { replaceState: (state, title, url) => urls.push(url) };
+vm.runInNewContext(fs.readFileSync(process.argv[2], "utf8"), { document, location, history });
+// Then each action (argv, JSON [id, value, event]): the control takes the value, its event fires.
+for (const [id, value, type] of JSON.parse(process.argv[5])) {
+  const node = document.getElementById(id);
+  node.value = value;
+  for (const listener of node.listeners[type] ?? []) listener();
+}
+const out = { "#history": { urls } };
+for (const [id, node] of Object.entries(byId)) {
+  const { className, hidden, value } = node;
+  out[id] = { text: node.textContent, links: node.links(), className, hidden, value };
+}
 console.log(JSON.stringify(out));
 """
 
 
-def _rendered(data: dict[str, Any], tmp_path: Path) -> dict[str, dict[str, Any]]:
+def _rendered(
+    data: dict[str, Any],
+    tmp_path: Path,
+    url_hash: str = "",
+    actions: list[tuple[str, str, str]] | None = None,
+) -> dict[str, dict[str, Any]]:
     node = shutil.which("node")
     if node is None:
         pytest.skip("node is not installed")
@@ -922,7 +980,7 @@ def _rendered(data: dict[str, Any], tmp_path: Path) -> dict[str, dict[str, Any]]
     (tmp_path / "page.js").write_text(_resource("dashboard.js"))
     (tmp_path / "data.json").write_text(json.dumps(data, ensure_ascii=False))
     done = subprocess.run(
-        [node, "dom.js", "page.js", "data.json"],
+        [node, "dom.js", "page.js", "data.json", url_hash, json.dumps(actions or [])],
         cwd=tmp_path,
         capture_output=True,
         text=True,
@@ -1694,3 +1752,51 @@ def test_the_page_shows_the_explanations_of_its_own_language(
     ru = payload(con, None, cache, medlineplus, lang="ru")["items"]["clinvar:1"]
     en = payload(con, None, cache, medlineplus, lang="en")["items"]["clinvar:1"]
     assert (ru["explanation"]["text"], en["explanation"]) == ("Текст.", None)
+
+
+# --- the HG002 demo: the view from the URL, and a demo lab -----------------------------------
+
+
+def test_view_from_url_hash(con: duckdb.DuckDBPyConnection, tmp_path: Path) -> None:
+    """`#tab=…&rel=…&ev=…&topic=…&q=…` opens that view; an unknown key or value is ignored;
+    a control that moves writes the view back with `history.replaceState`."""
+    data = payload(con, None, NO_CACHE)
+    shown = _rendered(data, tmp_path, "#tab=changes&rel=2&ev=3&q=CYP2D6")
+    assert (shown["reliability"]["value"], shown["validity"]["value"]) == ("2", "3")
+    assert shown["search"]["value"] == "CYP2D6"
+    assert (shown["tab-changes"]["className"], shown["feed-view"]["hidden"]) == (
+        "tab on",
+        True,
+    )
+    assert shown["#history"]["urls"] == []  # loading writes nothing back
+    feed = _rendered(data, tmp_path, "#rel=2&ev=3&topic=drugs&q=CYP2D6")["feed"]
+    assert "CYP2D6" in feed["text"] and "BRCA1" not in feed["text"]
+    ignored = "#tab=nope&rel=3&ev=-1&ev=1.5&topic=nope&zz=1&q=%E0%A4%A"
+    shown = _rendered(data, tmp_path, ignored)
+    assert (shown["reliability"]["value"], shown["validity"]["value"]) == ("1", "2")
+    assert (shown["tab-feed"]["className"], shown["search"]["value"]) == ("tab on", "")
+    moved = _rendered(
+        data, tmp_path, "#tab=changes&q=CYP2D6", [("reliability", "0", "input")]
+    )
+    assert moved["#history"]["urls"] == ["#tab=changes&rel=0&ev=2&q=CYP2D6"]
+
+
+def test_demo_lab_has_no_check_block(tmp_path: Path) -> None:
+    """A demo lab (it holds `DEMO_MARKER`) has no update check to report: the tab's data
+    leaves the block out and the page shows none; any other lab without a check reads
+    "never ran"."""
+    reports, lab = tmp_path / "reports", tmp_path / "lab"
+    _history(reports)
+    lab.mkdir()
+    (lab / DEMO_MARKER).write_text("{}")
+    with open_store(reports / "genomelab.duckdb") as con:
+        data = payload(con, None, NO_CACHE, reports=reports, lab=lab)
+    assert "check" not in data["changes"]
+    assert _rendered(data, tmp_path, "#tab=changes")["check"]["text"] == ""
+    (lab / DEMO_MARKER).unlink()
+    assert _changes(reports, lab)["check"] == {
+        "ran_at": None,
+        "newer": [],
+        "failed": [],
+        "stale_days": 35,
+    }

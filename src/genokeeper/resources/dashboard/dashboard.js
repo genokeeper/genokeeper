@@ -299,6 +299,7 @@ function chips() {
     chip.addEventListener("click", () => {
       state.topic = name;
       render();
+      writeHash();
     });
     box.append(chip);
   }
@@ -602,10 +603,14 @@ function renderHead(compared) {
 }
 
 // The update check's age is computed here, when the page is viewed: a check that stopped
-// after the page was written still shows as stale.
+// after the page was written still shows as stale. A demo lab has no check, and no block.
 function renderCheck() {
   const box = document.getElementById("check");
   const info = changes.check;
+  if (!info) {
+    box.replaceChildren();
+    return;
+  }
   const ran = info.ran_at ? Date.parse(info.ran_at) : NaN;
   const days = Number.isNaN(ran) ? null : Math.max(0, Math.floor((Date.now() - ran) / 86400000));
   const notes = [];
@@ -749,27 +754,67 @@ function render() {
   else renderChanges();
 }
 
+// The view in the URL's hash, `#tab=feed|changes&rel=0..2&ev=0..3&topic=<topic>&q=<text>`, so
+// a link opens one exact view (from file:// too); an unknown key or value is ignored.
+const HASH_SLIDERS = { rel: "reliability", ev: "validity" };
+function readHash() {
+  for (const pair of location.hash.replace(/^#/, "").split("&")) {
+    const at = pair.indexOf("=");
+    if (at < 0) continue;
+    const key = pair.slice(0, at);
+    let value;
+    try {
+      value = decodeURIComponent(pair.slice(at + 1));
+    } catch {
+      continue; // a cut %-escape
+    }
+    if (key === "tab" && (value === "feed" || value === "changes")) state.tab = value;
+    else if (key in HASH_SLIDERS && /^[0-9]$/.test(value)) {
+      const levels = SLIDERS[HASH_SLIDERS[key]];
+      if (Number(value) < levels.length) state[HASH_SLIDERS[key]] = levels[Number(value)];
+    } else if (key === "topic" && `${state.reliability}|${state.validity}|${value}` in data.views) state.topic = value;
+    else if (key === "q") state.search = value;
+  }
+}
+
+// The view written back when a control moves, replacing the history entry.
+function writeHash() {
+  const parts = [
+    `tab=${state.tab}`,
+    `rel=${SLIDERS.reliability.indexOf(state.reliability)}`,
+    `ev=${SLIDERS.validity.indexOf(state.validity)}`,
+  ];
+  if (state.topic) parts.push(`topic=${encodeURIComponent(state.topic)}`);
+  if (state.search) parts.push(`q=${encodeURIComponent(state.search)}`);
+  history.replaceState(null, "", `#${parts.join("&")}`);
+}
+
 for (const name of ["feed", "changes"]) {
   document.getElementById(`tab-${name}`).addEventListener("click", () => {
     state.tab = name;
     render();
+    writeHash();
   });
 }
 
+const search = document.getElementById("search");
+state.search = search.value; // a value the browser kept across a reload
+readHash();
+search.value = state.search;
+search.addEventListener("input", () => {
+  state.search = search.value;
+  render();
+  writeHash();
+});
 for (const [name, levels] of Object.entries(SLIDERS)) {
   const input = document.getElementById(name);
   input.value = String(levels.indexOf(state[name]));
   input.addEventListener("input", () => {
     state[name] = levels[Number(input.value)];
     render();
+    writeHash();
   });
 }
-const search = document.getElementById("search");
-state.search = search.value; // a value the browser kept across a reload
-search.addEventListener("input", () => {
-  state.search = search.value;
-  render();
-});
 const versions = Object.entries(data.versions).map(([tool, version]) => `${tool} ${version}`);
 document.getElementById("footer").textContent = t("footer", { run: data.run_id, versions: versions.join(", ") });
 render();
