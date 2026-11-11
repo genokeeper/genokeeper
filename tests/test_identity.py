@@ -74,3 +74,14 @@ def test_identity_ignores_bytecode_and_reads_a_copy_alike(
     (copy / "stray.pyc").write_bytes(b"junk")
     monkeypatch.setattr(identity, "PACKAGE_ROOT", copy)
     assert analyser_identity() == first
+
+
+def test_skill_edit_leaves_analyser_identity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The packaged skill is documentation for the reader, not part of the analyser."""
+    first = analyser_identity()
+    copy = _package_copy(tmp_path)
+    _append_byte(copy / "resources" / "skills" / "genome-ask" / "SKILL.md")
+    monkeypatch.setattr(identity, "PACKAGE_ROOT", copy)
+    assert analyser_identity() == first

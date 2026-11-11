@@ -27,6 +27,8 @@ def _files() -> list[tuple[str, Path]]:
         and path.suffix != ".pyc"
         and "__pycache__" not in path.relative_to(PACKAGE_ROOT).parts
         and path.name != ".DS_Store"
+        # The skill is documentation for the reader; editing it is not a new analyser.
+        and path.relative_to(PACKAGE_ROOT).parts[:2] != ("resources", "skills")
     )
     return [*package, (f"config/{GRADING_FILE.name}", GRADING_FILE)]
 

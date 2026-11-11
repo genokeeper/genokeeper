@@ -2,6 +2,8 @@
 
 import tomllib
 from dataclasses import asdict, dataclass, field
+from importlib import resources
+from importlib.resources.abc import Traversable
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +27,17 @@ class Paths:
 
 
 DEMO_MARKER = "demo.json"
+
+
+def skill_resource() -> Traversable:
+    """The packaged genome-ask SKILL.md, which the wheel carries."""
+    return (
+        resources.files("genokeeper")
+        / "resources"
+        / "skills"
+        / "genome-ask"
+        / "SKILL.md"
+    )
 
 
 def load_paths(root: Path | None = None, *, cwd: Path | None = None) -> Paths:
