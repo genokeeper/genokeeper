@@ -3,6 +3,7 @@
 [![CI](https://github.com/genokeeper/genokeeper/actions/workflows/ci.yml/badge.svg)](https://github.com/genokeeper/genokeeper/actions/workflows/ci.yml)
 [![Licence: AGPL v3](https://img.shields.io/badge/licence-AGPL--3.0--or--later-blue.svg)](LICENSE)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/16523/badge)](https://www.bestpractices.dev/projects/16523)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24134245.svg)](https://doi.org/10.5281/zenodo.24134245)
 
 > **Not medical advice, not a medical device.** This is a research tool a person runs on their
 > own genome; nothing it reports is a diagnosis or a basis for a medical decision.
