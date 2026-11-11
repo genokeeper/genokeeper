@@ -1,6 +1,6 @@
 :root {
   --ink: #16232a; --muted: #5d6b73; --rule: #d9e0e3; --panel: #ffffff; --sunk: #eef2f3;
-  --page: #f6f8f9; --rel: #2f6fd0; --ev: #2c8a4c; --warn: #b07d0a;
+  --page: #f6f8f9; --rel: #2f6fd0; --ev: #2c8a4c;
   --rel-text: #2459ad; --ev-text: #1f6e3a; --warn-text: #8a6100;
   --serif: Charter, "Bitstream Charter", "Iowan Old Style", "Sitka Text", Cambria, Georgia, serif;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -13,9 +13,9 @@ a { color: inherit; text-decoration-color: var(--rule); text-decoration-thicknes
 a:hover { text-decoration-color: var(--ink); }
 a:focus-visible, summary:focus-visible { outline: 2px solid var(--rel); outline-offset: 2px; }
 
-.frame-note { background: var(--sunk); border-bottom: 1px solid var(--rule);
+.frame { background: var(--sunk); border-bottom: 1px solid var(--rule);
   font: 14px/1.5 var(--sans); }
-.frame-note details { max-width: 880px; margin: 0 auto; padding: 10px 20px; }
+.frame-note { max-width: 880px; margin: 0 auto; padding: 10px 20px; }
 .frame-note summary { cursor: pointer; font-weight: 600; }
 .frame-note p { margin: 8px 0 4px; max-width: 72ch; color: var(--muted); font-weight: 400; }
 
@@ -72,9 +72,8 @@ figcaption { margin-top: 12px; }
 .steps li { counter-increment: s; display: grid; grid-template-columns: 1.6em 1fr; gap: 0 8px;
   margin-bottom: 12px; }
 .steps li::before { content: counter(s); font: 600 14px/1.9 var(--sans); color: var(--muted); }
-code, .cmd { font: 14px/1.5 var(--mono); }
-.cmd { display: block; background: var(--ink); color: #fff; border-radius: 6px;
-  padding: 9px 12px; overflow-x: auto; white-space: pre; margin-top: 4px; }
+.cmd { font: 14px/1.5 var(--mono); display: block; background: var(--ink); color: #fff;
+  border-radius: 6px; padding: 9px 12px; overflow-x: auto; white-space: pre; margin-top: 4px; }
 .say { display: block; background: var(--panel); border: 1px solid var(--rule);
   border-radius: 6px; padding: 9px 12px; margin-top: 4px; font: italic 16px/1.5 var(--serif); }
 

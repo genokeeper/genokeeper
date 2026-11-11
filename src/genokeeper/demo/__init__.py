@@ -17,6 +17,7 @@ MANIFEST = "manifest.json"
 STORE_FILE = "genomelab.duckdb"
 REFRESH_LOG_FILE = "refresh-log.jsonl"
 SITE_FILES = ("index.html", "dashboard.html", "calibration.html")
+SHIPPED = (STORE_FILE, *SITE_FILES, REFRESH_LOG_FILE)  # the files `MANIFEST` names
 
 
 def demo_paths(lab: Path) -> Paths:

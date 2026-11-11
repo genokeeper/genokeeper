@@ -32,13 +32,18 @@ jobs:
         run: |
           mkdir site
           gh release download hg002 --repo genokeeper/hg002-demo --dir site \
-            --pattern manifest.json --pattern index.html --pattern dashboard.html \
-            --pattern calibration.html
+            --pattern manifest.json
           python3 -c '
-          import hashlib, json, sys
+          import hashlib, json, subprocess, sys
           files = json.load(open("site/manifest.json"))["files"]
+          pages = [name for name in files if name.endswith(".html")]
+          subprocess.run(
+              ["gh", "release", "download", "hg002", "--repo", "genokeeper/hg002-demo"]
+              + ["--dir", "site"] + [a for name in pages for a in ("--pattern", name)],
+              check=True,
+          )
           bad = 0
-          for name in ("index.html", "dashboard.html", "calibration.html"):
+          for name in pages:
               got = hashlib.sha256(open("site/" + name, "rb").read()).hexdigest()
               if files.get(name) != got:
                   print(name + ": sha256 differs from the manifest", file=sys.stderr)

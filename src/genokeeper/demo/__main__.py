@@ -1,19 +1,26 @@
-"""`python -m genokeeper.demo package OUT`: the maintainer's demo commands, kept out of the
-users' CLI (see `genokeeper.demo`)."""
+"""`python -m genokeeper.demo build` and `package OUT`: the maintainer's demo commands, kept
+out of the users' CLI (see `genokeeper.demo`)."""
 
 import argparse
+import shlex
 import sys
 from pathlib import Path
 
 from genokeeper.config import load_paths
+from genokeeper.demo import MANIFEST, SHIPPED
 from genokeeper.demo.build import BuildRefused, build
 from genokeeper.demo.package import Leak, package, private_id_file
+from genokeeper.pipeline import RunRefused
 
-# Where the files go once written: the demo repository's moving release, then the Pages
-# workflow that checks them against the manifest and deploys them.
+# Where the files go once written, each named (never OUT/*): the demo repository's moving
+# release, created once, then the Pages workflow that checks them and deploys them.
 _PUBLISH = (
-    "gh release upload hg002 {out}/* --clobber --repo genokeeper/hg002-demo",
-    "gh workflow run pages.yml --repo genokeeper/genokeeper",
+    (
+        "first publish",
+        'gh release create hg002 --repo genokeeper/hg002-demo --title "HG002 demo" {files}',
+    ),
+    ("later", "gh release upload hg002 --repo genokeeper/hg002-demo {files} --clobber"),
+    ("then", "gh workflow run pages.yml --repo genokeeper/genokeeper"),
 )
 
 
@@ -29,15 +36,16 @@ def _package(args: argparse.Namespace) -> int:
         print(f"genokeeper demo package: {e}", file=sys.stderr)
         return 2
     print(f"genokeeper demo package: wrote {out}; to publish:")
-    for command in _PUBLISH:
-        print(f"  {command.format(out=out)}")
+    files = " ".join(shlex.quote(str(out / name)) for name in (MANIFEST, *SHIPPED))
+    for when, command in _PUBLISH:
+        print(f"  {when}: {command.format(files=files)}")
     return 0
 
 
 def _build(args: argparse.Namespace) -> int:
     try:
         first, second = build(load_paths().lab, threads=args.threads)
-    except (BuildRefused, OSError) as e:
+    except (BuildRefused, RunRefused, OSError) as e:
         print(f"genokeeper demo build: {e}", file=sys.stderr)
         return 2
     print(f"genokeeper demo build: runs {first} and {second}; next, `package OUT`")

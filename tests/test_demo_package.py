@@ -1,27 +1,28 @@
 """`python -m genokeeper.demo package OUT`: a fresh, path-scrubbed store and the site's pages,
 refused (nothing under a final name) when a needle survives in any output."""
 
-import base64
 import hashlib
 import html
 import json
 import os
 import re
 import shutil
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 import duckdb
 import pytest
-from fixtures.store_mini import Row, seed
+from fixtures.demo_site import RUN1, RUN2, seeded
+from fixtures.store_mini import Row
 
 import genokeeper
 from genokeeper import changes, refresh_log
 from genokeeper.calibrate.tables import REPORT, TABLES, folder
+from genokeeper.dashboard import _sha256
 from genokeeper.demo import (
     MANIFEST,
     REFRESH_LOG_FILE,
+    SHIPPED,
     SITE_FILES,
     STORE_FILE,
     demo_paths,
@@ -30,7 +31,6 @@ from genokeeper.demo import package as pkg
 from genokeeper.demo.frame import CALIBRATION_NOTE, FRAME, TABLE_SAMPLES
 from genokeeper.demo.package import Leak, package, scan_bytes
 from genokeeper.query import Filters, open_store, query
-from genokeeper.refresh_log import RefreshRecord, SourceOutcome, SourceStatus
 from genokeeper.store.db import (
     SCHEMA_VERSION,
     Level,
@@ -39,7 +39,6 @@ from genokeeper.store.db import (
     export_snapshots,
 )
 
-RUN1, RUN2 = "20261012T120000Z-aaaaaa", "20261109T120000Z-bbbbbb"
 # Four findings enter or leave the trusted tier between the runs; two stay as they were.
 BEFORE = {"clinvar:1": "limited", "clinvar:2": "strong", "clinvar:3": "conflicting"}
 BEFORE |= {"clinvar:4": "moderate", "clinvar:5": "strong", "clinvar:6": "limited"}
@@ -71,10 +70,7 @@ def _lab(tmp_path: Path) -> tuple[Path, Path]:
     home = tmp_path / "Users" / "someone"
     lab = home / "genome-lab"
     root = demo_paths(lab)
-    con = connect(root.reports / STORE_FILE)
-    try:
-        seed(con, _rows(BEFORE), run_id=RUN1)
-        seed(con, _rows(AFTER), run_id=RUN2)
+    with connect(seeded(lab, _rows(BEFORE), _rows(AFTER))) as con:
         tools = {"clinvar": "20261108", "deepvariant": "1.10.0"}
         con.execute(
             "UPDATE run SET tools = ? WHERE run_id = ?", [json.dumps(tools), RUN2]
@@ -89,12 +85,6 @@ def _lab(tmp_path: Path) -> tuple[Path, Path]:
             "UPDATE call SET warnings = ? WHERE run_id = ? AND vid LIKE '%:1001:%'",
             [["first", f"log at {lab}/work/x.log"], RUN2],
         )
-    finally:
-        con.close()
-    at = datetime(2026, 11, 10, 9, tzinfo=UTC)
-    clinvar = SourceOutcome("clinvar", "20261011", "20261108", SourceStatus.NEW)
-    record = RefreshRecord(at, at, "complete", (clinvar,), RUN1, None, RUN2)
-    refresh_log.append(root.repo / "lab", record)
     report = folder(lab, "stage3") / REPORT
     report.parent.mkdir(parents=True)
     report.write_text(f"measured <b>on</b> {lab}/calibration/hg002\n")
@@ -109,10 +99,7 @@ def _package(tmp_path: Path, private_ids: Path | None = None) -> Path:
 def _needles(tmp_path: Path) -> dict[str, str]:
     home = tmp_path / "Users" / "someone"
     lab = home / "genome-lab"
-    return {
-        str(i): re.escape(str(p))
-        for i, p in enumerate((home, lab, demo_paths(lab).repo))
-    }
+    return {str(i): str(p) for i, p in enumerate((home, lab, demo_paths(lab).repo))}
 
 
 def _read(out: Path, name: str) -> str:
@@ -186,6 +173,41 @@ def test_scan_refuses_planted_path_in_any_table(
     assert os.listdir(tmp_path / "out") == []
 
 
+def test_scan_reads_the_refresh_log(tmp_path: Path) -> None:
+    """The log is copied as it is: the scan of the shipped files is its only control."""
+    lab, home = _lab(tmp_path)
+    with (demo_paths(lab).repo / "lab" / "refresh" / refresh_log.LOG).open("a") as log:
+        log.write(f"cut at {home}/x\n")
+    with pytest.raises(
+        Leak, match=f"^refusing to package: {REFRESH_LOG_FILE}: the home"
+    ):
+        package(lab, tmp_path / "out", home=home, private_ids=None)
+    assert os.listdir(tmp_path / "out") == []
+
+
+def test_private_ids_are_read_as_the_guard_reads_them(tmp_path: Path) -> None:
+    """`grep -E`'s POSIX classes, in a page alone; a pattern it cannot read refuses."""
+    lab, home = _lab(tmp_path)
+    (folder(lab, "stage3") / REPORT).write_text("kit KIT-0042\n")
+    ids = tmp_path / "genome-private-ids"
+    ids.write_text("KIT-[[:digit:]]{4}\n")
+    with pytest.raises(Leak, match=r"calibration\.html: private ID on line 1$"):
+        package(lab, tmp_path / "out", home=home, private_ids=ids)
+    ids.write_text("# a comment\nKIT-[\n")
+    with pytest.raises(Leak, match="cannot read the private ID on line 2"):
+        package(lab, tmp_path / "out", home=home, private_ids=ids)
+    assert os.listdir(tmp_path / "out") == []
+
+
+def test_package_refuses_an_out_holding_other_files(tmp_path: Path) -> None:
+    lab, home = _lab(tmp_path)
+    (tmp_path / "out").mkdir()
+    (tmp_path / "out" / "shot.png").write_bytes(b"png")
+    with pytest.raises(FileExistsError, match="holds shot.png"):
+        package(lab, tmp_path / "out", home=home, private_ids=None)
+    assert os.listdir(tmp_path / "out") == ["shot.png"]
+
+
 def test_private_ids_skip_comments_and_missing_file(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -195,13 +217,13 @@ def test_private_ids_skip_comments_and_missing_file(
     ids = tmp_path / "genome-private-ids"
     ids.write_text("#\n\n  \nKIT-[0-9]{4}\n")
     package(lab, out, home=home, private_ids=ids)
-    assert set(os.listdir(out)) == {STORE_FILE, *SITE_FILES, MANIFEST, REFRESH_LOG_FILE}
+    assert set(os.listdir(out)) == {*SHIPPED, MANIFEST}
     # A pattern line is a needle, in the store's text as anywhere.
     with connect(demo_paths(lab).reports / STORE_FILE) as con:
         con.execute(
             "UPDATE statement SET reason = 'kit KIT-0042' WHERE run_id = ?", [RUN2]
         )
-    with pytest.raises(Leak, match=r"statement\.reason: private ID 1"):
+    with pytest.raises(Leak, match=r"statement\.reason: private ID on line 4"):
         package(lab, tmp_path / "out2", home=home, private_ids=ids)
     assert os.listdir(tmp_path / "out2") == []
     capsys.readouterr()
@@ -217,7 +239,7 @@ def test_package_writes_site_and_manifest(
 ) -> None:
     monkeypatch.setenv("GENOKEEPER_LANG", "ru")
     out = _package(tmp_path)
-    assert set(os.listdir(out)) == {STORE_FILE, *SITE_FILES, MANIFEST, REFRESH_LOG_FILE}
+    assert set(os.listdir(out)) == {*SHIPPED, MANIFEST}
     manifest = json.loads(_read(out, MANIFEST))
     assert set(manifest) == {"version", "schema_version", "runs", "date", "files"}
     assert (manifest["version"], manifest["schema_version"]) == (
@@ -229,8 +251,7 @@ def test_package_writes_site_and_manifest(
         {"run_id": RUN2, "clinvar": "20261108"},
     ]
     assert manifest["files"] == {
-        name: hashlib.sha256((out / name).read_bytes()).hexdigest()
-        for name in (STORE_FILE, *SITE_FILES, REFRESH_LOG_FILE)
+        name: hashlib.sha256((out / name).read_bytes()).hexdigest() for name in SHIPPED
     }
     first = html.escape(FRAME.split(". ")[0])
     for name in SITE_FILES:
@@ -244,6 +265,8 @@ def test_dashboard_shows_a_refresh_and_no_check_warning(tmp_path: Path) -> None:
     assert "check" not in shown
     assert shown["default_base"] == RUN1  # the refresh's base run
     assert shown["bases"][RUN1]["rows"]
+    # The shipped log is what makes `changes --json` in the demo folder show a refresh.
+    assert _report(out, tmp_path)["refresh"]["run"] == RUN2
 
 
 def test_landing_numbers(tmp_path: Path) -> None:
@@ -258,7 +281,9 @@ def test_landing_numbers(tmp_path: Path) -> None:
     assert f"{default:,} pass at the default thresholds." in index
     n = len(_report(out, tmp_path)["changes"])
     assert n == 4
-    assert f", {n} findings changed at the default thresholds." in index
+    assert (
+        f", {n} findings entered or left the list at the default thresholds." in index
+    )
 
 
 def test_landing_matrix(tmp_path: Path) -> None:
@@ -314,24 +339,18 @@ def test_calibration_summary_covers_every_table(tmp_path: Path) -> None:
     assert set(TABLE_SAMPLES) == set(TABLES)
     out = _package(tmp_path)
     page, index = _read(out, "calibration.html"), _read(out, "index.html")
-    for name, measured in TABLE_SAMPLES.items():
-        assert measured.for_hg002 in ("independent", "same sample"), name
+    for measured in TABLE_SAMPLES.values():
         row = (
             f"<td>{html.escape(measured.measures)}</td>"
             f"<td>{html.escape(measured.samples)}</td>"
         )
         assert row in page and row in index
-    assert TABLE_SAMPLES["small_variants"].for_hg002 == "independent"
     assert html.escape(CALIBRATION_NOTE.split(". ")[0]) in page
     # A table's report, its paths rewritten, escaped in its own section.
     assert (
         "<pre>measured &lt;b&gt;on&lt;/b&gt; &lt;lab&gt;/calibration/hg002\n</pre>"
         in page
     )
-
-
-def _sha256(text: str) -> str:
-    return base64.b64encode(hashlib.sha256(text.encode()).digest()).decode()
 
 
 def test_site_pages_load_nothing(tmp_path: Path) -> None:

@@ -20,26 +20,32 @@ RUN1, RUN2 = "20261012T120000Z-aaaaaa", "20261109T120000Z-bbbbbb"
 GENE = "GENE1"
 
 
+def seeded(lab: Path, before: list[Row], after: list[Row]) -> Path:
+    """The demo root under `lab`: its store (returned) with RUN1's `before` and RUN2's
+    `after`, and the refresh-log record that made RUN2."""
+    root = demo_paths(lab)
+    store = root.reports / STORE_FILE
+    with connect(store) as con:
+        seed(con, before, run_id=RUN1)
+        seed(con, after, run_id=RUN2)
+    at = datetime(2026, 11, 10, 9, tzinfo=UTC)
+    clinvar = SourceOutcome("clinvar", "20261011", "20261108", SourceStatus.NEW)
+    record = RefreshRecord(at, at, "complete", (clinvar,), RUN1, None, RUN2)
+    refresh_log.append(root.repo / "lab", record)
+    return store
+
+
 def packaged(tmp: Path) -> Path:
     """`package`'s `out/` under `tmp`: two runs, one finding whose evidence moved between
     them, and the refresh-log record that made the second."""
     home = tmp / "home"
     lab = home / "genome-lab"
-    root = demo_paths(lab)
-    con = connect(root.reports / STORE_FILE)
-    try:
-        for run, validity in ((RUN1, "limited"), (RUN2, "strong")):
-            rows = [
-                Row("clinvar:1", gene=GENE, validity=validity),
-                Row("clinvar:2", gene="GENE2", pos=2000, validity="moderate"),
-            ]
-            seed(con, rows, run_id=run)
-    finally:
-        con.close()
-    at = datetime(2026, 11, 10, 9, tzinfo=UTC)
-    clinvar = SourceOutcome("clinvar", "20261011", "20261108", SourceStatus.NEW)
-    record = RefreshRecord(at, at, "complete", (clinvar,), RUN1, None, RUN2)
-    refresh_log.append(root.repo / "lab", record)
+    rows = [Row("clinvar:2", gene="GENE2", pos=2000, validity="moderate")]
+    seeded(
+        lab,
+        [Row("clinvar:1", gene=GENE, validity="limited"), *rows],
+        [Row("clinvar:1", gene=GENE, validity="strong"), *rows],
+    )
     return package(lab, tmp / "out", home=home, private_ids=None)
 
 

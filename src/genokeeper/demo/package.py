@@ -12,16 +12,15 @@ with the frame's calibration paragraph on top) and the landing page, its numbers
 store. `MANIFEST` names each file's sha256.
 
 The scan is the control: the adversary is the maintainer's own machine leaking into a public
-file by mistake; the anchor is the outputs as written, read back. `scan_store` reads every
-column of every table of the shipped store and `scan_bytes` the bytes of every file, for the
-home directory, the lab, the demo root and the patterns of the private-ID file the
-genome-data guard reads (`private_id_file`). Any hit is a `Leak`, and nothing is renamed
-from `OUT/.tmp-*` to its final name. The bare user name is not a needle: it can match a
-condition or a drug name, and the home path covers it where it matters.
+file by mistake; the anchor is the outputs as written, read back. It covers every file
+`package` ships, `MANIFEST` included, and every column of every table of the shipped store
+(`_texts`). `scan_bytes` looks in each for the home directory, the lab and the demo root, as
+exact strings, and `scan_private` runs each pattern of the private-ID file the genome-data
+guard reads (`private_id_file`) through `grep -E`, the guard's engine. Any hit is a `Leak`, and
+nothing is renamed from `OUT/.tmp-*` to its final name. The bare user name is not a needle: it
+can match a condition or a drug name, and the home path covers it where it matters.
 """
 
-import base64
-import hashlib
 import html
 import json
 import os
@@ -42,12 +41,13 @@ import duckdb
 import genokeeper
 from genokeeper import changes, refresh_log
 from genokeeper.calibrate.tables import REPORT, TABLES, folder
-from genokeeper.config import DEMO_MARKER, Paths
-from genokeeper.dashboard import write_dashboard
+from genokeeper.checksum import sha256_file
+from genokeeper.config import _REPO, DEMO_MARKER, Paths
+from genokeeper.dashboard import _banner, _sha256, write_dashboard
 from genokeeper.demo import (
     MANIFEST,
     REFRESH_LOG_FILE,
-    SITE_FILES,
+    SHIPPED,
     STORE_FILE,
     demo_paths,
 )
@@ -57,6 +57,7 @@ from genokeeper.demo.frame import (
     FRAME_SUMMARY,
     TABLE_SAMPLES,
 )
+from genokeeper.explain import LOOSEST
 from genokeeper.query import Filters, open_store, query
 from genokeeper.store.db import (
     SCHEMA_VERSION,
@@ -78,16 +79,23 @@ _SAY = "genokeeper demo package"
 
 
 class Leak(Exception):
-    """A shipped output holds a needle: each hit names the table and column, or the file,
-    and which needle, never its text."""
+    """A shipped output holds a needle (each hit names the table and column, or the file,
+    and which needle, never its text), or `grep -E` cannot read a private-ID pattern."""
 
 
 def private_id_file() -> Path | None:
     """The private-ID file the genome-data guard reads, `<git common dir>/info/
-    genome-private-ids`; None outside a checkout or without one."""
+    genome-private-ids` of this checkout (`_REPO`); None outside a checkout or without one."""
     try:
         done = subprocess.run(
-            ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
+            [
+                "git",
+                "-C",
+                _REPO,
+                "rev-parse",
+                "--path-format=absolute",
+                "--git-common-dir",
+            ],
             capture_output=True,
             text=True,
             check=True,
@@ -98,17 +106,15 @@ def private_id_file() -> Path | None:
     return path if path.is_file() else None
 
 
-def _private_patterns(path: Path) -> list[str]:
-    """The file's patterns, as the guard reads them: blank and `#` lines skipped."""
+def _private_patterns(path: Path) -> dict[int, str]:
+    """The file's patterns by line number, as the guard reads them: blank and `#` lines
+    skipped."""
     lines = path.read_text(encoding="utf-8").splitlines()
-    return [
-        line for line in lines if line.strip() and not line.lstrip().startswith("#")
-    ]
-
-
-def _literal(text: str) -> str:
-    """`text` as a pattern both DuckDB's RE2 and Python's `re` read literally."""
-    return re.sub(r"([\\.^$|?*+()\[\]{}])", r"\\\1", text)
+    return {
+        n: line
+        for n, line in enumerate(lines, 1)
+        if line.strip() and not line.lstrip().startswith("#")
+    }
 
 
 def _quote(name: str) -> str:
@@ -136,10 +142,14 @@ def _columns(con: duckdb.DuckDBPyConnection) -> list[tuple[str, str, str, str]]:
     ]
 
 
+def _longest_first(replacements: Mapping[str, str]) -> list[tuple[str, str]]:
+    return sorted(replacements.items(), key=lambda kv: len(kv[0]), reverse=True)
+
+
 def scrub(con: duckdb.DuckDBPyConnection, replacements: Mapping[str, str]) -> None:
     """Rewrite each key of `replacements` (longest first) in every VARCHAR, JSON and
     VARCHAR[] column of every table of `con`."""
-    order = sorted(replacements.items(), key=lambda kv: len(kv[0]), reverse=True)
+    order = _longest_first(replacements)
 
     def rewritten(expr: str) -> str:
         for old, new in order:
@@ -161,40 +171,50 @@ def scrub(con: duckdb.DuckDBPyConnection, replacements: Mapping[str, str]) -> No
         con.execute(f"UPDATE {table} SET {c} = {value} WHERE {held}")
 
 
-def scan_store(con: duckdb.DuckDBPyConnection, needles: Mapping[str, str]) -> list[str]:
-    """`<table>.<column>: <needle's name>` for each column of each table of `con` whose
-    text holds a match of a pattern of `needles` (name -> pattern)."""
-    names = list(needles)
-    hits: list[str] = []
+def _texts(con: duckdb.DuckDBPyConnection, folder: Path) -> list[Path]:
+    """Each column of each table of `con`, its values as text one per line, in
+    `folder/<table>.<column>`."""
+    folder.mkdir()
+    texts: list[Path] = []
     for table, name, column, _ in _columns(con):
-        text = f"CAST({_quote(column)} AS VARCHAR)"
-        found = con.execute(
-            "SELECT "
-            + ", ".join(
-                f"coalesce(bool_or(regexp_matches({text}, {_string(needles[n])})), false)"
-                for n in names
-            )
-            + f" FROM {table}"
-        ).fetchone()
-        assert found is not None
-        hits += [
-            f"{name}.{column}: {n}" for n, hit in zip(names, found, strict=True) if hit
-        ]
-    return hits
+        c = _quote(column)
+        values = con.execute(
+            f"SELECT CAST({c} AS VARCHAR) FROM {table} WHERE {c} IS NOT NULL"
+        )
+        texts.append(folder / f"{name}.{column}")
+        with texts[-1].open("a", encoding="utf-8") as handle:  # a name in two schemas
+            while batch := values.fetchmany(10_000):
+                handle.writelines(f"{value}\n" for (value,) in batch)
+    return texts
 
 
 def scan_bytes(path: Path, needles: Mapping[str, str]) -> list[str]:
-    """`<file name>: <needle's name>` for each pattern of `needles` the file's bytes match."""
+    """`<file name>: <needle's name>` for each string of `needles` in the file's bytes."""
     data = path.read_bytes()
     return [
         f"{path.name}: {name}"
-        for name, pattern in needles.items()
-        if re.search(pattern.encode(), data)
+        for name, text in needles.items()
+        if text.encode() in data
     ]
 
 
-def _sha256_b64(text: str) -> str:
-    return base64.b64encode(hashlib.sha256(text.encode()).digest()).decode()
+def scan_private(paths: Sequence[Path], patterns: Mapping[int, str]) -> list[str]:
+    """`<file name>: private ID on line <n>` for each pattern (line number -> ERE) `grep -E`
+    finds in a file of `paths`."""
+    hits: list[str] = []
+    for n, pattern in patterns.items():
+        found = subprocess.run(
+            ["grep", "-E", "-a", "-l", "-e", pattern, "--", *paths],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if found.returncode > 1:
+            raise Leak(f"grep -E cannot read the private ID on line {n}")
+        hits += [
+            f"{Path(f).name}: private ID on line {n}" for f in found.stdout.splitlines()
+        ]
+    return hits
 
 
 def _fill(template: str, parts: Mapping[str, str]) -> str:
@@ -202,24 +222,16 @@ def _fill(template: str, parts: Mapping[str, str]) -> str:
     one pass: a filled-in part is never searched for placeholders."""
     folder_ = files("genokeeper").joinpath("resources", "demo")
     css = folder_.joinpath("site.css").read_text(encoding="utf-8")
+    frame = _banner((FRAME_SUMMARY, FRAME, CALIBRATION_NOTE))
     every = {
         "css": css,
-        "csp": f"default-src 'none'; style-src 'sha256-{_sha256_b64(css)}'",
-        "frame": _frame(),
+        "csp": f"default-src 'none'; style-src 'sha256-{_sha256(css)}'",
+        "frame": f'<div class="frame">{frame}</div>',
         "repository": REPOSITORY,
         **parts,
     }
     page = folder_.joinpath(template).read_text(encoding="utf-8")
     return re.sub(r"\{\{(\w+)\}\}", lambda m: every[m[1]], page)
-
-
-def _frame() -> str:
-    paragraphs = "".join(f"<p>{html.escape(p)}</p>" for p in (FRAME, CALIBRATION_NOTE))
-    summary = html.escape(FRAME_SUMMARY)
-    return (
-        f'<div class="frame-note"><details><summary>{summary}</summary>{paragraphs}'
-        "</details></div>"
-    )
 
 
 def _calibration_table() -> str:
@@ -284,34 +296,29 @@ def _diff(rows: Sequence[Mapping[str, Any]], before: str, after: str) -> str:
     )
 
 
-def _matrix(con: duckdb.DuckDBPyConnection, run_id: str) -> str:
+def _grid() -> list[list[Filters]]:
+    """The matrix's thresholds, rows by `REL` and columns by `EV`."""
+    return [[Filters(min_reliability=r, min_validity=v) for v in EV] for r in REL]
+
+
+def _matrix(counts: Mapping[Filters, int]) -> str:
     """Figure 1's rows: each cell the findings `query` keeps at its pair of thresholds,
     shaded by count, linking to the dashboard at that view; the default pair outlined."""
-    counts = {
-        (r, v): len(
-            query(
-                con, run_id, Filters(min_reliability=REL[r], min_validity=EV[v])
-            ).findings
-        )
-        for r in range(len(REL))
-        for v in range(len(EV))
-    }
     top = max(counts.values())
-    default = (REL.index(Filters().min_reliability), EV.index(Filters().min_validity))
     rows: list[str] = []
-    for r in range(len(REL)):
+    for r, row in enumerate(_grid()):
         cells: list[str] = []
-        for v in range(len(EV)):
-            n = counts[r, v]
+        for v, f in enumerate(row):
+            n = counts[f]
             shade = int(5 * log1p(n) / log1p(top)) if top else 0
             label = (
                 "<small>default</small>"
-                if (r, v) == default
+                if f == Filters()
                 else "<small>everything called</small>"
-                if (r, v) == (0, 0)
+                if f == LOOSEST
                 else ""
             )
-            mark = ' class="default"' if (r, v) == default else ""
+            mark = ' class="default"' if f == Filters() else ""
             cells.append(
                 f'<td{mark}><a class="t{shade}" href="dashboard.html#rel={r}&amp;ev={v}">'
                 f"{n:,}{label}</a></td>"
@@ -334,19 +341,16 @@ def _landing(
     report: Mapping[str, Any],
 ) -> str:
     run = runs[-1]
-    loosest = len(
-        query(
-            con, run["run_id"], Filters(min_reliability=REL[0], min_validity=EV[0])
-        ).findings
-    )
-    default = len(query(con, run["run_id"], Filters()).findings)
+    grid = [f for row in _grid() for f in row]
+    counts = {f: len(query(con, run["run_id"], f).findings) for f in grid}
+    loosest, default = counts[LOOSEST], counts[Filters()]
     clinvar = {r["run_id"]: r["clinvar"] for r in runs}
     base = clinvar.get(report["base"]) if report["base"] else None
     rows = report["changes"]
     changed = (
         f"The reads are the same. Between the ClinVar releases of {_day(base)} and"
-        f" {_day(run['clinvar'])}, {_count(len(rows), 'finding')} changed at the default"
-        " thresholds."
+        f" {_day(run['clinvar'])}, {_count(len(rows), 'finding')} entered or left the"
+        " list at the default thresholds."
     )
     if len(rows) > 3:
         changed += " Three of them:"
@@ -364,7 +368,7 @@ def _landing(
             "doi": DOI,
             "loosest": f"{loosest:,}",
             "default": f"{default:,}",
-            "matrix": _matrix(con, run["run_id"]),
+            "matrix": _matrix(counts),
             "caption": html.escape(
                 f"Run {run['run_id']}, ClinVar {_day(run['clinvar'])}, genokeeper {version}."
             ),
@@ -382,9 +386,7 @@ def _landing(
 
 
 def _rewrite(text: str, replacements: Mapping[str, str]) -> str:
-    for old, new in sorted(
-        replacements.items(), key=lambda kv: len(kv[0]), reverse=True
-    ):
+    for old, new in _longest_first(replacements):
         text = text.replace(old, new)
     return text
 
@@ -443,25 +445,23 @@ def _write_fresh(source: Path, target: Path) -> None:
         con.close()
 
 
-def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
 def package(lab: Path, out: Path, *, home: Path, private_ids: Path | None) -> Path:
     """Write the demo's files from `demo_paths(lab)` into `out` (see the module); return
     `out`. Raises `Leak`, with nothing under a final name, when an output holds the home
-    directory, the lab, the demo root or a private-ID pattern."""
+    directory, the lab, the demo root or a private-ID pattern, and `FileExistsError` when
+    `out` holds anything but an earlier run's `.tmp-*` folder."""
     root = demo_paths(lab)
-    needles = {
-        "the home directory": _literal(str(home)),
-        "the lab": _literal(str(lab)),
-        "the demo root": _literal(str(root.repo)),
-    }
+    if out.is_dir() and (
+        held := sorted(p.name for p in out.iterdir() if not p.name.startswith(".tmp-"))
+    ):
+        raise FileExistsError(
+            f"{out} holds {', '.join(held)}: package writes only into an empty folder"
+        )
+    needles = {"the home directory": str(home), "the lab": str(lab)}
+    needles["the demo root"] = str(root.repo)
     if private_ids is None:
         print(f"{_SAY}: no private-ID file: that check is skipped", file=sys.stderr)
-    else:
-        for n, pattern in enumerate(_private_patterns(private_ids), 1):
-            needles[f"private ID {n}"] = pattern
+    patterns = {} if private_ids is None else _private_patterns(private_ids)
     replacements = {str(root.repo): "<demo>", str(lab): "<lab>", str(home): "~"}
     out.mkdir(parents=True, exist_ok=True)
     work = Path(tempfile.mkdtemp(prefix=".tmp-", dir=out))
@@ -508,30 +508,30 @@ def package(lab: Path, out: Path, *, home: Path, private_ids: Path | None) -> Pa
         )
         with open_store(work / STORE_FILE) as shipped:
             runs = _runs(shipped)
-            pages = {
-                "index.html": _landing(shipped, runs, report),
-                "calibration.html": _calibration(lab, shipped, runs, replacements),
+            (work / "index.html").write_text(
+                _landing(shipped, runs, report), encoding="utf-8"
+            )
+            (work / "calibration.html").write_text(
+                _calibration(lab, shipped, runs, replacements), encoding="utf-8"
+            )
+            manifest = {
+                "version": genokeeper.__version__,
+                "schema_version": SCHEMA_VERSION,
+                "runs": runs,
+                "date": datetime.now(UTC).date().isoformat(),
+                "files": {name: sha256_file(work / name) for name in SHIPPED},
             }
-            leaks = scan_store(shipped, needles)
-        for name, page in pages.items():
-            (work / name).write_text(page, encoding="utf-8")
-        shipped_files = (STORE_FILE, *SITE_FILES, REFRESH_LOG_FILE)
-        for name in shipped_files:
-            leaks += scan_bytes(work / name, needles)
+            (work / MANIFEST).write_text(
+                json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+            )
+            files = [work / name for name in (*SHIPPED, MANIFEST)]
+            scanned = [*files, *_texts(shipped, work / "text")]
+        leaks = [hit for path in scanned for hit in scan_bytes(path, needles)]
+        leaks += scan_private(scanned, patterns)
         if leaks:
             raise Leak("refusing to package: " + "; ".join(leaks))
-        manifest = {
-            "version": genokeeper.__version__,
-            "schema_version": SCHEMA_VERSION,
-            "runs": runs,
-            "date": datetime.now(UTC).date().isoformat(),
-            "files": {name: _sha256(work / name) for name in shipped_files},
-        }
-        (work / MANIFEST).write_text(
-            json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
-        )
-        for name in (*shipped_files, MANIFEST):
-            os.replace(work / name, out / name)
+        for path in files:
+            os.replace(path, out / path.name)
     finally:
         shutil.rmtree(work, ignore_errors=True)
     return out
