@@ -8,15 +8,15 @@
 > own genome; nothing it reports is a diagnosis or a basis for a medical decision.
 
 A local analyser for your own whole-genome sequencing data. It takes the raw paired reads of a
-30x WGS run, aligns them to GRCh38 and calls them on your Mac. It grades every finding with an
-error rate measured on public reference samples (GIAB's HG002, HG003 and HG004). When you run
-`genokeeper refresh`, it fetches the newest releases of ClinVar, ClinGen, GenCC, CPIC, ClinPGx
-and the GWAS Catalog and grades your calls on them again. An optional daily check tells you
+30x WGS run, aligns them to GRCh38 and calls them on your own machine. It grades every finding
+with an error rate measured on public reference samples (GIAB's HG002, HG003 and HG004). When
+you run `genokeeper refresh`, it fetches the newest releases of ClinVar, ClinGen, GenCC, CPIC,
+ClinPGx and the GWAS Catalog and grades your calls on them again. An optional daily check tells you
 when a newer release is out. It never runs the refresh for you.
 
 **Nothing leaves your machine unless you ask.** Genokeeper has no telemetry, no analytics and
 no crash reporting. The pipeline never uploads your reads, genotypes or findings. The
-aligner and its helpers (bwa, samtools, bcftools, mosdepth) run on your Mac and open no
+aligner and its helpers (bwa, samtools, bcftools, mosdepth) run on your machine and open no
 connection of their own; every other tool that reads your data runs in a container with no
 network; and a run opens no connection at all.
 Two optional features send finding data to Anthropic, and only when you use them: the
@@ -31,7 +31,8 @@ and every calibration sample are T7's. BAM, CRAM and VCF input are not supported
 
 **Requirements:**
 - a Mac with Apple silicon and 48 GB of memory or more: Docker needs 32 GB of it, and macOS
-  needs the rest;
+  needs the rest. It is the only platform tested so far; Linux, Intel Macs and WSL2 are
+  tracked in [#48](https://github.com/genokeeper/genokeeper/issues/48);
 - about 1.5 TB of downloads, and 1 TB of free disk at the peak; about 0.85 TB stays after
   calibration, and about 0.5 TB once you free what may go ([Freeing disk](#freeing-disk) adds
   it up);

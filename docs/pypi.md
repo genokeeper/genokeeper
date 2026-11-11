@@ -1,9 +1,9 @@
 # Genokeeper
 
 A local, privacy-first analyser for your own whole-genome sequencing data. It takes the raw
-paired reads of a 30x WGS run, aligns them to GRCh38 and calls them on your Mac, and grades
-every finding with an error rate measured on public reference samples (GIAB's HG002, HG003 and
-HG004). `genokeeper refresh` grades your calls again on the newest releases of ClinVar,
+paired reads of a 30x WGS run, aligns them to GRCh38 and calls them on your own machine, and
+grades every finding with an error rate measured on public reference samples (GIAB's HG002,
+HG003 and HG004). `genokeeper refresh` grades your calls again on the newest releases of ClinVar,
 ClinGen, GenCC, CPIC, ClinPGx and the GWAS Catalog and shows what changed.
 
 > **Not medical advice, not a medical device.** This is a research tool a person runs on their
