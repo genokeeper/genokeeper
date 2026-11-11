@@ -21,8 +21,11 @@ import shlex
 import shutil
 import sys
 import urllib.request
+from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+
+import duckdb
 
 from genokeeper import __version__, refresh_log
 from genokeeper.config import DEMO_MARKER, load_paths, skill_resource
@@ -30,7 +33,7 @@ from genokeeper.dashboard import write_dashboard
 from genokeeper.demo import MANIFEST, REFRESH_LOG_FILE, STORE_FILE
 from genokeeper.demo.frame import CALIBRATION_NOTE, FRAME, FRAME_SUMMARY
 from genokeeper.query import RunNotFound, open_store
-from genokeeper.store.db import SCHEMA_VERSION, export_snapshots
+from genokeeper.store.db import SCHEMA_VERSION, connect, export_snapshots
 
 if TYPE_CHECKING:
     from genokeeper.cli import Subparsers
@@ -107,9 +110,50 @@ def _manifest(base: str) -> tuple[bytes, dict[str, str]]:
     return body, sums
 
 
-def _download(url: str, sha256: str, target: Path, *, size_line: bool = False) -> None:
+_VIEWS = "SELECT view_name, sql FROM duckdb_views() WHERE NOT internal ORDER BY 1"
+_MACROS = "SELECT function_name FROM duckdb_functions() WHERE NOT internal"
+_INERT: dict[str, str | bool | int | float | list[str]] = {
+    "enable_external_access": False,
+    "autoload_known_extensions": False,
+    "autoinstall_known_extensions": False,
+}
+
+
+def _inert(store: Path) -> None:
+    """Refuse (`DemoRefused`) a store whose views are not exactly the ones this genokeeper's
+    schema creates, or that holds a macro: a view runs SQL on every later read, and could read
+    the user's files. The adversary is whoever can replace the release's assets (the manifest
+    comes from the same release, so the sha256 cannot stop it); the anchor is the expected
+    views, from the installed wheel's schema, which the asset cannot move, and the catalog read
+    with external access off, which runs no view."""
+    try:
+        with duckdb.connect(str(store), read_only=True, config=_INERT) as con:
+            views, macros = (
+                con.execute(_VIEWS).fetchall(),
+                con.execute(_MACROS).fetchall(),
+            )
+    except duckdb.Error as e:
+        raise DemoRefused(f"the demo's store cannot be read: {e}") from e
+    with connect(Path(":memory:")) as fresh:
+        expected = fresh.execute(_VIEWS).fetchall()
+    if views != expected or macros:
+        raise DemoRefused(
+            "the demo's store holds views or macros this genokeeper's schema does not"
+            " create; nothing was installed"
+        )
+
+
+def _download(
+    url: str,
+    sha256: str,
+    target: Path,
+    *,
+    size_line: bool = False,
+    check: Callable[[Path], None] | None = None,
+) -> None:
     """`url` into `target`, through `<target>.part`, renamed only when its sha256 is
-    `sha256`. With `size_line`, say its size first, and show progress on a terminal."""
+    `sha256` and `check`, given the part, raises nothing. With `size_line`, say its size
+    first, and show progress on a terminal."""
     part = target.with_name(target.name + ".part")
     target.parent.mkdir(parents=True, exist_ok=True)
     digest = hashlib.sha256()
@@ -139,6 +183,8 @@ def _download(url: str, sha256: str, target: Path, *, size_line: bool = False) -
                 f"{url}: its sha256 does not match the manifest's (a cut or corrupted"
                 " download); run genokeeper demo again"
             )
+        if check is not None:
+            check(part)
         os.replace(part, target)
     finally:
         part.unlink(missing_ok=True)
@@ -202,7 +248,7 @@ def install(folder: Path, *, base: str = DEMO_BASE) -> Path:
     (folder / DEMO_MARKER).write_bytes(manifest)
     paths = load_paths(folder)
     store = paths.reports / STORE_FILE
-    _download(base + STORE_FILE, sums[STORE_FILE], store, size_line=True)
+    _download(base + STORE_FILE, sums[STORE_FILE], store, size_line=True, check=_inert)
     log = paths.lab / "refresh" / refresh_log.LOG
     _download(base + REFRESH_LOG_FILE, sums[REFRESH_LOG_FILE], log)
     (paths.lab / DEMO_MARKER).write_text("{}\n", encoding="utf-8")

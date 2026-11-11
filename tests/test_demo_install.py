@@ -1,6 +1,7 @@
 """`genokeeper demo`: the HG002 store downloaded from the demo's release, checked against its
 manifest, and written into a folder Claude Code can work in."""
 
+import hashlib
 import html
 import json
 import shlex
@@ -8,6 +9,7 @@ import shutil
 import tomllib
 from pathlib import Path
 
+import duckdb
 import pytest
 from fixtures.demo_site import RUN1, RUN2, packaged, serve
 
@@ -71,6 +73,35 @@ def test_install_refuses_sha_mismatch(site: Path, tmp_path: Path) -> None:
         install(tmp_path / "d", base=base)
     assert not (tmp_path / "d" / "reports" / STORE_FILE).exists()
     assert not list(tmp_path.rglob("*.part"))
+
+
+@pytest.mark.parametrize(
+    "plant",
+    [
+        "CREATE VIEW extra AS SELECT content FROM read_text('{secret}')",
+        "CREATE MACRO plus_one(x) AS x + 1",
+    ],
+)
+def test_install_refuses_a_store_that_runs_sql(
+    site: Path, tmp_path: Path, plant: str
+) -> None:
+    """A store and manifest swapped on the release: the sha256 matches, the catalog does not."""
+    secret = tmp_path / "secret.txt"
+    secret.write_text("the user's own file")
+    served = _copy(site, tmp_path)
+    with duckdb.connect(str(served / STORE_FILE)) as con:
+        con.execute(plant.format(secret=secret))
+    manifest = json.loads((served / MANIFEST).read_text())
+    store = (served / STORE_FILE).read_bytes()
+    manifest["files"][STORE_FILE] = hashlib.sha256(store).hexdigest()
+    (served / MANIFEST).write_text(json.dumps(manifest))
+    folder = tmp_path / "d"
+    with serve(served) as base, pytest.raises(DemoRefused, match="views or macros"):
+        install(folder, base=base)
+    assert not (folder / "reports" / STORE_FILE).exists()
+    assert not list(folder.rglob("*.part"))
+    for f in (p for p in folder.rglob("*") if p.is_file()):
+        assert b"the user's own file" not in f.read_bytes(), f
 
 
 def test_install_refuses_schema_mismatch(site: Path, tmp_path: Path) -> None:
