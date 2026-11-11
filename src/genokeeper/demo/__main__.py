@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 from genokeeper.config import load_paths
+from genokeeper.demo.build import BuildRefused, build
 from genokeeper.demo.package import Leak, package, private_id_file
 
 # Where the files go once written: the demo repository's moving release, then the Pages
@@ -33,6 +34,16 @@ def _package(args: argparse.Namespace) -> int:
     return 0
 
 
+def _build(args: argparse.Namespace) -> int:
+    try:
+        first, second = build(load_paths().lab, threads=args.threads)
+    except (BuildRefused, OSError) as e:
+        print(f"genokeeper demo build: {e}", file=sys.stderr)
+        return 2
+    print(f"genokeeper demo build: runs {first} and {second}; next, `package OUT`")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m genokeeper.demo")
     commands = parser.add_subparsers(required=True)
@@ -41,6 +52,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     p.add_argument("out", type=Path, help="the folder to write into")
     p.set_defaults(handler=_package)
+    b = commands.add_parser(
+        "build", help="run HG002 on two ClinVar releases into the demo root"
+    )
+    b.add_argument("--threads", type=int, default=None, help="CPU threads")
+    b.set_defaults(handler=_build)
     args = parser.parse_args(argv)
     return args.handler(args)
 
