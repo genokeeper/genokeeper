@@ -160,7 +160,7 @@
 #   hg003       stage 2b's calibration inputs, only with --with-calibration (without it the
 #               step says what is missing, and --check lists it), into the places
 #               `python -m genokeeper.calibrate layout` names: GIAB's HG003 v4.2.1 GRCh38
-#               benchmark (VCF, .tbi, BED; md5-pinned) and HG003's
+#               benchmark (VCF, .tbi, BED; sha256-pinned) and HG003's
 #               DNBSEQ-T7 FASTQ (147 GB, md5-pinned, no manifest row: a file under its final
 #               name was verified, as it is renamed there only after its md5 matched). A
 #               transfer cut part-way leaves <name>.part, which the rerun resumes with
@@ -338,11 +338,15 @@ pgs_panel_pvar=GRCh38_HGDP+1kGP_panel.pvar.zst
 # the sizes the server's Content-Length. All read 2026-10-20.
 hg003_fastq_base=https://ftp.cngb.org/pub/CNSA/data7/CNP0008319/CNS1414628/CNX1267209/CNR1441268
 hg003_fastq_files="E200029822_L01_UDB-451_1.fq.gz:5a1593a2ca3f72d5d89d7e0888e84933:70700990194 E200029822_L01_UDB-451_2.fq.gz:0e011c6e9ea4f9024d91b107be7ee968:75959390481"
-# GIAB's HG003 v4.2.1 GRCh38 benchmark (chr1-22), name:md5. GIAB publishes no checksum for
-# these files (unchanged since December 2020): the md5s were computed on their download of
-# 2026-10-20, so a file served differently later is refused.
+# GIAB's HG003 v4.2.1 GRCh38 benchmark (chr1-22), one per line: name, size, sha256, URL.
+# GIAB publishes no checksum for these files (unchanged since December 2020): each sha256 was
+# computed on the download of 2026-10-20, whose md5s that day's pins recorded (ea98d8b9...,
+# 769599d9..., 26f7a0a3...) and a copy matched on 2026-11-11, and each size is the server's
+# Content-Length. So a file re-published with other bytes is refused.
 hg003_truth_base=https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG003_NA24149_father/NISTv4.2.1/GRCh38
-hg003_truth_files="HG003_GRCh38_1_22_v4.2.1_benchmark.vcf.gz:ea98d8b9de762e050e34666462bf3452 HG003_GRCh38_1_22_v4.2.1_benchmark.vcf.gz.tbi:769599d9863a3290ea1da97297dbbc91 HG003_GRCh38_1_22_v4.2.1_benchmark_noinconsistent.bed:26f7a0a353c653e4e2979654586110b1"
+hg003_truth_downloads="HG003_GRCh38_1_22_v4.2.1_benchmark.vcf.gz 147212428 a4f8fefa826f8d2c9457eacf6f4b2f6bfa29daef429d570ce04254c5e7b1121e $hg003_truth_base/HG003_GRCh38_1_22_v4.2.1_benchmark.vcf.gz
+HG003_GRCh38_1_22_v4.2.1_benchmark.vcf.gz.tbi 1651307 989305947e5af2e81ca8ad1087262a12cc87499b36163c49a7878dc9e18fcaa5 $hg003_truth_base/HG003_GRCh38_1_22_v4.2.1_benchmark.vcf.gz.tbi
+HG003_GRCh38_1_22_v4.2.1_benchmark_noinconsistent.bed 13219856 652afd3046705af3200f9c87c255fef11bb212dd76c75a19999c9b2df8a3180c $hg003_truth_base/HG003_GRCh38_1_22_v4.2.1_benchmark_noinconsistent.bed"
 # Parascopy's data (Zenodo record 15019940, 52 MB), name:md5, as Zenodo's file list gives them.
 parascopy_base=https://zenodo.org/records/15019940/files
 parascopy_files="GRCh38_v1.7.tar.gz:a95bf674f43317d3a4c1b8ddbb140945 models_GRCh38_1KGP_v1.7.tar.gz:244110d8fa883cf11334527ec2383498"
@@ -1441,7 +1445,7 @@ fasta_recorded() {
 
 # Stage 2b's calibration inputs (see the header); only with --with-calibration.
 step_hg003() {
-  local layout fastq_dir ds_dir truth_dir entry name md5 size
+  local layout fastq_dir ds_dir truth_dir entry name md5 size pin url
   local wanted="" fastq_bytes=0 truth_ok=1 outputs=()
   layout=$(genokeeper_python -m genokeeper.calibrate layout) || {
     [ "$check" = 1 ] && { missing "project environment for genokeeper.calibrate (uv sync)"; return; }
@@ -1450,14 +1454,13 @@ step_hg003() {
   fastq_dir=$(awk -F'\t' '$1 == "fastq" { print $2 }' <<< "$layout")
   ds_dir=$(awk -F'\t' '$1 == "downsampled" { print $2 }' <<< "$layout")
   truth_dir=$(awk -F'\t' '$1 == "truth" { print $2 }' <<< "$layout")
-  for entry in $hg003_truth_files; do outputs+=("$truth_dir/${entry%%:*}"); done
+  while read -r name size pin url; do outputs+=("$truth_dir/$name"); done <<< "$hg003_truth_downloads"
   if ! step_done hg003_truth "${outputs[@]}"; then
     truth_ok=0
-    for entry in $hg003_truth_files; do
-      name=${entry%%:*}
+    while read -r name size pin url; do
       recorded hg003_truth "$truth_dir/$name" ||
-        wanted+="GIAB HG003 v4.2.1 truth file $name ($hg003_truth_base/$name)"$'\n'
-    done
+        wanted+="GIAB HG003 v4.2.1 truth file $name ($url)"$'\n'
+    done <<< "$hg003_truth_downloads"
   fi
   # Once downsampled, the full FASTQ (`genokeeper calibrate` deletes it then) is not wanted again;
   # nor once HG003 has a record (its aligned.json beside the FASTQ folder) or a CRAM under
@@ -1487,7 +1490,8 @@ step_hg003() {
     return
   fi
   if [ "$truth_ok" = 0 ]; then
-    fetch_truth hg003_truth "$hg003_truth_base" "$truth_dir" "$hg003_truth_files"
+    obtain_downloads "$hg003_truth_downloads" "$truth_dir" "$truth_dir/.prefetch"
+    record hg003_truth "${outputs[@]}"
     say "GIAB HG003 v4.2.1 GRCh38 benchmark -> $truth_dir"
   fi
   if [ -z "$ds_dir" ]; then

@@ -53,7 +53,10 @@ bash scripts/check_no_genome_data.sh --tracked
 
 - Keep a pull request to one change, with a test that fails without it.
 - Write code, comments, commit messages and pull requests in English.
-- A new download is pinned by checksum, and a new tool runs in a container started with
+- A new download is pinned by checksum: a sha256 written in the script, or the md5 its
+  publisher lists when that is the only digest it gives (NCBI's, ClinVar's, Zenodo's and the
+  cloud buckets' listings), never an md5 computed here. HTTPS carries every download. A new tool
+  runs in a container started with
   `--network none` (`run_container` in `src/genokeeper/containers.py`). Anything that sends data off
   the machine needs a row in README, "Privacy and network", and a reason it cannot run locally.
 - A new data source or tool states its licence in `docs/reference.md`; terms a user must

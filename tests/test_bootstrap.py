@@ -904,7 +904,7 @@ class Calibration:
 @pytest.fixture
 def calibration(lab: dict[str, str], tmp_path: Path) -> Calibration:
     """A lab with the GRCh38 FASTA and rtg (stubs), a curl serving two small FASTQ and
-    three truth files, and the shell pins naming their md5s."""
+    three truth files, and the shell pins naming the FASTQ's md5s and the truth's sha256s."""
     home = Path(lab["GENOKEEPER_HOME"])
     _grch38_fai(grch38_fasta(home), CONTIGS)
     _executable(home / "tools" / "rtg-tools-3.13" / "rtg", FAKE_RTG)
@@ -921,7 +921,9 @@ def calibration(lab: dict[str, str], tmp_path: Path) -> Calibration:
     for name in truth:
         data = f"{name}\n".encode()
         (serve / name).write_bytes(data)
-        pins_truth.append(f"{name}:{hashlib.md5(data).hexdigest()}")
+        pins_truth.append(
+            f"{name} {len(data)} {hashlib.sha256(data).hexdigest()} {HG003_TRUTH_BASE}/{name}"
+        )
     bin_dir = tmp_path / "hg003-bin"
     _executable(bin_dir / "curl", FAKE_RESUMING_CURL)
     env = {
@@ -933,7 +935,7 @@ def calibration(lab: dict[str, str], tmp_path: Path) -> Calibration:
     }
     pins = (
         f"hg003_fastq_files='{' '.join(pins_fastq)}';"
-        f" hg003_truth_files='{' '.join(pins_truth)}';"
+        f" hg003_truth_downloads='{chr(10).join(pins_truth)}';"
         f' record grch38_fasta "{grch38_fasta(home)}"'
     )
     return Calibration(env, pins, serve, fastq, truth)
@@ -1056,15 +1058,15 @@ def test_hg003_pins_match_genokeeper(lab: dict[str, str]) -> None:
     """The truth files the script pins are those `genokeeper.calibrate` reads, and the rtg
     it installs is the one `genokeeper.calibrate.rtg_path` names."""
     shown = _run(
-        lab, 'echo "$hg003_truth_files"; echo "$hg003_fastq_files"; echo "$rtg_version"'
+        lab,
+        'echo "$hg003_fastq_files"; echo "$rtg_version"; echo "$hg003_truth_downloads"',
     )
-    truth, fastq, rtg = shown.stdout.splitlines()
-    assert [e.split(":")[0] for e in truth.split()] == [
-        TRUTH_VCF,
-        f"{TRUTH_VCF}.tbi",
-        BENCH_BED,
-    ]
-    assert all(len(e.split(":")[1]) == 32 for e in truth.split())
+    fastq, rtg, *truth = shown.stdout.splitlines()
+    rows = [row.split() for row in truth]
+    assert [row[0] for row in rows] == [TRUTH_VCF, f"{TRUTH_VCF}.tbi", BENCH_BED]
+    # a sha256, never an md5 computed here
+    assert all(len(row[2]) == 64 for row in rows)
+    assert all(row[3] == f"{HG003_TRUTH_BASE}/{row[0]}" for row in rows)
     assert [e.split(":")[0] for e in fastq.split()] == [
         "E200029822_L01_UDB-451_1.fq.gz",
         "E200029822_L01_UDB-451_2.fq.gz",
