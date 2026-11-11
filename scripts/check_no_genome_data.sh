@@ -69,7 +69,7 @@ check_paths() {
     # Data files (anything but source, docs and config) sit only where public data is kept.
     case "$f" in
       tests/fixtures/*|src/genokeeper/resources/*|docker/*|docs/demo/*|.github/*|.stayfixed/*) ;;
-      .claude/settings.json|.githooks/*|Dockerfile|*/Dockerfile|LICENSE|NOTICE|CITATION.cff) ;;
+      .claude/settings.json|.githooks/*|Dockerfile|*/Dockerfile|LICENSE|NOTICE|CITATION.cff|.zenodo.json) ;;
       *.py|*.md|*.toml|*.yml|*.yaml|*.sh|*.lock|*.sql|*.js|*.css|.gitignore|*.gitkeep|.python-version) ;;
       *) echo "genome-data guard: a data file outside the data folders: $f" >&2; fail=1; continue ;;
     esac

@@ -68,6 +68,15 @@ bash scripts/check_no_genome_data.sh --tracked
 Maintainers review a pull request from outside in a checkout with no genome data and no lab: the
 git hooks, `uv run genokeeper` and an agent's project settings all run the checked-out code.
 
+## Releasing
+
+A release is one merged pull request that sets the version in `pyproject.toml` and
+`CITATION.cff` and dates its section in `CHANGELOG.md`, then the tag `v<version>` on that commit
+of `main`. The tag runs `.github/workflows/release.yml`: it refuses a tag that differs from the
+version or a section still marked unreleased, publishes to PyPI by trusted publishing (the
+`pypi` environment) and opens the GitHub release with that section as its notes, which Zenodo
+archives under a DOI.
+
 ## Licence
 
 Genokeeper is licensed under the GNU AGPL, version 3 or any later version. By contributing, you

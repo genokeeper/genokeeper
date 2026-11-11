@@ -1,0 +1,14 @@
+{
+  "title": "Genokeeper: a local, privacy-first analyser of your own whole genome",
+  "upload_type": "software",
+  "description": "A local analyser for a person's own whole-genome sequencing data: it aligns and calls 30x WGS reads to GRCh38 on the user's Mac, grades every finding with an error rate measured on public GIAB reference samples, and grades the calls again on new ClinVar, ClinGen, CPIC and other releases. Not medical advice, not a medical device.",
+  "creators": [{ "name": "Nezhinskiy" }],
+  "license": "AGPL-3.0-or-later",
+  "keywords": [
+    "whole-genome sequencing",
+    "personal genomics",
+    "variant calling",
+    "pharmacogenomics",
+    "privacy"
+  ]
+}

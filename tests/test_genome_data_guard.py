@@ -202,6 +202,7 @@ def test_a_range_refuses_what_a_later_commit_deleted(
         "LICENSE",
         "NOTICE",
         "CITATION.cff",
+        ".zenodo.json",
         "src/genokeeper/vcf.py",
         "docs/bed.md",
         "ci/runner/Dockerfile",

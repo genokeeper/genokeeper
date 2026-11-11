@@ -2,11 +2,27 @@
 name = "genokeeper"
 version = "0.1.0"
 description = "Local analyser for your own whole-genome data: findings with two confidences."
+readme = "docs/pypi.md"
+authors = [{ name = "Nezhinskiy" }]
 requires-python = ">=3.14"
 license = "AGPL-3.0-or-later"
 license-files = ["LICENSE", "NOTICE"]
+keywords = [
+    "genomics",
+    "whole-genome-sequencing",
+    "personal-genomics",
+    "variant-calling",
+    "pharmacogenomics",
+    "clinvar",
+    "privacy",
+]
 classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "Operating System :: MacOS",
     "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
 dependencies = [
     "duckdb==1.5.*",
@@ -15,6 +31,12 @@ dependencies = [
 
 [project.scripts]
 genokeeper = "genokeeper.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/genokeeper/genokeeper"
+Documentation = "https://github.com/genokeeper/genokeeper#readme"
+Changelog = "https://github.com/genokeeper/genokeeper/blob/main/CHANGELOG.md"
+Issues = "https://github.com/genokeeper/genokeeper/issues"
 
 [build-system]
 requires = ["uv_build>=0.12.19,<0.14"]
