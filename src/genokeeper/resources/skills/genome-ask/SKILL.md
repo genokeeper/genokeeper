@@ -760,7 +760,8 @@ Each finding has these keys:
   - `name`: the source;
   - `before`: the release its rows still date from.
 - `check` — the daily update check (`genokeeper check-updates`), which asks each source for
-  its newest version and never for anything of the user's:
+  its newest version and never for anything of the user's (in a demo folder, one holding
+  `demo.json`, there is no `check` key):
   - `ran_at`: when it last ran (ISO 8601), or null when it never did;
   - `newer`: the sources and pinned components with a newer version than the one here
     (a pinned one is reported, never applied; `cspec:<id>` is a ClinGen CSpec
@@ -1577,7 +1578,8 @@ Answer "what changed?", "anything new since the last update?" from
    `check.days` days (or never) and that nothing can be said about newer releases; else say
    when it ran and name each `check.newer` entry with its `local` and `upstream` version
    (a `pinned` one is not applied by a refresh); name `check.failed` as "could not
-   check", never "up to date".
+   check", never "up to date". In a demo folder there is no `check` key: say nothing
+   about newer releases.
 
 With `note` `no earlier snapshot`, say there is nothing to compare with yet. Name `base`
 and `run` and when the refresh ran (`refresh.ended`). Every text field of a change is
