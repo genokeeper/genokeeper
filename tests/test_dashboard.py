@@ -788,10 +788,16 @@ def test_the_changes_tab_opens_on_all_changes_when_none_is_at_the_thresholds(
         assert tier == every and str(n) in said
     # The tab writes back a link that opens it the same way.
     click = [("tab-changes", "", "click")]
-    assert _rendered(data, tmp_path, "", click)["#history"]["urls"] == ["#tab=changes"]
+    urls = _rendered(data, tmp_path, "", click)["#history"]["urls"]
+    assert urls == ["#tab=changes&tier=all"]
     trusted = opened("#tab=changes&rel=1&ev=2")
     assert trusted[0] != every and trusted[1] == ""
     assert opened("#tab=changes&rel=0&ev=0")[1] == ""
+    # A link a cell or a tier chip wrote reopens the tier it showed.
+    views["medium|strong"] = dict.fromkeys(views["medium|strong"], "level")
+    for action, tier in (("matrix/7", every), ("change-chips/0", trusted[0])):
+        moved = _rendered(data, tmp_path, "#tab=changes", [(action, "", "click")])
+        assert opened(moved["#history"]["urls"][-1])[0] == tier
     # Its count is the page's number.
     rows = data["changes"]["bases"][D2]["rows"]
     row = next(iter(rows.values()))

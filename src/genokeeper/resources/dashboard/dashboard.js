@@ -721,6 +721,7 @@ function chipGroup(label, options, key) {
       tab[key] = value;
       if (key === "tier") state.chosen = true;
       renderChanges();
+      writeHash();
     });
     group.append(chip);
   }
@@ -930,8 +931,8 @@ function render() {
   else renderChanges();
 }
 
-// The view in the URL's hash, `#tab=feed|changes&rel=0..2&ev=0..3&topic=<topic>&q=<text>`, so
-// a link opens one exact view (from file:// too); an unknown key or value is ignored.
+// The view in the URL's hash, `#tab=feed|changes&rel=0..2&ev=0..3&tier=first|all&topic=<topic>
+// &q=<text>`, so a link opens one exact view (from file:// too); an unknown key or value is ignored.
 const HASH_SCALES = bare({ rel: "reliability", ev: "validity" });
 function readHash() {
   for (const pair of location.hash.replace(/^#/, "").split("&")) {
@@ -948,18 +949,20 @@ function readHash() {
     else if (key in HASH_SCALES && /^[0-9]$/.test(value)) {
       const levels = SCALES[HASH_SCALES[key]];
       if (Number(value) < levels.length) Object.assign(state, { [HASH_SCALES[key]]: levels[Number(value)], chosen: true });
-    } else if (key === "topic" && `${state.reliability}|${state.validity}|${value}` in data.views) state.topic = value;
+    } else if (key === "tier" && ["first", "all"].includes(value)) [tab.tier, state.chosen] = [value, true];
+    else if (key === "topic" && `${state.reliability}|${state.validity}|${value}` in data.views) state.topic = value;
     else if (key === "q") state.search = value;
   }
 }
 
 // The view written back when a control moves, replacing the history entry; the default pair
-// is left out, so a copied link opens the Changes tab as an unchosen one does.
+// is left out, so a copied link opens the Changes tab as an unchosen one does. The Changes
+// tab's tier is written where reopening may not derive it: "all", or one chosen at the default pair.
 function writeHash() {
   const parts = [`tab=${state.tab}`];
-  if (state.reliability !== reliability || state.validity !== validity) {
-    parts.push(`rel=${SCALES.reliability.indexOf(state.reliability)}`, `ev=${SCALES.validity.indexOf(state.validity)}`);
-  }
+  const pair = state.reliability !== reliability || state.validity !== validity;
+  if (pair) parts.push(`rel=${SCALES.reliability.indexOf(state.reliability)}`, `ev=${SCALES.validity.indexOf(state.validity)}`);
+  if (state.tab === "changes" && (tab.tier === "all" || (state.chosen && !pair))) parts.push(`tier=${tab.tier}`);
   if (state.topic) parts.push(`topic=${encodeURIComponent(state.topic)}`);
   if (state.search) parts.push(`q=${encodeURIComponent(state.search)}`);
   history.replaceState(null, "", `#${parts.join("&")}`);
