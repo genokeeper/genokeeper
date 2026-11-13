@@ -351,7 +351,7 @@ def test_landing_examples_are_the_everything_called_rows(tmp_path: Path) -> None
         assert lines[1].startswith('<div class="m">- ') and before in lines[1]
         assert lines[2].startswith('<div class="p">+ ') and after in lines[2]
     assert rows[0]["gene"] not in diff
-    assert 'href="dashboard.html#tab=changes"' in index
+    assert 'href="dashboard.html#tab=changes&amp;rel=0&amp;ev=0"' in index
 
 
 def test_landing_diff_reads_clinvar_as_words() -> None:
