@@ -831,6 +831,7 @@ def test_page_loads_nothing_from_the_network(tmp_path: Path) -> None:
     )
     assert re.findall(r"https?://[^\"'`\s]*", outside) == [PUBMED]
     assert re.findall(r"https?://[^\"'`\s]*", js) == [PUBMED]
+    assert "Golos" not in css  # no font the page does not ship
     [name] = re.findall(rf'const (\w+) = "{re.escape(PUBMED)}";', js)
     uses = re.findall(rf"(.{{0,16}})\b{name}\b(.{{0,3}})", js)
     assert len(uses) >= 2
@@ -955,7 +956,18 @@ const urls = [];
 const location = { hash: process.argv[4] };
 const history = { replaceState: (state, title, url) => urls.push(url) };
 const window = new Node("window");
-vm.runInNewContext(fs.readFileSync(process.argv[2], "utf8"), { document, location, history, window });
+// Each read of an item's search string, counted (`#reads`): what typing or a click recomputes.
+let reads = 0;
+const parse = (text, reviver) => {
+  const data = JSON.parse(text, reviver);
+  for (const item of Object.values(data.items)) {
+    const search = item.search;
+    Object.defineProperty(item, "search", { get: () => (reads++, search) });
+  }
+  return data;
+};
+const sandbox = { document, location, history, window, JSON: { parse } };
+vm.runInNewContext(fs.readFileSync(process.argv[2], "utf8"), sandbox);
 // Then each action (argv, JSON [id, value, event]): the control (or, for "window", the URL's
 // hash; for "<id>/<n>", the n-th button in it) takes the value, its event fires.
 for (const [spec, value, type] of JSON.parse(process.argv[5])) {
@@ -966,12 +978,13 @@ for (const [spec, value, type] of JSON.parse(process.argv[5])) {
   else node.value = value;
   for (const listener of node.listeners[type] ?? []) listener();
 }
-const out = { "#history": { urls } };
+const out = { "#history": { urls }, "#reads": { count: reads } };
 for (const [id, node] of Object.entries(byId)) {
   const { className, hidden, value } = node;
-  const [buttons, titled] = [(n) => n.tag === "button", (n) => n.attrs.title].map((keep) =>
-    node.nodes().filter(keep).map((n) => ({ text: n.textContent, className: n.className, attrs: n.attrs })));
-  out[id] = { text: node.textContent, links: node.links(), className, hidden, value, buttons, titled };
+  const kept = [(n) => n.tag === "button", (n) => n.attrs.title, (n) => n.tag === "details"];
+  const [buttons, titled, details] = kept.map((keep) => node.nodes().filter(keep)
+    .map((n) => ({ text: n.textContent, className: n.className, attrs: n.attrs, open: Boolean(n.open) })));
+  out[id] = { text: node.textContent, links: node.links(), className, hidden, value, buttons, titled, details };
 }
 console.log(JSON.stringify(out));
 """
@@ -1825,6 +1838,34 @@ def test_view_from_url_hash(con: duckdb.DuckDBPyConnection, tmp_path: Path) -> N
     assert "CYP2D6" in shown["feed"]["text"] and len(shown["#history"]["urls"]) == 1
 
 
+@pytest.mark.parametrize(
+    "url_hash",
+    ["#constructor=1", "#__proto__=1", "#toString=1", "#topic=constructor", "#valueOf=1&hasOwnProperty=2"],
+)
+def test_a_hash_of_inherited_names_leaves_the_default_view(
+    con: duckdb.DuckDBPyConnection, tmp_path: Path, url_hash: str
+) -> None:
+    shown = _rendered(payload(con, None, NO_CACHE), tmp_path, url_hash)
+    assert _cell(shown) == (1, 2) and "BRCA1" in shown["feed"]["text"]
+
+
+def test_the_search_is_run_once_per_typed_text(
+    con: duckdb.DuckDBPyConnection, tmp_path: Path
+) -> None:
+    """The twelve cells, the chips and the feed count from one pass over the rows per
+    typed text: a click on a cell or a chip reads no row's search string again."""
+    data = payload(con, None, NO_CACHE)
+    n = len(data["items"])
+
+    def reads(*actions: tuple[str, str, str]) -> int:
+        return _rendered(data, tmp_path, actions=list(actions))["#reads"]["count"]
+
+    loaded = reads()
+    assert reads(("matrix/3", "", "click"), ("chips/1", "", "click")) == loaded
+    typed = reads(("search", "D", "input"), ("search", "DM", "input"))
+    assert typed == loaded + 2 * n
+
+
 # The matrix's rows, top down, and its columns, left to right.
 _MATRIX = list(product(Level, reversed(Validity)))
 
@@ -1894,6 +1935,11 @@ def test_explanation_tooltip_names_the_model_and_a_demo(
     for shown, text in ((own[0]["attrs"], tip), (demo["titled"][0]["attrs"], on_demo)):
         assert (shown["title"], shown["aria-description"]) == (text, text)
     assert "демо" in dashboard.messages("ru")["for_this_demo"]
+    # A dated model id reads as its name and version, without the date.
+    for item in data["items"].values():
+        item["explanation"]["model"] = "claude-sonnet-4-20250514"
+    dated = _rendered(data, tmp_path)["feed"]["titled"][0]["attrs"]["title"]
+    assert dated.startswith("Generated automatically by Sonnet 4,")
 
 
 def test_demo_lab_has_no_check_block(tmp_path: Path) -> None:

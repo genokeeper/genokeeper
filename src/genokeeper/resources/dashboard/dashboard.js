@@ -7,7 +7,10 @@
 // narrows the table by its chips. Every text it shows is a message of `data.messages`, the
 // catalog `resources/dashboard/messages.json` in the page's language.
 
-const data = JSON.parse(document.getElementById("data").textContent);
+// Every table here and in the data has no prototype, so no lookup by a data string or a hash
+// value (a topic, a cause, `#constructor=1`) finds an inherited name.
+const bare = (value) => (value && typeof value === "object" && !Array.isArray(value) ? Object.assign(Object.create(null), value) : value);
+const data = JSON.parse(document.getElementById("data").textContent, (key, value) => bare(value));
 const M = data.messages;
 const CARDINAL = new Intl.PluralRules(data.lang);
 const ORDINAL = new Intl.PluralRules(data.lang, { type: "ordinal" });
@@ -236,9 +239,9 @@ function opened(f) {
   const e = f.explanation;
   if (e) {
     const label = el("span", "note", t("written_by", { model: e.model, cites: e.cites.join(", ") }));
-    // "claude-opus-5-5" reads "Opus 5.5"; another id stays as stored.
-    const id = /^claude-([a-z]+)-(\d+)-(\d+)/.exec(e.model);
-    const model = id ? `${id[1][0].toUpperCase()}${id[1].slice(1)} ${id[2]}.${id[3]}` : e.model;
+    // "claude-opus-5-5" reads "Opus 5.5", "claude-sonnet-4-20250514" "Sonnet 4"; another id stays as stored.
+    const id = /^claude-([a-z]+)-(\d+)(?:-(\d{1,2}))?(?:-\d{8})?$/.exec(e.model);
+    const model = id ? `${id[1][0].toUpperCase()}${id[1].slice(1)} ${id[2]}${id[3] ? `.${id[3]}` : ""}` : e.model;
     const tip = t("explanation_tooltip", { model, demo: DEMO ? t("for_this_demo") : "" });
     label.setAttribute("title", tip);
     label.setAttribute("aria-description", tip);
@@ -289,12 +292,12 @@ function reasonText(reason) {
   const unassessed = reason.startsWith("unassessed:");
   const [name, threshold] = reason.replace(/^unassessed:/, "").split(":");
   const level = LEVELS[threshold] ? LEVELS[threshold][0] : threshold;
-  const key = {
+  const key = bare({
     reliability_below: "reliability_below",
     validity_below: "validity_below",
     topic: "other_topics",
     research_association: "research_hidden",
-  }[name];
+  })[name];
   if (key === undefined) return reason;
   const text = t(key, { level });
   return unassessed ? t("unknown_genotype", { text }) : text;
@@ -348,10 +351,25 @@ function renderScreened() {
 }
 
 // A view's findings that hold the typed text. Each item's `search` is
-// `genokeeper.query.searchable`'s, and so is the typed text.
+// `genokeeper.query.searchable`'s, and so is the typed text. The rows are searched once per
+// typed text, and each view's count kept until the text changes.
+let matched = { search: null, ids: null, counts: new Map() };
 function searched(view) {
-  const q = state.search.toLowerCase().replaceAll("_", " ").replaceAll("|", ", ");
-  return view.findings.filter((id) => data.items[id].search.includes(q));
+  if (matched.search !== state.search) {
+    const q = state.search.toLowerCase().replaceAll("_", " ").replaceAll("|", ", ");
+    const ids = new Set(Object.keys(data.items).filter((id) => data.items[id].search.includes(q)));
+    matched = { search: state.search, ids, counts: new Map() };
+  }
+  return view.findings.filter((id) => matched.ids.has(id));
+}
+
+// The number of findings the view `key` (`<reliability>|<validity>|<topic>`) shows.
+function count(key) {
+  if (matched.search !== state.search || !matched.counts.has(key)) {
+    const n = searched(data.views[key]).length;
+    matched.counts.set(key, n);
+  }
+  return matched.counts.get(key);
 }
 
 function renderFeed() {
@@ -412,13 +430,13 @@ function renderFeed() {
 
 const changes = data.changes;
 // Each change kind's cell, chip and cell class, in the order the table sorts them.
-const KINDS = Object.fromEntries(
+const KINDS = bare(Object.fromEntries(
   Object.entries({ entered: "up", left: "down", level: "mid", new: "mid", gone: "mid", details: "mid", publications: "mid" })
     .map(([kind, className]) => [kind, [...M.kinds[kind], className]]),
-);
+));
 // Run inputs (in a cause), refreshed sources (in the banner) and the update check's
 // sources, by their names.
-const SOURCES = {
+const SOURCES = bare({
   clinvar38: "ClinVar",
   clinvar: "ClinVar",
   clinvar_citations: t("clinvar_citations"),
@@ -443,7 +461,7 @@ const SOURCES = {
   haplogrep3: "Haplogrep3",
   pgs_catalog: "PGS Catalog",
   gnomad: "gnomAD",
-};
+});
 const STATEMENT_KINDS = M.statement_kinds;
 const FIELDS = M.fields;
 const tab = {
@@ -477,7 +495,7 @@ function datesText(dates) {
 }
 
 function causeGroup(cause) {
-  const own = { analyser: "cause_analyser", genotype: "cause_genotype", reference: "cause_reference" }[cause];
+  const own = bare({ analyser: "cause_analyser", genotype: "cause_genotype", reference: "cause_reference" })[cause];
   if (own) return t(own);
   const input = cause.replace(/^source:/, "").split("@")[0];
   return SOURCES[input] || input;
@@ -761,7 +779,7 @@ function renderChanges() {
 
 function render() {
   for (const [cell, r, v] of CELLS) {
-    const n = searched(data.views[`${r}|${v}|${state.topic}`]).length;
+    const n = count(`${r}|${v}|${state.topic}`);
     const marked = cell.className ? [el("small", "", t("default_cell"))] : [];
     cell.replaceChildren(String(n), ...marked);
     cell.setAttribute("aria-pressed", String(r === state.reliability && v === state.validity));
@@ -779,7 +797,7 @@ function render() {
 
 // The view in the URL's hash, `#tab=feed|changes&rel=0..2&ev=0..3&topic=<topic>&q=<text>`, so
 // a link opens one exact view (from file:// too); an unknown key or value is ignored.
-const HASH_SCALES = { rel: "reliability", ev: "validity" };
+const HASH_SCALES = bare({ rel: "reliability", ev: "validity" });
 function readHash() {
   for (const pair of location.hash.replace(/^#/, "").split("&")) {
     const at = pair.indexOf("=");
