@@ -55,7 +55,8 @@ documents it links to.
   the value kept: ABO, C4A, C4B, CTL2, FUT3, MAM, PIGG, XG (measurable on no library) and chrM
   heteroplasmy. UGT1A1\*28 is trusted; PharmCAT's read-backed phase sets are not (BR-036).
 - Research layer: rare predicted variants in PanelApp's Intellectual disability panel (`panelapp:`).
-- Roadmap: [docs/roadmap.md](docs/roadmap.md).
+  Roadmap: [docs/roadmap.md](docs/roadmap.md).
+- Public HG002 demo (0.2.0): `genokeeper demo` installs it; `python -m genokeeper.demo build|package`.
 - Questions about the user's genome: the `genome-ask` skill answers from `uv run genokeeper
   query --json` ([.claude/skills/genome-ask/SKILL.md](.claude/skills/genome-ask/SKILL.md)).
 

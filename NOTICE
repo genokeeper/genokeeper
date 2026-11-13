@@ -67,6 +67,15 @@ https://www.mitomap.org/MITOMAP/CitingMitomap asks. Modified: only the single-ba
 substitutions kept, five of its nine columns (the file's header says which).
 
 
+MedlinePlus Genetics summaries (public domain)
+----------------------------------------------
+The public HG002 demo release carries gene and condition summaries from MedlinePlus Genetics
+(https://medlineplus.gov/genetics/), the explanations' grounding. They are the National Library
+of Medicine's own text, in the public domain; the Library asks that it be credited as the
+source and implies no endorsement of this software. Unmodified; no file of the repository
+carries them.
+
+
 RBCeq2 allele positions (MIT)
 -----------------------------
 src/genokeeper/resources/bloodgroups/rbceq2_2.4.4_positions.tsv is cut from the GRCh38 column

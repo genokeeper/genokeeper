@@ -542,6 +542,23 @@ are information, never a diagnosis.
 general Terms of Use for EMBL-EBI Services (its licensing page, read 2026-10-21); they stay
 in the lab and the store, never redistributed.
 
+**MedlinePlus Genetics terms.** The National Library of Medicine's plain-language gene and
+condition summaries are its own text, in the public domain (`evidence/medlineplus.py`); NLM
+asks for attribution and implies no endorsement. They ground the explanations, and the public
+demo release carries the summaries its explanations were grounded in, so they are not only
+kept in the lab: attribution is in NOTICE.
+
+**Drug-response grading.** Every drug row's level quotes one curator's level, never the stars
+of ClinVar's review status (the submitter's own, not an evidence level). A gene PharmCAT calls
+is graded once, on its gene row, at the guideline's recommendation strength; where the
+guideline reports none, at CPIC's level for the gene-drug pair (A strong, B moderate, any
+other limited), and the reason says so. A ClinVar drug-response record in such a gene is
+limited, graded on the gene's call. In any other gene, ClinPGx's level of the same variant
+(matched by rsID) grades it on ClinPGx's own words (1B strong, 2A and 2B moderate, 3 limited in
+the research layer), as one row per variant and drug. A ClinVar drug-response record with no
+ClinPGx annotation at 1B-2B is limited, with the reason in words. A refresh grades the same
+calls by this rule, so a drug result can change grade at it.
+
 ## Asking about the genome
 
 Open Claude Code in this repository and ask in plain words ("am I a carrier of anything?",
@@ -631,7 +648,20 @@ Accepted answers are cached in `reports/explanations/` (`--cache` moves it) unde
 the model, the prompt version and the prompt, so a rerun asks only for findings whose claim,
 sources' text, model or prompt changed (a new release of a source alone does not). The page shows an explanation only while its key
 still matches, and otherwise "No explanation generated yet" (in Russian, "Объяснение ещё не
-сгенерировано"). The command refuses without
+сгенерировано").
+
+`explain` takes `--min-reliability` and `--min-validity`, the filters of `query`: it then
+explains only the findings that pass them (the default is every finding and stage-3 watch
+item, and a filter leaves the watch items out). `--model` names the model (default
+`claude-opus-5-5`). `--tone {plain,engaging}` chooses the writing: `plain`, the default, is the
+text above, and its prompts and cache keys are unchanged; `engaging` writes for a curious reader
+who is no specialist, adds a one-or-two-sentence gist (what you most likely are or will notice,
+hedged as the sources allow, from the same sources and under the same limits: no diagnosis,
+dose, drug choice or advice), which the dashboard shows above the paragraph. A run with another
+model or tone writes new cache entries beside the existing ones (the model, tone and prompt
+are in the key) and leaves them; the page reads first the model and tone the cache was last
+written in, then the defaults. Each run ends with a summary of its calls (made, served from the
+cache, failed), their cost in US dollars and their tokens. The command refuses without
 the bootstrap's MedlinePlus file.
 
 ## Refreshing
