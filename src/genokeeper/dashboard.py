@@ -96,11 +96,12 @@ _TYPICAL = re.compile(
     r"(\*\S+ )?(Normal( Metabolizer| Function)?|negative"
     r"|normal risk of aminoglycoside-induced hearing loss)"
 )
-# CPIC's terms for a gene with no variant of note, typical only at a reference diplotype:
-# beside a variant the same words can mean an unclassified one.
-_TYPICAL_AT_REFERENCE = frozenset(
-    {"Uncertain Susceptibility", "ivacaftor non-responsive in CF patients"}
+# CPIC's terms for a gene with no variant of note, and `<drugs> response` for one CPIC gives
+# no phenotype (VKORC1), typical only at a reference diplotype: beside a variant they are not.
+_TYPICAL_AT_REFERENCE = re.compile(
+    r"Uncertain Susceptibility|ivacaftor non-responsive in CF patients|.+ response"
 )
+_REFERENCE_ALLELE = re.compile(r"Reference|\*1|rs\d+ reference \(\w+\)")
 # The messages `page.html` holds, filled in by `render`.
 _PAGE = ("page_title", "tab_feed", "tab_changes", "search_label", "search_placeholder")
 
@@ -413,10 +414,9 @@ def payload(
         normal |= phenotype is not None and all(
             _TYPICAL.fullmatch(part) for part in phenotype.split("; ")
         )
-        normal |= (
-            phenotype in _TYPICAL_AT_REFERENCE
-            and call.get("diplotype") == "Reference/Reference"
-        )
+        alleles = (call.get("diplotype") or "").split("/")
+        reference = all(_REFERENCE_ALLELE.fullmatch(a) for a in alleles)
+        normal |= reference and bool(_TYPICAL_AT_REFERENCE.fullmatch(phenotype or ""))
         return {
             **finding,
             "explanation": explanation,

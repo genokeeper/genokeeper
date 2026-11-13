@@ -2195,19 +2195,27 @@ def test_a_reference_result_cpic_names_otherwise_folds(
     con: duckdb.DuckDBPyConnection,
 ) -> None:
     """CPIC's terms for a gene with no variant of note (RYR1 and CACNA1S "Uncertain
-    Susceptibility", CFTR's "ivacaftor non-responsive") fold only at a Reference/Reference
-    diplotype; the same terms beside a variant stay shown."""
+    Susceptibility", CFTR's "ivacaftor non-responsive", a gene CPIC gives no phenotype read
+    by its drugs) fold only at a reference diplotype; beside a variant they stay shown."""
 
     def gene(name: str, diplotype: str, phenotype: str) -> Row:
         call = {**GENE_CALL, "diplotype": diplotype, "phenotype": phenotype}
         return Row(f"pharmcat:{name}", gene=name, level=None, topic="drugs",
                    gene_call=call, claim=PGX_CLAIM)  # fmt: skip
 
+    vkorc1 = "rs9923231 reference (C)/rs9923231 {}"
     seed(con, [gene("CACNA1S", "Reference/Reference", "Uncertain Susceptibility"),
                gene("CFTR", "Reference/Reference", "ivacaftor non-responsive in CF patients"),
-               gene("RYR1", "Reference/c.1840C>T", "Uncertain Susceptibility")])  # fmt: skip
+               gene("RYR1", "Reference/c.1840C>T", "Uncertain Susceptibility"),
+               gene("VKORC1", vkorc1.format("reference (C)"), "warfarin response"),
+               gene("CYP4F2", "*1/*1", "warfarin response")])  # fmt: skip
     data = payload(con, None, NO_CACHE)
     assert {i for i, f in data["items"].items() if f["normal"]} == {
         "pharmcat:CACNA1S",
         "pharmcat:CFTR",
+        "pharmcat:VKORC1",
+        "pharmcat:CYP4F2",
     }
+    later = "20261101T120000Z-bbbbbb"
+    seed(con, [gene("VKORC1", vkorc1.format("variant (T)"), "warfarin response")], later)  # fmt: skip
+    assert not payload(con, later, NO_CACHE)["items"]["pharmcat:VKORC1"]["normal"]
