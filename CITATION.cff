@@ -8,8 +8,8 @@ repository-code: "https://github.com/genokeeper/genokeeper"
 # The concept DOI: it resolves to the newest version Zenodo archived.
 doi: 10.5281/zenodo.24134245
 license: AGPL-3.0-or-later
-version: 0.1.0
-date-released: 2026-11-11
+version: 0.2.0
+date-released: 2026-11-13
 keywords:
   - whole-genome sequencing
   - personal genomics

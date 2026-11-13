@@ -555,7 +555,8 @@ guideline reports none, at CPIC's level for the gene-drug pair (A strong, B mode
 other limited), and the reason says so. A ClinVar drug-response record in such a gene is
 limited, graded on the gene's call. In any other gene, ClinPGx's level of the same variant
 (matched by rsID) grades it on ClinPGx's own words (1B strong, 2A and 2B moderate, 3 limited in
-the research layer), as one row per variant and drug. A ClinVar drug-response record with no
+the research layer); the ClinVar record of that variant stays a limited row whose reason names
+the annotation, so the variant is never stronger through ClinVar. A ClinVar drug-response record with no
 ClinPGx annotation at 1B-2B is limited, with the reason in words. A refresh grades the same
 calls by this rule, so a drug result can change grade at it.
 
