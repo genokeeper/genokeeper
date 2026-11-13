@@ -38,7 +38,7 @@ calls at each of its positions (`pharmcat_step`) given the outside callers' call
 (`outside_steps`, `outside_calls`), stored by `PgxSource`; and PharmGKB's clinical
 annotations located at their ClinVar alleles and graded on our calls there, stored by
 `PharmGkbSource`. CPIC's gene-drug levels also make a carried ClinVar drug_response
-actionable. No dosing text enters the store; PharmCAT's HTML report stays in its step's
+actionable; the located annotations grade it (`RunContext.clinpgx`). No dosing text enters the store; PharmCAT's HTML report stays in its step's
 directory under `reports/work/pharmcat/` for the user. An outside caller that fails (exits
 non-zero, or writes no result its reader takes) leaves the genes it serves unresolved, the
 failure as the reason, and the run goes on; nothing of its step is cached.
@@ -315,6 +315,7 @@ from genokeeper.evidence.pharmgkb import DOWNLOADS as PHARMGKB_DOWNLOADS
 from genokeeper.evidence.pharmgkb import (
     PHARMGKB_DROP_REASONS,
     ClinicalAnnotations,
+    by_rsid,
     clinvar_alleles,
     left_by_pharmcat,
     locate,
@@ -5486,6 +5487,7 @@ def run_genome(
                 haploid=haploid,
                 source_version=release,
                 cpic_levels=pgx.cpic_levels,
+                clinpgx=by_rsid(a for a, _ in located),
                 validity_source=validity_source,
             )
             store_sources(

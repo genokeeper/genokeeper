@@ -25,6 +25,7 @@ from genokeeper.evidence.pharmgkb import (
     DOWNLOADS,
     RESEARCH_LEVEL,
     ClinicalAnnotations,
+    by_rsid,
     clinvar_alleles,
     left_by_pharmcat,
     locate,
@@ -33,15 +34,24 @@ from genokeeper.evidence.pharmgkb import (
 from genokeeper.genelists import load_gene_lists
 from genokeeper.genotype.gvcf import NOCALL_REASON, Called
 from genokeeper.genotype.reliability import Reliability
+from genokeeper.panel.build import Claim
 from genokeeper.pgx.pharmcat import DOSING, PHARMCAT_GENES
 from genokeeper.sources import RunContext, write_collected
+from genokeeper.sources.panel import grade_claim
 from genokeeper.sources.pharmgkb import (
     PHARMGKB_RESEARCH_TOOL,
     PHARMGKB_TOOL,
     RESEARCH_REASON,
     PharmGkbSource,
 )
-from genokeeper.store.db import Level, RowType, connect, start_run, transaction
+from genokeeper.store.db import (
+    Level,
+    RowType,
+    Validity,
+    connect,
+    start_run,
+    transaction,
+)
 from genokeeper.store.writer import StoreWriter
 
 TNF = Ann("655384799", "rs1800629", "TNF", "2B", ("AA", "AG", "GG"))
@@ -269,7 +279,7 @@ RELIABLE = Reliability(p_wrong=1e-6, level=Level.HIGH, flags=(), warnings=())
 
 def test_carried_annotation_is_finding(tmp_path: Path) -> None:
     """Carried (one or two copies): a finding under drugs; not carried: a non-finding;
-    unknown: unassessed, never a finding. 1B is moderate, 2A and 2B limited. The claim
+    unknown: unassessed, never a finding. 1B is strong, 2A and 2B moderate. The claim
     holds no annotation text and no dosing word: a category naming dose is left out."""
     read = read_clinical_annotations(
         _download(tmp_path, [TNF, CHRNA5, SCN1A, Ann("9", "rs9", "GENEX", "2A")])
@@ -289,7 +299,7 @@ def test_carried_annotation_is_finding(tmp_path: Path) -> None:
     by_id = {r.statement["statement_id"]: r for r in collected.rows}
     chr15 = by_id[f"pharmgkb:{chrna5.annotation_id}"]
     s = chr15.statement
-    assert (s["kind"], s["topic"], s["validity"]) == ("finding", "drugs", "moderate")
+    assert (s["kind"], s["topic"], s["validity"]) == ("finding", "drugs", "strong")
     assert (s["source"], s["source_id"], s["source_version"]) == (
         "pharmgkb",
         chrna5.annotation_id,
@@ -317,7 +327,7 @@ def test_carried_annotation_is_finding(tmp_path: Path) -> None:
     tnf_row = by_id[f"pharmgkb:{tnf.annotation_id}"].statement
     assert (tnf_row["kind"], tnf_row["validity"], tnf_row["actionable"]) == (
         "finding",
-        "limited",
+        "moderate",
         False,
     )
     scn1a_row = by_id[f"pharmgkb:{scn1a.annotation_id}"].statement
@@ -488,6 +498,44 @@ def test_aldh2_rs671_reaches_drugs(tmp_path: Path) -> None:
         "pharmgkb:1450810451",
         "finding",
         "drugs",
-        "limited",
+        "moderate",
     )
     assert s["gene"] == "ALDH2" and s["vid"] == "GRCh38:chr12:111803962:G:A"
+
+
+def test_one_row_per_variant_on_clinpgx(tmp_path: Path) -> None:
+    """Owner's ruling A3s: a ClinVar drug_response claim at an rsID with a kept ClinPGx
+    annotation is graded on it (limited, naming it), so the variant has one row at its
+    ClinPGx level; the strongest kept level answers for an rsID."""
+    mthfr = Ann("1000000002", "rs900002", "MTHFR", "2A", ("CC", "CT", "TT"))
+    weaker = Ann("1000000003", "rs900002", "MTHFR", "2B", ("CC", "CT", "TT"))
+    read = read_clinical_annotations(_download(tmp_path, [weaker, mthfr]))
+    allele = ("chr1", 11796321, "G", "A")
+    ctx = replace(_context(tmp_path), clinpgx=by_rsid(read.annotations))
+    assert ctx.clinpgx == {"rs900002": ("1000000002", "2A")}
+    kept = next(a for a in read.annotations if a.level == "2A")
+    rows = (
+        PharmGkbSource([(kept, allele, _called("1"), RELIABLE)], 1, {}, read.created)
+        .collect(ctx)
+        .rows
+    )
+    claim = Claim(
+        variation_id=3520,
+        gene="MTHFR",
+        clnsig="drug_response",
+        clnrevstat="reviewed_by_expert_panel",
+        disease_ids="",
+        condition="methotrexate response",
+        chrom="chr1",
+        pos=11796321,
+        ref="G",
+        alt="A",
+        vid="GRCh38:chr1:11796321:G:A",
+        rsid="rs900002",
+    )
+    grade = grade_claim(claim, _called("1"), ctx, None)
+    assert [r.statement["validity"] for r in rows] == ["moderate"]
+    assert (grade.level, grade.reason) == (
+        Validity.LIMITED,
+        "graded on ClinPGx's annotation 1000000002 (level 2A)",
+    )

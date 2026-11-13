@@ -896,13 +896,15 @@ clopidogrel?", "what is my CYP2D6?") is answered with `--topic drugs` (add `--ge
   result, not an absence. An unresolved gene sits in `unassessed`: say it could not be
   called and why (its `gene call unresolved: …` warning), never a phenotype for it.
 - `pharmgkb:<annotation_id>` — a PharmGKB (ClinPGx) clinical annotation of level 1B
-  (moderate) or 2A/2B (limited) at a marker, in a gene PharmCAT's report gives no drug
+  (strong) or 2A/2B (moderate) at a marker, in a gene PharmCAT's report gives no drug
   (outside PharmCAT's genes, or F2, F5 and IFNL3): a finding where the user carries the
   allele. It is research-grade evidence, not a guideline; say so. For F2 and F5, PharmCAT's
   `pharmcat:<gene>` holds the gene call with no drugs (`claim.drugs` empty): name the call,
   and take the drugs from the PharmGKB annotations.
 - ClinVar's `drug_response` — a `clinvar:<variation_id>` claim with that classification,
-  its validity from ClinVar's stars alone.
+  always limited (its stars are the submitter's review status); its reason names what
+  grades the variant instead: the `pharmgkb:` annotation at its rsID or the gene's
+  `pharmcat:` call. Answer from that row.
 
 The store holds no dosing text, and the answer gives none:
 

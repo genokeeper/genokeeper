@@ -76,6 +76,9 @@ class RunContext:
     source_version: str  # the ClinVar release date
     # CPIC's level of each (gene, drug) pair (`evidence.pgx.load_cpic_levels`).
     cpic_levels: Mapping[tuple[str, str], str] = field(default_factory=dict)
+    # rsID -> the ClinPGx annotation the run stores there, its id and level
+    # (`evidence.pharmgkb.by_rsid`), which grades a ClinVar drug_response claim at it.
+    clinpgx: Mapping[str, tuple[str, str]] = field(default_factory=dict)
     # Gene -> who gave its validity when it is not ClinGen (`evidence.gencc.merge`).
     validity_source: Mapping[str, str] = field(default_factory=dict)
 

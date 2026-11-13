@@ -12,7 +12,9 @@ ID`); an id has the same grades in both. An annotation is kept
 (`read_clinical_annotations`):
 
 - at levels 1B, 2A and 2B only: 1A restates a guideline, which PharmCAT reports, and 3 and 4
-  fall below the bar. 1B is moderate validity, 2A and 2B limited (`validity`). Level 3 (one
+  fall below the bar. 1B is strong validity, 2A and 2B moderate (`validity`), in ClinPGx's
+  own words (clinpgx.org/page/clinAnnLevels, read 2026-11-13: 1B "a high level of
+  evidence", 2A and 2B "a moderate level of evidence"; owner's ruling A3s). Level 3 (one
   study or an unconfirmed association) is kept apart (`ClinicalAnnotations.research`), read
   and filtered alike, for the research layer (slice 3f), which grades it limited; the
   `level_3` count still says where those rows went from the 1B–2B statements' tally;
@@ -83,7 +85,7 @@ _LAYOUTS = (
         "clinical_annotations.tsv", "clinical_ann_alleles.tsv", "Clinical Annotation ID"
     ),
 )
-LEVELS = {"1B": Validity.MODERATE, "2A": Validity.LIMITED, "2B": Validity.LIMITED}
+LEVELS = {"1B": Validity.STRONG, "2A": Validity.MODERATE, "2B": Validity.MODERATE}
 # The level the research layer reads (slice 3f); limited, as every research association is.
 RESEARCH_LEVEL = "3"
 # Where every annotation that is no statement went.
@@ -217,8 +219,18 @@ def left_by_pharmcat(
 
 
 def validity(level: str) -> Validity:
-    """An annotation's validity: moderate for 1B, limited for 2A, 2B and 3."""
+    """An annotation's validity: strong for 1B, moderate for 2A and 2B, limited for 3."""
     return Validity.LIMITED if level == RESEARCH_LEVEL else LEVELS[level]
+
+
+def by_rsid(annotations: Iterable[Annotation]) -> dict[str, tuple[str, str]]:
+    """Each rsID's strongest annotation of `annotations` (1B, then 2A, then 2B), as its id
+    and level: what a ClinVar drug_response claim at that rsID is graded on (A3s)."""
+    best: dict[str, tuple[str, str]] = {}
+    for a in sorted(annotations, key=lambda a: (a.level, a.annotation_id)):
+        if a.level in LEVELS and _RSID.fullmatch(a.variant):
+            best.setdefault(a.variant, (a.annotation_id, a.level))
+    return best
 
 
 def _rs_numbers(value: object) -> set[str]:

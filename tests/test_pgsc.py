@@ -727,11 +727,14 @@ def test_apoe_e3e4(tmp_path: Path) -> None:
     assert pgsc.apoe_genotype(double, Phase.IN_CIS) == "ε1/ε3"
     assert pgsc.apoe_genotype(double, Phase.UNPHASED) is None
     assert pgsc.apoe_genotype(double) is None
-    strong = "criteria_provided,_multiple_submitters,_no_conflicts"  # 2★ drug_response
+    # 3★ P is strong without a curation; a drug_response is limited whatever its stars.
+    strong = replace(
+        _apoe_claim(APOE_E4, 17864, "reviewed_by_expert_panel"), clnsig="Pathogenic"
+    )
     apoe = (
-        _graded(_apoe_claim(APOE_E4, 17864, strong), "1", Level.HIGH),
+        _graded(strong, "1", Level.HIGH),
         _graded(_apoe_claim(APOE_E4, 17865, ""), "1", Level.HIGH),  # 0★: limited
-        _graded(_apoe_claim(APOE_E2, 17848, SINGLE), "0", Level.MEDIUM),  # 1★
+        _graded(_apoe_claim(APOE_E2, 17848, SINGLE), "0", Level.MEDIUM),  # limited
     )
     con, _ = _store(tmp_path, PrsSource(scores=[], results={}, apoe=apoe))
     row = _statement(con, "apoe:APOE")
@@ -741,7 +744,7 @@ def test_apoe_e3e4(tmp_path: Path) -> None:
         None,
         "risks",
     )
-    assert row["validity"] == "moderate"  # rs429358's strongest (strong), rs7412's
+    assert row["validity"] == "limited"  # rs429358's strongest (strong), rs7412's
     assert json.loads(row["claim"])["diplotype"] == "ε3/ε4"
     gene_call = con.execute(
         "SELECT diplotype, level FROM gene_call WHERE gene = 'APOE'"

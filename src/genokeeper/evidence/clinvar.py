@@ -15,14 +15,17 @@ except on a haploid locus (a male's chrX or chrY outside the PARs), where one co
 hemizygous whatever the gene's inheritance. A claim that would be a finding where the user's dosage is unknown is
 unassessed, never a finding.
 
-A `drug_response` claim (a whole CLNSIG of that term; slice 1b) is graded from its stars
-alone, with no ClinGen gate and no frequency filter: at least 2 stars strong, 1 moderate, 0
-limited. Carried, it is a finding under drugs; at dosage 0 a non-finding.
+A `drug_response` claim (a whole CLNSIG of that term; slice 1b) is never graded by its stars,
+which are the submitter's review status (owner's ruling A3s): it is limited, with no ClinGen
+gate and no frequency filter, its reason naming the one authority that grades the variant:
+the ClinPGx annotation kept at its rsID, else the gene's PharmCAT call, else none. Carried,
+it is a finding under drugs; at dosage 0 a non-finding.
 
 `sf_actionable` says whether ACMG SF v3.3 would report a claim, from its class, its placement
 and the gene's report rule in `acmg_sf_v3.3.tsv`.
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from genokeeper.config import Grading
@@ -36,6 +39,7 @@ from genokeeper.genelists import (
     carrier_genes,
     gene_mode,
 )
+from genokeeper.pgx.pharmcat import PHARMCAT_GENES
 from genokeeper.store.db import Kind, Topic, Validity
 
 BASE_CLASSES = frozenset(
@@ -89,8 +93,6 @@ _CONFLICT_STATUS = frozenset(
 )
 # Classes graded only as watch or non-finding carry no level.
 _UNGRADED = frozenset({"vus", "benign", "other"})
-# A drug_response claim's level by its stars, 2 and more alike (track design, slice 1b).
-_DRUG_RESPONSE_LEVELS = {2: Validity.STRONG, 1: Validity.MODERATE, 0: Validity.LIMITED}
 # The terms a germline classification (the part before the first `|`) may join with `/`.
 GERMLINE_TERMS = frozenset(
     term
@@ -122,6 +124,10 @@ RISK_PART_REASON = "risk_factor has no review status"
 INHERITANCE_REASON = "inheritance unknown"
 GENOTYPE_REASON = "genotype unknown"
 HEMIZYGOUS_REASON = "hemizygous (haploid locus)"
+NO_CLINPGX_REASON = (
+    "ClinVar's stars on a drug-response record are the submitter's review status; ClinPGx"
+    " has no current annotation at levels 1B–2B for this variant"
+)
 
 
 @dataclass(frozen=True)
@@ -384,6 +390,19 @@ def sf_actionable(
     return rule.partition(":")[2] == vid
 
 
+def drug_response_reason(
+    gene: str, rsid: str | None, clinpgx: Mapping[str, tuple[str, str]]
+) -> str:
+    """What grades a drug_response claim in `gene` at `rsid` (A3s): the ClinPGx annotation
+    `clinpgx` holds there (`evidence.pharmgkb.by_rsid`), else a PharmCAT gene's call."""
+    found = clinpgx.get(rsid) if rsid else None
+    if found is not None:
+        return f"graded on ClinPGx's annotation {found[0]} (level {found[1]})"
+    if gene in PHARMCAT_GENES:
+        return f"graded on the {gene} gene call"
+    return NO_CLINPGX_REASON
+
+
 def grade_clinvar(
     *,
     clnsig: str,
@@ -401,6 +420,8 @@ def grade_clinvar(
     ba1_exceptions: frozenset[str] = frozenset(),
     validity_matched: bool = False,
     validity_source: str | None = None,
+    rsid: str | None = None,
+    clinpgx: Mapping[str, tuple[str, str]] | None = None,
 ) -> ValidityGrade:
     """Grade one ClinVar claim at a site where the user has `dosage` copies of the allele.
 
@@ -413,6 +434,7 @@ def grade_clinvar(
     `gene_validity` is the ClinGen classification `match_curation` gives the claim, and
     `validity_matched` whether a curation of the claim's own disease gave it;
     `validity_source` who gave it, named in the reasons when given (GenCC's, slice 3f).
+    A drug_response claim's reason is `drug_response_reason` of its `rsid` and `clinpgx`.
     """
     if dosage not in _DOSAGES:
         raise ValueError(f"dosage {dosage!r}: expected one of {sorted(_DOSAGES)}")
@@ -424,7 +446,8 @@ def grade_clinvar(
     elif cls in _UNGRADED:
         level, level_reasons = None, []
     elif cls == "drug_response":
-        level, level_reasons = _DRUG_RESPONSE_LEVELS[min(stars(clnrevstat), 2)], []
+        reason = drug_response_reason(gene, rsid, clinpgx or {})
+        level, level_reasons = Validity.LIMITED, [reason]
     elif parsed.risk_part:
         # CLNREVSTAT reviews the germline part, not the risk term: grade with no stars.
         level, level_reasons = _level(

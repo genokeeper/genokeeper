@@ -3,8 +3,8 @@ at its allele (`evidence.pharmgkb.locate`), graded on the user's call there, und
 (track design, slice 1b, "PharmGKB clinical annotations").
 
 Carried (one or two copies of the allele) is a finding, not carried a non-finding, an
-unknown genotype an unassessed claim; validity is moderate for level 1B and limited for 2A
-and 2B; `actionable` when one of the annotation's drugs is a CPIC level A or B pair with its
+unknown genotype an unassessed claim; validity is strong for level 1B and moderate for 2A
+and 2B (ClinPGx's own words; A3s); `actionable` when one of the annotation's drugs is a CPIC level A or B pair with its
 gene (`evidence.pgx.cpic_actionable`).
 
 Built with `tool=PHARMGKB_RESEARCH_TOOL` over the level-3 annotations

@@ -15,6 +15,7 @@ from genokeeper.evidence.clinvar import (
     GERMLINE_TERMS,
     HEMIZYGOUS_REASON,
     LEGACY_RISK_TERM,
+    NO_CLINPGX_REASON,
     NOT_MATCHED_REASON,
     ValidityGrade,
     clnsig_class,
@@ -426,12 +427,12 @@ def test_stars(clnrevstat: str, expected: int) -> None:
             None,
         ),
         (
-            "drug response: stars alone, under drugs",
+            "drug response: never by its stars, under drugs",
             {"clnsig": "drug_response"},
-            Validity.STRONG,
+            Validity.LIMITED,
             Kind.FINDING,
             Topic.DRUGS,
-            None,
+            NO_CLINPGX_REASON,
         ),
         (
             "P and B terms of one classification conflict",
@@ -981,7 +982,15 @@ RISK_PART = "risk_factor has no review status"
             None,
             None,
         ),
-        ("drug_response", {}, Kind.FINDING, Validity.STRONG, Topic.DRUGS, None, None),
+        (
+            "drug_response",
+            {},
+            Kind.FINDING,
+            Validity.LIMITED,
+            Topic.DRUGS,
+            NO_CLINPGX_REASON,
+            None,
+        ),
         ("not_provided", {}, Kind.NON_FINDING, None, None, None, None),
     ],
 )
@@ -1177,36 +1186,53 @@ def test_validity_source_named_in_every_validity_reason() -> None:
     )
 
 
-@pytest.mark.parametrize(
-    ("clnrevstat", "validity"),
-    [
-        ("practice_guideline", Validity.STRONG),
-        (EXPERT_PANEL, Validity.STRONG),
-        (TWO_STARS, Validity.STRONG),
-        (ONE_STAR, Validity.MODERATE),
-        (NO_STARS, Validity.LIMITED),
-    ],
-)
-@pytest.mark.parametrize("dosage", ["1", "2"])
-def test_drug_response_star_grading(
-    clnrevstat: str, validity: Validity, dosage: str
+# Owner's ruling A3s: one authority per claim, never the stars. A ClinPGx annotation kept
+# at the claim's rsID first, then a gene PharmCAT calls, else limited with rule 3's reason.
+DRUG_RULES = [
+    ("KIF6", "rs900001", {}, NO_CLINPGX_REASON),
+    (
+        "MTHFR",
+        "rs900002",
+        {"rs900002": ("1000000002", "2A")},
+        "graded on ClinPGx's annotation 1000000002 (level 2A)",
+    ),
+    ("VKORC1", "rs900003", {}, "graded on the VKORC1 gene call"),
+    (
+        "F5",
+        "rs900004",
+        {"rs900004": ("1000000004", "2B")},
+        "graded on ClinPGx's annotation 1000000004 (level 2B)",
+    ),
+]
+
+
+@pytest.mark.parametrize(("gene", "rsid", "clinpgx", "reason"), DRUG_RULES)
+@pytest.mark.parametrize("clnrevstat", ["practice_guideline", EXPERT_PANEL, ONE_STAR])
+def test_drug_response_one_authority(
+    gene: str,
+    rsid: str,
+    clinpgx: dict[str, tuple[str, str]],
+    reason: str,
+    clnrevstat: str,
 ) -> None:
-    """A carried drug_response claim is a finding under drugs, its validity from the stars
-    alone: no ClinGen gate (a Refuted gene, or none) and no frequency filter."""
+    """A carried drug_response claim is a finding under drugs, limited whatever its stars
+    (the submitter's review status), its reason naming the authority that grades it; no
+    ClinGen gate (a Refuted gene, or none) and no frequency filter."""
     for gene_validity in (None, "Refuted", "Definitive"):
         grade = _grade(
             clnsig="drug_response",
             clnrevstat=clnrevstat,
-            gene="CYP2C19",
+            gene=gene,
             gene_validity=gene_validity,
             faf_grpmax=0.4,
-            dosage=dosage,
+            rsid=rsid,
+            clinpgx=clinpgx,
         )
         assert (grade.kind, grade.level, grade.topic, grade.reason) == (
             Kind.FINDING,
-            validity,
+            Validity.LIMITED,
             Topic.DRUGS,
-            None,
+            reason,
         )
         assert grade.source_level == f"drug_response ({stars(clnrevstat)}★)"
 
@@ -1216,15 +1242,15 @@ def test_drug_response_dosage_zero_non_finding() -> None:
     absent = _grade(clnsig="drug_response", gene="CYP2C19", dosage="0")
     assert (absent.kind, absent.level, absent.topic) == (
         Kind.NON_FINDING,
-        Validity.STRONG,
+        Validity.LIMITED,
         None,
     )
     unknown = _grade(clnsig="drug_response", gene="CYP2C19", dosage="unknown")
     assert (unknown.kind, unknown.level, unknown.topic, unknown.reason) == (
         Kind.UNASSESSED,
-        Validity.STRONG,
+        Validity.LIMITED,
         Topic.DRUGS,
-        GENOTYPE_REASON,
+        f"graded on the CYP2C19 gene call; {GENOTYPE_REASON}",
     )
     # A drug_response after a germline classification is not this claim's class.
     assert _grade(clnsig="Benign|drug_response").kind == Kind.NON_FINDING
