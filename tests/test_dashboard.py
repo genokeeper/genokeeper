@@ -946,6 +946,8 @@ const byId = {};
 const document = {
   createElement: (tag) => new Node(tag),
   getElementById: (id) => (byId[id] ??= new Node("div")),
+  // A class looked up (the banner's) is there when the rendered page (argv) has it.
+  querySelector: (s) => (fs.readFileSync(process.argv[6], "utf8").includes(`class="${s.slice(1)}"`) ? new Node("details") : null),
 };
 document.getElementById("data").textContent = fs.readFileSync(process.argv[3], "utf8");
 // The URL's hash (argv), and each URL the script gave `history.replaceState`.
@@ -967,9 +969,9 @@ for (const [spec, value, type] of JSON.parse(process.argv[5])) {
 const out = { "#history": { urls } };
 for (const [id, node] of Object.entries(byId)) {
   const { className, hidden, value } = node;
-  const buttons = node.nodes().filter((n) => n.tag === "button")
-    .map((n) => ({ text: n.textContent, className: n.className, attrs: n.attrs }));
-  out[id] = { text: node.textContent, links: node.links(), className, hidden, value, buttons };
+  const [buttons, titled] = [(n) => n.tag === "button", (n) => n.attrs.title].map((keep) =>
+    node.nodes().filter(keep).map((n) => ({ text: n.textContent, className: n.className, attrs: n.attrs })));
+  out[id] = { text: node.textContent, links: node.links(), className, hidden, value, buttons, titled };
 }
 console.log(JSON.stringify(out));
 """
@@ -980,6 +982,7 @@ def _rendered(
     tmp_path: Path,
     url_hash: str = "",
     actions: list[tuple[str, str, str]] | None = None,
+    banner: list[str] | None = None,
 ) -> dict[str, dict[str, Any]]:
     node = shutil.which("node")
     if node is None:
@@ -987,8 +990,10 @@ def _rendered(
     (tmp_path / "dom.js").write_text(_DOM)
     (tmp_path / "page.js").write_text(_resource("dashboard.js"))
     (tmp_path / "data.json").write_text(json.dumps(data, ensure_ascii=False))
+    (tmp_path / "page.html").write_text(render(data, banner))
+    args = ["page.js", "data.json", url_hash, json.dumps(actions or []), "page.html"]
     done = subprocess.run(
-        [node, "dom.js", "page.js", "data.json", url_hash, json.dumps(actions or [])],
+        [node, "dom.js", *args],
         cwd=tmp_path,
         capture_output=True,
         text=True,
@@ -1868,6 +1873,27 @@ def test_a_matrix_click_sets_the_view(
     n = len(data["views"]["high|strong|"]["findings"])
     assert n != len(data["views"]["medium|moderate|"]["findings"])
     assert shown["count"]["text"].startswith(f"Showing {n} of ")
+
+
+def test_explanation_tooltip_names_the_model_and_a_demo(
+    con: duckdb.DuckDBPyConnection, tmp_path: Path
+) -> None:
+    """An explanation's label says which model wrote it and that it can be configured;
+    "for this demo" only on a page with the demo's banner."""
+    ghr, cache = _explained(con, tmp_path)
+    data = payload(con, None, cache, load_medlineplus(ghr))
+    own = _rendered(data, tmp_path)["feed"]["titled"]
+    demo = _rendered(data, tmp_path, banner=["Demo", "An invented genome."])["feed"]
+    assert MODEL == "claude-opus-5-5" and own and len(own) == len(demo["titled"])
+    assert own[0]["text"].startswith("Written by claude-opus-5-5")
+    tip = (
+        "Generated automatically by Opus 5.5, to show a plain-language reading of the"
+        " sources. Tone, style and model can be configured in your own setup."
+    )
+    on_demo = tip.replace("Opus 5.5,", "Opus 5.5 for this demo,")
+    for shown, text in ((own[0]["attrs"], tip), (demo["titled"][0]["attrs"], on_demo)):
+        assert (shown["title"], shown["aria-description"]) == (text, text)
+    assert "демо" in dashboard.messages("ru")["for_this_demo"]
 
 
 def test_demo_lab_has_no_check_block(tmp_path: Path) -> None:

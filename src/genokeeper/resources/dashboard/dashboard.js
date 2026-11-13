@@ -27,6 +27,8 @@ const SCALES = {
 };
 // Each level's name and its short form under a bar.
 const LEVELS = M.levels;
+// A caller's banner is the demo's frame (`genokeeper.demo`), the one caller that sets one.
+const DEMO = document.querySelector(".frame-note") !== null;
 const TOPICS = M.topics;
 // A repeat count's class (`genokeeper.repeats.loci.RepeatClass`).
 const REPEAT_CLASSES = M.repeat_classes;
@@ -233,10 +235,14 @@ function opened(f) {
   box.append(el("b", "", t("what_it_means")));
   const e = f.explanation;
   if (e) {
-    box.append(
-      el("span", "", e.text),
-      el("span", "note", t("written_by", { model: e.model, cites: e.cites.join(", ") })),
-    );
+    const label = el("span", "note", t("written_by", { model: e.model, cites: e.cites.join(", ") }));
+    // "claude-opus-5-5" reads "Opus 5.5"; another id stays as stored.
+    const id = /^claude-([a-z]+)-(\d+)-(\d+)/.exec(e.model);
+    const model = id ? `${id[1][0].toUpperCase()}${id[1].slice(1)} ${id[2]}.${id[3]}` : e.model;
+    const tip = t("explanation_tooltip", { model, demo: DEMO ? t("for_this_demo") : "" });
+    label.setAttribute("title", tip);
+    label.setAttribute("aria-description", tip);
+    box.append(el("span", "", e.text), label);
   } else {
     box.append(el("span", "", t("no_explanation")));
   }
