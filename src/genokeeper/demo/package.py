@@ -509,39 +509,34 @@ def _grid() -> list[list[Filters]]:
     return [[Filters(min_reliability=r, min_validity=v) for v in EV] for r in REL]
 
 
-def _label(axis: str, level: str) -> str:
-    """A matrix header: the dashboard's words (`matrix_<axis>`), and its short form a phone
-    shows."""
-    m = messages("en")
-    long, short = m[f"matrix_{axis}"][level], m[f"matrix_{axis}_short"][level]
-    return f'<span class="long">{long}</span><span class="short">{short}</span>'
-
-
 def _matrix(counts: Mapping[Filters, int]) -> str:
     """The figure's table: each cell the results `query` keeps at its pair of thresholds,
     coloured by the pair (`.m<rel><ev>`: blue down the reliability axis, green across the
-    evidence one), named by them and linking to the dashboard at that view; "high only" is
-    the top row, and each link keeps its `REL` index."""
+    evidence one), named by them (the dashboard's words, and their short forms a phone
+    shows) and linking to the dashboard at that view; "high only" is the top row, and each
+    link keeps its `REL` index."""
     m = messages("en")
-    head = "".join(f"<th>{_label('columns', v)}</th>" for v in EV)
+
+    def label(axis: str, level: str) -> str:
+        long, short = m[f"matrix_{axis}"][level], m[f"matrix_{axis}_short"][level]
+        return f'<span class="long">{long}</span><span class="short">{short}</span>'
+
+    head = "".join(f"<th>{label('columns', v)}</th>" for v in EV)
     rows = [f'<tr><th class="axis">results that remain</th>{head}</tr>']
     for r, row in reversed(list(enumerate(_grid()))):
         cells: list[str] = []
         for v, f in enumerate(row):
             default = f == Filters()
             small = "default" if default else "everything" if f == LOOSEST else ""
-            name = (
-                f"{counts[f]:,} results: genotype {m['matrix_rows'][REL[r]]}, evidence"
-            )
-            name += f" {m['matrix_columns'][EV[v]]}" + (
-                ", the default" if default else ""
-            )
+            said = m["matrix_rows"][REL[r]], m["matrix_columns"][EV[v]]
+            name = f"{counts[f]:,} results: genotype {said[0]}, evidence {said[1]}"
+            name += ", the default" if default else ""
             cells.append(
                 f'<td><a class="m{r}{v}{" default" if default else ""}"'
                 f' href="dashboard.html#rel={r}&amp;ev={v}" aria-label="{name}">'
                 f"{counts[f]:,}{f'<small>{small}</small>' if small else ''}</a></td>"
             )
-        rows.append(f"<tr><th>{_label('rows', REL[r])}</th>{''.join(cells)}</tr>")
+        rows.append(f"<tr><th>{label('rows', REL[r])}</th>{''.join(cells)}</tr>")
     return "\n".join(rows)
 
 
