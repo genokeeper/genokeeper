@@ -34,7 +34,7 @@
       </tbody>
     </table>
     </div>
-    <figcaption class="sub">Figure 1. Findings left at each pair of thresholds: genotype reliability down the side, strength of evidence across. Each cell opens the dashboard at that view. {{caption}}</figcaption>
+    <figcaption class="sub">Figure 1. Findings left at each pair of thresholds: genotype reliability down the side, strength of evidence across. Each cell opens the dashboard at that view. {{levels}} {{caption}}</figcaption>
   </figure>
 
   <h2>What a newer ClinVar changed</h2>
@@ -45,6 +45,8 @@
   <h2>How often it is wrong</h2>
   <p>Genotypes carry a measured error rate: small variants, and the kinds of call in the table below. Polygenic scores, GWAS associations and VEP predictions carry none of their own; only the genotypes under them are measured. Where nothing could be measured, as at the repeat loci a table withheld, the tool says so and does not grade.</p>
   <p>This run is HG002's PCR-free library, one of the libraries the HG002 rows below were measured on, so those rates are shown on the data they were fitted on. HG002 may also be in DeepVariant's training data.</p>
+{{measured}}
+  <p>A clean result is not an exclusion: a variant the callers missed leaves no finding. {{withheld}} <a href="calibration.html">The calibration page</a> lists each table's withheld items.</p>
 {{calibration}}
   <p class="sub"><a href="calibration.html">Every table as the tool printed it, and the tools' versions</a></p>
 

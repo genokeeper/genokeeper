@@ -43,7 +43,7 @@ import genokeeper
 from genokeeper import changes, refresh_log
 from genokeeper.calibrate.tables import REPORT, TABLES, folder
 from genokeeper.checksum import sha256_file
-from genokeeper.config import _REPO, DEMO_MARKER, Paths
+from genokeeper.config import _REPO, DEMO_MARKER, Paths, load_grading
 from genokeeper.dashboard import _banner, _sha256, write_dashboard
 from genokeeper.demo import (
     MANIFEST,
@@ -346,6 +346,50 @@ def _matrix(counts: Mapping[Filters, int]) -> str:
     return "\n".join(rows)
 
 
+def _measured(lab: Path, p_low: float) -> str:
+    """Per table, the numbers its report printed: HG003's F1, each library's truth found,
+    and the classes whose `p_wrong` is above `p_low` (graded low)."""
+    items: list[str] = []
+    for name in TABLES:
+        report = folder(lab, name) / REPORT
+        if not report.is_file():
+            continue
+        text = report.read_text(encoding="utf-8")
+        parts = [", ".join(re.findall(r"(?m)^((?:SNP|INDEL) F1 \d\.\d+)", text))]
+        found: dict[str, tuple[int, int]] = {}  # library -> (found, truth), all bands
+        line = r"(?m)^  (\S+): \d+ rare calls, \d+ false; truth (\d+) of (\d+) found"
+        for library, hit, truth in re.findall(line, text):
+            a, b = found.get(library, (0, 0))
+            found[library] = (a + int(hit), b + int(truth))
+        if found:
+            shown = ", ".join(f"{k} {a:,} of {b:,}" for k, (a, b) in found.items())
+            parts.append(f"truth events found: {shown}")
+        rates = [
+            float(p) for p in re.findall(r"(?m)^  \S.*: p_wrong ([\d.e+-]+) \(", text)
+        ]
+        if high := [p for p in rates if p > p_low]:
+            parts.append(
+                f"{len(high)} of {len(rates)} classes wrong with a chance above"
+                f" {p_low:g}, up to {max(high):.3g}"
+            )
+        if said := "; ".join(p for p in parts if p):
+            m = TABLE_SAMPLES[name]
+            items.append(
+                f"<li>{html.escape(f'{m.measures}, on {m.samples}: {said}.')}</li>"
+            )
+    return f'<ul class="plain">\n{"\n".join(items)}\n</ul>' if items else ""
+
+
+def _withheld(con: duckdb.DuckDBPyConnection, run_id: str) -> int:
+    """The values a calibration table withheld in the run: each a claim's `WITHHELD` entry."""
+    found = con.execute(
+        "SELECT sum(json_array_length(claim, '$.withheld')) FROM statement"
+        " WHERE run_id = ? AND json_exists(claim, '$.withheld')",
+        [run_id],
+    ).fetchone()
+    return int(found[0] or 0) if found is not None else 0
+
+
 def _runs(con: duckdb.DuckDBPyConnection) -> list[dict[str, Any]]:
     """The store's runs, oldest first, each with its ClinVar release."""
     rows = con.execute(
@@ -355,13 +399,14 @@ def _runs(con: duckdb.DuckDBPyConnection) -> list[dict[str, Any]]:
 
 
 def _landing(
+    lab: Path,
     con: duckdb.DuckDBPyConnection,
     runs: Sequence[Mapping[str, Any]],
     reports: Sequence[Mapping[str, Any]],
 ) -> str:
     """The landing page; `reports` are every change, then those entering or leaving the
     list of everything called and the list at the default thresholds."""
-    run = runs[-1]
+    run, g = runs[-1], load_grading()
     grid = [f for row in _grid() for f in row]
     kept = {f: query(con, run["run_id"], f).findings for f in grid}
     counts = {f: len(found) for f, found in kept.items()}
@@ -403,6 +448,23 @@ def _landing(
             "changed": html.escape(changed),
             "diff": _diff(everything, base or "", run["clinvar"] or ""),
             "calibration": _calibration_table(),
+            "levels": html.escape(
+                "Genotype reliability is high when the measured chance the genotype is"
+                f" wrong is at most {g.p_high:g} and the site is in no difficult region,"
+                f" low above {g.p_low:g} or at a no-call, and medium between. For a ClinVar"
+                " claim, evidence is conflicting when its submitters conflict, gnomAD's"
+                f" frequency is above BA1 ({g.ba1:g}) or the gene's BS1, or a ClinGen"
+                " curation is disputed or refuted; strong at 3 or 4 review stars; below"
+                " that, limited without a positive curation of the gene, else strong at 2"
+                " stars, moderate at 1 and limited at none. Any evidence counts the"
+                " conflicting claims too."
+            ),
+            "measured": _measured(lab, g.p_low),
+            "withheld": html.escape(
+                f"This run holds {_count(_withheld(con, run['run_id']), 'withheld value')}:"
+                " a calibration table could not measure the item, so it is not graded and"
+                " keeps the table's reason."
+            ),
             "cite": (
                 f"Genokeeper {html.escape(version)}. "
                 f'<a href="https://doi.org/{DOI}">doi:{DOI}</a>. HG002 reads: ENA'
@@ -540,7 +602,7 @@ def package(lab: Path, out: Path, *, home: Path, private_ids: Path | None) -> Pa
         with open_store(work / STORE_FILE) as shipped:
             runs = _runs(shipped)
             (work / "index.html").write_text(
-                _landing(shipped, runs, reports), encoding="utf-8"
+                _landing(lab, shipped, runs, reports), encoding="utf-8"
             )
             (work / "calibration.html").write_text(
                 _calibration(lab, shipped, runs, replacements), encoding="utf-8"

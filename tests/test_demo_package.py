@@ -7,6 +7,7 @@ import json
 import os
 import re
 import shutil
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -18,6 +19,7 @@ from fixtures.store_mini import Row
 import genokeeper
 from genokeeper import changes, refresh_log
 from genokeeper.calibrate.tables import REPORT, TABLES, folder
+from genokeeper.config import load_grading
 from genokeeper.dashboard import _sha256
 from genokeeper.demo import (
     MANIFEST,
@@ -337,7 +339,7 @@ def test_landing_examples_are_the_everything_called_rows(tmp_path: Path) -> None
     rows, tier = reports[0]["changes"], reports[1]["changes"]
     assert {r["id"] for r in rows[:3]}.isdisjoint(r["id"] for r in tier)
     with open_store(out / STORE_FILE) as con:
-        index = pkg._landing(con, pkg._runs(con), reports)  # pyright: ignore[reportPrivateUsage]
+        index = pkg._landing(tmp_path, con, pkg._runs(con), reports)  # pyright: ignore[reportPrivateUsage]
     [diff] = re.findall(
         r'<div class="diff"[^>]*aria-label="[^"]+">(.*?)\n</div>', index, re.DOTALL
     )
@@ -393,6 +395,51 @@ def test_landing_says_only_what_is_measured(tmp_path: Path) -> None:
     assert "outside the calibrated regions" in CALIBRATION_NOTE
     assert "a different genome" not in CALIBRATION_NOTE
     assert TABLE_SAMPLES["small_variants"].for_hg002 == "related sample"
+
+
+# Report lines as `calibrate` prints them (`build.report`, `classes.report`).
+SMALL = "SNP F1 0.9912 (the part stops below 0.995); below the limit\nINDEL F1 0.9934\n"
+DELETIONS = """short band: h 0.5, prior 0.1
+  pcrfree: 10 rare calls, 9 false; truth 30 of 70 found
+  pcr: 12 rare calls, 11 false; truth 31 of 70 found
+  delly|short: p_wrong 0.997 (0.98-1)
+  both|short: p_wrong 0.004 (0.001-0.01)
+long band: h none, prior 0.2
+  pcrfree: 3 rare calls, 1 false; truth 56 of 127 found
+  dysgu|long: p_wrong 0.83 (0.5-0.95)
+"""
+
+
+def test_landing_numbers_come_from_reports_store_and_config(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    lab, home = _lab(tmp_path)
+    for name, text in (("small_variants", SMALL), ("deletions", DELETIONS)):
+        folder(lab, name).mkdir(parents=True)
+        (folder(lab, name) / REPORT).write_text(text)
+    with connect(demo_paths(lab).reports / STORE_FILE) as con:
+        withheld = json.dumps({"withheld": [{"reason": "a"}, {"reason": "b"}]})
+        con.execute(
+            "UPDATE statement SET claim = json_merge_patch(claim, ?)"
+            " WHERE statement_id = 'clinvar:3'",
+            [withheld],
+        )
+    grading = replace(load_grading(), p_high=0.002, p_low=0.02, ba1=0.07)
+    monkeypatch.setattr(pkg, "load_grading", lambda: grading)
+    index = _read(
+        package(lab, tmp_path / "out", home=home, private_ids=None), "index.html"
+    )
+    for said in (
+        "Small-variant genotypes, chr1-22, on HG003: SNP F1 0.9912, INDEL F1 0.9934.",
+        "truth events found: pcrfree 86 of 197, pcr 31 of 70;",
+        "2 of 3 classes wrong with a chance above 0.02, up to 0.997.",
+        "This run holds 2 withheld values",
+        "is at most 0.002 ",
+        "low above 0.02 ",
+        "above BA1 (0.07)",
+        "A clean result is not an exclusion",
+    ):
+        assert said in index, said
 
 
 def test_landing_has_share_tags(tmp_path: Path) -> None:
