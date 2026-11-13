@@ -102,7 +102,7 @@ store in a folder you can ask questions about.
 
 ![The HG002 demo's landing page: the findings left at each pair of thresholds, and what a newer ClinVar release changed](docs/demo/hg002-landing.png)
 
-![The HG002 demo's dashboard at its default thresholds](docs/demo/hg002-dashboard.png)
+![The HG002 demo's dashboard: the threshold matrix with "any genotype, moderate or more" chosen, and the first findings with their generated plain-language titles](docs/demo/hg002-dashboard.png)
 
 **Language.** Text is in English by default. `GENOKEEPER_LANG=ru`, or `--lang ru` on
 `dashboard` and `explain`, switches the dashboard, the explanations and the update notices to
