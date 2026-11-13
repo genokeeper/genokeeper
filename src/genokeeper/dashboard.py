@@ -1,13 +1,13 @@
 """The dashboard (spec item 10): one static page over a run's findings.
 
-The page's data comes from the query alone. `payload` runs `query.query` once per slider and
+The page's data comes from the query alone. `payload` runs `query.query` once per threshold pair and
 topic combination and keeps each result as a view of finding ids beside the query's own
 hidden and unassessed counts, so the page's script only looks a view up and never filters.
 
 The Changes tab's data (`changes`) comes from the run snapshots (`genokeeper.history`): the
 comparison with each of the last snapshots before the run, each change's kind at every
-slider pair, so the tab's line between trusted and not is always the feed's. Each snapshot
-is queried once at the loosest filters, and a slider pair's trusted set is the findings
+threshold pair, so the tab's line between trusted and not is always the feed's. Each snapshot
+is queried once at the loosest filters, and a threshold pair's trusted set is the findings
 of that result the pair's filters keep, as `query.query` would keep them.
 
 `render` fills `resources/dashboard/page.html`. Its Content-Security-Policy allows nothing
@@ -132,7 +132,7 @@ def _day(snapshot: Snapshot) -> str:
 
 
 def _trusted(root: Path, run_id: str) -> dict[str, frozenset[str]]:
-    """The snapshot's trusted ids at each slider pair, from one query at the loosest
+    """The snapshot's trusted ids at each threshold pair, from one query at the loosest
     filters: a finding is trusted at a pair when the pair's filters keep it."""
     found = history.findings(root, run_id, LOOSEST)
     return {
@@ -146,7 +146,7 @@ def _kinds(
     before: dict[str, frozenset[str]],
     after: dict[str, frozenset[str]],
 ) -> dict[str, ChangeKind]:
-    """The kind of `change` at each slider pair, given each snapshot's trusted ids there."""
+    """The kind of `change` at each threshold pair, given each snapshot's trusted ids there."""
     return {
         _pair(f): history.kind_of(
             change,

@@ -72,7 +72,7 @@ Other questions it answers the same way:
 3x4 matrix of thresholds, genotype reliability down the side and strength of evidence across,
 each cell counting the findings it keeps and choosing them on a click; topic chips; and a
 search box.
-Below the list, the page counts what the sliders hide and why.
+Below the list, the page counts what the chosen cell hides and why.
 
 A whole genome yields thousands of candidate findings, and most rest on an uncertain genotype or
 weak evidence. Each finding carries two measures:
@@ -92,7 +92,7 @@ To try the filters yourself, download the demo page
 [docs/demo/dashboard.html](docs/demo/dashboard.html) and open it in a browser. It loads nothing
 from the network.
 
-![The demo dashboard at its default thresholds: findings with genotype-reliability and evidence bars, the topic chips and the two sliders](docs/demo/dashboard.png)
+![The demo dashboard at its default thresholds: findings with genotype-reliability and evidence bars, the topic chips and the two sliders of an earlier version](docs/demo/dashboard.png)
 
 **The HG002 demo.** The same pipeline run on GIAB's HG002, a public reference genome, is at
 [genokeeper.github.io/genokeeper](https://genokeeper.github.io/genokeeper/). It shows the

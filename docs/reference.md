@@ -594,7 +594,7 @@ uv run genokeeper explain             # ask Claude for the findings and watch it
 uv run genokeeper dashboard           # write reports/dashboard.html
 ```
 
-`genokeeper dashboard` writes one static page of every finding (topic chips, the two sliders,
+`genokeeper dashboard` writes one static page of every finding (topic chips, the matrix of threshold pairs,
 what the filter hides and why, expandable rows), built from the query alone. It loads
 nothing from the network: its Content-Security-Policy allows only its own inlined script and
 style. Its search box narrows the current view to findings whose gene, condition,
