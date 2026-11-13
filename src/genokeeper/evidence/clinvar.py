@@ -125,8 +125,8 @@ INHERITANCE_REASON = "inheritance unknown"
 GENOTYPE_REASON = "genotype unknown"
 HEMIZYGOUS_REASON = "hemizygous (haploid locus)"
 NO_CLINPGX_REASON = (
-    "ClinVar's stars on a drug-response record are the submitter's review status; ClinPGx"
-    " has no current annotation at levels 1B–2B for this variant"
+    "ClinVar's stars on a drug-response record are the submitter's review status; no"
+    " ClinPGx annotation at levels 1B–2B is located at this variant"
 )
 
 
