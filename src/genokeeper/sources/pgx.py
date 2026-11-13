@@ -80,6 +80,13 @@ def pgx_claim(result: GeneResult) -> str:
     )
 
 
+def _drugs_response(result: GeneResult) -> str | None:
+    """`<drugs> response` for a result PharmCAT gives no phenotype (VKORC1, CYP4F2), so its
+    gene call reads with its drugs; None without a drug or a call (no phenotype for it)."""
+    drugs = ", ".join(dict.fromkeys(d.drug for d in result.drugs))
+    return f"{drugs} response" if drugs and result.diplotype else None
+
+
 def _score(text: str | None) -> float | None:
     """A plain activity score as a number; a bin (`≥3.0`) or alternatives stay in the
     claim's text only."""
@@ -165,7 +172,7 @@ class PgxSource:
                 "gene": result.gene,
                 "claim": claim,
                 "validity": str(validity),
-                "source_level": source_level(result),
+                "source_level": source_level(result, self.cpic_levels),
                 "reason": reason,
                 "effect": None,
                 "actionable": actionable,
@@ -186,7 +193,7 @@ class PgxSource:
                     "run_id": ctx.run_id,
                     "gene": result.gene,
                     "diplotype": result.diplotype,
-                    "phenotype": result.phenotype,
+                    "phenotype": result.phenotype or _drugs_response(result),
                     "activity_score": _score(result.activity_score),
                     "callers": json.dumps(callers, ensure_ascii=False),
                     "agreed": None if outside is None else outside.agreed,

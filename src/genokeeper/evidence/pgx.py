@@ -3,8 +3,9 @@ reliability"), and CPIC's gene-drug levels.
 
 - **Validity** is the strongest recommendation strength PharmCAT reports for the gene's
   drugs: Strong, Moderate, Optional -> strong, moderate, limited. With none of the three
-  (only `No recommendation`, `Unspecified`, or no drug) it is limited, warned
-  `NO_STRENGTH` (builder's call).
+  (only `No recommendation`, `Unspecified`, or no drug), the best CPIC level of the gene's
+  pairs with its drugs grades it (owner's ruling A3s): A strong, B (and A/B) moderate,
+  otherwise limited, warned `NO_STRENGTH` with the level that graded it.
 - **Actionable** when one of the gene's drugs is a CPIC level A or B pair with it (CPIC's
   pair list, `load_cpic_levels`) or carries a DPWG guideline.
 - **Reliability** of the gene call: high when two callers agree and no defining position is
@@ -44,6 +45,9 @@ STRENGTH = {
 _RANK = {Validity.STRONG: 3, Validity.MODERATE: 2, Validity.LIMITED: 1}
 # CPIC levels that make a gene-drug pair actionable.
 ACTIONABLE_LEVELS = frozenset({"A", "A/B", "B"})
+# A pair's CPIC level as the gene's validity where no strength is reported (A3s); A/B is
+# graded at its lower level.
+CPIC_VALIDITY = {"A": Validity.STRONG, "A/B": Validity.MODERATE, "B": Validity.MODERATE}
 DPWG = "DPWG"
 NO_STRENGTH = "no recommendation strength reported"
 # Every unresolved gene call's warning starts with this (query.unassessed_reason reads it).
@@ -120,11 +124,29 @@ def _strongest(drugs: tuple[DrugRec, ...]) -> tuple[Validity | None, DrugRec | N
     return best
 
 
-def source_level(result: GeneResult) -> str:
+def _cpic_level(
+    result: GeneResult, cpic_levels: Mapping[tuple[str, str], str]
+) -> tuple[str, str] | None:
+    """The best CPIC level (in CPIC_VALIDITY) of the gene's pairs with its drugs, with its
+    drug, or None."""
+    found = [
+        (level, d.drug)
+        for d in result.drugs
+        if (level := cpic_levels.get((result.gene, d.drug.lower()))) in CPIC_VALIDITY
+    ]
+    return min(found, key=lambda f: (-_RANK[CPIC_VALIDITY[f[0]]], f), default=None)
+
+
+def source_level(
+    result: GeneResult, cpic_levels: Mapping[tuple[str, str], str] | None = None
+) -> str:
     """The source's own level: the strongest recommendation's source and strength, e.g.
-    `CPIC Strong`, or `NO_STRENGTH`."""
+    `CPIC Strong`; else the CPIC level that grades it (`CPIC level A`), or `NO_STRENGTH`."""
     _, drug = _strongest(result.drugs)
-    return NO_STRENGTH if drug is None else f"{drug.source} {drug.classification}"
+    if drug is not None:
+        return f"{drug.source} {drug.classification}"
+    cpic = _cpic_level(result, cpic_levels or {})
+    return NO_STRENGTH if cpic is None else f"CPIC level {cpic[0]}"
 
 
 def grade_gene_result(
@@ -139,8 +161,10 @@ def grade_gene_result(
     warnings: list[str] = []
     validity, _ = _strongest(result.drugs)
     if validity is None:
-        validity = Validity.LIMITED
-        warnings.append(NO_STRENGTH)
+        cpic = _cpic_level(result, cpic_levels)
+        validity = Validity.LIMITED if cpic is None else CPIC_VALIDITY[cpic[0]]
+        named = "" if cpic is None else f"CPIC level {cpic[0]} for {cpic[1]}; "
+        warnings.append(named + NO_STRENGTH)
     actionable = any(
         _pair_actionable(result.gene, d.drug, cpic_levels) or d.source == DPWG
         for d in result.drugs

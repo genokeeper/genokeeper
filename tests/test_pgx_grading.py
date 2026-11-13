@@ -123,6 +123,46 @@ def test_no_graded_recommendation_is_limited() -> None:
 
 
 @pytest.mark.parametrize(
+    ("gene", "level", "validity", "warning"),
+    [
+        ("VKORC1", "A", Validity.STRONG, "CPIC level A for warfarin; " + NO_STRENGTH),
+        ("CYP4F2", "B", Validity.MODERATE, "CPIC level B for warfarin; " + NO_STRENGTH),
+        ("CYP3A4", "C", Validity.LIMITED, NO_STRENGTH),
+    ],
+)
+def test_no_strength_falls_back_to_cpic_level(
+    gene: str, level: str, validity: Validity, warning: str
+) -> None:
+    """Owner's ruling A3s: with no strength reported, the gene's CPIC pair level grades it,
+    A strong, B moderate, any other level limited, and the warning says which."""
+    result = _result(
+        gene=gene, phenotype=None, drugs=(DrugRec("warfarin", "CPIC", None, ()),)
+    )
+    got, _, _, warnings = grade_gene_result(
+        result, cpic_levels={(gene, "warfarin"): level}, outside=None
+    )
+    assert (got, warnings) == (validity, (warning,))
+
+
+def test_gene_without_phenotype_reads_its_drug(tmp_path: Path) -> None:
+    """A gene result PharmCAT gives no phenotype (VKORC1) names its drugs in the gene call's
+    phenotype, and its source level is the CPIC level that grades it."""
+    vkorc1 = _result(
+        gene="VKORC1",
+        diplotype="rs9923231 variant (T)/rs9923231 variant (T)",
+        phenotype=None,
+        drugs=(DrugRec("warfarin", "CPIC", None, ()),),
+    )
+    levels = {("VKORC1", "warfarin"): "A"}
+    con, _ = _store(tmp_path, PgxSource([vkorc1], {}, levels, "3.4.0"))
+    row = _statements(con)["pharmcat:VKORC1"]
+    assert (row["validity"], row["source_level"]) == ("strong", "CPIC level A")
+    assert con.execute("SELECT phenotype FROM gene_call").fetchall() == [
+        ("warfarin response",)
+    ]
+
+
+@pytest.mark.parametrize(
     ("levels", "drugs", "actionable"),
     [
         ({("CYP2C19", "clopidogrel"): "A"}, [("clopidogrel", "CPIC")], True),
