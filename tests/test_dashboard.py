@@ -751,7 +751,7 @@ def test_the_changes_head_names_the_source_versions_that_differ(tmp_path: Path) 
     for base in (D1, D2):
         assert data["changes"]["bases"][base]["sources"] == [clinvar, gwas]
     head = _rendered(data, tmp_path, "#tab=changes")["changes-head"]
-    assert "ClinVar 2026-10-01 → 2026-11-01" in head["text"]
+    assert head["text"].startswith("Changed: ClinVar 2026-10-01 → 2026-11-01")
     assert D2 not in head["text"] and D3 not in head["text"]
     assert {D2, D3} <= {node["attrs"]["title"] for node in head["titled"]}
 
@@ -792,6 +792,13 @@ def test_the_changes_tab_opens_on_all_changes_when_none_is_at_the_thresholds(
     trusted = opened("#tab=changes&rel=1&ev=2")
     assert trusted[0] != every and trusted[1] == ""
     assert opened("#tab=changes&rel=0&ev=0")[1] == ""
+    # Its count is the page's number.
+    rows = data["changes"]["bases"][D2]["rows"]
+    row = next(iter(rows.values()))
+    rows.update({f"x{i}": {**row, "id": f"x{i}"} for i in range(1000)})
+    for view in views.values():
+        view.update(dict.fromkeys((f"x{i}" for i in range(1000)), "level"))
+    assert f"{n + 1000:,} changes" in opened("#tab=changes")[1]
     views["low|conflicting"] = dict.fromkeys(views["low|conflicting"], "level")
     assert opened("#tab=changes")[0] != every
 

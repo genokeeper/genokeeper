@@ -743,9 +743,12 @@ function iso(release) {
 // that differ between them.
 function renderHead(compared) {
   const head = document.getElementById("changes-head");
+  // The source versions that differ lead; the two run dates follow, their ids as tooltips.
+  const differ = (compared ? compared.sources : []).map((s) => `${SOURCES[s.name] || s.name} ${iso(s.before)} → ${iso(s.after)}`);
+  head.replaceChildren(...(differ.length ? [el("div", "", t("sources_differ", { sources: differ.join(", ") }))] : []));
   const update = el("span", "", t("update_head", { date: changes.date || "—" }));
   update.setAttribute("title", changes.run);
-  head.replaceChildren(update);
+  head.append(update);
   if (!compared) return;
   const select = el("select");
   select.setAttribute("aria-label", t("compared_label"));
@@ -763,8 +766,6 @@ function renderHead(compared) {
     renderChanges();
   });
   head.append(t("compared_with"), select);
-  const differ = compared.sources.map((s) => `${SOURCES[s.name] || s.name} ${iso(s.before)} → ${iso(s.after)}`);
-  if (differ.length) head.append(el("div", "", t("sources_differ", { sources: differ.join(", ") })));
 }
 
 // The update check's age is computed here, when the page is viewed: a check that stopped
@@ -834,7 +835,7 @@ function renderChanges() {
   const loosest = compared.views[`${SCALES.reliability[0]}|${SCALES.validity[0]}`];
   if (!state.chosen && !first.length && rows.some((row) => changes.first_tier.includes(loosest[row.id]))) {
     tab.tier = "all";
-    note.textContent = t("below_thresholds", { n: rows.length });
+    note.textContent = t("below_thresholds", { n: rows.length, count: number(rows.length) });
   }
   const tiered = tab.tier === "first" ? first : rows;
   const shown = tiered.filter(

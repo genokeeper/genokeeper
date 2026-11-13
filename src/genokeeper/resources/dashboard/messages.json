@@ -241,8 +241,8 @@
   "update_head": {"en": "Update {date}", "ru": "Обновление {date}"},
   "sources_differ": {"en": "Changed: {sources}", "ru": "Изменились: {sources}"},
   "below_thresholds": {
-    "en": {"one": "Nothing at your thresholds changed; {n} change below them.", "other": "Nothing at your thresholds changed; {n} changes below them."},
-    "ru": "При ваших порогах ничего не изменилось; изменений ниже них: {n}."
+    "en": {"one": "Nothing at your thresholds changed; {count} change below them.", "other": "Nothing at your thresholds changed; {count} changes below them."},
+    "ru": "При ваших порогах ничего не изменилось; изменений ниже них: {count}."
   },
   "compared_label": {"en": "Compared with", "ru": "Сравнение с"},
   "base_refresh": {"en": "refresh", "ru": "обновление"},
