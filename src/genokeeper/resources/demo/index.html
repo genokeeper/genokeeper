@@ -14,11 +14,8 @@
 </head>
 <body>
 {{frame}}
+<header class="site">{{header}}</header>
 <main class="sheet">
-  <div class="top">
-    <b>genokeeper</b>
-    <nav><a href="dashboard.html">Dashboard</a><a href="calibration.html">Calibration</a><a href="{{repository}}">GitHub</a><a href="https://doi.org/{{doi}}">doi:{{doi}}</a></nav>
-  </div>
 
   <h1><span>One genome, {{loosest}} candidate findings.</span><span>{{default}} remain at the default thresholds.</span></h1>
   <p class="lede">Genokeeper takes the raw reads of a 30x genome and calls them on your own Mac. It grades each finding twice: how likely the genotype is wrong, and how strong the evidence behind the claim is. Inside GIAB's benchmark regions the first is an error rate measured on four libraries of three reference samples (HG002 PCR-free and PCR, HG003, HG004); outside them it is DeepVariant's own genotype quality. This page is its output for HG002.</p>

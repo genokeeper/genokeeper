@@ -15,15 +15,16 @@ a:focus-visible, summary:focus-visible { outline: 2px solid var(--rel); outline-
 
 .frame { background: var(--sunk); border-bottom: 1px solid var(--rule);
   font: 14px/1.5 var(--sans); }
-.frame-note { max-width: 880px; margin: 0 auto; padding: 10px 20px; }
+.frame-note { max-width: 1040px; margin: 0 auto; padding: 10px 20px; }
 .frame-note summary { cursor: pointer; font-weight: 600; }
 .frame-note p { margin: 8px 0 4px; max-width: 72ch; color: var(--muted); font-weight: 400; }
 
-.sheet { max-width: 880px; margin: 0 auto; padding: 0 20px 72px; }
-.top { display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
-  flex-wrap: wrap; padding: 28px 0 0; font: 14px/1.5 var(--sans); }
-.top b { font: 600 15px/1.5 var(--mono); }
-.top nav { display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--muted); }
+.sheet { max-width: 1040px; margin: 0 auto; padding: 0 20px 72px; }
+nav.site { max-width: 1040px; margin: 0 auto; padding: 18px 20px 0; display: flex;
+  flex-wrap: wrap; align-items: baseline; gap: 4px 18px; font: 14px/1.5 var(--sans);
+  color: var(--muted); }
+nav.site .mark { font: 600 15px/1.5 var(--mono); color: var(--ink); text-decoration: none;
+  margin-right: 10px; }
 
 h1 { font: 700 clamp(27px, 4.3vw, 40px)/1.15 var(--serif); letter-spacing: -0.012em;
   margin: 44px 0 18px; }

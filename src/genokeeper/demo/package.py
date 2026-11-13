@@ -77,6 +77,15 @@ DOI = "10.5281/zenodo.24134245"
 REPOSITORY = "https://github.com/genokeeper/genokeeper"
 SOCIAL_IMAGE = "https://genokeeper.github.io/genokeeper/social.png"
 PRIVATE_IDS = "genome-private-ids"
+# The header every page shows; the dashboard's links are views in its URL hash.
+SITE_NAV = (
+    ("Overview", "index.html"),
+    ("Results", "dashboard.html#tab=feed"),
+    ("Changes", "dashboard.html#tab=changes&rel=0&ev=0"),
+    ("How often it is wrong", "calibration.html"),
+    ("Sources", "sources.html"),
+    ("GitHub", REPOSITORY),
+)
 # The dashboard's slider order: its `#rel=<i>&ev=<i>` index these.
 REL = (Level.LOW, Level.MEDIUM, Level.HIGH)
 EV = (Validity.CONFLICTING, Validity.LIMITED, Validity.MODERATE, Validity.STRONG)
@@ -266,6 +275,15 @@ def _note(template: str) -> str:
     return html.escape(head) + link + html.escape(tail)
 
 
+def header() -> str:
+    """The site's header: the wordmark, then `SITE_NAV`'s links."""
+    links = "".join(
+        f' <a href="{html.escape(href)}">{name}</a>' for name, href in SITE_NAV
+    )
+    mark = '<a class="mark" href="index.html">genokeeper</a>'
+    return f'<nav class="site" aria-label="genokeeper">{mark}{links}</nav>'
+
+
 def _fill(template: str, parts: Mapping[str, str]) -> str:
     """`resources/demo/<template>` with the site's style, its CSP and `parts` filled in, in
     one pass: a filled-in part is never searched for placeholders."""
@@ -277,7 +295,7 @@ def _fill(template: str, parts: Mapping[str, str]) -> str:
         "css": css,
         "csp": f"default-src 'none'; style-src 'sha256-{_sha256(css)}'",
         "frame": f'<div class="frame">{frame}</div>',
-        "repository": REPOSITORY,
+        "header": header(),
         **parts,
     }
     page = folder_.joinpath(template).read_text(encoding="utf-8")
@@ -678,6 +696,12 @@ def package(
             lang="en",
             banner=(FRAME_SUMMARY, FRAME, CALIBRATION_NOTE),
         )
+        # The site's header in the dashboard's banner slot, which escapes what it is given.
+        page = (work / "dashboard.html").read_text(encoding="utf-8")
+        slot = '<main class="frame"><details class="frame-note">'
+        assert page.count(slot) == 1, "the dashboard's banner slot moved"
+        page = page.replace(slot, slot.replace("<details", f"{header()}<details"))
+        (work / "dashboard.html").write_text(page, encoding="utf-8")
         reports = [
             changes.report(
                 scratch.reports,

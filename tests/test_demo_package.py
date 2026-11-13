@@ -307,6 +307,29 @@ def test_package_writes_site_and_manifest(
     assert _page_data(_read(out, "dashboard.html"))["lang"] == "en"
 
 
+def test_one_header_on_every_page(tmp_path: Path) -> None:
+    """The same links on every page, the dashboard's in its banner slot, ahead of the frame."""
+    out = _package(tmp_path)
+    navs = {
+        name: re.findall(r'<nav class="site"[^>]*>(.*?)</nav>', _read(out, name))
+        for name in SITE_FILES
+    }
+    assert {name: len(found) for name, found in navs.items()} == dict.fromkeys(
+        SITE_FILES, 1
+    )
+    assert len({found[0] for found in navs.values()}) == 1
+    hrefs = re.findall(r'href="([^"]+)"', navs["index.html"][0])
+    assert [html.unescape(h) for h in hrefs] == [
+        "index.html",
+        *(h for _, h in pkg.SITE_NAV),
+    ]
+    assert "dashboard.html#tab=changes&amp;rel=0&amp;ev=0" in hrefs
+    dashboard = _read(out, "dashboard.html")
+    assert dashboard.index('<nav class="site"') < dashboard.index(
+        '<details class="frame-note"'
+    )
+
+
 def test_dashboard_shows_a_refresh_and_no_check_warning(tmp_path: Path) -> None:
     out = _package(tmp_path)
     shown = _page_data(_read(out, "dashboard.html"))["changes"]
@@ -538,7 +561,7 @@ def test_site_pages_load_nothing(tmp_path: Path) -> None:
     for name in ("index.html", "calibration.html"):
         page = _read(out, name)
         assert re.search(
-            r'</div>\n<main class="sheet">.*</main>\n</body>', page, re.DOTALL
+            r'</header>\n<main class="sheet">.*</main>\n</body>', page, re.DOTALL
         )
         assert "<script" not in page and "<link" not in page and "@import" not in page
         assert re.findall(r"\bsrc\s*=|url\(", page) == []

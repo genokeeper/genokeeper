@@ -18,7 +18,8 @@ FRAME_SUMMARY = (
 FRAME = (
     "HG002 comes from a Personal Genome Project participant under PGP's open consent. The"
     " results illustrate the tool. They are not a statement about anyone's health, and"
-    " nobody should try to identify the person."
+    " nobody should try to identify the person. The dashboard is written as its owner would"
+    ' read it, so it says "you".'
 )
 CALIBRATION_PAGE = "https://genokeeper.github.io/genokeeper/calibration.html"
 # The note's last clause; each site page shows it its own way (`package._note`).
