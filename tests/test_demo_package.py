@@ -316,6 +316,8 @@ def test_landing_matrix(tmp_path: Path) -> None:
         _read(out, "index.html"),
     )
     assert len(cells) == 12
+    # "high only" on top: the display order flips, each link keeps its own indices.
+    assert [r for _, r, _, _ in cells[::4]] == ["2", "1", "0"]
     with open_store(out / STORE_FILE) as con:
         for default, r, v, count in cells:
             f = Filters(min_reliability=REL[int(r)], min_validity=EV[int(v)])

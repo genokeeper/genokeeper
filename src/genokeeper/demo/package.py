@@ -317,10 +317,11 @@ def _grid() -> list[list[Filters]]:
 
 def _matrix(counts: Mapping[Filters, int]) -> str:
     """Figure 1's rows: each cell the findings `query` keeps at its pair of thresholds,
-    shaded by count, linking to the dashboard at that view; the default pair outlined."""
+    shaded by count, linking to the dashboard at that view; the default pair outlined. "high
+    only" is the top row: each link keeps its `REL` index."""
     top = max(counts.values())
     rows: list[str] = []
-    for r, row in enumerate(_grid()):
+    for r, row in reversed(list(enumerate(_grid()))):
         cells: list[str] = []
         for v, f in enumerate(row):
             n = counts[f]
