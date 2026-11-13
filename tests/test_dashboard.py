@@ -1619,7 +1619,9 @@ def test_clinvar_strings_read_as_words(
     data = {**payload(con, None, NO_CACHE), "default": "low|conflicting|"}
     feed = _rendered(data, tmp_path)["feed"]["text"]
     assert "BRCA1: Conflicting classifications of pathogenicity, a b, c\n" in feed
-    assert "Conflicting classifications of pathogenicity (2★)" in feed and long not in feed
+    assert (
+        "Conflicting classifications of pathogenicity (2★)" in feed and long not in feed
+    )
 
 
 def test_mc1r_two_strong_names_copies() -> None:

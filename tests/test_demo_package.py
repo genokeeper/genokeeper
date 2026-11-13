@@ -381,6 +381,19 @@ def test_calibration_summary_covers_every_table(tmp_path: Path) -> None:
     )
 
 
+def test_site_pages_have_a_main_and_wrap_the_versions(tmp_path: Path) -> None:
+    out = _package(tmp_path)
+    for name in ("index.html", "calibration.html"):
+        assert re.search(
+            r"</div>\n<main class=\"sheet\">.*</main>\n</body>",
+            _read(out, name),
+            re.DOTALL,
+        )
+    page = _read(out, "calibration.html")
+    assert '<ul class="plain methods">\n    <li>Tools and versions' in page
+    assert ".methods { overflow-wrap: anywhere; }" in page
+
+
 def test_site_pages_load_nothing(tmp_path: Path) -> None:
     out = _package(tmp_path)
     for name in ("index.html", "calibration.html"):

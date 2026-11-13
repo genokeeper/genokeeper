@@ -79,6 +79,8 @@ figcaption { margin-top: 12px; }
 
 ul.plain { max-width: 66ch; padding-left: 20px; margin: 10px 0; }
 ul.plain li { margin-bottom: 6px; }
+/* The tools' versions are md5 lists with no space: they must wrap at 375 px. */
+.methods { overflow-wrap: anywhere; }
 .cite { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px;
   padding: 12px 14px; font: 14px/1.55 var(--sans); max-width: 78ch; }
 .report { border-top: 1px solid var(--rule); padding: 8px 0; font: 14px/1.5 var(--sans); }
