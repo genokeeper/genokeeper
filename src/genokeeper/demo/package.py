@@ -55,6 +55,7 @@ from genokeeper.demo.frame import (
     CALIBRATION_NOTE,
     FRAME,
     FRAME_SUMMARY,
+    POINTER,
     TABLE_SAMPLES,
 )
 from genokeeper.explain import LOOSEST
@@ -217,12 +218,23 @@ def scan_private(paths: Sequence[Path], patterns: Mapping[int, str]) -> list[str
     return hits
 
 
+def _note(template: str) -> str:
+    """The calibration note as HTML on the site page `template`: on the calibration page
+    without its pointer to itself, on the others with a link to that page."""
+    head, _, tail = CALIBRATION_NOTE.partition(POINTER)
+    if template == "calibration.html":
+        return html.escape(head) + "."
+    link = '; <a href="calibration.html">the calibration page</a> says'
+    return html.escape(head) + link + html.escape(tail)
+
+
 def _fill(template: str, parts: Mapping[str, str]) -> str:
     """`resources/demo/<template>` with the site's style, its CSP and `parts` filled in, in
     one pass: a filled-in part is never searched for placeholders."""
     folder_ = files("genokeeper").joinpath("resources", "demo")
     css = folder_.joinpath("site.css").read_text(encoding="utf-8")
-    frame = _banner((FRAME_SUMMARY, FRAME, CALIBRATION_NOTE))
+    frame = _banner((FRAME_SUMMARY, FRAME))
+    frame = frame.replace("</details>", f"<p>{_note(template)}</p></details>")
     every = {
         "css": css,
         "csp": f"default-src 'none'; style-src 'sha256-{_sha256(css)}'",
@@ -427,7 +439,7 @@ def _calibration(
     return _fill(
         "calibration.html",
         {
-            "note": html.escape(CALIBRATION_NOTE),
+            "note": _note("calibration.html"),
             "calibration": _calibration_table(),
             "reports": "\n".join(sections) or "<p>No table's report was found.</p>",
             "methods": "\n".join(f"    <li>{html.escape(m)}</li>" for m in methods),

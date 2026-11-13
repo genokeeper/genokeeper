@@ -20,15 +20,17 @@ FRAME = (
     " results illustrate the tool. They are not a statement about anyone's health, and"
     " nobody should try to identify the person."
 )
+CALIBRATION_PAGE = "https://genokeeper.github.io/genokeeper/calibration.html"
+# The note's last clause; each site page shows it its own way (`package._note`).
+POINTER = f"; the calibration page ({CALIBRATION_PAGE}) says"
 CALIBRATION_NOTE = (
     "Most small-variant error rates were measured on HG003, a different genome. The rates"
     " for chrX, chrY and the regions only GIAB's v5.0q truth reaches, and those for repeats,"
     " deletions, copy number, insertions, paralog loci and the run-time checks, were"
     " measured on HG002's own libraries, this one among them, often beside HG003 and HG004:"
     " they are shown on data they were measured on. This is the one genome where every call"
-    " can be checked against a truth set; the calibration page"
-    " (https://genokeeper.github.io/genokeeper/calibration.html) says which table was"
-    " measured on which samples."
+    f" can be checked against a truth set{POINTER} which table was measured on which"
+    " samples."
 )
 
 

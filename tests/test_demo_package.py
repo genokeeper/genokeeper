@@ -28,7 +28,12 @@ from genokeeper.demo import (
     demo_paths,
 )
 from genokeeper.demo import package as pkg
-from genokeeper.demo.frame import CALIBRATION_NOTE, FRAME, TABLE_SAMPLES
+from genokeeper.demo.frame import (
+    CALIBRATION_NOTE,
+    CALIBRATION_PAGE,
+    FRAME,
+    TABLE_SAMPLES,
+)
 from genokeeper.demo.package import Leak, package, scan_bytes
 from genokeeper.explain import LOOSEST
 from genokeeper.query import Filters, open_store, query
@@ -379,6 +384,10 @@ def test_calibration_summary_covers_every_table(tmp_path: Path) -> None:
         "<pre>measured &lt;b&gt;on&lt;/b&gt; &lt;lab&gt;/calibration/hg002\n</pre>"
         in page
     )
+    # The note points at the calibration page from the others only: a link on the landing.
+    assert CALIBRATION_PAGE not in page and "checked against a truth set.</p>" in page
+    link = '<a href="calibration.html">the calibration page</a> says which table'
+    assert link in index and CALIBRATION_PAGE in _read(out, "dashboard.html")
 
 
 def test_site_pages_have_a_main_and_wrap_the_versions(tmp_path: Path) -> None:
