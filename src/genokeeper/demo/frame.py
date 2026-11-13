@@ -39,54 +39,88 @@ CALIBRATION_NOTE = (
 
 @dataclass(frozen=True)
 class Measured:
-    """A calibration table: what it measures, the libraries it was measured on, and whether
-    HG002 is among them."""
+    """A calibration table: what it measures, the libraries it was measured on, whether
+    HG002 is among them, the truth its calls were judged against and what the tool does
+    with a call of its class."""
 
     measures: str
     samples: str
     for_hg002: Literal["related sample", "same sample"]
+    truth: str
+    does: str
 
 
+_GRADES = "Grades each genotype by its cell's measured error rate."
+_UNSURE = (
+    "None is trustworthy without confirmation: each is graded by its class's chance of"
+    " being false, never as likely."
+)
+_SAME = "same sample"
 TABLE_SAMPLES: dict[str, Measured] = {
     "small_variants": Measured(
-        "Small-variant genotypes, chr1-22", "HG003", "related sample"
+        "Small-variant genotypes, chr1-22",
+        "HG003",
+        "related sample",
+        "GIAB v4.2.1",
+        _GRADES,
     ),
     "hg002_cells": Measured(
         "Small-variant genotypes on chrX, chrY and v5.0q-only regions",
         "HG002 PCR-free",
-        "same sample",
+        _SAME,
+        "GIAB v5.0q",
+        _GRADES,
     ),
     "stage3": Measured(
         "SMN1 and SMN2 copies, repeat lengths, the Y haplogroup",
         "HG002 PCR-free and PCR; HG003 and HG004 for repeats",
-        "same sample",
+        _SAME,
+        "GIAB v5.0q; a healthy sample",
+        "Withholds a locus or gene a library got wrong; the rest carry the test that"
+        " confirms them.",
     ),
     "deletions": Measured(
         "Deletions of 50 bp or more in ACMG SF and carrier genes",
         "HG002 PCR-free and PCR",
-        "same sample",
+        _SAME,
+        "GIAB v5.0q structural variants",
+        "None is trustworthy without confirmation: each is shown only with a confirm-by"
+        " note (MLPA, a microarray, qPCR or long reads).",
     ),
     "cnv": Measured(
         "Copy number from read depth",
         "HG002 PCR-free and PCR, HG003, HG004",
-        "same sample",
+        _SAME,
+        "GIAB v5.0q; spike-ins",
+        _UNSURE,
     ),
     "insertions": Measured(
-        "Insertions and mobile elements", "HG002 PCR-free and PCR", "same sample"
+        "Insertions and mobile elements",
+        "HG002 PCR-free and PCR",
+        _SAME,
+        "GIAB v5.0q structural variants",
+        _UNSURE,
     ),
     "paralogs": Measured(
         "Paralog loci (GBA1, Lp(a) and others)",
         "HG002 PCR-free and PCR, HG003, HG004",
-        "same sample",
+        _SAME,
+        "a published HG002 copy-number list",
+        "Withholds a locus no library measured; the rest carry a confirm-by note.",
     ),
     "foundation": Measured(
         "Run-time checks: sex dosage, allele fraction",
         "HG002 PCR-free and PCR, HG003, HG004",
-        "same sample",
+        _SAME,
+        "known sexes; GIAB v5.0q heterozygotes",
+        "Sets the bounds of the run-time checks, which flag a run outside them.",
     ),
     "slice3f": Measured(
         "HLA, chrM variants, HHV-6, runs of homozygosity, blood groups, ancestry",
         "HG002 PCR-free, HG003, HG004",
-        "same sample",
+        _SAME,
+        "GIAB truths; the trio's inheritance",
+        "Withholds what no library could measure; the rest carry the test that confirms"
+        " them.",
     ),
 }

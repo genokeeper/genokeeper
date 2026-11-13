@@ -19,6 +19,8 @@ from fixtures.store_mini import Row
 
 import genokeeper
 from genokeeper import changes, refresh_log
+from genokeeper.calibrate.classes import BandTerms, ClassTable, Share, write_classes
+from genokeeper.calibrate.table import VERSION_KEYS, CalibrationTable
 from genokeeper.calibrate.tables import REPORT, TABLES, folder
 from genokeeper.config import GRADING_FILE, load_grading
 from genokeeper.dashboard import _sha256
@@ -454,26 +456,42 @@ def test_landing_says_only_what_is_measured(tmp_path: Path) -> None:
     assert TABLE_SAMPLES["small_variants"].for_hg002 == "related sample"
 
 
-# Report lines as `calibrate` prints them (`build.report`, `classes.report`).
-SMALL = "SNP F1 0.9912 (the part stops below 0.995); below the limit\nINDEL F1 0.9934\n"
-DELETIONS = """short band: h 0.5, prior 0.1
-  pcrfree: 10 rare calls, 9 false; truth 30 of 70 found
-  pcr: 12 rare calls, 11 false; truth 31 of 70 found
-  delly|short: p_wrong 0.997 (0.98-1)
-  both|short: p_wrong 0.004 (0.001-0.01)
-long band: h none, prior 0.2
-  pcrfree: 3 rare calls, 1 false; truth 56 of 127 found
-  dysgu|long: p_wrong 0.83 (0.5-0.95)
-"""
+def _band(calls: int, false: int, found: int, truth: int) -> dict[str, Any]:
+    return {"calls": calls, "false": false, "found": found, "truth": truth}
 
 
-def test_landing_numbers_come_from_reports_store_and_config(
+def _tables(lab: Path) -> None:
+    """HG003's small-variant table with its F1, and a deletions class table: two bands,
+    two libraries of one sample."""
+    versions = dict.fromkeys(VERSION_KEYS, "v")
+    f1 = {"snp": 0.9961234, "indel": 0.9960876}
+    CalibrationTable(cells={}, versions=versions, f1=f1).write(
+        folder(lab, "small_variants")
+    )
+    bands = {"short": BandTerms(Share(0.5, 0, 1), 1, 1, Share(0.5, 0, 1), None, 0.1)}
+    bands["long"] = bands["short"]
+    measured = {
+        "pcrfree": {"short": _band(10, 9, 30, 70), "long": _band(3, 1, 56, 127)},
+        "pcr": {"short": _band(12, 11, 31, 70), "long": _band(5, 3, 50, 127)},
+    }
+    write_classes(folder(lab, "deletions"), ClassTable({}, bands, {}, measured, {}))
+
+
+def _cal_rows(page: str) -> dict[str, list[str]]:
+    """The "How often it is wrong" table's rows, by class: their other cells."""
+    table = page.split('class="cal"')[1].split("</table>")[0]
+    rows = [
+        re.findall(r"<td[^>]*>(.*?)</td>", r)
+        for r in re.findall(r"<tr>(.*?)</tr>", table)
+    ]
+    return {cells[0]: cells[1:] for cells in rows if cells}
+
+
+def test_how_often_it_is_wrong_comes_from_the_tables(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     lab, home = _lab(tmp_path)
-    for name, text in (("small_variants", SMALL), ("deletions", DELETIONS)):
-        folder(lab, name).mkdir(parents=True)
-        (folder(lab, name) / REPORT).write_text(text)
+    _tables(lab)
     with connect(demo_paths(lab).reports / STORE_FILE) as con:
         withheld = json.dumps({"withheld": [{"reason": "a"}, {"reason": "b"}]})
         con.execute(
@@ -483,23 +501,48 @@ def test_landing_numbers_come_from_reports_store_and_config(
         )
     grading = replace(load_grading(), p_high=0.002, p_low=0.02, ba1=0.07)
     monkeypatch.setattr(pkg, "load_grading", lambda: grading)
-    index = _read(
-        package(
-            lab, tmp_path / "out", home=home, private_ids=None, no_private_ids=True
-        ),
-        "index.html",
+    out = package(
+        lab, tmp_path / "out", home=home, private_ids=None, no_private_ids=True
     )
-    for said in (
-        "Small-variant genotypes, chr1-22, on HG003: SNP F1 0.9912, INDEL F1 0.9934.",
-        "truth events found: pcrfree 86 of 197, pcr 31 of 70;",
-        "2 of 3 classes wrong with a chance above 0.02, up to 0.997.",
-        "This run holds 2 withheld values",
-        "is at most 0.002 ",
-        "low above 0.02 ",
-        "above BA1 (0.07)",
-        "A clean result is not an exclusion",
-    ):
+    index = _read(out, "index.html")
+    for page in (index, _read(out, "calibration.html")):
+        rows = _cal_rows(page)
+        assert len(rows) == len(TABLE_SAMPLES)
+        deletions = rows[html.escape(TABLE_SAMPLES["deletions"].measures)]
+        # Truth 197 a library; found and false pooled over both bands, per library.
+        assert deletions[1:4] == ["197", "81 (pcr), 86 (pcrfree)", "80%"]
+        assert deletions[-1] == "same sample"
+        small = rows[html.escape(TABLE_SAMPLES["small_variants"].measures)]
+        assert small[2] == "SNP F1 0.99612, INDEL F1 0.99609"
+        assert small[-1] == "related sample"
+    for said in ("This run holds 2 withheld values", "is at most 0.002 ",
+                 "low above 0.02 ", "above BA1 (0.07)"):  # fmt: skip
         assert said in index, said
+
+
+@pytest.mark.parametrize(
+    ("checkpoint", "named"),
+    [
+        ("weights-51-0.995354.ckpt", "Google&#x27;s Complete Genomics T7 checkpoint"),
+        ("weights-7-0.5.ckpt", "weights-7-0.5.ckpt"),
+    ],
+)
+def test_deepvariant_names_the_runs_checkpoint(
+    tmp_path: Path, checkpoint: str, named: str
+) -> None:
+    lab, home = _lab(tmp_path)
+    tools = {"deepvariant": "1.10.0", "clinvar": "20261108"}
+    tools["checkpoint_md5"] = f"example_info.json:ab,{checkpoint}.index:cd"
+    with connect(demo_paths(lab).reports / STORE_FILE) as con:
+        con.execute("UPDATE run SET tools = ?", [json.dumps(tools)])
+    out = package(
+        lab, tmp_path / "out", home=home, private_ids=None, no_private_ids=True
+    )
+    published = "SNP F1 0.997509 and INDEL F1 0.998207 on HG001 chr20"
+    for name in ("index.html", "calibration.html"):
+        page = _read(out, name)
+        assert f"DeepVariant 1.10.0 with {named}" in page, name
+        assert (published in page) == (named != checkpoint), name
 
 
 def test_landing_built_on(tmp_path: Path) -> None:
@@ -534,12 +577,8 @@ def test_calibration_summary_covers_every_table(tmp_path: Path) -> None:
     assert set(TABLE_SAMPLES) == set(TABLES)
     out = _package(tmp_path)
     page, index = _read(out, "calibration.html"), _read(out, "index.html")
-    for measured in TABLE_SAMPLES.values():
-        row = (
-            f"<td>{html.escape(measured.measures)}</td>"
-            f"<td>{html.escape(measured.samples)}</td>"
-        )
-        assert row in page and row in index
+    for shown in (_cal_rows(page), _cal_rows(index)):
+        assert list(shown) == [html.escape(m.measures) for m in TABLE_SAMPLES.values()]
     assert html.escape(CALIBRATION_NOTE.split(". ")[0]) in page
     # A table's report, its paths rewritten, escaped in its own section.
     assert (

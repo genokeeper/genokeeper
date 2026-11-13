@@ -42,6 +42,8 @@ import duckdb
 
 import genokeeper
 from genokeeper import changes, refresh_log
+from genokeeper.calibrate.classes import read_class_table
+from genokeeper.calibrate.table import CalibrationTable
 from genokeeper.calibrate.tables import REPORT, TABLES, folder
 from genokeeper.checksum import sha256_file
 from genokeeper.config import _REPO, DEMO_MARKER, Paths, load_grading
@@ -91,6 +93,27 @@ REL = (Level.LOW, Level.MEDIUM, Level.HIGH)
 EV = (Validity.CONFLICTING, Validity.LIMITED, Validity.MODERATE, Validity.STRONG)
 _REL_NAMES = ("any genotype", "medium or better", "high only")
 _SAY = "genokeeper demo package"
+# DeepVariant checkpoints by file name: what to call one, and Google's published figures.
+CHECKPOINTS = {
+    "weights-51-0.995354.ckpt": (
+        "Google's Complete Genomics T7 checkpoint",
+        (
+            "SNP F1 0.997509 and INDEL F1 0.998207 on HG001 chr20 (DeepVariant r1.10,"
+            " Complete Genomics T7 case study)"
+        ),
+    ),
+}
+CLASS_TABLES = ("deletions", "cnv", "insertions")
+_COUNTS = ("calls", "false", "found", "truth")
+_WRONG_HEAD = (
+    "Class",
+    "Truth set; measured on",
+    "Events in truth",
+    "Found",
+    "Share of calls false",
+    "What the tool does with it",
+    "For HG002",
+)
 # Per group of `citations.toml`: what genokeeper itself measured for it.
 GROUP_MEASURED = {
     "Reads to calls": "Measured here: small-variant genotype error rates on HG003 and"
@@ -302,18 +325,81 @@ def _fill(template: str, parts: Mapping[str, str]) -> str:
     return re.sub(r"\{\{(\w+)\}\}", lambda m: every[m[1]], page)
 
 
-def _calibration_table() -> str:
-    same = {"same sample": ' class="same"', "related sample": ""}
-    rows = "\n".join(
-        f"<tr><td>{html.escape(m.measures)}</td><td>{html.escape(m.samples)}</td>"
-        f"<td{same[m.for_hg002]}>{m.for_hg002}</td></tr>"
-        for m in TABLE_SAMPLES.values()
-    )
+def _f1(lab: Path) -> dict[str, float]:
+    """HG003's SNP and INDEL F1 from the small-variant table; none without it."""
+    try:
+        return CalibrationTable.read(folder(lab, "small_variants")).f1
+    except OSError, ValueError:
+        return {}
+
+
+def _class_values(path: Path) -> tuple[str, str, str]:
+    """A class table's events in truth (a library's, over its bands), each library's found,
+    and the share of calls false over every band and library."""
+    table = read_class_table(path)
+    sums = {
+        library: Counter(
+            {k: sum(int(bands[b][k]) for b in table.bands) for k in _COUNTS}
+        )
+        for library, bands in table.measured.items()
+    }
+    calls, false = (sum(c[k] for c in sums.values()) for k in ("calls", "false"))
     return (
-        '<div class="wrap"><table class="cal">\n<thead><tr><th>Class</th>'
-        "<th>Measured on</th><th>For HG002</th></tr></thead>\n"
-        f"<tbody>\n{rows}\n</tbody>\n</table></div>"
+        ", ".join(f"{t:,}" for t in sorted({c["truth"] for c in sums.values()})),
+        ", ".join(f"{c['found']:,} ({library})" for library, c in sums.items()),
+        f"{false / calls:.0%}" if calls else "no call",
     )
+
+
+def _values(lab: Path, name: str) -> tuple[str, str, str]:
+    """Events in truth, found and share of calls false, as the table `name` holds them."""
+    none = ("—", "—", "—")
+    if name == "small_variants" and (f1 := _f1(lab)):
+        return "—", f"SNP F1 {f1['snp']:.5f}, INDEL F1 {f1['indel']:.5f}", "—"
+    if name not in CLASS_TABLES:
+        return none
+    try:
+        return _class_values(folder(lab, name))
+    except OSError, ValueError, KeyError:
+        return none
+
+
+def _wrong(lab: Path, tools: Mapping[str, Any]) -> str:
+    """ "How often it is wrong": one row per calibration table, from its values, and the
+    run's DeepVariant model beside the small-variant F1 and Google's published one."""
+    head = "".join(f"<th>{h}</th>" for h in _WRONG_HEAD)
+    rows = []
+    for name, m in TABLE_SAMPLES.items():
+        cells = [m.measures, f"{m.truth}; {m.samples}", *_values(lab, name), m.does]
+        same = ' class="same"' if m.for_hg002 == "same sample" else ""
+        rows.append(
+            "<tr>"
+            + "".join(f"<td>{html.escape(c)}</td>" for c in cells)
+            + f"<td{same}>{m.for_hg002}</td></tr>"
+        )
+    model, published = _checkpoint(tools)
+    said = f"Small variants are called by DeepVariant {tools.get('deepvariant')} with {model}."
+    if f1 := _f1(lab):
+        said += (
+            f" Measured here on HG003, chr1-22: SNP F1 {f1['snp']:.5f}, INDEL F1"
+            f" {f1['indel']:.5f}."
+        )
+    if published:
+        said += f" Google's published figures for that checkpoint: {published}."
+    return (
+        f'<div class="wrap"><table class="cal">\n<thead><tr>{head}</tr></thead>\n'
+        f"<tbody>\n{'\n'.join(rows)}\n</tbody>\n</table></div>\n"
+        f'<p class="sub">{html.escape(said)}</p>'
+    )
+
+
+def _checkpoint(tools: Mapping[str, Any]) -> tuple[str, str | None]:
+    """The run's DeepVariant checkpoint by its recorded file name (`CHECKPOINTS`'s, else the
+    name) and Google's published figures for it."""
+    found = re.search(r"weights-[\w.-]+?\.ckpt", str(tools.get("checkpoint_md5", "")))
+    if found is None:
+        return "a checkpoint the run did not record", None
+    return CHECKPOINTS.get(found[0], (found[0], None))
 
 
 def _day(release: str | None) -> str:
@@ -399,40 +485,6 @@ def _matrix(counts: Mapping[Filters, int]) -> str:
             )
         rows.append(f"        <tr><th>{_REL_NAMES[r]}</th>{''.join(cells)}</tr>")
     return "\n".join(rows)
-
-
-def _measured(lab: Path, p_low: float) -> str:
-    """Per table, the numbers its report printed: HG003's F1, each library's truth found,
-    and the classes whose `p_wrong` is above `p_low` (graded low)."""
-    items: list[str] = []
-    for name in TABLES:
-        report = folder(lab, name) / REPORT
-        if not report.is_file():
-            continue
-        text = report.read_text(encoding="utf-8")
-        parts = [", ".join(re.findall(r"(?m)^((?:SNP|INDEL) F1 \d\.\d+)", text))]
-        found: dict[str, tuple[int, int]] = {}  # library -> (found, truth), all bands
-        line = r"(?m)^  (\S+): \d+ rare calls, \d+ false; truth (\d+) of (\d+) found"
-        for library, hit, truth in re.findall(line, text):
-            a, b = found.get(library, (0, 0))
-            found[library] = (a + int(hit), b + int(truth))
-        if found:
-            shown = ", ".join(f"{k} {a:,} of {b:,}" for k, (a, b) in found.items())
-            parts.append(f"truth events found: {shown}")
-        rates = [
-            float(p) for p in re.findall(r"(?m)^  \S.*: p_wrong ([\d.e+-]+) \(", text)
-        ]
-        if high := [p for p in rates if p > p_low]:
-            parts.append(
-                f"{len(high)} of {len(rates)} classes wrong with a chance above"
-                f" {p_low:g}, up to {max(high):.3g}"
-            )
-        if said := "; ".join(p for p in parts if p):
-            m = TABLE_SAMPLES[name]
-            items.append(
-                f"<li>{html.escape(f'{m.measures}, on {m.samples}: {said}.')}</li>"
-            )
-    return f'<ul class="plain">\n{"\n".join(items)}\n</ul>' if items else ""
 
 
 def _withheld(con: duckdb.DuckDBPyConnection, run_id: str) -> int:
@@ -535,7 +587,7 @@ def _landing(
             ),
             "changed": html.escape(changed),
             "diff": _diff(everything, base or "", run["clinvar"] or ""),
-            "calibration": _calibration_table(),
+            "calibration": _wrong(lab, _tools(con, run["run_id"])),
             "levels": html.escape(
                 "Genotype reliability is high when the measured chance the genotype is"
                 f" wrong is at most {g.p_high:g} and the site is in no difficult region,"
@@ -547,7 +599,6 @@ def _landing(
                 " stars, moderate at 1 and limited at none. Any evidence counts the"
                 " conflicting claims too."
             ),
-            "measured": _measured(lab, g.p_low),
             "built": _built_on(_tools(con, run["run_id"])),
             "withheld": html.escape(
                 f"This run holds {_count(_withheld(con, run['run_id']), 'withheld value')}:"
@@ -599,7 +650,7 @@ def _calibration(
         "calibration.html",
         {
             "note": _note("calibration.html"),
-            "calibration": _calibration_table(),
+            "calibration": _wrong(lab, tools),
             "reports": "\n".join(sections) or "<p>No table's report was found.</p>",
             "methods": "\n".join(f"    <li>{html.escape(m)}</li>" for m in methods),
         },
