@@ -769,9 +769,9 @@ def test_apoe_e3e4(tmp_path: Path) -> None:
     (tmp_path / "genomelab.duckdb").unlink()
     con, _ = _store(tmp_path, PrsSource(scores=[], results={}, apoe=apoe[1:]))
     assert con.execute("SELECT count(*) FROM statement").fetchone() == (0,)
-    (dropped,) = con.execute(
+    [(dropped,)] = con.execute(
         "SELECT dropped FROM accounting WHERE tool = 'pgsc_calc'"
-    ).fetchone()
+    ).fetchall()
     assert json.loads(dropped) == {"apoe_no_clinvar_claim": 1}
 
 
