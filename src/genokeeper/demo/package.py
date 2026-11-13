@@ -602,11 +602,19 @@ def _write_fresh(source: Path, target: Path) -> None:
         con.close()
 
 
-def package(lab: Path, out: Path, *, home: Path, private_ids: Path | None) -> Path:
+def package(
+    lab: Path,
+    out: Path,
+    *,
+    home: Path,
+    private_ids: Path | None,
+    no_private_ids: bool = False,
+) -> Path:
     """Write the demo's files from `demo_paths(lab)` into `out` (see the module); return
     `out`. Raises `Leak`, with nothing under a final name, when an output holds the home
     directory, the lab, the demo root or a private-ID pattern, and `FileExistsError` when
-    `out` holds anything but an earlier run's `.tmp-*` folder."""
+    `out` holds anything but an earlier run's `.tmp-*` folder; `Leak` too without
+    `private_ids`, unless `no_private_ids` waives that check (and the run says so)."""
     root = demo_paths(lab)
     if out.is_dir() and (
         held := sorted(p.name for p in out.iterdir() if not p.name.startswith(".tmp-"))
@@ -616,8 +624,16 @@ def package(lab: Path, out: Path, *, home: Path, private_ids: Path | None) -> Pa
         )
     needles = {"the home directory": str(home), "the lab": str(lab)}
     needles |= {"the demo root": str(root.repo), "the checkout": str(_REPO)}
+    if private_ids is None and not no_private_ids:
+        raise Leak(
+            "no private-ID file (genome-private-ids in the checkout's git folder):"
+            " write it, or pass --no-private-ids to package without that check"
+        )
     if private_ids is None:
-        print(f"{_SAY}: no private-ID file: that check is skipped", file=sys.stderr)
+        print(
+            f"{_SAY}: --no-private-ids: the private-ID check is skipped",
+            file=sys.stderr,
+        )
     patterns = {} if private_ids is None else _private_patterns(private_ids)
     replacements = {
         str(root.repo): "<demo>",

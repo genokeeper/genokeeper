@@ -31,6 +31,7 @@ def _package(args: argparse.Namespace) -> int:
             args.out,
             home=Path.home(),
             private_ids=private_id_file(),
+            no_private_ids=args.no_private_ids,
         )
     except (Leak, OSError) as e:
         print(f"genokeeper demo package: {e}", file=sys.stderr)
@@ -59,6 +60,11 @@ def main(argv: list[str] | None = None) -> int:
         "package", help="write the demo's store, pages and manifest"
     )
     p.add_argument("out", type=Path, help="the folder to write into")
+    p.add_argument(
+        "--no-private-ids",
+        action="store_true",
+        help="package without the private-ID file's check (refused without it)",
+    )
     p.set_defaults(handler=_package)
     b = commands.add_parser(
         "build", help="run HG002 on two ClinVar releases into the demo root"

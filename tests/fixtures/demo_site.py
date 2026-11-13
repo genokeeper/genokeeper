@@ -46,7 +46,7 @@ def packaged(tmp: Path) -> Path:
         [Row("clinvar:1", gene=GENE, validity="limited"), *rows],
         [Row("clinvar:1", gene=GENE, validity="strong"), *rows],
     )
-    return package(lab, tmp / "out", home=home, private_ids=None)
+    return package(lab, tmp / "out", home=home, private_ids=None, no_private_ids=True)
 
 
 @contextmanager

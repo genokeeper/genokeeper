@@ -113,9 +113,11 @@ def _lab(tmp_path: Path) -> tuple[Path, Path]:
     return lab, home
 
 
-def _package(tmp_path: Path, private_ids: Path | None = None) -> Path:
+def _package(tmp_path: Path) -> Path:
     lab, home = _lab(tmp_path)
-    return package(lab, tmp_path / "out", home=home, private_ids=private_ids)
+    return package(
+        lab, tmp_path / "out", home=home, private_ids=None, no_private_ids=True
+    )
 
 
 def _needles(tmp_path: Path) -> dict[str, str]:
@@ -184,7 +186,7 @@ def test_scan_refuses_any_absolute_path_left(tmp_path: Path, planted: str) -> No
     with connect(demo_paths(lab).reports / STORE_FILE) as con:
         con.execute("UPDATE run SET inputs = ?", [json.dumps({"grading": path})])
     with pytest.raises(Leak, match=r"^refusing to package: run\.inputs: a path$"):
-        package(lab, tmp_path / "out", home=home, private_ids=None)
+        package(lab, tmp_path / "out", home=home, private_ids=None, no_private_ids=True)
     assert os.listdir(tmp_path / "out") == []
 
 
@@ -222,7 +224,7 @@ def test_scan_reads_the_refresh_log(tmp_path: Path) -> None:
     with pytest.raises(
         Leak, match=f"^refusing to package: {REFRESH_LOG_FILE}: the home"
     ):
-        package(lab, tmp_path / "out", home=home, private_ids=None)
+        package(lab, tmp_path / "out", home=home, private_ids=None, no_private_ids=True)
     assert os.listdir(tmp_path / "out") == []
 
 
@@ -245,7 +247,7 @@ def test_package_refuses_an_out_holding_other_files(tmp_path: Path) -> None:
     (tmp_path / "out").mkdir()
     (tmp_path / "out" / "shot.png").write_bytes(b"png")
     with pytest.raises(FileExistsError, match="holds shot.png"):
-        package(lab, tmp_path / "out", home=home, private_ids=None)
+        package(lab, tmp_path / "out", home=home, private_ids=None, no_private_ids=True)
     assert os.listdir(tmp_path / "out") == ["shot.png"]
 
 
@@ -267,11 +269,15 @@ def test_private_ids_skip_comments_and_missing_file(
     with pytest.raises(Leak, match=r"statement\.reason: private ID on line 4"):
         package(lab, tmp_path / "out2", home=home, private_ids=ids)
     assert os.listdir(tmp_path / "out2") == []
+    # Without the file, nothing is written unless the waiver names it; then the run says so.
+    with pytest.raises(Leak, match="no private-ID file.*--no-private-ids"):
+        package(lab, tmp_path / "out3", home=home, private_ids=None)
+    assert not (tmp_path / "out3").exists()
     capsys.readouterr()
-    package(lab, tmp_path / "out3", home=home, private_ids=None)
+    package(lab, tmp_path / "out3", home=home, private_ids=None, no_private_ids=True)
     err = capsys.readouterr().err.splitlines()
     assert [line for line in err if "private-ID" in line] == [
-        "genokeeper demo package: no private-ID file: that check is skipped"
+        "genokeeper demo package: --no-private-ids: the private-ID check is skipped"
     ]
 
 
@@ -395,7 +401,10 @@ def test_landing_says_only_what_is_measured(tmp_path: Path) -> None:
             "UPDATE statement SET topic = 'drugs' WHERE statement_id = 'clinvar:4'"
         )
     index = _read(
-        package(lab, tmp_path / "out", home=home, private_ids=None), "index.html"
+        package(
+            lab, tmp_path / "out", home=home, private_ids=None, no_private_ids=True
+        ),
+        "index.html",
     )
     assert "The 2 at the default thresholds by topic: drugs 1, risks 1." in index
     for said in ("Every class of finding", "GitHub and sends nothing", "Anthropic"):
@@ -447,7 +456,10 @@ def test_landing_numbers_come_from_reports_store_and_config(
     grading = replace(load_grading(), p_high=0.002, p_low=0.02, ba1=0.07)
     monkeypatch.setattr(pkg, "load_grading", lambda: grading)
     index = _read(
-        package(lab, tmp_path / "out", home=home, private_ids=None), "index.html"
+        package(
+            lab, tmp_path / "out", home=home, private_ids=None, no_private_ids=True
+        ),
+        "index.html",
     )
     for said in (
         "Small-variant genotypes, chr1-22, on HG003: SNP F1 0.9912, INDEL F1 0.9934.",
@@ -562,7 +574,9 @@ def test_dashboard_shows_the_demo_roots_explanations(tmp_path: Path) -> None:
     explain(
         [finding], newest_medlineplus(lab), cache, ask, model=model, tone="engaging"
     )
-    out = package(lab, tmp_path / "out", home=home, private_ids=None)
+    out = package(
+        lab, tmp_path / "out", home=home, private_ids=None, no_private_ids=True
+    )
     shown = _page_data(_read(out, "dashboard.html"))["items"]["clinvar:2"][
         "explanation"
     ]
