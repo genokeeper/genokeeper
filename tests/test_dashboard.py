@@ -1813,6 +1813,15 @@ def test_what_stands_out_is_what_a_reader_acts_on(tmp_path: Path) -> None:
                      "CAD: 1st decile", "CAD: 10th decile"]  # fmt: skip
     opened = _rendered(data, tmp_path, actions=[("stands-out/5", "", "click")])
     assert "topic=risks" in opened["#history"]["urls"][-1]
+    apoe = [
+        Row("apoe:APOE", gene="APOE", level=None, topic="risks", claim={"type": "apoe"})
+    ]
+    con = connect(tmp_path / "apoe.duckdb")
+    seed(con, apoe)
+    data = {**payload(con, None, NO_CACHE), "default": "low|conflicting|"}
+    assert [b["text"] for b in _rendered(data, tmp_path)["stands-out"]["buttons"]] == [
+        "APOE"
+    ]
 
 
 def test_the_hidden_line_names_each_reason_once(

@@ -436,7 +436,8 @@ function standsOut(f) {
   const claim = f.claim || {};
   if (f.normal || f.kind !== "finding" || ["traits", "ancestry"].includes(f.topic)) return false;
   if (claim.type === "pgs") return [1, 10].includes(f.effect?.score?.decile);
-  return ["clinvar_germline", "predicted_variant"].includes(claim.type) || ["drugs", "carrier"].includes(f.topic);
+  // Every non-typical result under risks (APOE, a repeat, a deletion) is one a reader asks about.
+  return ["clinvar_germline", "predicted_variant"].includes(claim.type) || ["risks", "drugs", "carrier"].includes(f.topic);
 }
 
 function renderFeed() {
