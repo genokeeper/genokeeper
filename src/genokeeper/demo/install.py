@@ -240,7 +240,7 @@ def install(folder: Path, *, base: str = DEMO_BASE) -> Path:
     holds = folder.is_dir() and any(folder.iterdir())
     if (folder.exists() and not folder.is_dir()) or (holds and not _ours(folder)):
         raise DemoRefused(
-            f"{folder} holds something else and is not a demo folder (no demo {DEMO_MARKER});"
+            f"{folder} holds something else and is not a demo folder (no {DEMO_MARKER});"
             " choose another with --dir"
         )
     manifest, sums = _manifest(base)

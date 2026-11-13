@@ -128,7 +128,7 @@ def test_install_refuses_foreign_folder(
     if marker is not None:  # a `demo.json` that is not a demo manifest
         (folder / DEMO_MARKER).write_text(marker)
     with serve(site) as base:
-        with pytest.raises(DemoRefused, match="not a demo folder"):
+        with pytest.raises(DemoRefused, match=r"not a demo folder \(no demo\.json\)"):
             install(folder, base=base)
         monkeypatch.setattr(inst, "DEMO_BASE", base)
         assert cli.main(["demo", "--dir", str(folder)]) == 2

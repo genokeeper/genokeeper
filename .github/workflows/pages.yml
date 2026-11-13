@@ -37,6 +37,8 @@ jobs:
           import hashlib, json, subprocess, sys
           files = json.load(open("site/manifest.json"))["files"]
           pages = [name for name in files if name.endswith(".html")]
+          if not pages:
+              sys.exit("manifest.json names no .html page: nothing to deploy")
           subprocess.run(
               ["gh", "release", "download", "hg002", "--repo", "genokeeper/hg002-demo"]
               + ["--dir", "site"] + [a for name in pages for a in ("--pattern", name)],
