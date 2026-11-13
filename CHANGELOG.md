@@ -5,8 +5,8 @@ Versioning](https://semver.org); until 1.0, a minor version may change commands 
 
 ## [0.2.0] — 2026-11-13
 
-- A public demo on GIAB's HG002: three pages (an overview, the dashboard, the calibration
-  tables) and `genokeeper demo` (`uvx genokeeper demo`, macOS or Linux), which downloads the
+- A public demo on GIAB's HG002: four pages (an overview, the dashboard, the calibration
+  tables, the sources it is built on) and `genokeeper demo` (`uvx genokeeper demo`, macOS or Linux), which downloads the
   demo store, checks it against its manifest and writes a folder Claude Code can answer
   questions about with the `genome-ask` skill. The maintainer-only `python -m genokeeper.demo
   build|package` makes it.

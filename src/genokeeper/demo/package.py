@@ -89,7 +89,7 @@ SITE_NAV = (
     ("Sources", "sources.html"),
     ("GitHub", REPOSITORY),
 )
-# The dashboard's slider order: its `#rel=<i>&ev=<i>` index these.
+# The dashboard's threshold order: its matrix's `#rel=<i>&ev=<i>` index these.
 REL = (Level.LOW, Level.MEDIUM, Level.HIGH)
 EV = (Validity.CONFLICTING, Validity.LIMITED, Validity.MODERATE, Validity.STRONG)
 _REL_NAMES = ("any genotype", "medium or better", "high only")

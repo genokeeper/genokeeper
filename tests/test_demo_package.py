@@ -369,7 +369,8 @@ def test_landing_numbers(tmp_path: Path) -> None:
     ) in index
     # The folder's first question is the landing's; the command names its platforms.
     assert html.escape(QUESTIONS[0]) in index
-    assert index.count("uvx genokeeper demo</span>") == index.count("macOS or Linux")
+    commands = index.count("uvx genokeeper demo</span>")
+    assert commands >= 1 and commands == index.count("macOS or Linux")
 
 
 def test_landing_matrix(tmp_path: Path) -> None:
