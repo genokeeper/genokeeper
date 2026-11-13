@@ -297,7 +297,7 @@ def test_landing_numbers(tmp_path: Path) -> None:
         default = len(query(con, None, Filters()).findings)
     assert (loosest, default) == (7, 2)
     assert f"One genome, {loosest:,} candidate findings." in index
-    assert f"{default:,} pass at the default thresholds." in index
+    assert f"{default:,} remain at the default thresholds." in index
     n = [
         len(_report(out, tmp_path / str(i), *t)["changes"]) for i, t in enumerate(TIERS)
     ]
@@ -359,10 +359,40 @@ def test_landing_examples_are_the_everything_called_rows(tmp_path: Path) -> None
 def test_landing_diff_reads_clinvar_as_words() -> None:
     side = {"kind": "finding", "validity": "conflicting", "level": "high"}
     side["source_level"] = "Conflicting_classifications_of_pathogenicity|risk_factor"
+    side["reason"] = "gnomAD FAF above BA1"  # the reason the store holds, shown
     assert pkg._side(side) == (  # pyright: ignore[reportPrivateUsage]
         "Conflicting classifications of pathogenicity, risk factor,"
-        " conflicting evidence, genotype high"
+        " conflicting evidence (gnomAD FAF above BA1), genotype high"
     )
+
+
+def test_landing_says_only_what_is_measured(tmp_path: Path) -> None:
+    lab, home = _lab(tmp_path)
+    with connect(demo_paths(lab).reports / STORE_FILE) as con:
+        con.execute(
+            "UPDATE statement SET topic = 'drugs' WHERE statement_id = 'clinvar:4'"
+        )
+    index = _read(
+        package(lab, tmp_path / "out", home=home, private_ids=None), "index.html"
+    )
+    assert "The 2 at the default thresholds by topic: drugs 1, risks 1." in index
+    for said in ("Every class of finding", "GitHub and sends nothing", "Anthropic"):
+        assert said not in index
+    for said in (
+        "Polygenic scores, GWAS associations and VEP predictions carry none of their own",
+        "This run is HG002's PCR-free library",
+        "HG002 may also be in DeepVariant's training data.",
+        "DeepVariant's own genotype quality",
+        "The download sends nothing.",
+        "with a local model nothing leaves the machine",
+        "No finding is not an all-clear",
+    ):
+        assert said in index, said
+    assert "HG002's father: a different library of a related sample" in CALIBRATION_NOTE
+    assert "one Ashkenazi Jewish family" in CALIBRATION_NOTE
+    assert "outside the calibrated regions" in CALIBRATION_NOTE
+    assert "a different genome" not in CALIBRATION_NOTE
+    assert TABLE_SAMPLES["small_variants"].for_hg002 == "related sample"
 
 
 def test_landing_has_share_tags(tmp_path: Path) -> None:
@@ -392,7 +422,9 @@ def test_calibration_summary_covers_every_table(tmp_path: Path) -> None:
         in page
     )
     # The note points at the calibration page from the others only: a link on the landing.
-    assert CALIBRATION_PAGE not in page and "checked against a truth set.</p>" in page
+    assert (
+        CALIBRATION_PAGE not in page and "outside the calibrated regions.</p>" in page
+    )
     link = '<a href="calibration.html">the calibration page</a> says which table'
     assert link in index and CALIBRATION_PAGE in _read(out, "dashboard.html")
     assert '<ul class="plain methods">\n    <li>Tools and versions' in page

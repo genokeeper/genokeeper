@@ -29,6 +29,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from collections import Counter
 from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 from importlib.resources import files
@@ -247,7 +248,7 @@ def _fill(template: str, parts: Mapping[str, str]) -> str:
 
 
 def _calibration_table() -> str:
-    same = {"same sample": ' class="same"', "independent": ""}
+    same = {"same sample": ' class="same"', "related sample": ""}
     rows = "\n".join(
         f"<tr><td>{html.escape(m.measures)}</td><td>{html.escape(m.samples)}</td>"
         f"<td{same[m.for_hg002]}>{m.for_hg002}</td></tr>"
@@ -275,12 +276,15 @@ def _count(n: int, noun: str) -> str:
 def _side(side: Mapping[str, Any] | None) -> str:
     if side is None:
         return "not reported"
+    # A conflict has several causes (ClinVar's, BA1/BS1, a negative curation): name it.
+    conflicting = side["validity"] == "conflicting" and side["reason"]
+    why = f" ({side['reason']})" if conflicting else ""
     parts = [
         None if side["kind"] == "finding" else str(side["kind"]).replace("_", " "),
         None
         if side["source_level"] is None
         else str(side["source_level"]).replace("_", " ").replace("|", ", "),
-        None if side["validity"] is None else f"{side['validity']} evidence",
+        None if side["validity"] is None else f"{side['validity']} evidence{why}",
         None if side["level"] is None else f"genotype {side['level']}",
     ]
     return ", ".join(str(p) for p in parts if p is not None)
@@ -359,8 +363,13 @@ def _landing(
     list of everything called and the list at the default thresholds."""
     run = runs[-1]
     grid = [f for row in _grid() for f in row]
-    counts = {f: len(query(con, run["run_id"], f).findings) for f in grid}
+    kept = {f: query(con, run["run_id"], f).findings for f in grid}
+    counts = {f: len(found) for f, found in kept.items()}
     loosest, default = counts[LOOSEST], counts[Filters()]
+    topics = Counter(str(found["topic"]) for found in kept[Filters()])
+    by_topic = ", ".join(
+        f"{t} {n:,}" for t, n in sorted(topics.items(), key=lambda kv: (-kv[1], kv[0]))
+    )
     clinvar = {r["run_id"]: r["clinvar"] for r in runs}
     base = clinvar.get(reports[0]["base"]) if reports[0]["base"] else None
     rows, everything, defaults = (r["changes"] for r in reports)
@@ -388,7 +397,8 @@ def _landing(
             "default": f"{default:,}",
             "matrix": _matrix(counts),
             "caption": html.escape(
-                f"Run {run['run_id']}, ClinVar {_day(run['clinvar'])}, genokeeper {version}."
+                f"The {default:,} at the default thresholds by topic: {by_topic}."
+                f" Run {run['run_id']}, ClinVar {_day(run['clinvar'])}, genokeeper {version}."
             ),
             "changed": html.escape(changed),
             "diff": _diff(everything, base or "", run["clinvar"] or ""),

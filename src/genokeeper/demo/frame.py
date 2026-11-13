@@ -24,13 +24,15 @@ CALIBRATION_PAGE = "https://genokeeper.github.io/genokeeper/calibration.html"
 # The note's last clause; each site page shows it its own way (`package._note`).
 POINTER = f"; the calibration page ({CALIBRATION_PAGE}) says"
 CALIBRATION_NOTE = (
-    "Most small-variant error rates were measured on HG003, a different genome. The rates"
-    " for chrX, chrY and the regions only GIAB's v5.0q truth reaches, and those for repeats,"
-    " deletions, copy number, insertions, paralog loci and the run-time checks, were"
-    " measured on HG002's own libraries, this one among them, often beside HG003 and HG004:"
-    " they are shown on data they were measured on. This is the one genome where every call"
-    f" can be checked against a truth set{POINTER} which table was measured on which"
-    " samples."
+    "Most small-variant error rates were measured on HG003, HG002's father: a different"
+    " library of a related sample. The rates for chrX, chrY and the regions only GIAB's"
+    " v5.0q truth reaches, and those for repeats, deletions, copy number, insertions,"
+    " paralog loci and the run-time checks, were measured on HG002's own libraries, this"
+    " one among them, often beside HG003 and HG004, its mother: they are shown on data they"
+    " were measured on. HG002, HG003 and HG004 are one Ashkenazi Jewish family, so every"
+    " rate comes from one family of one ancestry. Inside GIAB's benchmark regions a call"
+    " can be checked against a truth set; a call outside them is marked as outside the"
+    f" calibrated regions{POINTER} which table was measured on which samples."
 )
 
 
@@ -41,12 +43,12 @@ class Measured:
 
     measures: str
     samples: str
-    for_hg002: Literal["independent", "same sample"]
+    for_hg002: Literal["related sample", "same sample"]
 
 
 TABLE_SAMPLES: dict[str, Measured] = {
     "small_variants": Measured(
-        "Small-variant genotypes, chr1-22", "HG003", "independent"
+        "Small-variant genotypes, chr1-22", "HG003", "related sample"
     ),
     "hg002_cells": Measured(
         "Small-variant genotypes on chrX, chrY and v5.0q-only regions",

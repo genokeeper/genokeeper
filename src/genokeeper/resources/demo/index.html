@@ -20,8 +20,8 @@
     <nav><a href="dashboard.html">Dashboard</a><a href="calibration.html">Calibration</a><a href="{{repository}}">GitHub</a><a href="https://doi.org/{{doi}}">doi:{{doi}}</a></nav>
   </div>
 
-  <h1><span>One genome, {{loosest}} candidate findings.</span><span>{{default}} pass at the default thresholds.</span></h1>
-  <p class="lede">Genokeeper takes the raw reads of a 30x genome and calls them on your own Mac. It grades each finding twice: how likely the genotype is wrong, measured on reference genomes, and how strong the evidence behind the claim is. This page is its output for HG002.</p>
+  <h1><span>One genome, {{loosest}} candidate findings.</span><span>{{default}} remain at the default thresholds.</span></h1>
+  <p class="lede">Genokeeper takes the raw reads of a 30x genome and calls them on your own Mac. It grades each finding twice: how likely the genotype is wrong, and how strong the evidence behind the claim is. Inside GIAB's benchmark regions the first is an error rate measured on four libraries of three reference samples (HG002 PCR-free and PCR, HG003, HG004); outside them it is DeepVariant's own genotype quality. This page is its output for HG002.</p>
 
   <figure>
     <div class="wrap">
@@ -43,24 +43,25 @@
   <p class="sub"><a href="dashboard.html#tab=changes&amp;rel=0&amp;ev=0">All changes, with their sources</a></p>
 
   <h2>How often it is wrong</h2>
-  <p>Every class of finding has an error rate measured against a truth set. Where nothing could be measured, the tool says so and does not grade.</p>
+  <p>Genotypes carry a measured error rate: small variants, and the kinds of call in the table below. Polygenic scores, GWAS associations and VEP predictions carry none of their own; only the genotypes under them are measured. Where nothing could be measured, as at the repeat loci a table withheld, the tool says so and does not grade.</p>
+  <p>This run is HG002's PCR-free library, one of the libraries the HG002 rows below were measured on, so those rates are shown on the data they were fitted on. HG002 may also be in DeepVariant's training data.</p>
 {{calibration}}
   <p class="sub"><a href="calibration.html">Every table as the tool printed it, and the tools' versions</a></p>
 
   <h2>Ask it yourself</h2>
-  <p>With Claude Code installed, three steps put this genome in a folder you can ask questions about. It downloads the store from GitHub and sends nothing.</p>
+  <p>Three steps put this genome in a folder you can ask questions about. The download sends nothing.</p>
   <ol class="steps">
     <li><span>Get the folder.<span class="cmd">uvx genokeeper demo</span></span></li>
-    <li><span>Open it.<span class="cmd">cd ~/genokeeper-demo &amp;&amp; claude</span></span></li>
+    <li><span>Open it in your agent; in Claude Code:<span class="cmd">cd ~/genokeeper-demo &amp;&amp; claude</span></span></li>
     <li><span>Ask.<span class="say">Is this person a carrier of anything their children could inherit?</span></span></li>
   </ol>
-  <p class="sub">The answers go through Claude, so the findings a question needs are sent to Anthropic. For HG002 that is public data. For your own genome it is your choice.</p>
+  <p class="sub">Asking is optional and goes through the agent and model you choose: what a question needs is sent to that model's provider, and with a local model nothing leaves the machine. The skill ships for Claude Code and reads a local command's JSON (<code>genokeeper query --json</code>), so any agent can use it, and a self-hosted model with a small adaptation.</p>
 
   <h2>What it cannot do</h2>
   <ul class="plain">
     <li>It reads only paired FASTQ from a DNBSEQ-T7 run of about 30x. Illumina reads are refused.</li>
     <li>Your own run needs an Apple silicon Mac with 48 GB, about 1 TB of free disk and several days.</li>
-    <li>It is not a medical device. A finding is a reason to repeat the test in a clinical lab.</li>
+    <li>It is not a medical device. A finding is a reason to repeat the test in a clinical lab. No finding is not an all-clear. Results belong with a genetic counsellor or a clinician.</li>
   </ul>
 
   <h2>Cite</h2>
