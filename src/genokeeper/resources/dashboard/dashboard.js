@@ -983,6 +983,11 @@ window.addEventListener("hashchange", () => {
   search.value = state.search;
   render();
 });
-const versions = Object.entries(data.versions).map(([tool, version]) => `${tool} ${version}`);
-document.getElementById("footer").textContent = t("footer", { run: data.run_id, versions: versions.join(", ") });
+// The footer's first line (the run, ClinVar's release, genokeeper's version); every version
+// and digest in a closed disclosure.
+const { clinvar, genokeeper } = data.versions;
+const first = [t("footer", { run: data.run_id }), clinvar && `ClinVar ${iso(clinvar)}`, genokeeper && `genokeeper ${genokeeper}`];
+const versions = el("details");
+versions.append(el("summary", "", t("versions_digests")), el("div", "", Object.entries(data.versions).map(([tool, version]) => `${tool} ${version}`).join(", ")));
+document.getElementById("footer").replaceChildren(el("div", "", first.filter(Boolean).join(" · ")), versions);
 render();

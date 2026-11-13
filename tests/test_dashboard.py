@@ -2037,6 +2037,16 @@ def test_an_empty_chip_says_where_its_rows_are_and_moves_there(
     assert moved["#history"]["urls"] == ["#tab=feed&rel=1&ev=2&topic=carrier"]
 
 
+def test_the_footer_folds_its_versions(
+    con: duckdb.DuckDBPyConnection, tmp_path: Path
+) -> None:
+    footer = _rendered(payload(con, None, NO_CACHE), tmp_path)["footer"]
+    first = footer["text"].split("\n")[0]
+    assert RUN in first and "2026-10-11" in first and "deepvariant" not in first
+    [fold] = footer["details"]
+    assert not fold["open"] and "deepvariant 1.10.0" in fold["text"]
+
+
 def test_a_matrix_click_sets_the_view(
     con: duckdb.DuckDBPyConnection, tmp_path: Path
 ) -> None:
