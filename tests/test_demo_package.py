@@ -14,6 +14,7 @@ from typing import Any
 import duckdb
 import pytest
 from fixtures.demo_site import RUN1, RUN2, seeded
+from fixtures.medlineplus_mini import gene, write_medlineplus
 from fixtures.store_mini import Row
 
 import genokeeper
@@ -37,7 +38,8 @@ from genokeeper.demo.frame import (
     TABLE_SAMPLES,
 )
 from genokeeper.demo.package import Leak, package, scan_bytes
-from genokeeper.explain import LOOSEST
+from genokeeper.evidence.medlineplus import MEDLINEPLUS_FILE
+from genokeeper.explain import LOOSEST, explain, newest_medlineplus
 from genokeeper.query import Filters, open_store, query
 from genokeeper.store.db import (
     SCHEMA_VERSION,
@@ -520,3 +522,31 @@ def test_readme_built_on_names_every_citation() -> None:
         t["name"] for t in pkg.citations() if f"[{t['name']}]({t['url']})" not in listed
     ]
     assert missing == []
+
+
+def test_dashboard_shows_the_demo_roots_explanations(tmp_path: Path) -> None:
+    """Written as the demo's are: another model and tone, grounded in the lab's MedlinePlus."""
+    lab, home = _lab(tmp_path)
+    write_medlineplus(lab / "medlineplus" / "20261020" / MEDLINEPLUS_FILE,
+                      gene("GENE2", "The GENE2 gene makes a protein."))  # fmt: skip
+    with open_store(demo_paths(lab).reports / STORE_FILE) as con:
+        [finding] = [
+            f for f in query(con, None, LOOSEST).findings if f["gene"] == "GENE2"
+        ]
+
+    def ask(text: str) -> str:
+        return json.dumps(
+            {"title": "T.", "text": "X.", "cites": ["medlineplus:gene:GENE2"]}
+        )
+
+    cache = demo_paths(lab).reports / "explanations"
+    model = "claude-sonnet-5-5"
+    explain(
+        [finding], newest_medlineplus(lab), cache, ask, model=model, tone="engaging"
+    )
+    out = package(lab, tmp_path / "out", home=home, private_ids=None)
+    shown = _page_data(_read(out, "dashboard.html"))["items"]["clinvar:2"][
+        "explanation"
+    ]
+    assert shown == {"title": "T.", "text": "X.", "cites": ["medlineplus:gene:GENE2"],
+                     "model": model}  # fmt: skip

@@ -60,7 +60,9 @@ from genokeeper.demo.frame import (
     POINTER,
     TABLE_SAMPLES,
 )
+from genokeeper.evidence.medlineplus import MEDLINEPLUS_FILE
 from genokeeper.explain import LOOSEST
+from genokeeper.pipeline import _newest_dated
 from genokeeper.query import Filters, open_store, query
 from genokeeper.store.db import (
     SCHEMA_VERSION,
@@ -629,6 +631,11 @@ def package(lab: Path, out: Path, *, home: Path, private_ids: Path | None) -> Pa
         (scratch.lab / "refresh").mkdir(parents=True)
         shutil.copyfile(log, scratch.lab / "refresh" / refresh_log.LOG)
         (scratch.lab / DEMO_MARKER).write_text("{}\n", encoding="utf-8")
+        # The demo root's explanations, keyed on prompts grounded in the lab's MedlinePlus.
+        if (explanations := root.reports / "explanations").is_dir():
+            shutil.copytree(explanations, scratch.reports / explanations.name)
+        if summaries := _newest_dated(lab / "medlineplus", [MEDLINEPLUS_FILE]):
+            shutil.copytree(summaries, scratch.lab / "medlineplus" / summaries.name)
         write_dashboard(
             scratch,
             out=work / "dashboard.html",
