@@ -150,7 +150,7 @@ def test_build_refuses_low_disk(
 
     monkeypatch.setattr(demo_build, "need_space", short)
     _refused_before_anything(lab, calls, "150 GB")
-    assert seen == [130 * 10**9]
+    assert seen == [105 * 10**9]
 
 
 def test_resumed_build_asks_only_for_what_its_root_lacks(

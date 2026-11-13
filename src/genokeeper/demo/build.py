@@ -27,7 +27,8 @@ from genokeeper.refresh_log import RefreshRecord, SourceOutcome, SourceStatus
 BASE_CLINVAR = "20260503"
 # NCBI files each archived release under its year: `{CLINVAR_BASE_URL}{year}/`.
 CLINVAR_BASE_URL = "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/archive_2.0/"
-NEED_BYTES = 130 * 10**9  # from an empty root; with `MARGIN_BYTES`, 150 GB
+# From an empty root; a full build left 101 GB there (2026-11-13). With `MARGIN_BYTES`, 125 GB.
+NEED_BYTES = 105 * 10**9
 
 
 class BuildRefused(Exception):
