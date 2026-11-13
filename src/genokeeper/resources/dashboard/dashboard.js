@@ -986,14 +986,15 @@ search.addEventListener("input", () => {
 // side, "high only" on top, strength of evidence across; `render` counts each cell's view.
 const matrix = document.getElementById("matrix");
 matrix.setAttribute("aria-label", t("matrix_axis"));
-// Each column head in full, and short for a phone's width (`dashboard.css`).
-matrix.append(el("span", "", t("matrix_axis")), ...SCALES.validity.map((v) => {
-  const head = el("span", "ev");
-  head.append(el("span", "long", M.matrix_columns[v]), el("span", "short", M.matrix_columns_short[v]));
-  return head;
-}));
+// Each head in full, and short for a phone's width (`dashboard.css`).
+function head(long, short, className) {
+  const span = el("span", className);
+  span.append(el("span", "long", long), el("span", "short", short));
+  return span;
+}
+matrix.append(el("span", "", t("matrix_axis")), ...SCALES.validity.map((v) => head(M.matrix_columns[v], M.matrix_columns_short[v], "ev")));
 const CELLS = [...SCALES.reliability].reverse().flatMap((r) => {
-  matrix.append(el("span", "rel", M.matrix_rows[r]));
+  matrix.append(head(M.matrix_rows[r], M.matrix_rows_short[r], "rel"));
   return SCALES.validity.map((v) => {
     const cell = el("button", r === reliability && v === validity ? "default" : "");
     cell.type = "button";

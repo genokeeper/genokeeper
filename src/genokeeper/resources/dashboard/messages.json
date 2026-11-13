@@ -299,6 +299,10 @@
     "en": {"high": "high only", "medium": "medium or better", "low": "any genotype"},
     "ru": {"high": "только высокая", "medium": "средняя и выше", "low": "любой генотип"}
   },
+  "matrix_rows_short": {
+    "en": {"high": "high", "medium": "medium+", "low": "any"},
+    "ru": {"high": "высокая", "medium": "средн.+", "low": "любой"}
+  },
   "matrix_columns": {
     "en": {"conflicting": "any evidence", "limited": "limited or more", "moderate": "moderate or more", "strong": "strong"},
     "ru": {"conflicting": "любые доказательства", "limited": "ограниченные и выше", "moderate": "умеренные и выше", "strong": "сильные"}

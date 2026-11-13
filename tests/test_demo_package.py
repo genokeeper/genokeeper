@@ -24,7 +24,7 @@ from genokeeper.calibrate.classes import BandTerms, ClassTable, Share, write_cla
 from genokeeper.calibrate.table import VERSION_KEYS, CalibrationTable
 from genokeeper.calibrate.tables import REPORT, TABLES, folder
 from genokeeper.config import GRADING_FILE, load_grading
-from genokeeper.dashboard import _sha256
+from genokeeper.dashboard import _sha256, messages
 from genokeeper.demo import (
     MANIFEST,
     REFRESH_LOG_FILE,
@@ -71,7 +71,8 @@ LEVELS = {
 }
 # The landing's three counts: every change, then the entered or left at each list.
 TIERS = ((LOOSEST, True), (LOOSEST, False), (Filters(), False))
-# The page's slider order: `rel=<i>` and `ev=<i>` index these.
+M = messages("en")
+# dashboard.js's `SCALES`: `rel=<i>` and `ev=<i>` index these.
 REL = (Level.LOW, Level.MEDIUM, Level.HIGH)
 EV = (Validity.CONFLICTING, Validity.LIMITED, Validity.MODERATE, Validity.STRONG)
 SITE = "https://genokeeper.github.io/genokeeper/social.png"
@@ -388,10 +389,10 @@ def test_landing_matrix(tmp_path: Path) -> None:
             assert (r, v) == (r_, v_)  # the colour is the pair's
             f = Filters(min_reliability=REL[int(r)], min_validity=EV[int(v)])
             assert int(count.replace(",", "")) == len(query(con, None, f).findings)
+            row, column = M["matrix_rows"][REL[int(r)]], M["matrix_columns"][EV[int(v)]]
             assert name.startswith(
-                f"{count} results: genotype {pkg._REL_NAMES[int(r)]}"
-            )  # pyright: ignore[reportPrivateUsage]
-            assert f"evidence {pkg._EV_NAMES[int(v)]}" in name  # pyright: ignore[reportPrivateUsage]
+                f"{count} results: genotype {row}, evidence {column}"
+            )
     assert [(c[0], c[1]) for c in cells if c[2]] == [("1", "2")]
     assert {(c[0], c[1]) for c in cells} == {
         (str(r), str(v)) for r in range(3) for v in range(4)

@@ -236,7 +236,11 @@ def report(
         "run": run,
         "refresh": None if refresh is None else refresh_log.as_json(refresh),
         "failed": failed(refresh),
-        **({} if demo_lab(lab) else {"check": check_block(lab, now or datetime.now(UTC))}),
+        **(
+            {}
+            if demo_lab(lab)
+            else {"check": check_block(lab, now or datetime.now(UTC))}
+        ),
         "changes": [],
         "research": {},
         "note": None,

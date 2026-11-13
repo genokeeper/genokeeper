@@ -48,7 +48,7 @@ from genokeeper.calibrate.table import CalibrationTable
 from genokeeper.calibrate.tables import REPORT, TABLES, folder
 from genokeeper.checksum import sha256_file
 from genokeeper.config import _REPO, DEMO_MARKER, Paths, load_grading
-from genokeeper.dashboard import _banner, _sha256, write_dashboard
+from genokeeper.dashboard import _banner, _sha256, messages, write_dashboard
 from genokeeper.demo import (
     MANIFEST,
     REFRESH_LOG_FILE,
@@ -67,7 +67,13 @@ from genokeeper.demo.install import FOLDER, QUESTIONS
 from genokeeper.evidence.medlineplus import MEDLINEPLUS_FILE
 from genokeeper.explain import LOOSEST, Explanation, lookup, newest_medlineplus
 from genokeeper.pipeline import _newest_dated
-from genokeeper.query import RESEARCH_ASSOCIATION, Filters, open_store, query
+from genokeeper.query import (
+    RESEARCH_ASSOCIATION,
+    Filters,
+    _hidden_by,
+    open_store,
+    query,
+)
 from genokeeper.store.db import (
     SCHEMA_VERSION,
     Level,
@@ -89,14 +95,8 @@ SITE_NAV = (
     ("Sources", "sources.html"),
     ("GitHub", REPOSITORY),
 )
-# The dashboard's threshold order: its matrix's `#rel=<i>&ev=<i>` index these.
-REL = (Level.LOW, Level.MEDIUM, Level.HIGH)
-EV = (Validity.CONFLICTING, Validity.LIMITED, Validity.MODERATE, Validity.STRONG)
-_REL_NAMES = ("any genotype", "medium or better", "high only")
-_EV_NAMES = ("any evidence", "limited or more", "moderate or more", "strong")
-_SHORT = {"medium or better": "medium+", "high only": "high"}
-_SHORT |= {"limited or more": "limited+", "moderate or more": "moderate+"}
-_SHORT |= {"any genotype": "any", "any evidence": "any", "strong": "strong"}
+# The dashboard's threshold order (dashboard.js's `SCALES`): `#rel=<i>&ev=<i>` index these.
+REL, EV = tuple(reversed(Level)), tuple(reversed(Validity))
 # The recorded question and answer the landing shows, when the maintainer has recorded one.
 TRANSCRIPT: Traversable = files("genokeeper").joinpath(
     "resources", "demo", "transcript.md"
@@ -509,9 +509,12 @@ def _grid() -> list[list[Filters]]:
     return [[Filters(min_reliability=r, min_validity=v) for v in EV] for r in REL]
 
 
-def _label(name: str) -> str:
-    """A matrix header: its words, and the short form a phone shows (`_SHORT`)."""
-    return f'<span class="long">{name}</span><span class="short">{_SHORT[name]}</span>'
+def _label(axis: str, level: str) -> str:
+    """A matrix header: the dashboard's words (`matrix_<axis>`), and its short form a phone
+    shows."""
+    m = messages("en")
+    long, short = m[f"matrix_{axis}"][level], m[f"matrix_{axis}_short"][level]
+    return f'<span class="long">{long}</span><span class="short">{short}</span>'
 
 
 def _matrix(counts: Mapping[Filters, int]) -> str:
@@ -519,21 +522,26 @@ def _matrix(counts: Mapping[Filters, int]) -> str:
     coloured by the pair (`.m<rel><ev>`: blue down the reliability axis, green across the
     evidence one), named by them and linking to the dashboard at that view; "high only" is
     the top row, and each link keeps its `REL` index."""
-    head = "".join(f"<th>{_label(n)}</th>" for n in _EV_NAMES)
+    m = messages("en")
+    head = "".join(f"<th>{_label('columns', v)}</th>" for v in EV)
     rows = [f'<tr><th class="axis">results that remain</th>{head}</tr>']
     for r, row in reversed(list(enumerate(_grid()))):
         cells: list[str] = []
         for v, f in enumerate(row):
             default = f == Filters()
             small = "default" if default else "everything" if f == LOOSEST else ""
-            name = f"{counts[f]:,} results: genotype {_REL_NAMES[r]}, evidence"
-            name += f" {_EV_NAMES[v]}" + (", the default" if default else "")
+            name = (
+                f"{counts[f]:,} results: genotype {m['matrix_rows'][REL[r]]}, evidence"
+            )
+            name += f" {m['matrix_columns'][EV[v]]}" + (
+                ", the default" if default else ""
+            )
             cells.append(
                 f'<td><a class="m{r}{v}{" default" if default else ""}"'
                 f' href="dashboard.html#rel={r}&amp;ev={v}" aria-label="{name}">'
                 f"{counts[f]:,}{f'<small>{small}</small>' if small else ''}</a></td>"
             )
-        rows.append(f"<tr><th>{_label(_REL_NAMES[r])}</th>{''.join(cells)}</tr>")
+        rows.append(f"<tr><th>{_label('rows', REL[r])}</th>{''.join(cells)}</tr>")
     return "\n".join(rows)
 
 
@@ -671,11 +679,12 @@ def _landing(
     list of everything called and the list at the default thresholds; `explained` gives a
     result's shipped explanation."""
     run, g = runs[-1], load_grading()
+    # One query at the loosest filters; each cell keeps what its pair's filters keep.
+    every = query(con, run["run_id"], LOOSEST)
     grid = [f for row in _grid() for f in row]
-    results = {f: query(con, run["run_id"], f) for f in grid}
-    kept = {f: found.findings for f, found in results.items()}
+    kept = {f: [x for x in every.findings if _hidden_by(x, f) is None] for f in grid}
     counts = {f: len(found) for f, found in kept.items()}
-    research = results[LOOSEST].hidden.get(RESEARCH_ASSOCIATION, 0)
+    research = every.hidden.get(RESEARCH_ASSOCIATION, 0)
     hero = _hero(kept[LOOSEST], explained)
     tools = _tools(con, run["run_id"])
     loosest, default = counts[LOOSEST], counts[Filters()]
