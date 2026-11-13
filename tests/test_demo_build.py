@@ -17,7 +17,7 @@ from genokeeper.demo import build as demo_build
 from genokeeper.demo.build import BASE_CLINVAR, BuildRefused, build
 from genokeeper.pipeline import RunRefused
 
-BODY = b"##fileDate=2026-10-11\nbase clinvar bytes\n"
+BODY = b"##fileDate=2026-05-03\nbase clinvar bytes\n"
 
 
 def _publish(folder: Path, md5: str | None = None) -> None:
@@ -38,11 +38,11 @@ def _download(url: str, md5: str, out: Path) -> Path:
 
 @pytest.fixture
 def ncbi(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
-    site = tmp_path / "ncbi"
-    site.mkdir()
+    site = tmp_path / "ncbi" / BASE_CLINVAR[:4]
+    site.mkdir(parents=True)
     _publish(site)
     monkeypatch.setattr(demo_build.hg002, "download", _download)
-    with serve(site) as base:
+    with serve(site.parent) as base:
         monkeypatch.setattr(demo_build, "CLINVAR_BASE_URL", base)
         yield site
 
@@ -135,8 +135,8 @@ def test_build_refuses_existing_store(lab: Path, calls: Calls) -> None:
 
 
 def test_build_refuses_a_lab_clinvar_not_newer(lab: Path, calls: Calls) -> None:
-    _newest(lab, "2026-10-11")
-    _refused_before_anything(lab, calls, "not newer than 20261011")
+    _newest(lab, "2026-05-03")
+    _refused_before_anything(lab, calls, f"not newer than {BASE_CLINVAR}")
 
 
 def test_build_refuses_low_disk(
@@ -182,3 +182,20 @@ def test_base_clinvar_md5_refused(lab: Path, calls: Calls, ncbi: Path) -> None:
         build(lab, threads=None)
     assert not demo_build.base_clinvar_path(demo_paths(lab).repo).exists()
     assert calls.kwargs == []
+
+
+def test_base_clinvar_fetched_from_its_years_folder(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seen: list[str] = []
+
+    def offline(url: str, timeout: int) -> None:
+        seen.append(url)
+        raise OSError("offline")
+
+    monkeypatch.setattr(demo_build, "BASE_CLINVAR", "20250105")
+    monkeypatch.setattr(demo_build.urllib.request, "urlopen", offline)
+    with pytest.raises(BuildRefused, match="offline"):
+        demo_build.fetch_base_clinvar(tmp_path)
+    archive = "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/archive_2.0/"
+    assert seen == [f"{archive}2025/clinvar_20250105.vcf.gz.md5"]

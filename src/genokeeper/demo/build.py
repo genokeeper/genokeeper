@@ -1,5 +1,5 @@
 """`python -m genokeeper.demo build`: two runs of GIAB's HG002 into the demo root, the first
-on ClinVar 20261011 and the second on the lab's newest, and the refresh-log record that
+on ClinVar `BASE_CLINVAR` and the second on the lab's newest, and the refresh-log record that
 labels the diff between them a refresh.
 
 `run_genome` branches on no sample's name: its identity check reads "not checked" without a
@@ -24,10 +24,9 @@ from genokeeper.demo import STORE_FILE, demo_paths
 from genokeeper.refresh import FOLDERS, REFRESHED, _dated
 from genokeeper.refresh_log import RefreshRecord, SourceOutcome, SourceStatus
 
-BASE_CLINVAR = "20261011"
-CLINVAR_BASE_URL = (
-    "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/archive_2.0/2026/"
-)
+BASE_CLINVAR = "20260503"
+# NCBI files each archived release under its year: `{CLINVAR_BASE_URL}{year}/`.
+CLINVAR_BASE_URL = "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/archive_2.0/"
 NEED_BYTES = 130 * 10**9  # from an empty root; with `MARGIN_BYTES`, 150 GB
 
 
@@ -36,15 +35,15 @@ class BuildRefused(Exception):
 
 
 def base_clinvar_path(root: Path) -> Path:
-    """Where the demo keeps ClinVar 20261011: under its own root, never the lab's `clinvar/`."""
+    """Where the demo keeps its base ClinVar: under its own root, never the lab's `clinvar/`."""
     return root / "clinvar" / BASE_CLINVAR / "clinvar_GRCh38.vcf.gz"
 
 
 def fetch_base_clinvar(root: Path) -> Path:
-    """ClinVar 20261011 from NCBI's archive into `root` (`hg002.download`), checked against
+    """ClinVar `BASE_CLINVAR` from NCBI's archive into `root` (`hg002.download`), checked against
     the `.md5` NCBI publishes beside it; its `.tbi` is fetched again with every new VCF."""
     out = base_clinvar_path(root)
-    url = f"{CLINVAR_BASE_URL}clinvar_{BASE_CLINVAR}.vcf.gz"
+    url = f"{CLINVAR_BASE_URL}{BASE_CLINVAR[:4]}/clinvar_{BASE_CLINVAR}.vcf.gz"
     try:
         with urllib.request.urlopen(url + ".md5", timeout=60) as response:
             words = response.read().decode("ascii", "replace").split()
