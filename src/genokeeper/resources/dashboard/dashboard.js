@@ -71,9 +71,10 @@ function percent(share) {
   return `${Math.round(100 * share)}%`;
 }
 
-// ClinVar's strings read as words, `_` a space and `|` a comma; the data stays as stored.
-function readable(text) {
-  return typeof text === "string" ? text.replace(/_/g, " ").replace(/\|/g, ", ") : text;
+// ClinVar's strings read as words, `_` a space and `|` a comma; the data stays as stored,
+// and another source's text (`pgsc_calc`, a transcript id) is its own.
+function readable(text, source = "clinvar") {
+  return typeof text === "string" && source === "clinvar" ? text.replace(/_/g, " ").replace(/\|/g, ", ") : text;
 }
 
 function joined(...parts) {
@@ -158,7 +159,7 @@ function markerLine(f) {
       parts.push(t("copies", genotype));
     }
   }
-  parts.push(readable(f.validity.source_level));
+  parts.push(readable(f.validity.source_level, f.sources[0].source));
   return parts.filter((part) => part).join(" · ");
 }
 
@@ -241,7 +242,7 @@ function opened(f) {
   }
   box.append(labelled(t("genotype"), genotypeText(f)));
   const v = f.validity;
-  const own = v.source_level ? ` (${readable(v.source_level)})` : "";
+  const own = v.source_level ? ` (${readable(v.source_level, f.sources[0].source)})` : "";
   const reason = v.reason ? `; ${v.reason}` : "";
   box.append(labelled(t("evidence"), `${LEVELS[v.level][0]}${own}${reason}`));
   if (f.effect) box.append(labelled(t("effect"), effectText(f.effect)));
@@ -344,8 +345,8 @@ function renderFeed() {
   const view = data.views[`${state.reliability}|${state.validity}|${state.topic}`];
   chips();
 
-  // `genokeeper.dashboard` wrote each item's `search` lower-cased, with `_` as a space.
-  const q = state.search.toLowerCase().replaceAll("_", " ");
+  // Each item's `search` is `genokeeper.query.searchable`'s, and so is the typed text.
+  const q = state.search.toLowerCase().replaceAll("_", " ").replaceAll("|", ", ");
   const shown = view.findings.filter((id) => data.items[id].search.includes(q));
   document.getElementById("count").textContent = t("count", { shown: shown.length, n: Object.keys(data.items).length });
   document.getElementById("feed").replaceChildren(...shown.map((id) => row(data.items[id])));
@@ -476,9 +477,9 @@ function causeText(cause) {
   return release ? `${causeGroup(cause)} ${release}` : causeGroup(cause);
 }
 
-function validityText(side) {
+function validityText(side, source) {
   if (side === null) return "—";
-  const own = side.source_level ? ` (${readable(side.source_level)})` : "";
+  const own = side.source_level ? ` (${readable(side.source_level, source)})` : "";
   return `${level(side.validity)}${own}`;
 }
 
@@ -502,7 +503,7 @@ const COLUMNS = [
   [M.columns.change, (row, kind) => KINDS[kind][0]],
   [M.columns.gene, (row) => `${row.gene || t("no_gene")} · ${marker(row)}`],
   [M.columns.topic, (row) => TOPICS[row.topic] || row.topic || "—"],
-  [M.columns.validity, (row) => `${validityText(row.before)} → ${validityText(row.after)}`],
+  [M.columns.validity, (row) => `${validityText(row.before, row.source)} → ${validityText(row.after, row.source)}`],
   [M.columns.reliability, reliabilityText],
   [M.columns.cause, (row) => row.causes.map(causeText).join("; ") || "—"],
   [M.columns.found, (row) => dated(row, "first_found")],
@@ -524,13 +525,13 @@ function links(label, pmids) {
   return span;
 }
 
-function sideValue(side, name) {
+function sideValue(side, name, source) {
   const value = side === null ? null : side[name];
   if (value === null || value === undefined) return "—";
   if (name === "validity" || name === "level") return level(value);
   if (name === "actionable") return t(value ? "yes" : "no");
   if (name === "kind") return STATEMENT_KINDS[value] || value;
-  if (name === "source_level") return readable(value);
+  if (name === "source_level") return readable(value, source);
   return String(value);
 }
 
@@ -539,7 +540,7 @@ function expanded(row) {
   if (row.fields.length) {
     const fields = el("ul");
     for (const name of row.fields) {
-      const text = `${sideValue(row.before, name)} → ${sideValue(row.after, name)}`;
+      const text = `${sideValue(row.before, name, row.source)} → ${sideValue(row.after, name, row.source)}`;
       fields.append(el("li", "", `${FIELDS[name] || name}: ${text}`));
     }
     box.append(el("b", "", t("what_changed")), fields);

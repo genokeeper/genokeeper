@@ -356,12 +356,15 @@ def text_fields(finding: dict[str, Any]) -> list[str]:
     return [str(field) for field in haystack if field is not None]
 
 
+def searchable(text: str) -> str:
+    """`text` as both searches match it: lower-cased, and ClinVar's `_` and `|` as the
+    dashboard shows them, a space and ", "."""
+    return text.lower().replace("_", " ").replace("|", ", ")
+
+
 def _text_matches(finding: dict[str, Any], text: str) -> bool:
-    # `_` reads as a space, as the dashboard's search reads it: ClinVar writes one for each.
-    wanted = text.lower().replace("_", " ")
-    return any(
-        wanted in field.lower().replace("_", " ") for field in text_fields(finding)
-    )
+    wanted = searchable(text)
+    return any(wanted in searchable(field) for field in text_fields(finding))
 
 
 def _hidden_by(
