@@ -103,6 +103,7 @@ CHECKPOINTS = {
         ),
     ),
 }
+_MOVES = ("left", "entered")  # the change kinds the landing shows one of each
 CLASS_TABLES = ("deletions", "cnv", "insertions")
 _COUNTS = ("calls", "false", "found", "truth")
 _WRONG_HEAD = (
@@ -431,23 +432,57 @@ def _side(side: Mapping[str, Any] | None) -> str:
     return ", ".join(str(p) for p in parts if p is not None)
 
 
-def _diff(rows: Sequence[Mapping[str, Any]], before: str, after: str) -> str:
-    """The first three changes as a unified diff, one before and one after line each."""
+def _pathogenic(level: Any) -> bool:
+    text = str(level).lower()
+    return "pathogenic" in text and "conflicting" not in text
+
+
+def _carried(side: Mapping[str, Any] | None) -> bool:
+    return side is not None and side["dosage"] not in (None, "0", "unknown")
+
+
+def _examples(
+    every: Sequence[Mapping[str, Any]], listed: Sequence[Mapping[str, Any]]
+) -> list[Mapping[str, Any]]:
+    """The changes the landing shows, each the first in its report's order: one whose
+    ClinVar classification crossed between pathogenic and not at a variant carried on both
+    sides (ClinVar reversed itself), then one that left and one that entered `listed`."""
+    reversed_ = (
+        r
+        for r in every
+        if r["id"].startswith("clinvar:")
+        and _carried(r["before"])
+        and _carried(r["after"])
+        and _pathogenic(r["before"]["source_level"])
+        != _pathogenic(r["after"]["source_level"])
+    )
+    picks = [next(reversed_, None)]
+    picks += [next((r for r in listed if r["kind"] == k), None) for k in _MOVES]
+    found = {r["id"]: r for r in picks if r is not None}  # one row once
+    return list(found.values())
+
+
+def _diff(
+    every: Sequence[Mapping[str, Any]],
+    listed: Sequence[Mapping[str, Any]],
+    before: str,
+    after: str,
+) -> str:
+    """`_examples` as a unified diff, one before and one after line each."""
+    rows = _examples(every, listed)
     if not rows:
         return ""
     lines = [f'<div class="h">ClinVar {_day(before)} → {_day(after)}</div>']
-    for row in rows[:3]:
+    for row in rows:
         marker = row["marker"]["rsid"] or row["marker"]["grch38"] or row["id"]
         label = f"{row['gene'] or '(no gene)'} {marker}"
+        what = row["kind"] if row["kind"] in _MOVES else "ClinVar reversed itself"
         lines += [
-            f'<div class="g h">{html.escape(label)} ({html.escape(row["kind"])})</div>',
+            f'<div class="g h">{html.escape(label)} ({what})</div>',
             f'<div class="m">- {html.escape(_side(row["before"]))}</div>',
             f'<div class="p">+ {html.escape(_side(row["after"]))}</div>',
         ]
-    shown = min(len(rows), 3)
-    aria = (
-        f"{_count(shown, 'finding')} whose grading changed between two ClinVar releases"
-    )
+    aria = f"{_count(len(rows), 'change')} between two ClinVar releases"
     return (
         f'<div class="diff" role="img" aria-label="{aria}">\n'
         + "\n".join(lines)
@@ -563,8 +598,6 @@ def _landing(
         f" called, and {len(defaults):,} entered or left the list at the default"
         " thresholds."
     )
-    if len(everything) > 3:
-        changed += " Three of them:"
     description = (
         f"{loosest:,} candidate findings for GIAB's HG002, {default:,} at the default"
         " thresholds, each graded by a measured error rate and the strength of its evidence."
@@ -586,7 +619,7 @@ def _landing(
                 f" Run {run['run_id']}, ClinVar {_day(run['clinvar'])}, genokeeper {version}."
             ),
             "changed": html.escape(changed),
-            "diff": _diff(everything, base or "", run["clinvar"] or ""),
+            "diff": _diff(rows, everything, base or "", run["clinvar"] or ""),
             "calibration": _wrong(lab, _tools(con, run["run_id"])),
             "levels": html.escape(
                 "Genotype reliability is high when the measured chance the genotype is"

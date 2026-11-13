@@ -386,32 +386,51 @@ def test_landing_matrix(tmp_path: Path) -> None:
     }
 
 
-def test_landing_examples_are_the_everything_called_rows(tmp_path: Path) -> None:
-    out = _package(tmp_path)
-    reports = [_report(out, tmp_path / str(i), *t) for i, t in enumerate(TIERS)]
-    reports[0][
-        "changes"
-    ].reverse()  # the first three of every change are none of the list's
-    rows, tier = reports[0]["changes"], reports[1]["changes"]
-    assert {r["id"] for r in rows[:3]}.isdisjoint(r["id"] for r in tier)
-    with open_store(out / STORE_FILE) as con:
-        index = pkg._landing(tmp_path, con, pkg._runs(con), reports)  # pyright: ignore[reportPrivateUsage]
-    [diff] = re.findall(
-        r'<div class="diff"[^>]*aria-label="[^"]+">(.*?)\n</div>', index, re.DOTALL
-    )
-    assert len(tier) == 3 and "Three of them:" not in index
-    for listed in tier:
-        label = f"{listed['gene']} {listed['marker']['grch38']}"
-        assert label in diff
-        lines = diff.split(label, 1)[1].split("\n")
-        before, after = (
-            "not reported" if side is None else f"{side['validity']} evidence"
-            for side in (listed["before"], listed["after"])
+def test_landing_examples_by_rule(tmp_path: Path) -> None:
+    """ClinVar's own reversal at a carried variant first, then the first that left and the
+    first that entered the list of everything called; each with both sides."""
+    lab, home = _lab(tmp_path)
+    with connect(demo_paths(lab).reports / STORE_FILE) as con:
+        con.execute(
+            "UPDATE statement SET source_level = 'Uncertain_risk_allele (0★)'"
+            " WHERE run_id = ? AND statement_id = 'clinvar:5'",
+            [RUN2],
         )
-        assert lines[1].startswith('<div class="m">- ') and before in lines[1]
-        assert lines[2].startswith('<div class="p">+ ') and after in lines[2]
-    assert rows[0]["gene"] not in diff
-    assert 'href="dashboard.html#tab=changes&amp;rel=0&amp;ev=0"' in index
+    out = package(
+        lab, tmp_path / "out", home=home, private_ids=None, no_private_ids=True
+    )
+    [diff] = re.findall(
+        r'<div class="diff"[^>]*>(.*?)\n</div>', _read(out, "index.html"), re.DOTALL
+    )
+    shown = re.findall(r'<div class="g h">(GENE\d) ', diff)
+    assert shown == ["GENE5", "GENE6", "GENE7"]
+    lines = diff.split("GENE5 ", 1)[1].split("\n")
+    assert lines[1].startswith('<div class="m">- Pathogenic (2★), strong evidence')
+    assert lines[2].startswith('<div class="p">+ Uncertain risk allele (0★), strong')
+
+
+def test_examples_skip_an_uncarried_or_unreversed_change() -> None:
+    def row(sid: str, kind: str, before: str, after: str, dosage: str = "1") -> Any:
+        sides = [{"source_level": level, "dosage": dosage} for level in (before, after)]
+        return {"id": sid, "kind": kind, "before": sides[0], "after": sides[1]}
+
+    left = row("clinvar:1", "left", "Pathogenic (2★)", "Pathogenic (2★)")
+    entered = row("clinvar:2", "entered", "Benign (1★)", "Benign (2★)")
+    every = [
+        row("clinvar:3", "details", "Pathogenic (1★)", "Likely_pathogenic (2★)"),
+        row("clinvar:4", "details", "Pathogenic (1★)", "Benign (1★)", dosage="0"),
+        row(
+            "clinvar:5",
+            "details",
+            "Conflicting_classifications_of_pathogenicity (1★)",
+            "Pathogenic (2★)",
+        ),  # fmt: skip
+    ]
+    assert [r["id"] for r in pkg._examples(every, [left, entered])] == [  # pyright: ignore[reportPrivateUsage]
+        "clinvar:5",
+        "clinvar:1",
+        "clinvar:2",
+    ]
 
 
 def test_landing_diff_reads_clinvar_as_words() -> None:
