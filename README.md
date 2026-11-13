@@ -79,30 +79,32 @@ weak evidence. Each finding carries two measures:
 - how likely its genotype is wrong, measured on reference samples;
 - how strong the evidence behind its claim is.
 
-In the matrix's loosest cell, any genotype and any evidence, the invented genome shows 2,405
-findings. At the default thresholds, 18 remain.
+**The HG002 demo.** The same pipeline run on GIAB's HG002, a public reference genome, is at
+[genokeeper.github.io/genokeeper](https://genokeeper.github.io/genokeeper/). In the matrix's
+loosest cell, any genotype and any evidence, HG002 has 481 results; at the default thresholds,
+54 remain, and 5 at high reliability and strong evidence. The site shows what a newer ClinVar
+release changed and how often each kind of call is wrong, with the samples it was measured on.
+`uvx genokeeper demo` (macOS or Linux) puts the same store in a folder you can ask questions
+about.
+
+![The HG002 demo's landing page: one opened result beside the headline counts](docs/demo/hg002-landing.png)
+
+![The HG002 demo's dashboard: the threshold matrix at its default, medium or better and moderate or more, what stands out, and the first results with their generated plain-language titles](docs/demo/hg002-dashboard.png)
 
 An open row shows its genotype, its evidence and sources, and, once `genokeeper explain` has run,
-a plain-language explanation. The page labels that explanation with the model that wrote it and
-the sources it was given.
+a short gist and a plain-language explanation. The page labels both with the model that wrote
+them and the sources it was given.
+
+The invented genome below, made to touch every topic, shows 2,405 findings in the loosest cell
+and 18 at the default thresholds. Its page, recording and screenshot are of an earlier version,
+with two sliders where the matrix now is.
 
 ![The demo dashboard: the chosen cell moves from the matrix's loosest to the default, the count falls from 2,405 findings to 18, then two rows open with explanations written by a language model](docs/demo/dashboard.gif)
 
-To try the filters yourself, download the demo page
-[docs/demo/dashboard.html](docs/demo/dashboard.html) and open it in a browser. It loads nothing
-from the network.
+To try the page yourself, download [docs/demo/dashboard.html](docs/demo/dashboard.html) and open
+it in a browser. It loads nothing from the network.
 
 ![The demo dashboard at its default thresholds: findings with genotype-reliability and evidence bars, the topic chips and the two sliders of an earlier version](docs/demo/dashboard.png)
-
-**The HG002 demo.** The same pipeline run on GIAB's HG002, a public reference genome, is at
-[genokeeper.github.io/genokeeper](https://genokeeper.github.io/genokeeper/). It shows the
-findings left at each pair of thresholds, what a newer ClinVar release changed, and how often each
-kind of call is wrong, with the samples it was measured on. `uvx genokeeper demo` puts the same
-store in a folder you can ask questions about.
-
-![The HG002 demo's landing page: the findings left at each pair of thresholds, and what a newer ClinVar release changed](docs/demo/hg002-landing.png)
-
-![The HG002 demo's dashboard: the threshold matrix with "any genotype, moderate or more" chosen, and the first findings with their generated plain-language titles](docs/demo/hg002-dashboard.png)
 
 **Language.** Text is in English by default. `GENOKEEPER_LANG=ru`, or `--lang ru` on
 `dashboard` and `explain`, switches the dashboard, the explanations and the update notices to
