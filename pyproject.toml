@@ -1,6 +1,6 @@
 [project]
 name = "genokeeper"
-version = "0.1.0"
+version = "0.2.0"
 description = "Local analyser for your own whole-genome data: findings with two confidences."
 readme = "docs/pypi.md"
 authors = [{ name = "Nezhinskiy" }]
