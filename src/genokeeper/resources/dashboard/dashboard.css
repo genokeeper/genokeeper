@@ -107,3 +107,10 @@ select { font: inherit; }
   .matrix .long { display: none; }
   .matrix .short { display: inline; }
 }
+/* The demo site's header, which `demo package` puts in the banner slot. */
+nav.site { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 18px;
+  color: var(--muted); padding-bottom: 10px; border-bottom: 1px solid var(--rule); }
+nav.site a { color: inherit; text-decoration-color: var(--rule); text-underline-offset: 3px; }
+nav.site a:hover { text-decoration-color: var(--ink); }
+nav.site .mark { font: 600 15px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color: var(--ink); text-decoration: none; margin-right: 10px; }
