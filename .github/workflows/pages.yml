@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      # Only the share image is wanted from the repository, and only when it is committed.
+      # Only the share image is wanted from the repository.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -53,9 +53,7 @@ jobs:
           sys.exit(bad)
           '
           rm site/manifest.json
-          if [ -f docs/demo/site/social.png ]; then
-            cp docs/demo/site/social.png site/social.png
-          fi
+          cp docs/demo/site/social.png site/social.png
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: site

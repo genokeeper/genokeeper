@@ -33,7 +33,6 @@ import tempfile
 import tomllib
 from collections import Counter
 from collections.abc import Mapping, Sequence
-from datetime import UTC, datetime
 from importlib.resources import files
 from math import log1p
 from pathlib import Path
@@ -61,7 +60,7 @@ from genokeeper.demo.frame import (
     POINTER,
     TABLE_SAMPLES,
 )
-from genokeeper.demo.install import FOLDER
+from genokeeper.demo.install import FOLDER, QUESTIONS
 from genokeeper.evidence.medlineplus import MEDLINEPLUS_FILE
 from genokeeper.explain import LOOSEST
 from genokeeper.pipeline import _newest_dated
@@ -490,8 +489,9 @@ def _landing(
     changed = (
         f"The reads are the same. Between its releases of {_day(base)} and"
         f" {_day(run['clinvar'])}, ClinVar brought {_count(len(rows), 'change')};"
-        f" {_count(len(everything), 'finding')} entered or left the list of everything"
-        f" called, and {len(defaults):,} the list at the default thresholds."
+        f" {_count(len(everything), 'result')} entered or left the list of everything"
+        f" called, and {len(defaults):,} entered or left the list at the default"
+        " thresholds."
     )
     if len(everything) > 3:
         changed += " Three of them:"
@@ -507,6 +507,7 @@ def _landing(
             "og_title": html.escape(f"One genome, {loosest:,} candidate findings"),
             "og_image": SOCIAL_IMAGE,
             "doi": DOI,
+            "question": html.escape(QUESTIONS[0]),
             "loosest": f"{loosest:,}",
             "default": f"{default:,}",
             "matrix": _matrix(counts),
@@ -703,7 +704,6 @@ def package(
                 "version": genokeeper.__version__,
                 "schema_version": SCHEMA_VERSION,
                 "runs": runs,
-                "date": datetime.now(UTC).date().isoformat(),
                 "files": {name: sha256_file(work / name) for name in SHIPPED},
             }
             (work / MANIFEST).write_text(

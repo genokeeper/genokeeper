@@ -37,6 +37,7 @@ from genokeeper.demo.frame import (
     FRAME,
     TABLE_SAMPLES,
 )
+from genokeeper.demo.install import QUESTIONS
 from genokeeper.demo.package import Leak, package, scan_bytes
 from genokeeper.evidence.medlineplus import MEDLINEPLUS_FILE
 from genokeeper.explain import LOOSEST, explain, newest_medlineplus
@@ -288,7 +289,7 @@ def test_package_writes_site_and_manifest(
     out = _package(tmp_path)
     assert set(os.listdir(out)) == {*SHIPPED, MANIFEST}
     manifest = json.loads(_read(out, MANIFEST))
-    assert set(manifest) == {"version", "schema_version", "runs", "date", "files"}
+    assert set(manifest) == {"version", "schema_version", "runs", "files"}
     assert (manifest["version"], manifest["schema_version"]) == (
         genokeeper.__version__,
         SCHEMA_VERSION,
@@ -331,9 +332,13 @@ def test_landing_numbers(tmp_path: Path) -> None:
     ]
     assert n == [7, 3, 2]
     assert (
-        f"ClinVar brought {n[0]} changes; {n[1]} findings entered or left the list of"
-        f" everything called, and {n[2]} the list at the default thresholds.</p>"
+        f"ClinVar brought {n[0]} changes; {n[1]} results entered or left the list of"
+        f" everything called, and {n[2]} entered or left the list at the default"
+        " thresholds.</p>"
     ) in index
+    # The folder's first question is the landing's; the command names its platforms.
+    assert html.escape(QUESTIONS[0]) in index
+    assert index.count("uvx genokeeper demo</span>") == index.count("macOS or Linux")
 
 
 def test_landing_matrix(tmp_path: Path) -> None:

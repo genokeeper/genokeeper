@@ -53,9 +53,9 @@
   <h2>Ask it yourself</h2>
   <p>Three steps put this genome in a folder you can ask questions about. The download sends nothing.</p>
   <ol class="steps">
-    <li><span>Get the folder.<span class="cmd">uvx genokeeper demo</span></span></li>
+    <li><span>Get the folder (macOS or Linux).<span class="cmd">uvx genokeeper demo</span></span></li>
     <li><span>Open it in your agent; in Claude Code:<span class="cmd">cd ~/genokeeper-demo &amp;&amp; claude</span></span></li>
-    <li><span>Ask.<span class="say">Is this person a carrier of anything their children could inherit?</span></span></li>
+    <li><span>Ask.<span class="say">{{question}}</span></span></li>
   </ol>
   <p class="sub">Asking is optional and goes through the agent and model you choose: what a question needs is sent to that model's provider, and with a local model nothing leaves the machine. The skill ships for Claude Code and reads a local command's JSON (<code>genokeeper query --json</code>), so any agent can use it, and a self-hosted model with a small adaptation.</p>
 
