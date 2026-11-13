@@ -1723,17 +1723,32 @@ def test_clinvar_subtitles_drop_placeholders_and_a_drug_row_names_its_drugs(
 ) -> None:
     told = "not_provided|Breast_cancer|See_cases|Ovarian_cancer|not_specified|A_b|C_d"
     drug = "not_specified|Thrombosis|warfarin_response_-_Dosage|Warfarin_response|x_response"
+    # The shapes A3s leaves: a ClinVar drug row limited with its reason, the grade on the
+    # ClinPGx row beside it.
+    clinpgx = {"schema": "genomelab.claim/1", "type": "pharmgkb_clinical_annotation",
+               "annotation_id": "1449", "gene": "MTHFR", "condition": "Toxicity",
+               "drugs": [{"drug": "methotrexate"}]}  # fmt: skip
     seed(con, [Row("clinvar:20", pos=1020, condition=told),
-               Row("clinvar:21", gene="VKORC1", pos=1021, topic="drugs",
-                   classification="drug_response", condition=drug)])  # fmt: skip
+               Row("clinvar:21", gene="VKORC1", pos=1021, topic="drugs", validity="limited",
+                   classification="drug_response", condition=drug,
+                   reason="graded on the VKORC1 gene call"),
+               Row("pharmgkb:1449", gene="MTHFR", pos=1022, topic="drugs",
+                   validity="moderate", claim=clinpgx)])  # fmt: skip
+    con.execute(
+        "UPDATE statement SET source_level = 'ClinPGx level 2A', source = 'pharmgkb'"
+        " WHERE statement_id = 'pharmgkb:1449'"
+    )
     data = {**payload(con, None, NO_CACHE), "default": "low|conflicting|"}
     lines = _rendered(data, tmp_path)["feed"]["text"].split("\n")
     [told_line] = [line for line in lines if "Breast cancer" in line]
     assert "Breast cancer, Ovarian cancer, A b" in told_line and "+1" in told_line
     assert not re.search("(?i)not provided|not specified|see cases|C d", told_line)
     [drug_line] = [line for line in lines if line.startswith("VKORC1")]
-    assert "warfarin, x" in drug_line and "strong" in drug_line
-    assert "Thrombosis" not in drug_line and "Dosage" not in drug_line
+    assert "warfarin, x" in drug_line and "graded on the VKORC1 gene call" in drug_line
+    assert not re.search("Thrombosis|Dosage|limited", drug_line)
+    [clinpgx_line] = [line for line in lines if line.startswith("MTHFR")]
+    assert "methotrexate" in clinpgx_line and "ClinPGx level 2A" in clinpgx_line
+    assert "Toxicity" not in clinpgx_line
 
 
 def test_typical_results_fold_and_the_others_stand_out(

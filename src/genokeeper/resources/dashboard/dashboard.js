@@ -93,14 +93,14 @@ function joined(...parts) {
 const PLACEHOLDERS = new Set(["not provided", "not specified", "see cases", "none provided", "not applicable"]);
 
 // A ClinVar claim's subtitle: a drug-response row's drugs (its conditions `<drug>_response…`)
-// and evidence level; else its classification and first three named conditions.
+// and what grades it (A3s: never its stars); else its classification and first three named conditions.
 function clinvarHeadline(f) {
   const { classification, condition } = f.claim;
   const parts = String(condition || "").split("|");
   const drugs = [...new Set(parts.map((part) => /^(.+?)_response(?:_-_|$)/i.exec(part)?.[1]).filter(Boolean)
     .map((drug) => readable(drug).toLowerCase()))];
   if (classification === "drug_response" && drugs.length) {
-    return t("drug_response", { drugs: drugs.join(", "), level: LEVELS[f.validity.level][0] });
+    return [t("drug_response", { drugs: drugs.join(", ") }), f.validity.reason].filter(Boolean).join("; ");
   }
   const named = parts.map((part) => readable(part)).filter((part) => part && !PLACEHOLDERS.has(part.toLowerCase()));
   const more = named.length > 3 ? t("more", { n: named.length - 3 }) : "";
@@ -158,6 +158,11 @@ function headline(f) {
   const typed = typingHeadline(claim);
   if (typed !== undefined) return typed;
   if (claim.type === "clinvar_germline") return clinvarHeadline(f);
+  // ClinPGx's level is the grade (`sources.pharmgkb` writes "ClinPGx level <level>").
+  const clinpgx = /^ClinPGx level (\S+)$/.exec(f.validity.source_level || "");
+  if (claim.type === "pharmgkb_clinical_annotation" && clinpgx && (claim.drugs || []).length) {
+    return t("drug_response_clinpgx", { drugs: claim.drugs.map((d) => d.drug).join(", "), level: clinpgx[1] });
+  }
   if (claim.type === "mito_haplogroup") return t("mito_haplogroup", { haplogroup: claim.haplogroup || t("unknown_f") });
   if (claim.type === "y_haplogroup") return t("y_haplogroup", { haplogroup: claim.haplogroup || t("unknown_f") });
   if (claim.type === "pgs") return `${claim.condition}: ${percentile(f.effect)}${claim.weak ? `, ${t("weak_power")}` : ""}`;

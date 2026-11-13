@@ -156,7 +156,8 @@
     "en": {"one": "{n} result in {topic} reads as typical", "other": "{n} results in {topic} read as typical"},
     "ru": {"one": "{n} результат в теме «{topic}» — типичный", "few": "{n} результата в теме «{topic}» — типичные", "other": "{n} результатов в теме «{topic}» — типичные"}
   },
-  "drug_response": {"en": "response to {drugs}, evidence {level}", "ru": "ответ на {drugs}, доказательства {level}"},
+  "drug_response": {"en": "response to {drugs}", "ru": "ответ на {drugs}"},
+  "drug_response_clinpgx": {"en": "response to {drugs}, ClinPGx level {level}", "ru": "ответ на {drugs}, уровень ClinPGx {level}"},
   "more": {"en": " +{n} more", "ru": " и ещё {n}"},
   "all_topics": {"en": "All topics", "ru": "Все темы"},
   "excluded_item": {
