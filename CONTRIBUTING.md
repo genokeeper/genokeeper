@@ -80,8 +80,9 @@ archives under a DOI.
 The HG002 demo is published apart from a release, from the maintainer's machine, and no demo
 file is attached to a release of this repository (Zenodo would archive it):
 
-1. `python -m genokeeper.demo build` runs HG002 twice (ClinVar 20261011, then the lab's
-   newest) into `<lab>/demo/hg002/`; it takes about a day and needs 150 GB free.
+1. `python -m genokeeper.demo build` runs HG002 twice (ClinVar 20260503, then the lab's
+   newest) into `<lab>/demo/hg002/`; it takes about a day and needs 125 GB free from an
+   empty root (105 GB and a 20 GB margin), less what a resumed build's root already holds.
 2. `python -m genokeeper.demo package OUT` writes the store, the three pages, the refresh log
    and `manifest.json` into an empty OUT, and refuses when a path of the maintainer's machine
    is in any of them. It prints the next two commands with the six files named and quoted.

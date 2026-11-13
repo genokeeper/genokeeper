@@ -1625,6 +1625,17 @@ def test_clinvar_strings_read_as_words(
     assert (
         "Conflicting classifications of pathogenicity (2★)" in feed and long not in feed
     )
+    # What the row shows is what the search finds, and another source's text is its own.
+    for typed in ("A b, C", "a_b|c"):
+        found = _rendered(data, tmp_path, actions=[("search", typed, "input")])["feed"]
+        assert "a b, c\n" in found["text"], typed
+    con.execute(
+        "UPDATE statement SET source_level = 'pgsc_calc 1.3', source = 'pgsc_calc'"
+    )
+    assert (
+        " · pgsc_calc 1.3"
+        in _rendered(payload(con, None, NO_CACHE), tmp_path)["feed"]["text"]
+    )
 
 
 def test_mc1r_two_strong_names_copies() -> None:
@@ -1799,7 +1810,7 @@ def test_view_from_url_hash(con: duckdb.DuckDBPyConnection, tmp_path: Path) -> N
     assert moved["#history"]["urls"] == ["#tab=changes&rel=0&ev=2&q=CYP2D6"]
     # An edited hash on the open page is its view, from the defaults; nothing is written back.
     edit = [("search", "BRCA", "input"), ("window", "#rel=2&ev=3", "hashchange")]
-    shown = _rendered(data, tmp_path, "#tab=changes", edit)
+    shown = _rendered(data, tmp_path, "#tab=changes&topic=risks", edit)
     assert (shown["reliability"]["value"], shown["validity"]["value"]) == ("2", "3")
     assert (shown["tab-feed"]["className"], shown["search"]["value"]) == ("tab on", "")
     assert "CYP2D6" in shown["feed"]["text"] and len(shown["#history"]["urls"]) == 1

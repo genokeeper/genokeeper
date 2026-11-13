@@ -71,6 +71,7 @@ from genokeeper.query import (
     _hidden_by,
     open_store,
     query,
+    searchable,
     text_fields,
 )
 from genokeeper.schedule import STALE_DAYS
@@ -384,8 +385,8 @@ def payload(
         if found is not None:
             fields += [found.title, found.text]
         # One field per line, so that a search never matches across two of them; the
-        # page lower-cases the typed text and reads `_` as a space the same way.
-        search = "\n".join(fields).lower().replace("_", " ")
+        # page reads the typed text as `searchable` does.
+        search = searchable("\n".join(fields))
         explanation = None if found is None else asdict(found)
         return {**finding, "explanation": explanation, "search": search}
 
