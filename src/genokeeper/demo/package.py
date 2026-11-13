@@ -338,19 +338,22 @@ def _runs(con: duckdb.DuckDBPyConnection) -> list[dict[str, Any]]:
 def _landing(
     con: duckdb.DuckDBPyConnection,
     runs: Sequence[Mapping[str, Any]],
-    report: Mapping[str, Any],
+    reports: Sequence[Mapping[str, Any]],
 ) -> str:
+    """The landing page; `reports` are every change, then those entering or leaving the
+    list of everything called and the list at the default thresholds."""
     run = runs[-1]
     grid = [f for row in _grid() for f in row]
     counts = {f: len(query(con, run["run_id"], f).findings) for f in grid}
     loosest, default = counts[LOOSEST], counts[Filters()]
     clinvar = {r["run_id"]: r["clinvar"] for r in runs}
-    base = clinvar.get(report["base"]) if report["base"] else None
-    rows = report["changes"]
+    base = clinvar.get(reports[0]["base"]) if reports[0]["base"] else None
+    rows, everything, defaults = (r["changes"] for r in reports)
     changed = (
         f"The reads are the same. Between the ClinVar releases of {_day(base)} and"
-        f" {_day(run['clinvar'])}, {_count(len(rows), 'finding')} entered or left the"
-        " list at the default thresholds."
+        f" {_day(run['clinvar'])}, {_count(len(rows), 'finding')} changed their grading;"
+        f" {len(everything):,} entered or left the list of everything called, and"
+        f" {len(defaults):,} the list at the default thresholds."
     )
     if len(rows) > 3:
         changed += " Three of them:"
@@ -495,21 +498,24 @@ def package(lab: Path, out: Path, *, home: Path, private_ids: Path | None) -> Pa
             lang="en",
             banner=(FRAME_SUMMARY, FRAME, CALIBRATION_NOTE),
         )
-        report = changes.report(
-            scratch.reports,
-            scratch.lab,
-            base=None,
-            run=None,
-            f=Filters(),
-            every=False,
-            gene=None,
-            marker=None,
-            text=None,
-        )
+        reports = [
+            changes.report(
+                scratch.reports,
+                scratch.lab,
+                base=None,
+                run=None,
+                f=f,
+                every=every,
+                gene=None,
+                marker=None,
+                text=None,
+            )
+            for f, every in ((LOOSEST, True), (LOOSEST, False), (Filters(), False))
+        ]
         with open_store(work / STORE_FILE) as shipped:
             runs = _runs(shipped)
             (work / "index.html").write_text(
-                _landing(shipped, runs, report), encoding="utf-8"
+                _landing(shipped, runs, reports), encoding="utf-8"
             )
             (work / "calibration.html").write_text(
                 _calibration(lab, shipped, runs, replacements), encoding="utf-8"

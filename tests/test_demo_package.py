@@ -30,6 +30,7 @@ from genokeeper.demo import (
 from genokeeper.demo import package as pkg
 from genokeeper.demo.frame import CALIBRATION_NOTE, FRAME, TABLE_SAMPLES
 from genokeeper.demo.package import Leak, package, scan_bytes
+from genokeeper.explain import LOOSEST
 from genokeeper.query import Filters, open_store, query
 from genokeeper.store.db import (
     SCHEMA_VERSION,
@@ -39,12 +40,23 @@ from genokeeper.store.db import (
     export_snapshots,
 )
 
-# Four findings enter or leave the trusted tier between the runs; two stay as they were.
+# Seven changes: 1 and 2 enter or leave the default list, 6 leaves and 7, 8 enter the list of
+# everything called, 3 and 4 change their grading inside both; 5 stays as it was.
 BEFORE = {"clinvar:1": "limited", "clinvar:2": "strong", "clinvar:3": "conflicting"}
 BEFORE |= {"clinvar:4": "moderate", "clinvar:5": "strong", "clinvar:6": "limited"}
 AFTER = {**BEFORE, "clinvar:1": "strong", "clinvar:2": "conflicting"}
-AFTER |= {"clinvar:3": "moderate", "clinvar:4": "limited"}
-LEVELS = {"clinvar:5": "low", "clinvar:6": "medium"}
+AFTER |= {"clinvar:3": "limited", "clinvar:4": "strong", "clinvar:7": "limited"}
+AFTER = {sid: v for sid, v in AFTER.items() if sid != "clinvar:6"} | {
+    "clinvar:8": "limited"
+}
+LEVELS = {
+    "clinvar:5": "low",
+    "clinvar:6": "medium",
+    "clinvar:7": "low",
+    "clinvar:8": "low",
+}
+# The landing's three counts: every change, then the entered or left at each list.
+TIERS = ((LOOSEST, True), (LOOSEST, False), (Filters(), False))
 # The page's slider order: `rel=<i>` and `ev=<i>` index these.
 REL = (Level.LOW, Level.MEDIUM, Level.HIGH)
 EV = (Validity.CONFLICTING, Validity.LIMITED, Validity.MODERATE, Validity.STRONG)
@@ -113,9 +125,11 @@ def _page_data(page: str) -> dict[str, Any]:
     return json.loads(text)
 
 
-def _report(out: Path, tmp_path: Path) -> dict[str, Any]:
-    """`changes.report` at the default filters over the shipped store, as the demo folder
-    will have it: its snapshots exported, a lab holding the shipped refresh log."""
+def _report(
+    out: Path, tmp_path: Path, f: Filters = TIERS[2][0], every: bool = False
+) -> dict[str, Any]:
+    """`changes.report` at `f` (the default filters) over the shipped store, as the demo
+    folder will have it: its snapshots exported, a lab holding the shipped refresh log."""
     reports, lab = tmp_path / "check" / "reports", tmp_path / "check" / "lab"
     with open_store(out / STORE_FILE) as con:
         export_snapshots(con, reports / "snapshots")
@@ -126,8 +140,8 @@ def _report(out: Path, tmp_path: Path) -> dict[str, Any]:
         lab,
         base=None,
         run=None,
-        f=Filters(),
-        every=False,
+        f=f,
+        every=every,
         gene=None,
         marker=None,
         text=None,
@@ -276,14 +290,17 @@ def test_landing_numbers(tmp_path: Path) -> None:
         every = Filters(min_reliability=REL[0], min_validity=EV[0])
         loosest = len(query(con, None, every).findings)
         default = len(query(con, None, Filters()).findings)
-    assert (loosest, default) == (6, 2)
+    assert (loosest, default) == (7, 2)
     assert f"One genome, {loosest:,} candidate findings." in index
     assert f"{default:,} pass at the default thresholds." in index
-    n = len(_report(out, tmp_path)["changes"])
-    assert n == 4
+    n = [
+        len(_report(out, tmp_path / str(i), *t)["changes"]) for i, t in enumerate(TIERS)
+    ]
+    assert n == [7, 3, 2]
     assert (
-        f", {n} findings entered or left the list at the default thresholds." in index
-    )
+        f", {n[0]} findings changed their grading; {n[1]} entered or left the list of"
+        f" everything called, and {n[2]} the list at the default thresholds. Three of them:"
+    ) in index
 
 
 def test_landing_matrix(tmp_path: Path) -> None:
@@ -310,17 +327,19 @@ def test_landing_diff_lists_changes(tmp_path: Path) -> None:
     [diff] = re.findall(
         r'<div class="diff"[^>]*aria-label="[^"]+">(.*?)\n</div>', index, re.DOTALL
     )
-    rows = _report(out, tmp_path)["changes"]
+    rows = _report(out, tmp_path, *TIERS[0])["changes"]
+    tier = _report(out, tmp_path / "tier", *TIERS[1])["changes"]
+    assert [r["id"] for r in rows[:3]] == [r["id"] for r in tier]
     for listed in rows[:3]:
         label = f"{listed['gene']} {listed['marker']['grch38']}"
         assert label in diff
         lines = diff.split(label, 1)[1].split("\n")
-        assert lines[1].startswith('<div class="m">- ') and (
-            f"{listed['before']['validity']} evidence" in lines[1]
+        before, after = (
+            "not reported" if side is None else f"{side['validity']} evidence"
+            for side in (listed["before"], listed["after"])
         )
-        assert lines[2].startswith('<div class="p">+ ') and (
-            f"{listed['after']['validity']} evidence" in lines[2]
-        )
+        assert lines[1].startswith('<div class="m">- ') and before in lines[1]
+        assert lines[2].startswith('<div class="p">+ ') and after in lines[2]
     assert rows[3]["gene"] not in diff
     assert 'href="dashboard.html#tab=changes"' in index
 
