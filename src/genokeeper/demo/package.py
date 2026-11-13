@@ -32,11 +32,12 @@ import sys
 import tempfile
 import tomllib
 from collections import Counter
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from importlib.resources import files
-from math import log1p
+from importlib.resources.abc import Traversable
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 import duckdb
 
@@ -64,9 +65,9 @@ from genokeeper.demo.frame import (
 )
 from genokeeper.demo.install import FOLDER, QUESTIONS
 from genokeeper.evidence.medlineplus import MEDLINEPLUS_FILE
-from genokeeper.explain import LOOSEST
+from genokeeper.explain import LOOSEST, Explanation, lookup, newest_medlineplus
 from genokeeper.pipeline import _newest_dated
-from genokeeper.query import Filters, open_store, query
+from genokeeper.query import RESEARCH_ASSOCIATION, Filters, open_store, query
 from genokeeper.store.db import (
     SCHEMA_VERSION,
     Level,
@@ -92,6 +93,14 @@ SITE_NAV = (
 REL = (Level.LOW, Level.MEDIUM, Level.HIGH)
 EV = (Validity.CONFLICTING, Validity.LIMITED, Validity.MODERATE, Validity.STRONG)
 _REL_NAMES = ("any genotype", "medium or better", "high only")
+_EV_NAMES = ("any evidence", "limited or more", "moderate or more", "strong")
+_SHORT = {"medium or better": "medium+", "high only": "high"}
+_SHORT |= {"limited or more": "limited+", "moderate or more": "moderate+"}
+_SHORT |= {"any genotype": "any", "any evidence": "any", "strong": "strong"}
+# The recorded question and answer the landing shows, when the maintainer has recorded one.
+TRANSCRIPT: Traversable = files("genokeeper").joinpath(
+    "resources", "demo", "transcript.md"
+)
 _SAY = "genokeeper demo package"
 # DeepVariant checkpoints by file name: what to call one, and Google's published figures.
 CHECKPOINTS = {
@@ -495,31 +504,103 @@ def _grid() -> list[list[Filters]]:
     return [[Filters(min_reliability=r, min_validity=v) for v in EV] for r in REL]
 
 
+def _label(name: str) -> str:
+    """A matrix header: its words, and the short form a phone shows (`_SHORT`)."""
+    return f'<span class="long">{name}</span><span class="short">{_SHORT[name]}</span>'
+
+
 def _matrix(counts: Mapping[Filters, int]) -> str:
-    """Figure 1's rows: each cell the findings `query` keeps at its pair of thresholds,
-    shaded by count, linking to the dashboard at that view; the default pair outlined. "high
-    only" is the top row: each link keeps its `REL` index."""
-    top = max(counts.values())
-    rows: list[str] = []
+    """The figure's table: each cell the results `query` keeps at its pair of thresholds,
+    coloured by the pair (`.m<rel><ev>`: blue down the reliability axis, green across the
+    evidence one), named by them and linking to the dashboard at that view; "high only" is
+    the top row, and each link keeps its `REL` index."""
+    head = "".join(f"<th>{_label(n)}</th>" for n in _EV_NAMES)
+    rows = [f'<tr><th class="axis">results that remain</th>{head}</tr>']
     for r, row in reversed(list(enumerate(_grid()))):
         cells: list[str] = []
         for v, f in enumerate(row):
-            n = counts[f]
-            shade = int(5 * log1p(n) / log1p(top)) if top else 0
-            label = (
-                "<small>default</small>"
-                if f == Filters()
-                else "<small>everything called</small>"
-                if f == LOOSEST
-                else ""
-            )
-            mark = ' class="default"' if f == Filters() else ""
+            default = f == Filters()
+            small = "default" if default else "everything" if f == LOOSEST else ""
+            name = f"{counts[f]:,} results: genotype {_REL_NAMES[r]}, evidence"
+            name += f" {_EV_NAMES[v]}" + (", the default" if default else "")
             cells.append(
-                f'<td{mark}><a class="t{shade}" href="dashboard.html#rel={r}&amp;ev={v}">'
-                f"{n:,}{label}</a></td>"
+                f'<td><a class="m{r}{v}{" default" if default else ""}"'
+                f' href="dashboard.html#rel={r}&amp;ev={v}" aria-label="{name}">'
+                f"{counts[f]:,}{f'<small>{small}</small>' if small else ''}</a></td>"
             )
-        rows.append(f"        <tr><th>{_REL_NAMES[r]}</th>{''.join(cells)}</tr>")
+        rows.append(f"<tr><th>{_label(_REL_NAMES[r])}</th>{''.join(cells)}</tr>")
     return "\n".join(rows)
+
+
+def _normal(finding: Mapping[str, Any]) -> bool:
+    claim, call = finding["claim"] or {}, finding["gene_call"] or {}
+    said = f"{claim.get('classification')} {call.get('phenotype')}".lower()
+    return "normal" in said or "benign" in said
+
+
+def _hero(
+    findings: Sequence[dict[str, Any]],
+    explained: Callable[[dict[str, Any]], Explanation | None],
+) -> tuple[dict[str, Any], Explanation] | None:
+    """The result the landing opens: carried, not normal, with a shipped explanation; the
+    strictest first (genotype reliability, then evidence), then the lower measured chance
+    of a wrong genotype (none measured last), then the id."""
+
+    def rank(f: Mapping[str, Any]) -> tuple[int, int, float, str]:
+        rel, p = f["reliability"], f["reliability"]["p_wrong"]
+        level = EV.index(Validity(f["validity"]["level"]))
+        return -REL.index(Level(rel["level"])), -level, 1.0 if p is None else p, f["id"]
+
+    shown = (f for f in findings if _carried(f["genotype"]) and not _normal(f))
+    for f in sorted(shown, key=rank):
+        if (said := explained(f)) is not None:
+            return f, said
+    return None
+
+
+def _card(finding: Mapping[str, Any], said: Explanation) -> str:
+    """One result opened as the dashboard opens it: both bars, the explanation and its
+    model, and a link to its row."""
+    rel, ev, e = finding["reliability"], finding["validity"], html.escape
+    r, v = REL.index(Level(rel["level"])), EV.index(Validity(ev["level"]))
+    copies = {"1": "one copy", "2": "two copies"}.get(finding["genotype"]["dosage"])
+    wrong = "no measured error rate"
+    if (p := rel["p_wrong"]) is not None:
+        lo, hi = rel["p_wrong_ci"] or (None, None)
+        wrong = f"wrong with a measured chance of {p:.2g}" + (
+            "" if lo is None else f" [{lo:.2g}, {hi:.2g}]"
+        )
+    source = (
+        finding["sources"][0] if finding["sources"] else {"source": "", "version": ""}
+    )
+    level = str(ev["source_level"] or "").replace("_", " ")
+    marker = finding["marker"]["rsid"] or finding["marker"]["grch38"] or ""
+    href = f"dashboard.html#rel={r}&amp;ev={v}&amp;q={quote(finding['id'], safe='')}"
+    return f"""    <aside class="card" aria-label="One result, opened">
+      <p class="sub">{e(finding["topic"])} · {e(finding["gene"] or "")} {e(marker)}{f" · {copies} carried" if copies else ""}</p>
+      <h3>{e(said.title)}</h3>
+      <div class="pair"><span>genotype</span><span class="bar"><i class="r{r}"></i></span><b>{e(rel["level"])}</b></div>
+      <p class="sub">{e(wrong)}</p>
+      <div class="pair"><span>evidence</span><span class="bar"><i class="e{v}"></i></span><b>{e(ev["level"])}</b></div>
+      <p class="sub">{e(f"{source['source']} {source['version']}: {level}")}</p>
+      <p>{e(said.text)}</p>
+      <p class="sub">Generated by {e(said.model)}: an interpretation of the sources ({e(", ".join(said.cites))}), not one of them.</p>
+      <p class="sub"><a href="{href}">Open its row</a></p>
+    </aside>"""
+
+
+def _transcript() -> str:
+    """The recorded question and answer (`TRANSCRIPT`, its front matter naming when and with
+    which version), escaped; none without the file."""
+    if not TRANSCRIPT.is_file():
+        return ""
+    _, head, body = TRANSCRIPT.read_text(encoding="utf-8").split("---\n", 2)
+    meta = dict(line.split(": ", 1) for line in head.splitlines() if ": " in line)
+    said = f"Recorded on {meta['recorded']} from genokeeper {meta['version']}."
+    return (
+        f'  <p class="sub">{html.escape(said)}</p>\n'
+        f'  <pre class="transcript">{html.escape(body.strip())}</pre>'
+    )
 
 
 def _withheld(con: duckdb.DuckDBPyConnection, run_id: str) -> int:
@@ -544,6 +625,8 @@ def _built_on(tools: Mapping[str, Any]) -> str:
     groups: dict[str, list[str]] = {}
     for t in citations():
         version = tools.get(t["version_key"]) if t["version_key"] else None
+        if version is not None and t["version_key"] == "deepvariant":
+            version = f"{version} with {_checkpoint(tools)[0]}"
         groups.setdefault(t["group"], []).append(
             f'<li><a href="{html.escape(t["url"])}">{html.escape(t["name"])}</a>'
             + ("" if version is None else f" {html.escape(str(version))}")
@@ -576,13 +659,19 @@ def _landing(
     con: duckdb.DuckDBPyConnection,
     runs: Sequence[Mapping[str, Any]],
     reports: Sequence[Mapping[str, Any]],
+    explained: Callable[[dict[str, Any]], Explanation | None],
 ) -> str:
     """The landing page; `reports` are every change, then those entering or leaving the
-    list of everything called and the list at the default thresholds."""
+    list of everything called and the list at the default thresholds; `explained` gives a
+    result's shipped explanation."""
     run, g = runs[-1], load_grading()
     grid = [f for row in _grid() for f in row]
-    kept = {f: query(con, run["run_id"], f).findings for f in grid}
+    results = {f: query(con, run["run_id"], f) for f in grid}
+    kept = {f: found.findings for f, found in results.items()}
     counts = {f: len(found) for f, found in kept.items()}
+    research = results[LOOSEST].hidden.get(RESEARCH_ASSOCIATION, 0)
+    hero = _hero(kept[LOOSEST], explained)
+    tools = _tools(con, run["run_id"])
     loosest, default = counts[LOOSEST], counts[Filters()]
     topics = Counter(str(found["topic"]) for found in kept[Filters()])
     by_topic = ", ".join(
@@ -599,7 +688,7 @@ def _landing(
         " thresholds."
     )
     description = (
-        f"{loosest:,} candidate findings for GIAB's HG002, {default:,} at the default"
+        f"{loosest:,} results for GIAB's HG002, {default:,} at the default"
         " thresholds, each graded by a measured error rate and the strength of its evidence."
     )
     version = genokeeper.__version__
@@ -607,20 +696,27 @@ def _landing(
         "index.html",
         {
             "description": html.escape(description),
-            "og_title": html.escape(f"One genome, {loosest:,} candidate findings"),
+            "og_title": html.escape(f"One genome, {loosest:,} results"),
             "og_image": SOCIAL_IMAGE,
             "doi": DOI,
             "question": html.escape(QUESTIONS[0]),
             "loosest": f"{loosest:,}",
             "default": f"{default:,}",
             "matrix": _matrix(counts),
+            "card": "" if hero is None else _card(*hero),
+            "counted": html.escape(
+                "A result is any graded statement, a normal one included; a finding is a"
+                " result that is not normal. A research layer outside these counts holds"
+                f" {_count(research, 'GWAS association')}."
+            ),
+            "transcript": _transcript(),
             "caption": html.escape(
                 f"The {default:,} at the default thresholds by topic: {by_topic}."
                 f" Run {run['run_id']}, ClinVar {_day(run['clinvar'])}, genokeeper {version}."
             ),
             "changed": html.escape(changed),
             "diff": _diff(rows, everything, base or "", run["clinvar"] or ""),
-            "calibration": _wrong(lab, _tools(con, run["run_id"])),
+            "calibration": _wrong(lab, tools),
             "levels": html.escape(
                 "Genotype reliability is high when the measured chance the genotype is"
                 f" wrong is at most {g.p_high:g} and the site is in no difficult region,"
@@ -632,7 +728,10 @@ def _landing(
                 " stars, moderate at 1 and limited at none. Any evidence counts the"
                 " conflicting claims too."
             ),
-            "built": _built_on(_tools(con, run["run_id"])),
+            "built": html.escape(
+                f"Genokeeper runs {len(citations())} published tools, truth sets and"
+                " knowledge sources."
+            ),
             "withheld": html.escape(
                 f"This run holds {_count(_withheld(con, run['run_id']), 'withheld value')}:"
                 " a calibration table could not measure the item, so it is not graded and"
@@ -675,7 +774,7 @@ def _calibration(
     versions = ", ".join(f"{k} {v}" for k, v in sorted(tools.items()))
     releases = " and ".join(_day(r["clinvar"]) for r in runs)
     methods = [
-        f"Tools and versions of run {runs[-1]['run_id']}: {versions}.",
+        f"Run {runs[-1]['run_id']}, genokeeper {genokeeper.__version__}.",
         "Reference: GIAB's GRCh38 with the GRC false duplications masked.",
         f"ClinVar releases: {releases}.",
     ]
@@ -686,6 +785,7 @@ def _calibration(
             "calibration": _wrong(lab, tools),
             "reports": "\n".join(sections) or "<p>No table's report was found.</p>",
             "methods": "\n".join(f"    <li>{html.escape(m)}</li>" for m in methods),
+            "versions": html.escape(f"Tools and versions: {versions}."),
         },
     )
 
@@ -800,13 +900,22 @@ def package(
             )
             for f, every in ((LOOSEST, True), (LOOSEST, False), (Filters(), False))
         ]
+        medlineplus = newest_medlineplus(scratch.lab)
+
+        def explained(finding: dict[str, Any]) -> Explanation | None:
+            return lookup(finding, medlineplus, scratch.reports / "explanations")
+
         with open_store(work / STORE_FILE) as shipped:
             runs = _runs(shipped)
             (work / "index.html").write_text(
-                _landing(lab, shipped, runs, reports), encoding="utf-8"
+                _landing(lab, shipped, runs, reports, explained), encoding="utf-8"
             )
             (work / "calibration.html").write_text(
                 _calibration(lab, shipped, runs, replacements), encoding="utf-8"
+            )
+            tools = _tools(shipped, runs[-1]["run_id"])
+            (work / "sources.html").write_text(
+                _fill("sources.html", {"built": _built_on(tools)}), encoding="utf-8"
             )
             manifest = {
                 "version": genokeeper.__version__,

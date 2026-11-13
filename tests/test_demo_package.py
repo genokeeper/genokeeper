@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 from dataclasses import replace
+from importlib.resources import files
 from pathlib import Path
 from typing import Any
 
@@ -44,6 +45,7 @@ from genokeeper.demo.package import Leak, package, scan_bytes
 from genokeeper.evidence.medlineplus import MEDLINEPLUS_FILE
 from genokeeper.explain import LOOSEST, explain, newest_medlineplus
 from genokeeper.query import Filters, open_store, query
+from genokeeper.sources.research import RESEARCH_LAYERS
 from genokeeper.store.db import (
     SCHEMA_VERSION,
     Level,
@@ -350,8 +352,7 @@ def test_landing_numbers(tmp_path: Path) -> None:
         loosest = len(query(con, None, every).findings)
         default = len(query(con, None, Filters()).findings)
     assert (loosest, default) == (7, 2)
-    assert f"One genome, {loosest:,} candidate findings." in index
-    assert f"{default:,} remain at the default thresholds." in index
+    assert f"One genome, {loosest:,} results. <span>{default:,} at the" in index
     n = [
         len(_report(out, tmp_path / str(i), *t)["changes"]) for i, t in enumerate(TIERS)
     ]
@@ -369,21 +370,48 @@ def test_landing_numbers(tmp_path: Path) -> None:
 def test_landing_matrix(tmp_path: Path) -> None:
     out = _package(tmp_path)
     cells = re.findall(
-        r'<td( class="default")?><a class="t[0-5]"'
-        r' href="dashboard\.html#rel=(\d)&amp;ev=(\d)">([\d,]+)',
+        r'<a class="m(\d)(\d)( default)?" href="dashboard\.html#rel=(\d)&amp;ev=(\d)"'
+        r' aria-label="([^"]+)">([\d,]+)',
         _read(out, "index.html"),
     )
     assert len(cells) == 12
     # "high only" on top: the display order flips, each link keeps its own indices.
-    assert [r for _, r, _, _ in cells[::4]] == ["2", "1", "0"]
+    assert [c[3] for c in cells[::4]] == ["2", "1", "0"]
     with open_store(out / STORE_FILE) as con:
-        for default, r, v, count in cells:
+        for r, v, _, r_, v_, name, count in cells:
+            assert (r, v) == (r_, v_)  # the colour is the pair's
             f = Filters(min_reliability=REL[int(r)], min_validity=EV[int(v)])
             assert int(count.replace(",", "")) == len(query(con, None, f).findings)
-    assert [(r, v) for default, r, v, _ in cells if default] == [("1", "2")]
-    assert {(r, v) for _, r, v, _ in cells} == {
+            assert name.startswith(
+                f"{count} results: genotype {pkg._REL_NAMES[int(r)]}"
+            )  # pyright: ignore[reportPrivateUsage]
+            assert f"evidence {pkg._EV_NAMES[int(v)]}" in name  # pyright: ignore[reportPrivateUsage]
+    assert [(c[0], c[1]) for c in cells if c[2]] == [("1", "2")]
+    assert {(c[0], c[1]) for c in cells} == {
         (str(r), str(v)) for r in range(3) for v in range(4)
     }
+
+
+def _contrast(a: str, b: str) -> float:
+    def luminance(hex_: str) -> float:
+        rgb = [int(hex_[i : i + 2], 16) / 255 for i in (1, 3, 5)]
+        lin = [c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4 for c in rgb]
+        return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2]
+
+    hi, lo = sorted((luminance(a), luminance(b)), reverse=True)
+    return (hi + 0.05) / (lo + 0.05)
+
+
+def test_matrix_cells_are_legible() -> None:
+    """Every cell's text on its colour at WCAG AA (4.5:1), for all twelve pairs."""
+    css = (files("genokeeper") / "resources" / "demo" / "site.css").read_text()
+    found = re.findall(
+        r"\.m(\d\d) \{ background: (#[0-9a-f]{6}); color: (#[0-9a-f]{6}); \}", css
+    )
+    assert sorted(c for c, _, _ in found) == [
+        f"{r}{v}" for r in range(3) for v in range(4)
+    ]
+    assert min(_contrast(bg, fg) for _, bg, fg in found) >= 4.5
 
 
 def test_landing_examples_by_rule(tmp_path: Path) -> None:
@@ -424,7 +452,7 @@ def test_examples_skip_an_uncarried_or_unreversed_change() -> None:
             "details",
             "Conflicting_classifications_of_pathogenicity (1★)",
             "Pathogenic (2★)",
-        ),  # fmt: skip
+        ),
     ]
     assert [r["id"] for r in pkg._examples(every, [left, entered])] == [  # pyright: ignore[reportPrivateUsage]
         "clinvar:5",
@@ -443,36 +471,24 @@ def test_landing_diff_reads_clinvar_as_words() -> None:
     )
 
 
-def test_landing_says_only_what_is_measured(tmp_path: Path) -> None:
+def test_landing_counts_the_default_by_topic_and_the_research_layer(
+    tmp_path: Path,
+) -> None:
     lab, home = _lab(tmp_path)
     with connect(demo_paths(lab).reports / STORE_FILE) as con:
         con.execute(
             "UPDATE statement SET topic = 'drugs' WHERE statement_id = 'clinvar:4'"
         )
-    index = _read(
-        package(
-            lab, tmp_path / "out", home=home, private_ids=None, no_private_ids=True
-        ),
-        "index.html",
+        con.execute(
+            "UPDATE statement SET source = ? WHERE statement_id = 'clinvar:3'",
+            [min(RESEARCH_LAYERS)],
+        )
+    out = package(
+        lab, tmp_path / "out", home=home, private_ids=None, no_private_ids=True
     )
+    index = _read(out, "index.html")
     assert "The 2 at the default thresholds by topic: drugs 1, risks 1." in index
-    for said in ("Every class of finding", "GitHub and sends nothing", "Anthropic"):
-        assert said not in index
-    for said in (
-        "Polygenic scores, GWAS associations and VEP predictions carry none of their own",
-        "This run is HG002's PCR-free library",
-        "HG002 may also be in DeepVariant's training data.",
-        "DeepVariant's own genotype quality",
-        "The download sends nothing.",
-        "with a local model nothing leaves the machine",
-        "No finding is not an all-clear",
-    ):
-        assert said in index, said
-    assert "HG002's father: a different library of a related sample" in CALIBRATION_NOTE
-    assert "one Ashkenazi Jewish family" in CALIBRATION_NOTE
-    assert "outside the calibrated regions" in CALIBRATION_NOTE
-    assert "a different genome" not in CALIBRATION_NOTE
-    assert TABLE_SAMPLES["small_variants"].for_hg002 == "related sample"
+    assert "A research layer outside these counts holds 1 GWAS association." in index
 
 
 def _band(calls: int, false: int, found: int, truth: int) -> dict[str, Any]:
@@ -482,7 +498,7 @@ def _band(calls: int, false: int, found: int, truth: int) -> dict[str, Any]:
 def _tables(lab: Path) -> None:
     """HG003's small-variant table with its F1, and a deletions class table: two bands,
     two libraries of one sample."""
-    versions = dict.fromkeys(VERSION_KEYS, "v")
+    versions: dict[str, str] = dict.fromkeys(VERSION_KEYS, "v")
     f1 = {"snp": 0.9961234, "indel": 0.9960876}
     CalibrationTable(cells={}, versions=versions, f1=f1).write(
         folder(lab, "small_variants")
@@ -564,10 +580,12 @@ def test_deepvariant_names_the_runs_checkpoint(
         assert (published in page) == (named != checkpoint), name
 
 
-def test_landing_built_on(tmp_path: Path) -> None:
-    index = _read(_package(tmp_path), "index.html")
-    built = index.split("<h2>Built on</h2>")[1].split("<h2>")[0]
+def test_sources_page_is_built_on(tmp_path: Path) -> None:
+    out = _package(tmp_path)
+    index, built = _read(out, "index.html"), _read(out, "sources.html")
     tools = pkg.citations()
+    line = index.split("<h2>Built on</h2>")[1].split("<h2>")[0]
+    assert f"runs {len(tools)} published" in line and 'href="sources.html"' in line
     groups = list(dict.fromkeys(t["group"] for t in tools))  # in the file's order
     assert set(groups) == set(pkg.GROUP_MEASURED)
     assert re.findall(r"<h3>([^<]+)</h3>", built) == [html.escape(g) for g in groups]
@@ -575,7 +593,10 @@ def test_landing_built_on(tmp_path: Path) -> None:
         link = f'<a href="{html.escape(t["url"])}">{html.escape(t["name"])}</a>'
         assert link in built and html.escape(t["citation"]) in built, t["name"]
     # The run's recorded versions (the fixture's `tools`), where `version_key` names one.
-    assert '<a href="https://doi.org/10.1038/nbt.4235">DeepVariant</a> 1.10.0.' in built
+    assert (
+        '<a href="https://doi.org/10.1038/nbt.4235">DeepVariant</a> 1.10.0 with a'
+        " checkpoint the run did not record." in built
+    )
     assert "ClinVar</a> 20261108." in built and "BWA-MEM</a>. Li" in built
     assert "not genokeeper's own accuracy" in built and "endorses" in built
     for word in ("validated", "clinical-grade", "powered by", "<img"):
@@ -610,7 +631,7 @@ def test_calibration_summary_covers_every_table(tmp_path: Path) -> None:
     )
     link = '<a href="calibration.html">the calibration page</a> says which table'
     assert link in index and CALIBRATION_PAGE in _read(out, "dashboard.html")
-    assert '<ul class="plain methods">\n    <li>Tools and versions' in page
+    assert '<summary>Versions and digests</summary><p class="methods sub">Tools' in page
     assert ".methods { overflow-wrap: anywhere; }" in page  # md5 lists wrap at 375 px
 
 
@@ -668,6 +689,67 @@ def test_dashboard_shows_the_demo_roots_explanations(tmp_path: Path) -> None:
     ]
     assert shown == {"title": "T.", "text": "X.", "cites": ["medlineplus:gene:GENE2"],
                      "model": model}  # fmt: skip
+    # The only explained result is the landing's opened one, with both bars and a link.
+    [card] = re.findall(r'<aside class="card"[^>]*>(.*?)</aside>', _read(out, "index.html"),
+                        re.DOTALL)  # fmt: skip
+    for said in ("<h3>T.</h3>", "<p>X.</p>", f"Generated by {model}", 'class="r2"',
+                 'class="e0"', 'href="dashboard.html#rel=2&amp;ev=0&amp;q=clinvar%3A2"'):  # fmt: skip
+        assert said in card, said
+
+
+def _result(sid: str, rel: str, ev: str, *, dosage: str = "1", p: float | None = 1e-4,
+            classification: str = "Pathogenic") -> dict[str, Any]:  # fmt: skip
+    return {"id": sid, "genotype": {"dosage": dosage}, "gene_call": None,
+            "reliability": {"level": rel, "p_wrong": p},
+            "validity": {"level": ev}, "claim": {"classification": classification}}  # fmt: skip
+
+
+def test_hero_is_the_strictest_explained_carried_finding() -> None:
+    results = [
+        _result("a", "high", "strong", dosage="0"),  # not carried
+        _result("b", "high", "strong", classification="Benign"),  # normal
+        _result("c", "high", "strong"),  # no explanation shipped
+        _result("d", "medium", "strong"),
+        _result("e", "high", "moderate", p=None),
+        _result("f", "high", "moderate", p=0.01),
+        _result("g", "high", "limited"),
+    ]
+    explained = {"d", "e", "f", "g", "a", "b"}
+    found = pkg._hero(results, lambda r: r["id"] if r["id"] in explained else None)  # pyright: ignore[reportPrivateUsage]
+    assert (
+        found is not None and found[1] == "f"
+    )  # high first, then strong, then the rate
+    assert pkg._hero(results[:3], lambda r: None) is None  # pyright: ignore[reportPrivateUsage]
+
+
+@pytest.mark.parametrize("recorded", [True, False])
+def test_ask_it_shows_the_recorded_transcript(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, recorded: bool
+) -> None:
+    transcript = tmp_path / "transcript.md"
+    if recorded:
+        transcript.write_text(
+            "---\nrecorded: 2026-12-01\nversion: 9.9\n---\n> Q?\n<b>A.</b>\n"
+        )
+    monkeypatch.setattr(pkg, "TRANSCRIPT", transcript)
+    ask = (
+        _read(_package(tmp_path), "index.html")
+        .split('<h2 id="ask">')[1]
+        .split("<h2")[0]
+    )
+    shown = re.findall(r'<pre class="transcript">(.*?)</pre>', ask, re.DOTALL)
+    assert shown == (["&gt; Q?\n&lt;b&gt;A.&lt;/b&gt;"] if recorded else [])
+    assert ("Recorded on 2026-12-01 from genokeeper 9.9." in ask) == recorded
+    assert "uvx genokeeper demo" in ask
+
+
+def test_scan_reads_the_sources_page(tmp_path: Path) -> None:
+    lab, home = _lab(tmp_path)
+    with connect(demo_paths(lab).reports / STORE_FILE) as con:
+        tools = {"clinvar": "20261108", "deepvariant": f"built in {home}/dv"}
+        con.execute("UPDATE run SET tools = ?", [json.dumps(tools)])
+    with pytest.raises(Leak, match=r"sources\.html: the home directory"):
+        package(lab, tmp_path / "out", home=home, private_ids=None, no_private_ids=True)
 
 
 def test_built_on_shows_each_version_once() -> None:

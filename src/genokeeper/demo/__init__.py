@@ -16,7 +16,7 @@ DEMO_ROOT = Path("demo/hg002")
 MANIFEST = "manifest.json"
 STORE_FILE = "genomelab.duckdb"
 REFRESH_LOG_FILE = "refresh-log.jsonl"
-SITE_FILES = ("index.html", "dashboard.html", "calibration.html")
+SITE_FILES = ("index.html", "dashboard.html", "calibration.html", "sources.html")
 SHIPPED = (STORE_FILE, *SITE_FILES, REFRESH_LOG_FILE)  # the files `MANIFEST` names
 
 
