@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING, Any
 import duckdb
 
 from genokeeper import check, history, refresh_log
-from genokeeper.config import DEMO_MARKER, load_paths
+from genokeeper.config import demo_lab, load_paths
 from genokeeper.history import REFERENCE_CAUSE, Change, ChangeKind, Dates, State
 from genokeeper.query import Filters, _marker_matches, _text_matches
 from genokeeper.schedule import STALE_DAYS
@@ -231,14 +231,12 @@ def report(
     if base is None and run is not None:
         base = refresh_log.default_base(lab, root, run)
     refresh = refresh_of(lab, run)
-    # A demo lab (it holds `DEMO_MARKER`) has no update check to report.
-    demo = (lab / DEMO_MARKER).is_file()
     document: dict[str, Any] = {
         "base": base,
         "run": run,
         "refresh": None if refresh is None else refresh_log.as_json(refresh),
         "failed": failed(refresh),
-        **({} if demo else {"check": check_block(lab, now or datetime.now(UTC))}),
+        **({} if demo_lab(lab) else {"check": check_block(lab, now or datetime.now(UTC))}),
         "changes": [],
         "research": {},
         "note": None,

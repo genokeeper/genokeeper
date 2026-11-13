@@ -415,17 +415,17 @@ def test_missing_check_json_reads_never_ran(tmp_path: Path) -> None:
 
 
 def test_changes_report_demo_lab(tmp_path: Path) -> None:
-    """`changes --json` in a demo lab (it holds `DEMO_MARKER`) has no `check`; in any other
+    """`changes --json` in a demo lab (its folder holds `DEMO_MARKER`) has no `check`; in any other
     lab without a check it reads "never ran"."""
     lab = tmp_path / "lab"
     lab.mkdir()
-    (lab / DEMO_MARKER).write_text("{}")
+    (lab.parent / DEMO_MARKER).write_text("{}")
     write(tmp_path, D1, [at("clinvar:1", 1001, validity="limited")], [1001])
     write(tmp_path, D2, [at("clinvar:1", 1001)], [1001])
     document = changes_of(tmp_path, lab)
     assert "check" not in document
     assert [c["id"] for c in document["changes"]] == ["clinvar:1"]
-    (lab / DEMO_MARKER).unlink()
+    (lab.parent / DEMO_MARKER).unlink()
     never = {"ran_at": None, "newer": [], "failed": [], "days": None, "stale": True}
     assert changes_of(tmp_path, lab)["check"] == never
 

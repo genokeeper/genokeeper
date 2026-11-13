@@ -6,7 +6,7 @@ JSON and VARCHAR[] columns) has its absolute paths rewritten (`scrub`: the demo 
 `<demo>`, the lab to `<lab>`, the checkout `package` runs from to `<genokeeper>`), and the shipped store is a fresh
 database written from that copy (`COPY FROM DATABASE`): DuckDB keeps a replaced string in the
 file's bytes after an UPDATE, and a fresh copy does not. From the scratch copy, with its
-snapshots and a lab holding `DEMO_MARKER` and the demo's refresh-log record, come the
+snapshots, `DEMO_MARKER` (so its lab is a demo lab) and the demo's refresh-log record, come the
 dashboard (English, the frame in its banner), the calibration page (each table's report
 with the frame's calibration paragraph on top) and the landing page, its numbers from the
 store. `MANIFEST` names each file's sha256.
@@ -887,7 +887,7 @@ def package(
         shutil.copyfile(log, work / REFRESH_LOG_FILE)
         (scratch.lab / "refresh").mkdir(parents=True)
         shutil.copyfile(log, scratch.lab / "refresh" / refresh_log.LOG)
-        (scratch.lab / DEMO_MARKER).write_text("{}\n", encoding="utf-8")
+        (scratch.repo / DEMO_MARKER).write_text("{}\n", encoding="utf-8")
         # The demo root's explanations, keyed on prompts grounded in the lab's MedlinePlus.
         if (explanations := root.reports / "explanations").is_dir():
             shutil.copytree(explanations, scratch.reports / explanations.name)

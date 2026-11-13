@@ -47,7 +47,6 @@ def test_install_writes_folder(site: Path, tmp_path: Path) -> None:
     reports = folder / "reports"
     assert (reports / STORE_FILE).read_bytes() == (site / STORE_FILE).read_bytes()
     assert sorted(p.name for p in (reports / "snapshots").iterdir()) == [RUN1, RUN2]
-    assert (folder / "lab" / DEMO_MARKER).is_file()
     log = folder / "lab" / "refresh" / refresh_log.LOG
     assert log.read_bytes() == (site / REFRESH_LOG_FILE).read_bytes()
     page = (folder / "dashboard.html").read_text(encoding="utf-8")

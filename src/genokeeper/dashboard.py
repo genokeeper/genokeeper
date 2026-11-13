@@ -58,7 +58,7 @@ from genokeeper.carrier import (
     STAGE3_SOURCES,
     load_mechanisms,
 )
-from genokeeper.config import DEMO_MARKER, Paths, load_paths
+from genokeeper.config import Paths, demo_lab, load_paths
 from genokeeper.evidence.medlineplus import MEDLINEPLUS_FILE, MedlinePlus
 from genokeeper.explain import LOOSEST, lookup, newest_medlineplus, watch_items
 from genokeeper.history import Change, ChangeKind, Dates, Snapshot
@@ -214,12 +214,11 @@ def _changes(
     dates: dict[str, Dates],
 ) -> dict[str, Any]:
     """The Changes tab's data for `run_id`: the sources its refresh could not fetch, the
-    daily update check's `ran_at`, `newer` and `failed` (no age; none in a demo lab, which
-    holds `DEMO_MARKER` and has no check), and the comparison with each of the last `BASES`
+    daily update check's `ran_at`, `newer` and `failed` (no age; none in a demo lab,
+    `config.demo_lab`), and the comparison with each of the last `BASES`
     snapshots before it (refreshes first)."""
     # The age is the viewer's to compute from `ran_at`: the page outlives the check.
     state = check.read_state(lab) if lab is not None else None
-    demo = lab is not None and (lab / DEMO_MARKER).is_file()
     block: dict[str, Any] = {
         "run": run_id,
         "date": None,
@@ -230,7 +229,7 @@ def _changes(
         "failed": [],
         **(
             {}
-            if demo
+            if demo_lab(lab)
             else {"check": {**check.summary(state), "stale_days": STALE_DAYS}}
         ),
         "bases": {},
@@ -463,6 +462,7 @@ def payload(
         "views": views,
         "default": _key(_DEFAULT),
         "changes": _changes(reports, lab, loosest.run_id, dates),
+        "demo": demo_lab(lab),
         "not_covered": _not_covered(con, loosest.run_id, listed, mechanisms),
         "excluded": _excluded(con, loosest.run_id),
         "screened": screened,
@@ -531,7 +531,7 @@ def _write(
         )
     page = render(data, banner)
     # After the store, so that a refusal stays one line; a demo lab has no bootstrap to run.
-    if warning is not None and not (lab / DEMO_MARKER).is_file():
+    if warning is not None and not data["demo"]:
         print(
             f"genokeeper dashboard: {warning}: explanations grounded in MedlinePlus are"
             " not shown; run scripts/bootstrap.sh",

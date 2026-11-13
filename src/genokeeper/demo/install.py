@@ -247,7 +247,7 @@ def _foreign(folder: Path) -> bool:
 def install(folder: Path, *, base: str = DEMO_BASE) -> Path:
     """Write the demo folder at `folder` from the release at `base`; return `folder`:
     `DEMO_MARKER` (the manifest), `reports/` (the store and its snapshots), `lab/` (the
-    marker and the refresh-log record), `dashboard.html` with the frame, `pyproject.toml`
+    refresh-log record), `dashboard.html` with the frame, `pyproject.toml`
     (this genokeeper, for the skill's `uv run`), `.claude/skills/genome-ask/SKILL.md` and
     `CLAUDE.md`. Raises `DemoRefused`; nothing is written before the manifest's check, and
     no file is under its final name unless its sha256 matched."""
@@ -265,7 +265,6 @@ def install(folder: Path, *, base: str = DEMO_BASE) -> Path:
     paths = load_paths(folder)  # the marker makes the folder's own `lab/` the lab
     log = paths.lab / "refresh" / refresh_log.LOG
     _download(base + REFRESH_LOG_FILE, sums[REFRESH_LOG_FILE], log)
-    (paths.lab / DEMO_MARKER).write_text("{}\n", encoding="utf-8")
     snapshots = paths.reports / "snapshots"
     shutil.rmtree(snapshots, ignore_errors=True)
     print(f"{_SAY}: writing the store's snapshots", file=sys.stderr)

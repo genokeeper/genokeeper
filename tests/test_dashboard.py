@@ -2142,11 +2142,11 @@ def test_explanation_tooltip_names_the_model_and_a_demo(
     con: duckdb.DuckDBPyConnection, tmp_path: Path
 ) -> None:
     """An explanation's text, its gist and its label carry the tooltip naming the model;
-    "for this demo" only on a page with the demo's banner; the gist leads."""
+    "for this demo" only on a demo lab's page; the gist leads."""
     ghr, cache = _explained(con, tmp_path)
     data = payload(con, None, cache, load_medlineplus(ghr))
     own = _rendered(data, tmp_path)["feed"]["titled"]
-    demo = _rendered(data, tmp_path, banner=["Demo", "An invented genome."])["feed"]
+    demo = _rendered({**data, "demo": True}, tmp_path)["feed"]
     assert MODEL == "claude-opus-5-5" and own and len(own) == len(demo["titled"])
     assert own[0]["text"] == "Объяснение." and own[1]["text"].startswith("Written by")
     m = dashboard.messages("en")
@@ -2171,18 +2171,18 @@ def test_explanation_tooltip_names_the_model_and_a_demo(
 
 
 def test_demo_lab_has_no_check_block(tmp_path: Path) -> None:
-    """A demo lab (it holds `DEMO_MARKER`) has no update check to report: the tab's data
+    """A demo lab (its folder holds `DEMO_MARKER`) has no update check to report: the tab's data
     leaves the block out and the page shows none; any other lab without a check reads
     "never ran"."""
     reports, lab = tmp_path / "reports", tmp_path / "lab"
     _history(reports)
     lab.mkdir()
-    (lab / DEMO_MARKER).write_text("{}")
+    (lab.parent / DEMO_MARKER).write_text("{}")
     with open_store(reports / "genomelab.duckdb") as con:
         data = payload(con, None, NO_CACHE, reports=reports, lab=lab)
     assert "check" not in data["changes"]
     assert _rendered(data, tmp_path, "#tab=changes")["check"]["text"] == ""
-    (lab / DEMO_MARKER).unlink()
+    (lab.parent / DEMO_MARKER).unlink()
     assert _changes(reports, lab)["check"] == {
         "ran_at": None,
         "newer": [],

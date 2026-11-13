@@ -32,8 +32,6 @@ const SCALES = {
 };
 // Each level's name and its short form under a bar.
 const LEVELS = M.levels;
-// A caller's banner is the demo's frame (`genokeeper.demo`), the one caller that sets one.
-const DEMO = document.querySelector(".frame-note") !== null;
 const TOPICS = M.topics;
 // A repeat count's class (`genokeeper.repeats.loci.RepeatClass`).
 const REPEAT_CLASSES = M.repeat_classes;
@@ -267,7 +265,7 @@ function opened(f) {
     // "claude-opus-5-5" reads "Opus 5.5", "claude-sonnet-4-20250514" "Sonnet 4"; another id stays as stored.
     const id = /^claude-([a-z]+)-(\d+)(?:-(\d{1,2}))?(?:-\d{8})?$/.exec(e.model);
     const model = id ? `${id[1][0].toUpperCase()}${id[1].slice(1)} ${id[2]}${id[3] ? `.${id[3]}` : ""}` : e.model;
-    const tip = t("explanation_tooltip", { model, demo: DEMO ? t("for_this_demo") : "" });
+    const tip = t("explanation_tooltip", { model, demo: data.demo ? t("for_this_demo") : "" });
     // An engaging entry's gist leads; every generated text carries the tooltip.
     const parts = [...(e.gist ? [el("span", "gist", e.gist)] : []), el("span", "", e.text),
       el("span", "note", t("written_by", { model: e.model, cites: e.cites.join(", ") }))];
