@@ -1782,6 +1782,32 @@ def test_typical_results_fold_and_the_others_stand_out(
     ]
 
 
+def test_what_stands_out_is_what_a_reader_acts_on(tmp_path: Path) -> None:
+    """ClinVar and predicted findings, non-typical drug and carrier results, and scores in
+    the top or bottom decile; at most five per topic, "+N more" opening the topic."""
+    pgs = {"type": "pgs", "condition": "CAD"}
+    rows = [Row(f"clinvar:{30 + i}", gene=f"G{i}", pos=1030 + i) for i in range(7)]
+    rows += [replace(RESULT_ROWS[3], gene="P1"), RESULT_ROWS[1],
+             Row("clinvar:40", gene="CFTR", pos=1040, topic="carrier"),
+             Row("pharmcat:CYP2D6", gene="CYP2D6", level=None, topic="drugs",
+                 gene_call=GENE_CALL, claim=PGX_CLAIM),
+             Row("pharmcat:CYP2C9", gene="CYP2C9", level=None, topic="drugs", claim=PGX_CLAIM,
+                 gene_call={**GENE_CALL, "phenotype": "Normal Metabolizer"}),
+             Row("traits:LCT", gene="LCT", level=None, topic="traits",
+                 claim={"type": "trait", "trait": "lactase"})]  # fmt: skip
+    rows += [Row(f"pgsc_calc:PGS{d}", gene=None, level=None, topic="wellness", claim=pgs,
+                 effect={"score": {"decile": d, "percentile": None}}) for d in (1, 5, 10)]  # fmt: skip
+    con = connect(tmp_path / "stands.duckdb")
+    seed(con, rows)
+    data = {**payload(con, None, NO_CACHE), "default": "low|conflicting|"}
+    shown = _rendered(data, tmp_path)["stands-out"]
+    named = [b["text"] for b in shown["buttons"]]
+    assert named == ["G0", "G1", "G2", "G3", "G4", " +3 more", "CFTR", "CYP2D6",
+                     "CAD: 1st decile", "CAD: 10th decile"]  # fmt: skip
+    opened = _rendered(data, tmp_path, actions=[("stands-out/5", "", "click")])
+    assert "topic=risks" in opened["#history"]["urls"][-1]
+
+
 def test_the_hidden_line_names_each_reason_once(
     con: duckdb.DuckDBPyConnection, tmp_path: Path
 ) -> None:

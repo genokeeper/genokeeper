@@ -428,6 +428,17 @@ function count(key) {
   return matched.counts.get(key);
 }
 
+// What a reader would act on or ask about: ClinVar and predicted findings, a non-typical drug
+// or carrier result, a score in the top or bottom decile; never a trait or ancestry (the
+// haplogroups' topic).
+const HANDFUL = 5;
+function standsOut(f) {
+  const claim = f.claim || {};
+  if (f.normal || f.kind !== "finding" || ["traits", "ancestry"].includes(f.topic)) return false;
+  if (claim.type === "pgs") return [1, 10].includes(f.effect?.score?.decile);
+  return ["clinvar_germline", "predicted_variant"].includes(claim.type) || ["drugs", "carrier"].includes(f.topic);
+}
+
 function renderFeed() {
   const view = data.views[`${state.reliability}|${state.validity}|${state.topic}`];
   chips();
@@ -447,21 +458,33 @@ function renderFeed() {
   });
   document.getElementById("feed").replaceChildren(...standing.map((id) => rows.get(id)), ...folds);
   const out = document.getElementById("stands-out");
-  out.replaceChildren(...(standing.length ? [el("b", "", t("stands_out"))] : []));
-  for (const [name, ids] of byTopic(standing)) {
+  const outstanding = standing.filter((id) => standsOut(data.items[id]));
+  out.replaceChildren(...(outstanding.length ? [el("b", "", t("stands_out"))] : []));
+  for (const [name, ids] of byTopic(outstanding)) {
     const line = el("div", "", `${TOPICS[name] || name}: `);
-    const named = new Set();
+    const labels = new Map();
     for (const id of ids) {
       const label = data.items[id].gene || headline(data.items[id]);
-      if (named.has(label)) continue;
+      if (!labels.has(label)) labels.set(label, id);
+    }
+    for (const [i, [label, id]] of [...labels].slice(0, HANDFUL).entries()) {
       const link = el("button", "link", label);
       link.type = "button";
       link.addEventListener("click", () => {
         rows.get(id).open = true;
         rows.get(id).scrollIntoView?.();
       });
-      line.append(...(named.size ? [", "] : []), link);
-      named.add(label);
+      line.append(...(i ? [", "] : []), link);
+    }
+    if (labels.size > HANDFUL) {
+      const more = el("button", "link", t("more", { n: labels.size - HANDFUL }));
+      more.type = "button";
+      more.addEventListener("click", () => {
+        state.topic = name;
+        render();
+        writeHash();
+      });
+      line.append(more);
     }
     out.append(line);
   }
