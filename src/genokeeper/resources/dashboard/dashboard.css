@@ -38,7 +38,7 @@ h1 { font-size: 18px; margin: 0; }
 #hidden { border-top: 1px dashed var(--rule); padding-top: 10px; }
 #stands-out { color: var(--ink); display: flex; flex-direction: column; gap: 2px; }
 .link { font: inherit; padding: 0; border: 0; background: none; color: var(--rel);
-  cursor: pointer; text-decoration: underline; }
+  cursor: pointer; text-decoration: underline; text-align: left; }
 .fold { border-top: 1px solid var(--rule); }
 .fold > summary { padding: 10px 0; cursor: pointer; color: var(--muted); }
 .row { border-top: 1px solid var(--rule); }
@@ -99,6 +99,10 @@ select { font: inherit; }
   /* Column heads short, so none breaks inside a word at 375 px. */
   .matrix { grid-template-columns: minmax(0, 5em) repeat(4, minmax(0, 1fr)); font-size: 11px; }
   .matrix > span { padding: 4px 2px; }
+  .matrix > span:first-child { grid-column: 1 / -1; }
+  .matrix > span:nth-child(2) { grid-column: 2; }
+  .matrix button { padding: 8px 0; }
+  .matrix small { font-size: 10px; letter-spacing: -0.03em; }
   .matrix .long { display: none; }
   .matrix .short { display: inline; }
 }

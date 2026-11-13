@@ -779,6 +779,9 @@ def test_the_changes_tab_opens_on_all_changes_when_none_is_at_the_thresholds(
     for url_hash, actions in (("#tab=changes", []), ("", [("tab-changes", "", "click")])):
         tier, said = opened(url_hash, *actions)
         assert tier == every and str(n) in said
+    # The tab writes back a link that opens it the same way.
+    click = [("tab-changes", "", "click")]
+    assert _rendered(data, tmp_path, "", click)["#history"]["urls"] == ["#tab=changes"]
     trusted = opened("#tab=changes&rel=1&ev=2")
     assert trusted[0] != every and trusted[1] == ""
     assert opened("#tab=changes&rel=0&ev=0")[1] == ""
@@ -2034,7 +2037,7 @@ def test_an_empty_chip_says_where_its_rows_are_and_moves_there(
     [at] = [i for i, text in enumerate(texts) if text.startswith("Carrier status")]
     assert texts[at] != "Carrier status" and "moderate or more" in texts[at]
     moved = _rendered(data, tmp_path, "#rel=2&ev=3", [(f"chips/{at}", "", "click")])
-    assert moved["#history"]["urls"] == ["#tab=feed&rel=1&ev=2&topic=carrier"]
+    assert _cell(moved) == (1, 2) and moved["#history"]["urls"] == ["#tab=feed&topic=carrier"]
 
 
 def test_the_footer_folds_its_versions(

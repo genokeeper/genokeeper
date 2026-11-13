@@ -921,13 +921,13 @@ function readHash() {
   }
 }
 
-// The view written back when a control moves, replacing the history entry.
+// The view written back when a control moves, replacing the history entry; the default pair
+// is left out, so a copied link opens the Changes tab as an unchosen one does.
 function writeHash() {
-  const parts = [
-    `tab=${state.tab}`,
-    `rel=${SCALES.reliability.indexOf(state.reliability)}`,
-    `ev=${SCALES.validity.indexOf(state.validity)}`,
-  ];
+  const parts = [`tab=${state.tab}`];
+  if (state.reliability !== reliability || state.validity !== validity) {
+    parts.push(`rel=${SCALES.reliability.indexOf(state.reliability)}`, `ev=${SCALES.validity.indexOf(state.validity)}`);
+  }
   if (state.topic) parts.push(`topic=${encodeURIComponent(state.topic)}`);
   if (state.search) parts.push(`q=${encodeURIComponent(state.search)}`);
   history.replaceState(null, "", `#${parts.join("&")}`);
