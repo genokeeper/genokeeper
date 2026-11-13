@@ -1187,30 +1187,30 @@ def test_validity_source_named_in_every_validity_reason() -> None:
 
 
 # Owner's ruling A3s: one authority per claim, never the stars. A ClinPGx annotation kept
-# at the claim's rsID first, then a gene PharmCAT calls, else limited with rule 3's reason.
+# at the claim's allele first, then a gene PharmCAT calls, else limited with rule 3's reason.
 DRUG_RULES = [
-    ("KIF6", "rs900001", {}, NO_CLINPGX_REASON),
+    ("KIF6", "GRCh38:chr1:1:G:A", {}, NO_CLINPGX_REASON),
     (
         "MTHFR",
-        "rs900002",
-        {"rs900002": ("1000000002", "2A")},
+        "GRCh38:chr1:2:G:A",
+        {"GRCh38:chr1:2:G:A": ("1000000002", "2A")},
         "graded on ClinPGx's annotation 1000000002 (level 2A)",
     ),
-    ("VKORC1", "rs900003", {}, "graded on the VKORC1 gene call"),
+    ("VKORC1", "GRCh38:chr1:3:G:A", {}, "graded on the VKORC1 gene call"),
     (
         "F5",
-        "rs900004",
-        {"rs900004": ("1000000004", "2B")},
+        "GRCh38:chr1:4:G:A",
+        {"GRCh38:chr1:4:G:A": ("1000000004", "2B")},
         "graded on ClinPGx's annotation 1000000004 (level 2B)",
     ),
 ]
 
 
-@pytest.mark.parametrize(("gene", "rsid", "clinpgx", "reason"), DRUG_RULES)
+@pytest.mark.parametrize(("gene", "vid", "clinpgx", "reason"), DRUG_RULES)
 @pytest.mark.parametrize("clnrevstat", ["practice_guideline", EXPERT_PANEL, ONE_STAR])
 def test_drug_response_one_authority(
     gene: str,
-    rsid: str,
+    vid: str,
     clinpgx: dict[str, tuple[str, str]],
     reason: str,
     clnrevstat: str,
@@ -1225,7 +1225,7 @@ def test_drug_response_one_authority(
             gene=gene,
             gene_validity=gene_validity,
             faf_grpmax=0.4,
-            rsid=rsid,
+            vid=vid,
             clinpgx=clinpgx,
         )
         assert (grade.kind, grade.level, grade.topic, grade.reason) == (

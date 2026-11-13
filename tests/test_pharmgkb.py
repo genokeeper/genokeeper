@@ -20,12 +20,13 @@ from fixtures.grch38_mini import write_reference
 from fixtures.pharmgkb_mini import Ann, Layout, write_annotations
 
 from genokeeper.config import load_grading
+from genokeeper.evidence.clinvar import NO_CLINPGX_REASON
 from genokeeper.evidence.frequency import FafTable
 from genokeeper.evidence.pharmgkb import (
     DOWNLOADS,
     RESEARCH_LEVEL,
     ClinicalAnnotations,
-    by_rsid,
+    by_vid,
     clinvar_alleles,
     left_by_pharmcat,
     locate,
@@ -506,13 +507,16 @@ def test_aldh2_rs671_reaches_drugs(tmp_path: Path) -> None:
 def test_one_row_per_variant_on_clinpgx(tmp_path: Path) -> None:
     """Owner's ruling A3s: a ClinVar drug_response claim at an rsID with a kept ClinPGx
     annotation is graded on it (limited, naming it), so the variant has one row at its
-    ClinPGx level; the strongest kept level answers for an rsID."""
+    ClinPGx level; the strongest kept level answers for an allele, and it does not grade a
+    claim at another allele of the same rsID."""
     mthfr = Ann("1000000002", "rs900002", "MTHFR", "2A", ("CC", "CT", "TT"))
     weaker = Ann("1000000003", "rs900002", "MTHFR", "2B", ("CC", "CT", "TT"))
     read = read_clinical_annotations(_download(tmp_path, [weaker, mthfr]))
     allele = ("chr1", 11796321, "G", "A")
-    ctx = replace(_context(tmp_path), clinpgx=by_rsid(read.annotations))
-    assert ctx.clinpgx == {"rs900002": ("1000000002", "2A")}
+    ctx = replace(
+        _context(tmp_path), clinpgx=by_vid((a, allele) for a in read.annotations)
+    )
+    assert ctx.clinpgx == {"GRCh38:chr1:11796321:G:A": ("1000000002", "2A")}
     kept = next(a for a in read.annotations if a.level == "2A")
     rows = (
         PharmGkbSource([(kept, allele, _called("1"), RELIABLE)], 1, {}, read.created)
@@ -539,3 +543,5 @@ def test_one_row_per_variant_on_clinpgx(tmp_path: Path) -> None:
         Validity.LIMITED,
         "graded on ClinPGx's annotation 1000000002 (level 2A)",
     )
+    other = replace(claim, alt="T", vid="GRCh38:chr1:11796321:G:T")
+    assert grade_claim(other, _called("1"), ctx, None).reason == NO_CLINPGX_REASON

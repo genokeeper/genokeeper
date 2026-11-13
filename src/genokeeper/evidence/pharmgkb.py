@@ -55,7 +55,7 @@ from genokeeper.genotype.gvcf import Allele
 from genokeeper.panel.build import is_primary, normalise_records
 from genokeeper.pgx.pharmcat import DOSING, PHARMCAT_GENES
 from genokeeper.store.db import Validity
-from genokeeper.variants.key import ucsc_contig
+from genokeeper.variants.key import make_vid, ucsc_contig
 
 # The live download first, then the frozen one an older bootstrap fetched.
 DOWNLOADS = ("summaryAnnotations.zip", "clinicalAnnotations.zip")
@@ -223,13 +223,13 @@ def validity(level: str) -> Validity:
     return Validity.LIMITED if level == RESEARCH_LEVEL else LEVELS[level]
 
 
-def by_rsid(annotations: Iterable[Annotation]) -> dict[str, tuple[str, str]]:
-    """Each rsID's strongest annotation of `annotations` (1B, then 2A, then 2B), as its id
-    and level: what a ClinVar drug_response claim at that rsID is graded on (A3s)."""
+def by_vid(located: Iterable[tuple[Annotation, Allele]]) -> dict[str, tuple[str, str]]:
+    """Each allele's strongest `located` annotation (1B, then 2A, then 2B), keyed by its vid,
+    as its id and level: what a ClinVar drug_response claim at that allele is graded on (A3s)."""
     best: dict[str, tuple[str, str]] = {}
-    for a in sorted(annotations, key=lambda a: (a.level, a.annotation_id)):
-        if a.level in LEVELS and _RSID.fullmatch(a.variant):
-            best.setdefault(a.variant, (a.annotation_id, a.level))
+    for a, allele in sorted(located, key=lambda p: (p[0].level, p[0].annotation_id)):
+        if a.level in LEVELS:
+            best.setdefault(make_vid(*allele), (a.annotation_id, a.level))
     return best
 
 

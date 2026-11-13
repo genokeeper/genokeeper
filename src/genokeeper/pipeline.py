@@ -315,7 +315,7 @@ from genokeeper.evidence.pharmgkb import DOWNLOADS as PHARMGKB_DOWNLOADS
 from genokeeper.evidence.pharmgkb import (
     PHARMGKB_DROP_REASONS,
     ClinicalAnnotations,
-    by_rsid,
+    by_vid,
     clinvar_alleles,
     left_by_pharmcat,
     locate,
@@ -5487,7 +5487,7 @@ def run_genome(
                 haploid=haploid,
                 source_version=release,
                 cpic_levels=pgx.cpic_levels,
-                clinpgx=by_rsid(a for a, _ in located),
+                clinpgx=by_vid(located),
                 validity_source=validity_source,
             )
             store_sources(

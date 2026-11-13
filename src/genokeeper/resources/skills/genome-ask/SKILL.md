@@ -903,7 +903,7 @@ clopidogrel?", "what is my CYP2D6?") is answered with `--topic drugs` (add `--ge
   and take the drugs from the PharmGKB annotations.
 - ClinVar's `drug_response` — a `clinvar:<variation_id>` claim with that classification,
   always limited (its stars are the submitter's review status); its reason names what
-  grades the variant instead: the `pharmgkb:` annotation at its rsID or the gene's
+  grades the variant instead: the `pharmgkb:` annotation at its allele or the gene's
   `pharmcat:` call. Answer from that row.
 
 The store holds no dosing text, and the answer gives none:

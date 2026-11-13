@@ -156,7 +156,7 @@ def grade_claim(
     else the gene-level `ctx.gene_level` (`match_curation`), with gnomAD's filtering allele
     frequency at its vid; `ctx.haploid` takes the claim's GRCh38 locus. A validity GenCC
     gave is named so in the reasons (`ctx.validity_source`); a drug_response claim names
-    the ClinPGx annotation at its rsID (`ctx.clinpgx`) or its PharmCAT gene."""
+    the ClinPGx annotation at its own allele (`ctx.clinpgx`) or its PharmCAT gene."""
     curation = match_curation(
         claim.gene,
         parse_clndisdb(claim.disease_ids),
@@ -179,7 +179,6 @@ def grade_claim(
         inheritance=ctx.inheritance.get(claim.gene),
         male=ctx.male,
         haploid=ctx.haploid(claim.chrom, claim.pos),
-        rsid=claim.rsid,
         clinpgx=ctx.clinpgx,
     )
 
