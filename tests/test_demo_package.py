@@ -278,6 +278,11 @@ def test_private_ids_skip_comments_and_missing_file(
     with pytest.raises(Leak, match="no private-ID file.*--no-private-ids"):
         package(lab, tmp_path / "out3", home=home, private_ids=None)
     assert not (tmp_path / "out3").exists()
+    # A file of comments and blank lines checks nothing: refused as a missing one.
+    ids.write_text("#\n\n  \n")
+    with pytest.raises(Leak, match="no private-ID file.*--no-private-ids"):
+        package(lab, tmp_path / "out3", home=home, private_ids=ids)
+    assert not (tmp_path / "out3").exists()
     capsys.readouterr()
     package(lab, tmp_path / "out3", home=home, private_ids=None, no_private_ids=True)
     err = capsys.readouterr().err.splitlines()
