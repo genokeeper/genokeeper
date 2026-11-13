@@ -951,11 +951,14 @@ document.getElementById("data").textContent = fs.readFileSync(process.argv[3], "
 const urls = [];
 const location = { hash: process.argv[4] };
 const history = { replaceState: (state, title, url) => urls.push(url) };
-vm.runInNewContext(fs.readFileSync(process.argv[2], "utf8"), { document, location, history });
-// Then each action (argv, JSON [id, value, event]): the control takes the value, its event fires.
+const window = new Node("window");
+vm.runInNewContext(fs.readFileSync(process.argv[2], "utf8"), { document, location, history, window });
+// Then each action (argv, JSON [id, value, event]): the control (or, for "window", the URL's
+// hash) takes the value, its event fires.
 for (const [id, value, type] of JSON.parse(process.argv[5])) {
-  const node = document.getElementById(id);
-  node.value = value;
+  const node = id === "window" ? window : document.getElementById(id);
+  if (node === window) location.hash = value;
+  else node.value = value;
   for (const listener of node.listeners[type] ?? []) listener();
 }
 const out = { "#history": { urls } };
@@ -1794,6 +1797,12 @@ def test_view_from_url_hash(con: duckdb.DuckDBPyConnection, tmp_path: Path) -> N
         data, tmp_path, "#tab=changes&q=CYP2D6", [("reliability", "0", "input")]
     )
     assert moved["#history"]["urls"] == ["#tab=changes&rel=0&ev=2&q=CYP2D6"]
+    # An edited hash on the open page is its view, from the defaults; nothing is written back.
+    edit = [("search", "BRCA", "input"), ("window", "#rel=2&ev=3", "hashchange")]
+    shown = _rendered(data, tmp_path, "#tab=changes", edit)
+    assert (shown["reliability"]["value"], shown["validity"]["value"]) == ("2", "3")
+    assert (shown["tab-feed"]["className"], shown["search"]["value"]) == ("tab on", "")
+    assert "CYP2D6" in shown["feed"]["text"] and len(shown["#history"]["urls"]) == 1
 
 
 def test_demo_lab_has_no_check_block(tmp_path: Path) -> None:

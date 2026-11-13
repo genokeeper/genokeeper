@@ -821,6 +821,15 @@ for (const [name, levels] of Object.entries(SLIDERS)) {
     writeHash();
   });
 }
+// An edited hash is the view, read from the defaults as on load; `replaceState` fires no
+// `hashchange`, so writing the view back never loops.
+window.addEventListener("hashchange", () => {
+  Object.assign(state, { reliability, validity, topic, search: "", tab: "feed" });
+  readHash();
+  search.value = state.search;
+  for (const [name, levels] of Object.entries(SLIDERS)) document.getElementById(name).value = String(levels.indexOf(state[name]));
+  render();
+});
 const versions = Object.entries(data.versions).map(([tool, version]) => `${tool} ${version}`);
 document.getElementById("footer").textContent = t("footer", { run: data.run_id, versions: versions.join(", ") });
 render();
