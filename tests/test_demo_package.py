@@ -20,7 +20,7 @@ from fixtures.store_mini import Row
 import genokeeper
 from genokeeper import changes, refresh_log
 from genokeeper.calibrate.tables import REPORT, TABLES, folder
-from genokeeper.config import load_grading
+from genokeeper.config import GRADING_FILE, load_grading
 from genokeeper.dashboard import _sha256
 from genokeeper.demo import (
     MANIFEST,
@@ -99,7 +99,8 @@ def _lab(tmp_path: Path) -> tuple[Path, Path]:
         inputs = {
             "fastq": f"{root.repo}/raw/r1.fq.gz",
             "clinvar38": {"path": f"{lab}/clinvar/x.vcf.gz", "sha256": "ab"},
-            "vep": f"{home}/.vep/cache",
+            "vep": f"{lab}/vep/cache",
+            "grading": {"path": str(GRADING_FILE)},
         }
         con.execute("UPDATE run SET inputs = ?", [json.dumps(inputs)])
         con.execute(
@@ -167,7 +168,24 @@ def test_shipped_store_bytes_hold_no_planted_path(tmp_path: Path) -> None:
         "<demo>/raw/r1.fq.gz"
     }
     assert json.loads(rows[0][0])["clinvar38"]["path"] == "<lab>/clinvar/x.vcf.gz"
-    assert json.loads(rows[0][0])["vep"] == "~/.vep/cache"
+    assert json.loads(rows[0][0])["vep"] == "<lab>/vep/cache"
+    grading = json.loads(rows[0][0])["grading"]["path"]
+    assert grading == "<genokeeper>/config/grading.toml"
+
+
+@pytest.mark.parametrize(
+    "planted", ["{elsewhere}/config/grading.toml", "~/Dev/genokeeper/config/g.toml"]
+)
+def test_scan_refuses_any_absolute_path_left(tmp_path: Path, planted: str) -> None:
+    """A path under neither root, lab nor checkout (the grading config of another checkout,
+    or one the home rewrite already shortened) survives every rewrite: the scan names it."""
+    lab, home = _lab(tmp_path)
+    path = planted.format(elsewhere=tmp_path / "elsewhere")
+    with connect(demo_paths(lab).reports / STORE_FILE) as con:
+        con.execute("UPDATE run SET inputs = ?", [json.dumps({"grading": path})])
+    with pytest.raises(Leak, match=r"^refusing to package: run\.inputs: a path$"):
+        package(lab, tmp_path / "out", home=home, private_ids=None)
+    assert os.listdir(tmp_path / "out") == []
 
 
 def test_scrub_covers_list_columns(tmp_path: Path) -> None:

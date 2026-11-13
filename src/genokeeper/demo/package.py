@@ -3,7 +3,7 @@ demo root (`demo_paths(lab)`) into `OUT`.
 
 The store is copied into a scratch root, every text value of every table (its VARCHAR,
 JSON and VARCHAR[] columns) has its absolute paths rewritten (`scrub`: the demo root to
-`<demo>`, the lab to `<lab>`, the home directory to `~`), and the shipped store is a fresh
+`<demo>`, the lab to `<lab>`, the checkout `package` runs from to `<genokeeper>`), and the shipped store is a fresh
 database written from that copy (`COPY FROM DATABASE`): DuckDB keeps a replaced string in the
 file's bytes after an UPDATE, and a fresh copy does not. From the scratch copy, with its
 snapshots and a lab holding `DEMO_MARKER` and the demo's refresh-log record, come the
@@ -14,8 +14,9 @@ store. `MANIFEST` names each file's sha256.
 The scan is the control: the adversary is the maintainer's own machine leaking into a public
 file by mistake; the anchor is the outputs as written, read back. It covers every file
 `package` ships, `MANIFEST` included, and every column of every table of the shipped store
-(`_texts`). `scan_bytes` looks in each for the home directory, the lab and the demo root, as
-exact strings, and `scan_private` runs each pattern of the private-ID file the genome-data
+(`_texts`). `scan_bytes` looks in each for the home directory, the lab, the demo root and the
+checkout, as exact strings; `scan_paths` refuses any path left in a text output (`PATH`: one
+starting at `/` or `~/`), which no rewrite above produced, and `scan_private` runs each pattern of the private-ID file the genome-data
 guard reads (`private_id_file`) through `grep -E`, the guard's engine. Any hit is a `Leak`, and
 nothing is renamed from `OUT/.tmp-*` to its final name. The bare user name is not a needle: it
 can match a condition or a drug name, and the home path covers it where it matters.
@@ -60,6 +61,7 @@ from genokeeper.demo.frame import (
     POINTER,
     TABLE_SAMPLES,
 )
+from genokeeper.demo.install import FOLDER
 from genokeeper.evidence.medlineplus import MEDLINEPLUS_FILE
 from genokeeper.explain import LOOSEST
 from genokeeper.pipeline import _newest_dated
@@ -221,6 +223,19 @@ def scan_bytes(path: Path, needles: Mapping[str, str]) -> list[str]:
         for name, text in needles.items()
         if text.encode() in data
     ]
+
+
+# A path from a root of two characters or more, or from `~/`: never after a character that
+# makes it part of a word, a URL (`https://…`), a placeholder (`<lab>/…`, `&gt;/…`) or a
+# fraction; the demo folder's own default (`FOLDER`), which the landing tells users to open,
+# is not one.
+PATH = re.compile(rb"(?<![\w.:;/~<>%-])/[\w.@+-]{2,}/[\w.@+-]+|(?<![\w/])~/")
+
+
+def scan_paths(path: Path) -> list[str]:
+    """`<file name>: a path` when the text file holds one (`PATH`)."""
+    text = path.read_bytes().replace(FOLDER.encode(), b"")
+    return [f"{path.name}: a path"] if PATH.search(text) else []
 
 
 def scan_private(paths: Sequence[Path], patterns: Mapping[int, str]) -> list[str]:
@@ -600,11 +615,15 @@ def package(lab: Path, out: Path, *, home: Path, private_ids: Path | None) -> Pa
             f"{out} holds {', '.join(held)}: package writes only into an empty folder"
         )
     needles = {"the home directory": str(home), "the lab": str(lab)}
-    needles["the demo root"] = str(root.repo)
+    needles |= {"the demo root": str(root.repo), "the checkout": str(_REPO)}
     if private_ids is None:
         print(f"{_SAY}: no private-ID file: that check is skipped", file=sys.stderr)
     patterns = {} if private_ids is None else _private_patterns(private_ids)
-    replacements = {str(root.repo): "<demo>", str(lab): "<lab>", str(home): "~"}
+    replacements = {
+        str(root.repo): "<demo>",
+        str(lab): "<lab>",
+        str(_REPO): "<genokeeper>",
+    }
     out.mkdir(parents=True, exist_ok=True)
     work = Path(tempfile.mkdtemp(prefix=".tmp-", dir=out))
     try:
@@ -677,6 +696,7 @@ def package(lab: Path, out: Path, *, home: Path, private_ids: Path | None) -> Pa
             files = [work / name for name in (*SHIPPED, MANIFEST)]
             scanned = [*files, *_texts(shipped, work / "text")]
         leaks = [hit for path in scanned for hit in scan_bytes(path, needles)]
+        leaks += [hit for p in scanned if p.name != STORE_FILE for hit in scan_paths(p)]
         leaks += scan_private(scanned, patterns)
         if leaks:
             raise Leak("refusing to package: " + "; ".join(leaks))

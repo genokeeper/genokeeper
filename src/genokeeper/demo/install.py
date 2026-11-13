@@ -44,6 +44,7 @@ _CHUNK = 1 << 20
 _MANIFEST_MAX = 1 << 20
 _USER_AGENT = f"genokeeper/{__version__} (demo download)"
 _SAY = "genokeeper demo"
+FOLDER = "~/genokeeper-demo"  # the folder `genokeeper demo` writes by default
 
 QUESTIONS = (
     "Is HG002 a carrier of a recessive condition?",
@@ -297,7 +298,7 @@ def register(subparsers: Subparsers) -> None:
     d.add_argument(
         "--dir",
         type=Path,
-        default=Path("~/genokeeper-demo"),
-        help="the folder to write (default: ~/genokeeper-demo)",
+        default=Path(FOLDER),
+        help=f"the folder to write (default: {FOLDER})",
     )
     d.set_defaults(handler=_command)
