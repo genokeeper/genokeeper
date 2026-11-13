@@ -1103,15 +1103,41 @@ def test_the_watch_note_never_contradicts_a_watch_items_reason(
 SONNET = "claude-sonnet-5-5"
 
 
-def test_the_plain_english_keys_are_the_base_commits(
-    findings: dict[str, dict[str, Any]], medlineplus: MedlinePlus
+@pytest.mark.parametrize(
+    ("lang", "pinned"),
+    [
+        ("en", "66ef7ffe8c4309d4699bab94e2ede92cc9c115f8add028b5c0d1aa086d2fdd7a"),
+        ("ru", "1ec9c503d533adc1ad7848692d87099cee9f99059ea9b5b1385d39dee5bd323c"),
+    ],
+)
+def test_the_plain_keys_are_the_base_commits(
+    findings: dict[str, dict[str, Any]],
+    medlineplus: MedlinePlus,
+    lang: Language,
+    pinned: str,
 ) -> None:
-    """`--tone plain`, the default, keeps the English prompt's bytes: keys computed on
-    cef4868, so the user's cached explanations still hit."""
+    """`--tone plain`, the default, keeps its prompts' bytes: keys computed on cef4868
+    (English) and 5e34c01 (Russian), so the user's cached explanations still hit."""
     f = findings["clinvar:1"]
-    text = prompt(f, grounding(f, medlineplus), tone="plain")
-    pinned = "66ef7ffe8c4309d4699bab94e2ede92cc9c115f8add028b5c0d1aa086d2fdd7a"
+    text = prompt(f, grounding(f, medlineplus), lang=lang, tone="plain")
     assert cache_key(text) == cache_key(text, MODEL) == pinned
+
+
+def test_the_engaging_tone_asks_for_a_gist_and_caches_it(
+    findings: dict[str, dict[str, Any]], medlineplus: MedlinePlus, tmp_path: Path
+) -> None:
+    answer = {"title": "T.", "text": "X.", "cites": ["clinvar:1"]}
+    for text in (json.dumps({**answer, "gist": "G."}), json.dumps(answer)):
+        assert parse(text, ALLOWED) == Explanation("T.", "X.", ["clinvar:1"], MODEL)
+    assert parse(
+        json.dumps({**answer, "gist": " "}), ALLOWED, tone="engaging"
+    ) == parse(json.dumps(answer), ALLOWED)
+    gisted = Recorder(lambda p: json.dumps({**answer, "gist": "You likely X."}))
+    f, cache = findings["clinvar:1"], tmp_path / "e"
+    assert explain([f], medlineplus, cache, gisted, tone="engaging")["written"] == 1
+    assert '"gist"' in gisted.prompts[0]
+    found = lookup(f, medlineplus, cache)
+    assert found is not None and found.gist == "You likely X."
 
 
 @pytest.mark.parametrize("lang", LANGUAGES)

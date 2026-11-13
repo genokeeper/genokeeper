@@ -120,8 +120,8 @@
     "ru": "Написано {model} по источникам: {cites}"
   },
   "explanation_tooltip": {
-    "en": "Generated automatically by {model}{demo}, to show a plain-language reading of the sources. Tone, style and model can be configured in your own setup.",
-    "ru": "Сгенерировано автоматически моделью {model}{demo}, чтобы показать изложение источников простым языком. Тон, стиль и модель можно настроить в вашей собственной установке."
+    "en": "Generated automatically by {model}{demo}: the model's interpretation of the listed sources in plain language, not a clinical reading. Tone, style and model can be configured in your own setup.",
+    "ru": "Сгенерировано автоматически моделью {model}{demo}: толкование моделью перечисленных источников простым языком, а не клиническое заключение. Тон, стиль и модель можно настроить в вашей собственной установке."
   },
   "for_this_demo": {"en": " for this demo", "ru": " для этого демо"},
   "no_explanation": {"en": "No explanation generated yet", "ru": "Объяснение ещё не сгенерировано"},

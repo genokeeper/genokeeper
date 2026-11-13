@@ -61,6 +61,7 @@ h1 { font-size: 18px; margin: 0; }
 .open { background: var(--sunk); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px;
   font-size: 13px; display: flex; flex-direction: column; gap: 6px; }
 .open ul { margin: 0; padding-left: 18px; }
+.gist { font-weight: 600; }
 [hidden] { display: none !important; }
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--rule); }
 .tab { font: inherit; padding: 6px 14px; border: 1px solid transparent; border-bottom: none;

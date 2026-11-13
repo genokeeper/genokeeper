@@ -772,11 +772,18 @@ def test_the_changes_tab_opens_on_all_changes_when_none_is_at_the_thresholds(
 
     def opened(url_hash: str, *actions: tuple[str, str, str]) -> tuple[str, str]:
         shown = _rendered(data, tmp_path, url_hash, list(actions))
-        on = [b["text"] for b in shown["change-chips"]["buttons"] if "on" in b["className"]]
+        on = [
+            b["text"]
+            for b in shown["change-chips"]["buttons"]
+            if "on" in b["className"]
+        ]
         return on[0], shown["no-base"]["text"]
 
     every = tiers["tier_all"].replace("{n}", str(n))
-    for url_hash, actions in (("#tab=changes", []), ("", [("tab-changes", "", "click")])):
+    for url_hash, actions in (
+        ("#tab=changes", []),
+        ("", [("tab-changes", "", "click")]),
+    ):
         tier, said = opened(url_hash, *actions)
         assert tier == every and str(n) in said
     # The tab writes back a link that opens it the same way.
@@ -1755,7 +1762,9 @@ def test_typical_results_fold_and_the_others_stand_out(
     assert [d["open"] for d in found if d["className"] == "fold"] == [True]
     click = [(f"stands-out/{named.index('CYP2D6')}", "", "click")]
     rows = _rendered(data, tmp_path, actions=click)["feed"]["details"]
-    assert [d["text"][:6] for d in rows if d["className"] == "row" and d["open"]] == ["CYP2D6"]
+    assert [d["text"][:6] for d in rows if d["className"] == "row" and d["open"]] == [
+        "CYP2D6"
+    ]
 
 
 def test_the_hidden_line_names_each_reason_once(
@@ -1954,7 +1963,13 @@ def test_view_from_url_hash(con: duckdb.DuckDBPyConnection, tmp_path: Path) -> N
 
 @pytest.mark.parametrize(
     "url_hash",
-    ["#constructor=1", "#__proto__=1", "#toString=1", "#topic=constructor", "#valueOf=1&hasOwnProperty=2"],
+    [
+        "#constructor=1",
+        "#__proto__=1",
+        "#toString=1",
+        "#topic=constructor",
+        "#valueOf=1&hasOwnProperty=2",
+    ],
 )
 def test_a_hash_of_inherited_names_leaves_the_default_view(
     con: duckdb.DuckDBPyConnection, tmp_path: Path, url_hash: str
@@ -2033,11 +2048,15 @@ def test_an_empty_chip_says_where_its_rows_are_and_moves_there(
     """At high|strong no carrier finding shows; the nearest pair that shows one is
     medium|moderate (two steps; high|any evidence is three)."""
     data = payload(con, None, NO_CACHE)
-    texts = [b["text"] for b in _rendered(data, tmp_path, "#rel=2&ev=3")["chips"]["buttons"]]
+    texts = [
+        b["text"] for b in _rendered(data, tmp_path, "#rel=2&ev=3")["chips"]["buttons"]
+    ]
     [at] = [i for i, text in enumerate(texts) if text.startswith("Carrier status")]
     assert texts[at] != "Carrier status" and "moderate or more" in texts[at]
     moved = _rendered(data, tmp_path, "#rel=2&ev=3", [(f"chips/{at}", "", "click")])
-    assert _cell(moved) == (1, 2) and moved["#history"]["urls"] == ["#tab=feed&topic=carrier"]
+    assert _cell(moved) == (1, 2) and moved["#history"]["urls"] == [
+        "#tab=feed&topic=carrier"
+    ]
 
 
 def test_the_footer_folds_its_versions(
@@ -2065,27 +2084,33 @@ def test_a_matrix_click_sets_the_view(
 def test_explanation_tooltip_names_the_model_and_a_demo(
     con: duckdb.DuckDBPyConnection, tmp_path: Path
 ) -> None:
-    """An explanation's label says which model wrote it and that it can be configured;
-    "for this demo" only on a page with the demo's banner."""
+    """An explanation's text, its gist and its label carry the tooltip naming the model;
+    "for this demo" only on a page with the demo's banner; the gist leads."""
     ghr, cache = _explained(con, tmp_path)
     data = payload(con, None, cache, load_medlineplus(ghr))
     own = _rendered(data, tmp_path)["feed"]["titled"]
     demo = _rendered(data, tmp_path, banner=["Demo", "An invented genome."])["feed"]
     assert MODEL == "claude-opus-5-5" and own and len(own) == len(demo["titled"])
-    assert own[0]["text"].startswith("Written by claude-opus-5-5")
-    tip = (
-        "Generated automatically by Opus 5.5, to show a plain-language reading of the"
-        " sources. Tone, style and model can be configured in your own setup."
-    )
-    on_demo = tip.replace("Opus 5.5,", "Opus 5.5 for this demo,")
-    for shown, text in ((own[0]["attrs"], tip), (demo["titled"][0]["attrs"], on_demo)):
-        assert (shown["title"], shown["aria-description"]) == (text, text)
+    assert own[0]["text"] == "Объяснение." and own[1]["text"].startswith("Written by")
+    m = dashboard.messages("en")
+    tip = m["explanation_tooltip"].format(model="Opus 5.5", demo="")
+    on_demo = m["explanation_tooltip"].format(model="Opus 5.5", demo=m["for_this_demo"])
+    for shown, text in ((own[:2], tip), (demo["titled"][:2], on_demo)):
+        for node in shown:
+            assert (node["attrs"]["title"], node["attrs"]["aria-description"]) == (
+                text,
+                text,
+            )
     assert "демо" in dashboard.messages("ru")["for_this_demo"]
-    # A dated model id reads as its name and version, without the date.
+    # A dated model id reads as its name and version, without the date; a gist leads.
     for item in data["items"].values():
-        item["explanation"]["model"] = "claude-sonnet-4-20250514"
-    dated = _rendered(data, tmp_path)["feed"]["titled"][0]["attrs"]["title"]
-    assert dated.startswith("Generated automatically by Sonnet 4,")
+        item["explanation"].update(
+            model="claude-sonnet-4-20250514", gist="You likely X."
+        )
+    gisted = _rendered(data, tmp_path)["feed"]["titled"]
+    assert [node["text"] for node in gisted[:2]] == ["You likely X.", "Объяснение."]
+    assert gisted[0]["attrs"]["title"].startswith("Generated automatically by Sonnet 4")
+    assert gisted[0]["attrs"]["title"] == gisted[1]["attrs"]["title"]
 
 
 def test_demo_lab_has_no_check_block(tmp_path: Path) -> None:

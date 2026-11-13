@@ -408,8 +408,13 @@ def payload(
         # One field per line, so that a search never matches across two of them; the
         # page reads the typed text as `searchable` does.
         search = searchable("\n".join(fields))
+        # An entry without a gist reads as before it had one.
         explanation = None if found is None else asdict(found)
-        phenotype = call.get("phenotype") if claim.get("type") == "pharmcat_gene" else None
+        if explanation is not None and explanation["gist"] is None:
+            del explanation["gist"]
+        phenotype = (
+            call.get("phenotype") if claim.get("type") == "pharmcat_gene" else None
+        )
         normal = claim.get("type") == "repeat_expansion" and claim.get("class") == (
             RepeatClass.NORMAL
         )
