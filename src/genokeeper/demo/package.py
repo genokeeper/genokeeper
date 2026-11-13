@@ -364,12 +364,12 @@ def _landing(
     base = clinvar.get(reports[0]["base"]) if reports[0]["base"] else None
     rows, everything, defaults = (r["changes"] for r in reports)
     changed = (
-        f"The reads are the same. Between the ClinVar releases of {_day(base)} and"
-        f" {_day(run['clinvar'])}, {_count(len(rows), 'finding')} changed their grading;"
-        f" {len(everything):,} entered or left the list of everything called, and"
-        f" {len(defaults):,} the list at the default thresholds."
+        f"The reads are the same. Between its releases of {_day(base)} and"
+        f" {_day(run['clinvar'])}, ClinVar brought {_count(len(rows), 'change')};"
+        f" {_count(len(everything), 'finding')} entered or left the list of everything"
+        f" called, and {len(defaults):,} the list at the default thresholds."
     )
-    if len(rows) > 3:
+    if len(everything) > 3:
         changed += " Three of them:"
     description = (
         f"{loosest:,} candidate findings for GIAB's HG002, {default:,} at the default"
@@ -390,7 +390,7 @@ def _landing(
                 f"Run {run['run_id']}, ClinVar {_day(run['clinvar'])}, genokeeper {version}."
             ),
             "changed": html.escape(changed),
-            "diff": _diff(rows, base or "", run["clinvar"] or ""),
+            "diff": _diff(everything, base or "", run["clinvar"] or ""),
             "calibration": _calibration_table(),
             "cite": (
                 f"Genokeeper {html.escape(version)}. "

@@ -303,8 +303,8 @@ def test_landing_numbers(tmp_path: Path) -> None:
     ]
     assert n == [7, 3, 2]
     assert (
-        f", {n[0]} findings changed their grading; {n[1]} entered or left the list of"
-        f" everything called, and {n[2]} the list at the default thresholds. Three of them:"
+        f"ClinVar brought {n[0]} changes; {n[1]} findings entered or left the list of"
+        f" everything called, and {n[2]} the list at the default thresholds.</p>"
     ) in index
 
 
@@ -326,16 +326,21 @@ def test_landing_matrix(tmp_path: Path) -> None:
     }
 
 
-def test_landing_diff_lists_changes(tmp_path: Path) -> None:
+def test_landing_examples_are_the_everything_called_rows(tmp_path: Path) -> None:
     out = _package(tmp_path)
-    index = _read(out, "index.html")
+    reports = [_report(out, tmp_path / str(i), *t) for i, t in enumerate(TIERS)]
+    reports[0][
+        "changes"
+    ].reverse()  # the first three of every change are none of the list's
+    rows, tier = reports[0]["changes"], reports[1]["changes"]
+    assert {r["id"] for r in rows[:3]}.isdisjoint(r["id"] for r in tier)
+    with open_store(out / STORE_FILE) as con:
+        index = pkg._landing(con, pkg._runs(con), reports)  # pyright: ignore[reportPrivateUsage]
     [diff] = re.findall(
         r'<div class="diff"[^>]*aria-label="[^"]+">(.*?)\n</div>', index, re.DOTALL
     )
-    rows = _report(out, tmp_path, *TIERS[0])["changes"]
-    tier = _report(out, tmp_path / "tier", *TIERS[1])["changes"]
-    assert [r["id"] for r in rows[:3]] == [r["id"] for r in tier]
-    for listed in rows[:3]:
+    assert len(tier) == 3 and "Three of them:" not in index
+    for listed in tier:
         label = f"{listed['gene']} {listed['marker']['grch38']}"
         assert label in diff
         lines = diff.split(label, 1)[1].split("\n")
@@ -345,7 +350,7 @@ def test_landing_diff_lists_changes(tmp_path: Path) -> None:
         )
         assert lines[1].startswith('<div class="m">- ') and before in lines[1]
         assert lines[2].startswith('<div class="p">+ ') and after in lines[2]
-    assert rows[3]["gene"] not in diff
+    assert rows[0]["gene"] not in diff
     assert 'href="dashboard.html#tab=changes"' in index
 
 
