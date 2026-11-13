@@ -739,6 +739,53 @@ def test_a_refresh_that_made_no_run_is_compared_with_itself(tmp_path: Path) -> N
     assert changes["bases"][D3]["rows"] == {} and list(changes["bases"])[1:] == [D2, D1]
 
 
+def test_the_changes_head_names_the_source_versions_that_differ(tmp_path: Path) -> None:
+    """Each base carries the inputs a source reads whose files differ from it to the run,
+    with their releases; the head shows them as dates and the run ids only as tooltips."""
+    reports, lab = tmp_path / "reports", tmp_path / "lab"
+    _history(reports)
+    with open_store(reports / "genomelab.duckdb") as con:
+        data = payload(con, None, NO_CACHE, reports=reports, lab=lab)
+    clinvar = {"name": "clinvar38", "before": "20261001", "after": "20261101"}
+    gwas = {"name": "gwas", "before": "gw20261001", "after": "gw20261101"}
+    for base in (D1, D2):
+        assert data["changes"]["bases"][base]["sources"] == [clinvar, gwas]
+    head = _rendered(data, tmp_path, "#tab=changes")["changes-head"]
+    assert "ClinVar 2026-10-01 → 2026-11-01" in head["text"]
+    assert D2 not in head["text"] and D3 not in head["text"]
+    assert {D2, D3} <= {node["attrs"]["title"] for node in head["titled"]}
+
+
+def test_the_changes_tab_opens_on_all_changes_when_none_is_at_the_thresholds(
+    tmp_path: Path,
+) -> None:
+    """Thresholds no hash chose that keep no change open on all of them, saying so; a
+    hash's thresholds, or the loosest keeping none either, leave the trusted tier on."""
+    reports, lab = tmp_path / "reports", tmp_path / "lab"
+    _history(reports)
+    with open_store(reports / "genomelab.duckdb") as con:
+        data = payload(con, None, NO_CACHE, reports=reports, lab=lab)
+    views = data["changes"]["bases"][D2]["views"]
+    views["medium|moderate"] = dict.fromkeys(views["medium|moderate"], "level")
+    n = len(data["changes"]["bases"][D2]["rows"])
+    tiers = dashboard.messages("en")
+
+    def opened(url_hash: str, *actions: tuple[str, str, str]) -> tuple[str, str]:
+        shown = _rendered(data, tmp_path, url_hash, list(actions))
+        on = [b["text"] for b in shown["change-chips"]["buttons"] if "on" in b["className"]]
+        return on[0], shown["no-base"]["text"]
+
+    every = tiers["tier_all"].replace("{n}", str(n))
+    for url_hash, actions in (("#tab=changes", []), ("", [("tab-changes", "", "click")])):
+        tier, said = opened(url_hash, *actions)
+        assert tier == every and str(n) in said
+    trusted = opened("#tab=changes&rel=1&ev=2")
+    assert trusted[0] != every and trusted[1] == ""
+    assert opened("#tab=changes&rel=0&ev=0")[1] == ""
+    views["low|conflicting"] = dict.fromkeys(views["low|conflicting"], "level")
+    assert opened("#tab=changes")[0] != every
+
+
 def test_tab_says_no_base_on_first_snapshot(tmp_path: Path) -> None:
     reports, lab = tmp_path / "reports", tmp_path / "lab"
     reports.mkdir()

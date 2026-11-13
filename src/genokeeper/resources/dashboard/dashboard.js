@@ -41,7 +41,8 @@ const REPEAT_CLASSES = M.repeat_classes;
 const PUBMED = "https://pubmed.ncbi.nlm.nih.gov/";
 
 const [reliability, validity, topic] = data.default.split("|");
-const state = { reliability, validity, topic, search: "", tab: "feed" };
+// `chosen`: a hash or a tier chip set the Changes tab's thresholds or tier.
+const state = { reliability, validity, topic, search: "", tab: "feed", chosen: false };
 
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -457,6 +458,7 @@ const SOURCES = bare({
   litvar: "LitVar",
   pharmcat: "PharmCAT",
   ipd_imgt_hla: "IPD-IMGT/HLA",
+  panelapp: "PanelApp",
   ensembl_vep: "Ensembl VEP",
   haplogrep3: "Haplogrep3",
   pgs_catalog: "PGS Catalog",
@@ -605,6 +607,7 @@ function chipGroup(label, options, key) {
     chip.type = "button";
     chip.addEventListener("click", () => {
       tab[key] = value;
+      if (key === "tier") state.chosen = true;
       renderChanges();
     });
     group.append(chip);
@@ -618,14 +621,25 @@ function present(values, selected, order) {
   return [...found].sort((a, b) => order(a) - order(b) || a.localeCompare(b, data.lang));
 }
 
+// A release that is a date (`20261108`) in ISO form; any other stays as stored.
+function iso(release) {
+  return /^\d{8}$/.test(release) ? `${release.slice(0, 4)}-${release.slice(4, 6)}-${release.slice(6)}` : release;
+}
+
+// The head: the two runs by their dates (their ids in tooltips) and the source versions
+// that differ between them.
 function renderHead(compared) {
   const head = document.getElementById("changes-head");
-  head.replaceChildren(t("update_head", { date: changes.date || "—", run: changes.run }));
+  const update = el("span", "", t("update_head", { date: changes.date || "—" }));
+  update.setAttribute("title", changes.run);
+  head.replaceChildren(update);
   if (!compared) return;
   const select = el("select");
   select.setAttribute("aria-label", t("compared_label"));
+  select.setAttribute("title", tab.base);
   for (const [run, base] of Object.entries(changes.bases)) {
-    const option = el("option", "", `${base.date} · ${t(base.refresh ? "base_refresh" : "base_run")} ${run}`);
+    const option = el("option", "", `${base.date} · ${t(base.refresh ? "base_refresh" : "base_run")}`);
+    option.setAttribute("title", run);
     option.value = run;
     option.selected = run === tab.base;
     select.append(option);
@@ -636,6 +650,8 @@ function renderHead(compared) {
     renderChanges();
   });
   head.append(t("compared_with"), select);
+  const differ = compared.sources.map((s) => `${SOURCES[s.name] || s.name} ${iso(s.before)} → ${iso(s.after)}`);
+  if (differ.length) head.append(el("div", "", t("sources_differ", { sources: differ.join(", ") })));
 }
 
 // The update check's age is computed here, when the page is viewed: a check that stopped
@@ -688,9 +704,8 @@ function renderChanges() {
       return box;
     }),
   );
-  document.getElementById("no-base").textContent = compared
-    ? ""
-    : t("no_base");
+  const note = document.getElementById("no-base");
+  note.textContent = compared ? "" : t("no_base");
   const table = document.getElementById("changes");
   const chipsBox = document.getElementById("change-chips");
   const research = document.getElementById("research");
@@ -702,6 +717,12 @@ function renderChanges() {
   const kindOrder = (kind) => Object.keys(KINDS).indexOf(kind);
   const rows = Object.values(compared.rows);
   const first = rows.filter((row) => changes.first_tier.includes(kinds[row.id]));
+  // Thresholds no one chose that keep no change, where the loosest keep some: all of them.
+  const loosest = compared.views[`${SCALES.reliability[0]}|${SCALES.validity[0]}`];
+  if (!state.chosen && !first.length && rows.some((row) => changes.first_tier.includes(loosest[row.id]))) {
+    tab.tier = "all";
+    note.textContent = t("below_thresholds", { n: rows.length });
+  }
   const tiered = tab.tier === "first" ? first : rows;
   const shown = tiered.filter(
     (row) =>
@@ -812,7 +833,7 @@ function readHash() {
     if (key === "tab" && (value === "feed" || value === "changes")) state.tab = value;
     else if (key in HASH_SCALES && /^[0-9]$/.test(value)) {
       const levels = SCALES[HASH_SCALES[key]];
-      if (Number(value) < levels.length) state[HASH_SCALES[key]] = levels[Number(value)];
+      if (Number(value) < levels.length) Object.assign(state, { [HASH_SCALES[key]]: levels[Number(value)], chosen: true });
     } else if (key === "topic" && `${state.reliability}|${state.validity}|${value}` in data.views) state.topic = value;
     else if (key === "q") state.search = value;
   }
@@ -869,7 +890,8 @@ const CELLS = [...SCALES.reliability].reverse().flatMap((r) => {
 // An edited hash is the view, read from the defaults as on load; `replaceState` fires no
 // `hashchange`, so writing the view back never loops.
 window.addEventListener("hashchange", () => {
-  Object.assign(state, { reliability, validity, topic, search: "", tab: "feed" });
+  Object.assign(state, { reliability, validity, topic, search: "", tab: "feed", chosen: false });
+  tab.tier = "first";
   readHash();
   search.value = state.search;
   render();
