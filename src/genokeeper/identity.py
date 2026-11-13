@@ -2,8 +2,8 @@
 the knowledge-base releases.
 
 `analyser_identity` is a sha256 over the package's code and resources (every file under
-`PACKAGE_ROOT`, bytecode apart) and config/grading.toml. It is recorded in every run as
-`run.tools["analyser"]`; a refresh compares it with the latest snapshot's to tell a change
+`PACKAGE_ROOT`, bytecode, the skill and the demo site's resources apart) and
+config/grading.toml. It is recorded in every run as `run.tools["analyser"]`; a refresh compares it with the latest snapshot's to tell a change
 of the analyser from a change of the sources. It is in no step key: the cached slow steps
 are keyed by their own inputs, so a new analyser re-grades without re-calling.
 """
@@ -27,8 +27,10 @@ def _files() -> list[tuple[str, Path]]:
         and path.suffix != ".pyc"
         and "__pycache__" not in path.relative_to(PACKAGE_ROOT).parts
         and path.name != ".DS_Store"
-        # The skill is documentation for the reader; editing it is not a new analyser.
-        and path.relative_to(PACKAGE_ROOT).parts[:2] != ("resources", "skills")
+        # The skill is documentation for the reader, and the demo site's pages and recorded
+        # answer present the findings: editing either is not a new analyser.
+        and path.relative_to(PACKAGE_ROOT).parts[:2]
+        not in {("resources", "skills"), ("resources", "demo")}
     )
     return [*package, (f"config/{GRADING_FILE.name}", GRADING_FILE)]
 

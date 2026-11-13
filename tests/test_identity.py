@@ -85,3 +85,16 @@ def test_skill_edit_leaves_analyser_identity(
     _append_byte(copy / "resources" / "skills" / "genome-ask" / "SKILL.md")
     monkeypatch.setattr(identity, "PACKAGE_ROOT", copy)
     assert analyser_identity() == first
+
+
+def test_demo_site_edit_leaves_analyser_identity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The demo site's pages and its recorded answer present the findings; they are not
+    part of the analyser."""
+    first = analyser_identity()
+    copy = _package_copy(tmp_path)
+    _append_byte(copy / "resources" / "demo" / "index.html")
+    (copy / "resources" / "demo" / "transcript.md").write_text("---\n---\nx\n")
+    monkeypatch.setattr(identity, "PACKAGE_ROOT", copy)
+    assert analyser_identity() == first
