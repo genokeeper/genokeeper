@@ -37,10 +37,11 @@ from genokeeper.explain import (
     explain,
     grounding,
     lookup,
+    newest_medlineplus,
     parse,
     prompt,
 )
-from genokeeper.lang import LANGUAGES
+from genokeeper.lang import LANGUAGES, Language
 from genokeeper.query import HAPLOID_DOSAGE_NOTE, Filters, query
 from genokeeper.repeats.loci import Allele, RepeatCall
 from genokeeper.sources.repeats import grade
@@ -134,7 +135,7 @@ class Recorder:
             )
         )
 
-    def __call__(self, text: str) -> str:
+    def __call__(self, text: str, **_: Any) -> str:
         self.prompts.append(text)
         return self.answer(text)
 
@@ -855,7 +856,12 @@ def test_dry_run_calls_nothing_and_prints_prompts(
     assert HFE_TEXT in printed and "An older summary." not in printed
     assert printed.endswith(f"3 calls to {MODEL}\n")
     run = capsys.readouterr()
-    assert run.out.splitlines() == ["cached: 0", "written: 3", "failed: 0"]
+    assert run.out.splitlines()[:4] == [
+        "cached: 0",
+        "written: 3",
+        "failed: 0",
+        "calls: 3 made, 0 from the cache",
+    ]
     assert len(run.err.splitlines()) == 3
     monkeypatch.setattr(explainer, "claude_ask", refuse)
     assert main([*command, "--dry-run"]) == 0
@@ -907,7 +913,7 @@ def test_explain_exits_1_when_a_call_failed(
     lab = _lab(tmp_path, monkeypatch)
     _medlineplus(lab / "medlineplus" / "20261020" / MEDLINEPLUS_FILE)
 
-    def fail(_: str) -> str:
+    def fail(_: str, **__: Any) -> str:
         raise ExplainError("claude exited 1: Failed to authenticate")
 
     monkeypatch.setattr(explainer, "claude_ask", fail)
@@ -917,6 +923,9 @@ def test_explain_exits_1_when_a_call_failed(
         "cached: 0",
         "written: 0",
         "failed: 3",
+        "calls: 3 made, 0 from the cache",
+        "cost: $0.0000",
+        "tokens: 0 input, 0 output, 0 cache read, 0 cache creation",
     ]
 
 
@@ -1089,3 +1098,103 @@ def test_the_watch_note_never_contradicts_a_watch_items_reason(
     assert ban.startswith("never word it as settled")
     for term in ("expan", "carrier", "penetrance"):
         assert term not in ban.split("settled", 1)[0]
+
+
+SONNET = "claude-sonnet-5-5"
+
+
+def test_the_plain_english_keys_are_the_base_commits(
+    findings: dict[str, dict[str, Any]], medlineplus: MedlinePlus
+) -> None:
+    """`--tone plain`, the default, keeps the English prompt's bytes: keys computed on
+    cef4868, so the user's cached explanations still hit."""
+    f = findings["clinvar:1"]
+    text = prompt(f, grounding(f, medlineplus), tone="plain")
+    pinned = "66ef7ffe8c4309d4699bab94e2ede92cc9c115f8add028b5c0d1aa086d2fdd7a"
+    assert cache_key(text) == cache_key(text, MODEL) == pinned
+
+
+@pytest.mark.parametrize("lang", LANGUAGES)
+def test_the_engaging_tone_has_its_own_prompt_and_key(
+    findings: dict[str, dict[str, Any]], medlineplus: MedlinePlus, lang: Language
+) -> None:
+    f = findings["clinvar:1"]
+    sources = grounding(f, medlineplus)
+    plain, engaging = (
+        prompt(f, sources, lang=lang, tone=t) for t in ("plain", "engaging")
+    )
+    assert _document(engaging) == _document(plain)
+    assert "surprising" in engaging and "surprising" not in plain
+    assert 'addressing them as "' in engaging and "only from the sources" in engaging
+    assert "no diagnosis, no dose and no drug choice" in engaging
+    assert cache_key(engaging) != cache_key(plain)
+
+
+def test_filters_pick_findings_and_drop_watch_items(
+    store: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with connect(store) as con:
+        seed(con, [*STAGE3_ROWS, Row("clinvar:3", pos=1003, level="low",
+                                     validity="limited")])  # fmt: skip
+        con.execute("UPDATE statement SET source = 'expansionhunter'"
+                    " WHERE statement_id LIKE 'expansionhunter:%'")  # fmt: skip
+    lab = _lab(tmp_path, monkeypatch)
+    _medlineplus(lab / "medlineplus" / "20261020" / MEDLINEPLUS_FILE)
+    command = ["explain", "--db", str(store), "--cache", str(tmp_path / "e")]
+
+    def asked(*argv: str) -> set[str]:
+        assert main([*command, "--dry-run", *argv]) == 0
+        return set(re.findall(r"^--- (\S+)$", capsys.readouterr().out, re.MULTILINE))
+
+    every = {"clinvar:1", "clinvar:2", "clinvar:3", "pharmcat:CYP2D6"}
+    assert asked() == every | {"expansionhunter:HTT"}
+    assert asked("--min-reliability", "low") == every
+    assert asked("--min-validity", "moderate") == every - {"clinvar:3"}
+    assert asked("--min-reliability", "medium") == every - {"clinvar:3"}
+
+
+def test_the_model_reaches_the_call_the_key_and_the_entry_and_the_cost_is_summed(
+    store: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    lab = _lab(tmp_path, monkeypatch)
+    _medlineplus(lab / "medlineplus" / "20261020" / MEDLINEPLUS_FILE)
+    argvs: list[list[str]] = []
+    names = ("input", "output", "cache_read_input", "cache_creation_input")
+    usage = {f"{name}_tokens": n for n, name in enumerate(names, 1)}
+
+    def run(argv: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        argvs.append(argv)
+        answer = {"title": "T.", "text": "X.", "cites": [_own_id(kwargs["input"])]}
+        result = {**RESULT, "result": json.dumps(answer), "usage": usage}
+        return subprocess.CompletedProcess(argv, 0, json.dumps(result), "")
+
+    monkeypatch.setattr(subprocess, "run", run)
+    cache = tmp_path / "e"
+    command = ["explain", "--db", str(store), "--cache", str(cache), "--model", SONNET]
+    assert main(command) == 0
+    assert len(argvs) == 3 and all(a[a.index("--model") + 1] == SONNET for a in argvs)
+    assert capsys.readouterr().out.splitlines()[-3:] == [
+        "calls: 3 made, 0 from the cache",
+        "cost: $0.0300",  # RESULT's 0.01 each
+        "tokens: 3 input, 6 output, 9 cache read, 12 cache creation",
+    ]
+    f, summaries = _findings(store)["clinvar:1"], newest_medlineplus(lab)
+    text = prompt(f, grounding(f, summaries))
+    assert not (cache / f"{cache_key(text)}.json").exists()
+    assert json.loads((cache / f"{cache_key(text, SONNET)}.json").read_text()) == {
+        "title": "T.", "text": "X.", "cites": ["clinvar:1"], "model": SONNET
+    }  # fmt: skip
+    # The dashboard's lookup, which names no model, finds the entry and names its model.
+    found = lookup(f, summaries, cache)
+    assert found is not None and found.model == SONNET
+    assert main(command) == 0
+    assert capsys.readouterr().out.splitlines()[-3:-1] == [
+        "calls: 0 made, 3 from the cache",
+        "cost: $0.0000",
+    ]
