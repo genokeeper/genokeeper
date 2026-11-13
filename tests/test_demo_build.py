@@ -167,7 +167,9 @@ def test_resumed_build_asks_only_for_what_its_root_lacks(
     cache.parent.mkdir(parents=True)
     cache.write_bytes(b"x" * 10_000)
     os.link(cache, cache.parent / "hard")  # one inode, counted once
-    (cache.parent / "soft").symlink_to(cache)  # not followed
+    outside = lab / "outside.bin"
+    outside.write_bytes(b"y" * 50_000)
+    (cache.parent / "soft").symlink_to(outside)  # not followed out of the root
     held = cache.stat().st_blocks * 512
     for need in (10**6, held - 1):
         monkeypatch.setattr(demo_build, "NEED_BYTES", need)
