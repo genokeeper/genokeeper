@@ -2189,3 +2189,25 @@ def test_demo_lab_has_no_check_block(tmp_path: Path) -> None:
         "failed": [],
         "stale_days": 35,
     }
+
+
+def test_a_reference_result_cpic_names_otherwise_folds(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    """CPIC's terms for a gene with no variant of note (RYR1 and CACNA1S "Uncertain
+    Susceptibility", CFTR's "ivacaftor non-responsive") fold only at a Reference/Reference
+    diplotype; the same terms beside a variant stay shown."""
+
+    def gene(name: str, diplotype: str, phenotype: str) -> Row:
+        call = {**GENE_CALL, "diplotype": diplotype, "phenotype": phenotype}
+        return Row(f"pharmcat:{name}", gene=name, level=None, topic="drugs",
+                   gene_call=call, claim=PGX_CLAIM)  # fmt: skip
+
+    seed(con, [gene("CACNA1S", "Reference/Reference", "Uncertain Susceptibility"),
+               gene("CFTR", "Reference/Reference", "ivacaftor non-responsive in CF patients"),
+               gene("RYR1", "Reference/c.1840C>T", "Uncertain Susceptibility")])  # fmt: skip
+    data = payload(con, None, NO_CACHE)
+    assert {i for i, f in data["items"].items() if f["normal"]} == {
+        "pharmcat:CACNA1S",
+        "pharmcat:CFTR",
+    }
