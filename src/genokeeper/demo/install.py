@@ -47,10 +47,12 @@ _SAY = "genokeeper demo"
 FOLDER = "~/genokeeper-demo"  # the folder `genokeeper demo` writes by default
 
 QUESTIONS = (
-    "Is HG002 a carrier of a recessive condition?",
+    "Is HG002 a carrier of anything their children could inherit?",
     "How would HG002 respond to clopidogrel, which CYP2C19 activates?",
-    "What changed since the last update?",
+    "List every change the last ClinVar update brought, below the default thresholds too.",
 )
+# What Finder writes into a folder it opens: such a folder is not "something else".
+_FINDER = (".DS_Store", ".localized")
 # What a question cannot get here, each with its reason; CLAUDE.md lists them.
 CANNOT = (
     (
@@ -231,6 +233,17 @@ def _ours(folder: Path) -> bool:
     return isinstance(marker, dict) and {"schema_version", "runs"} <= marker.keys()
 
 
+def _foreign(folder: Path) -> bool:
+    """`folder` holds anything but Finder's files and empty folders (a refused first
+    download leaves `reports/`)."""
+    return any(
+        p.name not in _FINDER
+        and not p.name.startswith("._")
+        and not (p.is_dir() and not any(p.iterdir()))
+        for p in folder.iterdir()
+    )
+
+
 def install(folder: Path, *, base: str = DEMO_BASE) -> Path:
     """Write the demo folder at `folder` from the release at `base`; return `folder`:
     `DEMO_MARKER` (the manifest), `reports/` (the store and its snapshots), `lab/` (the
@@ -238,7 +251,7 @@ def install(folder: Path, *, base: str = DEMO_BASE) -> Path:
     (this genokeeper, for the skill's `uv run`), `.claude/skills/genome-ask/SKILL.md` and
     `CLAUDE.md`. Raises `DemoRefused`; nothing is written before the manifest's check, and
     no file is under its final name unless its sha256 matched."""
-    holds = folder.is_dir() and any(folder.iterdir())
+    holds = folder.is_dir() and _foreign(folder)
     if (folder.exists() and not folder.is_dir()) or (holds and not _ours(folder)):
         raise DemoRefused(
             f"{folder} holds something else and is not a demo folder (no {DEMO_MARKER});"
@@ -246,17 +259,19 @@ def install(folder: Path, *, base: str = DEMO_BASE) -> Path:
         )
     manifest, sums = _manifest(base)
     folder.mkdir(parents=True, exist_ok=True)
-    (folder / DEMO_MARKER).write_bytes(manifest)
-    paths = load_paths(folder)
-    store = paths.reports / STORE_FILE
+    store = folder / "reports" / STORE_FILE
     _download(base + STORE_FILE, sums[STORE_FILE], store, size_line=True, check=_inert)
+    (folder / DEMO_MARKER).write_bytes(manifest)
+    paths = load_paths(folder)  # the marker makes the folder's own `lab/` the lab
     log = paths.lab / "refresh" / refresh_log.LOG
     _download(base + REFRESH_LOG_FILE, sums[REFRESH_LOG_FILE], log)
     (paths.lab / DEMO_MARKER).write_text("{}\n", encoding="utf-8")
     snapshots = paths.reports / "snapshots"
     shutil.rmtree(snapshots, ignore_errors=True)
+    print(f"{_SAY}: writing the store's snapshots", file=sys.stderr)
     with open_store(store) as con:
         export_snapshots(con, snapshots)
+    print(f"{_SAY}: writing the dashboard, a few minutes", file=sys.stderr)
     write_dashboard(
         paths,
         out=folder / "dashboard.html",

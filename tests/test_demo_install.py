@@ -104,6 +104,32 @@ def test_install_refuses_a_store_that_runs_sql(
         assert b"the user's own file" not in f.read_bytes(), f
 
 
+def test_install_takes_a_folder_finder_touched(site: Path, tmp_path: Path) -> None:
+    folder = tmp_path / "d"
+    folder.mkdir()
+    for name in (".DS_Store", ".localized", "._notes"):
+        (folder / name).write_bytes(b"finder")
+    with serve(site) as base:
+        install(folder, base=base)
+    assert (folder / "reports" / STORE_FILE).is_file()
+
+
+def test_refused_download_keeps_the_earlier_marker(site: Path, tmp_path: Path) -> None:
+    folder = tmp_path / "d"
+    with serve(site) as base:
+        install(folder, base=base)
+    earlier = (folder / DEMO_MARKER).read_bytes()
+    served = _copy(site, tmp_path)
+    manifest = json.loads((served / MANIFEST).read_text())
+    manifest["version"] = "9.9.9"  # a newer release whose store comes in cut
+    (served / MANIFEST).write_text(json.dumps(manifest))
+    with (served / STORE_FILE).open("ab") as f:
+        f.write(b"x")
+    with serve(served) as base, pytest.raises(DemoRefused, match="sha256"):
+        install(folder, base=base)
+    assert (folder / DEMO_MARKER).read_bytes() == earlier
+
+
 def test_install_refuses_schema_mismatch(site: Path, tmp_path: Path) -> None:
     served = _copy(site, tmp_path)
     manifest = json.loads((served / MANIFEST).read_text())
@@ -153,6 +179,14 @@ def test_install_updates_demo_folder(site: Path, tmp_path: Path) -> None:
     ).read_bytes()
 
 
+def test_the_change_question_asks_for_every_change() -> None:
+    """The skill passes `--all` when asked for every change; at the default tier the
+    demo's changes are none."""
+    skill = skill_resource().read_text(encoding="utf-8")
+    assert "add `--all` when the user asks for every change" in skill
+    assert "every change" in QUESTIONS[2]
+
+
 def test_install_cut_download_leaves_no_store(site: Path, tmp_path: Path) -> None:
     folder = tmp_path / "d"
     with (
@@ -191,5 +225,11 @@ def test_install_prints_next_steps(
     claude = (folder / "CLAUDE.md").read_text(encoding="utf-8")
     assert FRAME_SUMMARY in claude and all(q in claude for q in QUESTIONS)
     size = (site / STORE_FILE).stat().st_size
-    assert f"{size / 1e6:.1f} MB" in err
+    said = [line for line in err.splitlines() if line.startswith("genokeeper demo: ")]
+    assert f"{size / 1e6:.1f} MB" in said[0]
+    # One line before each long step, so that a first run never sits silent.
+    assert [line.split(": ")[1].split(",")[0] for line in said[1:]] == [
+        "writing the store's snapshots",
+        "writing the dashboard",
+    ]
     assert "\r" not in err and "bootstrap" not in err
