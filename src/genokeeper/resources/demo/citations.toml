@@ -293,21 +293,21 @@ url = "https://doi.org/10.1073/pnas.1302575110"
 [[tool]]
 name = "ACMG SF v3.3 secondary findings list"
 group = "Clinical and population evidence"
-version_key = "acmg_sf"
+version_key = ""
 citation = "Lee et al., Genet Med 2025"
 url = "https://doi.org/10.1016/j.gim.2025.101454"
 
 [[tool]]
 name = "ACMG carrier screening tiers (2021)"
 group = "Clinical and population evidence"
-version_key = "carrier_tier3"
+version_key = ""
 citation = "Gregg et al., Genet Med 2021"
 url = "https://doi.org/10.1038/s41436-021-01203-z"
 
 [[tool]]
 name = "gnomAD v4.1 (allele frequencies and SV sites)"
 group = "Clinical and population evidence"
-version_key = "gnomad_faf"
+version_key = ""
 citation = "Chen et al., Nature 2024"
 url = "https://doi.org/10.1038/s41586-023-06045-0"
 
@@ -475,7 +475,7 @@ url = "https://doi.org/10.1093/nar/gkad284"
 [[tool]]
 name = "PhyloTree Build 17"
 group = "Haplogroups, HLA and other typing"
-version_key = "haplogrep3"
+version_key = "haplogrep3_tree"
 citation = "van Oven, Forensic Sci Int Genet Suppl Ser 2015"
 url = "https://doi.org/10.1016/j.fsigss.2015.09.155"
 

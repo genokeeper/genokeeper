@@ -550,3 +550,18 @@ def test_dashboard_shows_the_demo_roots_explanations(tmp_path: Path) -> None:
     ]
     assert shown == {"title": "T.", "text": "X.", "cites": ["medlineplus:gene:GENE2"],
                      "model": model}  # fmt: skip
+
+
+def test_built_on_shows_each_version_once() -> None:
+    tools = {"haplogrep3": "3.2.2", "haplogrep3_tree": "phylotree-rcrs@17.3"}
+    tools |= {
+        "acmg_sf": "3.3",
+        "carrier_tier3": "2021",
+        "gnomad_faf": "4.1, floor 1e-06",
+    }
+    built = pkg._built_on(tools)
+    assert "PhyloTree Build 17</a> phylotree-rcrs@17.3. " in built
+    assert "Haplogrep 3</a> 3.2.2. " in built
+    for name in ("ACMG SF v3.3", "ACMG carrier screening tiers (2021)", "gnomAD v4.1"):
+        assert re.search(rf">{re.escape(name)}[^<]*</a>\. ", built), name
+    assert "Filtering allele frequency (FAF)</a> 4.1, floor 1e-06. " in built
