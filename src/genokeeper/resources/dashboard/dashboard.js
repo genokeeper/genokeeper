@@ -71,6 +71,11 @@ function percent(share) {
   return `${Math.round(100 * share)}%`;
 }
 
+// ClinVar's strings read as words, `_` a space and `|` a comma; the data stays as stored.
+function readable(text) {
+  return typeof text === "string" ? text.replace(/_/g, " ").replace(/\|/g, ", ") : text;
+}
+
 function joined(...parts) {
   return parts.filter((part) => part !== null && part !== undefined && part !== "").join(", ");
 }
@@ -125,7 +130,7 @@ function headline(f) {
   const call = f.gene_call;
   const typed = typingHeadline(claim);
   if (typed !== undefined) return typed;
-  if (claim.type === "clinvar_germline") return `${claim.classification}, ${claim.condition}`;
+  if (claim.type === "clinvar_germline") return `${readable(claim.classification)}, ${readable(claim.condition)}`;
   if (claim.type === "mito_haplogroup") return t("mito_haplogroup", { haplogroup: claim.haplogroup || t("unknown_f") });
   if (claim.type === "y_haplogroup") return t("y_haplogroup", { haplogroup: claim.haplogroup || t("unknown_f") });
   if (claim.type === "pgs") return `${claim.condition}: ${percentile(f.effect)}${claim.weak ? `, ${t("weak_power")}` : ""}`;
@@ -153,7 +158,7 @@ function markerLine(f) {
       parts.push(t("copies", genotype));
     }
   }
-  parts.push(f.validity.source_level);
+  parts.push(readable(f.validity.source_level));
   return parts.filter((part) => part).join(" · ");
 }
 
@@ -236,7 +241,7 @@ function opened(f) {
   }
   box.append(labelled(t("genotype"), genotypeText(f)));
   const v = f.validity;
-  const own = v.source_level ? ` (${v.source_level})` : "";
+  const own = v.source_level ? ` (${readable(v.source_level)})` : "";
   const reason = v.reason ? `; ${v.reason}` : "";
   box.append(labelled(t("evidence"), `${LEVELS[v.level][0]}${own}${reason}`));
   if (f.effect) box.append(labelled(t("effect"), effectText(f.effect)));
@@ -473,7 +478,7 @@ function causeText(cause) {
 
 function validityText(side) {
   if (side === null) return "—";
-  const own = side.source_level ? ` (${side.source_level})` : "";
+  const own = side.source_level ? ` (${readable(side.source_level)})` : "";
   return `${level(side.validity)}${own}`;
 }
 
@@ -525,6 +530,7 @@ function sideValue(side, name) {
   if (name === "validity" || name === "level") return level(value);
   if (name === "actionable") return t(value ? "yes" : "no");
   if (name === "kind") return STATEMENT_KINDS[value] || value;
+  if (name === "source_level") return readable(value);
   return String(value);
 }
 

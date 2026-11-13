@@ -265,7 +265,9 @@ def _side(side: Mapping[str, Any] | None) -> str:
         return "not reported"
     parts = [
         None if side["kind"] == "finding" else str(side["kind"]).replace("_", " "),
-        side["source_level"],
+        None
+        if side["source_level"] is None
+        else str(side["source_level"]).replace("_", " ").replace("|", ", "),
         None if side["validity"] is None else f"{side['validity']} evidence",
         None if side["level"] is None else f"genotype {side['level']}",
     ]

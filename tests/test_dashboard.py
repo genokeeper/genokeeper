@@ -1609,6 +1609,19 @@ def test_headline_for_every_3f_claim_type(
         assert f": {row.claim['type']}\n" not in feed, row.id
 
 
+def test_clinvar_strings_read_as_words(
+    con: duckdb.DuckDBPyConnection, tmp_path: Path
+) -> None:
+    """ClinVar's `_` and `|` show as a space and a comma: a title with no break point
+    widened a phone's page."""
+    long = "Conflicting_classifications_of_pathogenicity"
+    seed(con, [Row("clinvar:77", pos=1077, classification=long, condition="a_b|c")])
+    data = {**payload(con, None, NO_CACHE), "default": "low|conflicting|"}
+    feed = _rendered(data, tmp_path)["feed"]["text"]
+    assert "BRCA1: Conflicting classifications of pathogenicity, a b, c\n" in feed
+    assert "Conflicting classifications of pathogenicity (2★)" in feed and long not in feed
+
+
 def test_mc1r_two_strong_names_copies() -> None:
     """MC1R's "two strong" counts copies (one strong variant on both is two), so its label
     names copies, not variants, in each language."""

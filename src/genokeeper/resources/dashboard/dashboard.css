@@ -28,6 +28,8 @@ input[type=range] { width: 100%; }
   padding: 10px 0; cursor: pointer; list-style: none; }
 .row > summary::-webkit-details-marker { display: none; }
 .row b { font-weight: 600; }
+/* No one token (a ClinVar condition, an HGVS) may widen a phone's page. */
+.row, table.changes td { overflow-wrap: anywhere; }
 .sub { color: var(--muted); font-size: 12.5px; font-family: ui-monospace, Menlo, monospace; }
 .warn { color: var(--warn); font-size: 12.5px; }
 .pair { display: grid; grid-template-columns: 62px 1fr 34px; gap: 3px 6px; align-items: center;

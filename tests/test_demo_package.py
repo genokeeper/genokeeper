@@ -344,6 +344,15 @@ def test_landing_diff_lists_changes(tmp_path: Path) -> None:
     assert 'href="dashboard.html#tab=changes"' in index
 
 
+def test_landing_diff_reads_clinvar_as_words() -> None:
+    side = {"kind": "finding", "validity": "conflicting", "level": "high"}
+    side["source_level"] = "Conflicting_classifications_of_pathogenicity|risk_factor"
+    assert pkg._side(side) == (  # pyright: ignore[reportPrivateUsage]
+        "Conflicting classifications of pathogenicity, risk factor,"
+        " conflicting evidence, genotype high"
+    )
+
+
 def test_landing_has_share_tags(tmp_path: Path) -> None:
     index = _read(_package(tmp_path), "index.html")
     tags = dict(
