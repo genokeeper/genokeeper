@@ -697,6 +697,19 @@ def test_dashboard_shows_the_demo_roots_explanations(tmp_path: Path) -> None:
         assert said in card, said
 
 
+def test_package_says_what_the_explanations_cover(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """No explanation shipped: the run counts none and warns that the opened card is empty."""
+    out = _package(tmp_path)
+    assert '<aside class="card"' not in _read(out, "index.html")
+    n = len(_page_data(_read(out, "dashboard.html"))["items"])
+    err = [
+        line for line in capsys.readouterr().err.splitlines() if "explanation" in line
+    ]
+    assert len(err) == 2 and f"0 of {n} " in err[0] and "card" in err[1]
+
+
 def _result(sid: str, rel: str, ev: str, *, dosage: str = "1", p: float | None = 1e-4,
             classification: str = "Pathogenic") -> dict[str, Any]:  # fmt: skip
     return {"id": sid, "genotype": {"dosage": dosage}, "gene_call": None,

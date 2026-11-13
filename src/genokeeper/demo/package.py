@@ -673,6 +673,17 @@ def _landing(
     hero = _hero(kept[LOOSEST], explained)
     tools = _tools(con, run["run_id"])
     loosest, default = counts[LOOSEST], counts[Filters()]
+    said = sum(explained(f) is not None for f in kept[LOOSEST])
+    print(
+        f"{_SAY}: {said:,} of {loosest:,} results carry a shipped explanation",
+        file=sys.stderr,
+    )
+    if hero is None:
+        print(
+            f"{_SAY}: warning: no carried, non-normal result has a shipped explanation;"
+            " the landing's opened-result card is empty",
+            file=sys.stderr,
+        )
     topics = Counter(str(found["topic"]) for found in kept[Filters()])
     by_topic = ", ".join(
         f"{t} {n:,}" for t, n in sorted(topics.items(), key=lambda kv: (-kv[1], kv[0]))
