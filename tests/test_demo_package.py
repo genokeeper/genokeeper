@@ -511,3 +511,12 @@ def test_site_pages_load_nothing(tmp_path: Path) -> None:
         [style] = re.findall(r"<style>(.*?)</style>", page, re.DOTALL)
         csp = f"default-src 'none'; style-src 'sha256-{_sha256(style)}'"
         assert f'<meta http-equiv="Content-Security-Policy" content="{csp}">' in page
+
+
+def test_readme_built_on_names_every_citation() -> None:
+    readme = (Path(__file__).parents[1] / "README.md").read_text(encoding="utf-8")
+    listed = readme.split("## Built on")[-1].split("\n## ")[0]
+    missing = [
+        t["name"] for t in pkg.citations() if f"[{t['name']}]({t['url']})" not in listed
+    ]
+    assert missing == []
