@@ -442,6 +442,24 @@ def test_landing_numbers_come_from_reports_store_and_config(
         assert said in index, said
 
 
+def test_landing_built_on(tmp_path: Path) -> None:
+    index = _read(_package(tmp_path), "index.html")
+    built = index.split("<h2>Built on</h2>")[1].split("<h2>")[0]
+    tools = pkg.citations()
+    groups = list(dict.fromkeys(t["group"] for t in tools))  # in the file's order
+    assert set(groups) == set(pkg.GROUP_MEASURED)
+    assert re.findall(r"<h3>([^<]+)</h3>", built) == [html.escape(g) for g in groups]
+    for t in tools:
+        link = f'<a href="{html.escape(t["url"])}">{html.escape(t["name"])}</a>'
+        assert link in built and html.escape(t["citation"]) in built, t["name"]
+    # The run's recorded versions (the fixture's `tools`), where `version_key` names one.
+    assert '<a href="https://doi.org/10.1038/nbt.4235">DeepVariant</a> 1.10.0.' in built
+    assert "ClinVar</a> 20261108." in built and "BWA-MEM</a>. Li" in built
+    assert "not genokeeper's own accuracy" in built and "endorses" in built
+    for word in ("validated", "clinical-grade", "powered by", "<img"):
+        assert word not in index.lower()
+
+
 def test_landing_has_share_tags(tmp_path: Path) -> None:
     index = _read(_package(tmp_path), "index.html")
     tags = dict(

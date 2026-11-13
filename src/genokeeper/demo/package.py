@@ -29,6 +29,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import tomllib
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
@@ -78,6 +79,26 @@ REL = (Level.LOW, Level.MEDIUM, Level.HIGH)
 EV = (Validity.CONFLICTING, Validity.LIMITED, Validity.MODERATE, Validity.STRONG)
 _REL_NAMES = ("any genotype", "medium or better", "high only")
 _SAY = "genokeeper demo package"
+# Per group of `citations.toml`: what genokeeper itself measured for it.
+GROUP_MEASURED = {
+    "Reads to calls": "Measured here: small-variant genotype error rates on HG003 and"
+    " HG002, and the run-time checks on all four libraries.",
+    "Truth sets and calibration": "Used here as the truth every error rate is measured"
+    " against.",
+    "Structural variants, copy number and repeats": "Measured here: each class's chance"
+    " of being wrong on HG002's two libraries, and for repeats, copy number and paralog"
+    " loci on HG003 and HG004 too.",
+    "Pharmacogenomics": "No calibration table measures the star-allele calls.",
+    "Clinical and population evidence": "These set the strength of evidence, which no"
+    " truth set measures.",
+    "Variant effect prediction": "Not measured here: a prediction carries no error rate"
+    " of its own.",
+    "Polygenic scores and ancestry": "Polygenic scores are not measured here; ancestry"
+    " is, on HG002, HG003 and HG004.",
+    "Haplogroups, HLA and other typing": "Measured here: HLA, chrM variants, runs of"
+    " homozygosity and blood groups on HG002, HG003 and HG004, and the Y haplogroup on"
+    " HG002's two libraries.",
+}
 
 
 class Leak(Exception):
@@ -390,6 +411,37 @@ def _withheld(con: duckdb.DuckDBPyConnection, run_id: str) -> int:
     return int(found[0] or 0) if found is not None else 0
 
 
+def citations() -> list[dict[str, str]]:
+    """`resources/demo/citations.toml`'s entries, in its order: the pipeline's."""
+    text = files("genokeeper").joinpath("resources", "demo", "citations.toml")
+    return tomllib.loads(text.read_text(encoding="utf-8"))["tool"]
+
+
+def _built_on(tools: Mapping[str, Any]) -> str:
+    """Each group's measured line and entries, each with the run's version of its
+    `version_key`, where it names one."""
+    groups: dict[str, list[str]] = {}
+    for t in citations():
+        version = tools.get(t["version_key"]) if t["version_key"] else None
+        groups.setdefault(t["group"], []).append(
+            f'<li><a href="{html.escape(t["url"])}">{html.escape(t["name"])}</a>'
+            + ("" if version is None else f" {html.escape(str(version))}")
+            + f". {html.escape(t['citation'])}.</li>"
+        )
+    return "\n".join(
+        f'<h3>{html.escape(g)}</h3>\n<p class="sub">{html.escape(GROUP_MEASURED[g])}'
+        f' <a href="calibration.html">Calibration</a></p>\n'
+        f'<ul class="plain methods">\n{"\n".join(items)}\n</ul>'
+        for g, items in groups.items()
+    )
+
+
+def _tools(con: duckdb.DuckDBPyConnection, run_id: str) -> dict[str, Any]:
+    """The tool versions the run recorded."""
+    found = con.execute("SELECT tools FROM run WHERE run_id = ?", [run_id]).fetchone()
+    return json.loads(found[0]) if found is not None else {}
+
+
 def _runs(con: duckdb.DuckDBPyConnection) -> list[dict[str, Any]]:
     """The store's runs, oldest first, each with its ClinVar release."""
     rows = con.execute(
@@ -460,6 +512,7 @@ def _landing(
                 " conflicting claims too."
             ),
             "measured": _measured(lab, g.p_low),
+            "built": _built_on(_tools(con, run["run_id"])),
             "withheld": html.escape(
                 f"This run holds {_count(_withheld(con, run['run_id']), 'withheld value')}:"
                 " a calibration table could not measure the item, so it is not graded and"
@@ -498,10 +551,7 @@ def _calibration(
             f'<details class="report"><summary>{html.escape(title)}</summary>'
             f"<pre>{html.escape(text)}</pre></details>"
         )
-    found = con.execute(
-        "SELECT tools FROM run WHERE run_id = ?", [runs[-1]["run_id"]]
-    ).fetchone()
-    tools: dict[str, Any] = json.loads(found[0]) if found is not None else {}
+    tools = _tools(con, runs[-1]["run_id"])
     versions = ", ".join(f"{k} {v}" for k, v in sorted(tools.items()))
     releases = " and ".join(_day(r["clinvar"]) for r in runs)
     methods = [

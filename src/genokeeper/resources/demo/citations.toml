@@ -1,0 +1,529 @@
+# The tools, truth sets and knowledge sources genokeeper's pipeline uses, in pipeline order,
+# for the demo page's "Built on" section and the README's (`demo.package.citations`). Each DOI
+# was checked on 2026-11-13 against Crossref or DataCite; an entry with no paper keeps its
+# project URL. `version_key` names the run's recorded tool version shown beside it, if any.
+
+[[tool]]
+name = "GRCh38 reference assembly"
+group = "Reads to calls"
+version_key = ""
+citation = "Schneider et al., Genome Res 2017"
+url = "https://doi.org/10.1101/gr.213611.116"
+
+[[tool]]
+name = "GIAB GRCh38 with GRC false duplications masked"
+group = "Reads to calls"
+version_key = ""
+citation = "Wagner et al., Nat Biotechnol 2022"
+url = "https://doi.org/10.1038/s41587-021-01158-1"
+
+[[tool]]
+name = "BWA-MEM"
+group = "Reads to calls"
+version_key = "bwa"
+citation = "Li, arXiv 2013"
+url = "https://doi.org/10.48550/arXiv.1303.3997"
+
+[[tool]]
+name = "SAMtools"
+group = "Reads to calls"
+version_key = "samtools"
+citation = "Danecek et al., GigaScience 2021"
+url = "https://doi.org/10.1093/gigascience/giab008"
+
+[[tool]]
+name = "BCFtools"
+group = "Reads to calls"
+version_key = "bcftools"
+citation = "Danecek et al., GigaScience 2021"
+url = "https://doi.org/10.1093/gigascience/giab008"
+
+[[tool]]
+name = "mosdepth"
+group = "Reads to calls"
+version_key = "mosdepth"
+citation = "Pedersen and Quinlan, Bioinformatics 2018"
+url = "https://doi.org/10.1093/bioinformatics/btx699"
+
+[[tool]]
+name = "VerifyBamID2"
+group = "Reads to calls"
+version_key = ""
+citation = "Zhang et al., Genome Res 2020"
+url = "https://doi.org/10.1101/gr.246934.118"
+
+[[tool]]
+name = "DeepVariant"
+group = "Reads to calls"
+version_key = "deepvariant"
+citation = "Poplin et al., Nat Biotechnol 2018"
+url = "https://doi.org/10.1038/nbt.4235"
+
+[[tool]]
+name = "mutserve (mtDNA-Server)"
+group = "Reads to calls"
+version_key = ""
+citation = "Weissensteiner et al., Nucleic Acids Res 2016"
+url = "https://doi.org/10.1093/nar/gkw247"
+
+[[tool]]
+name = "WhatsHap"
+group = "Reads to calls"
+version_key = ""
+citation = "Martin et al., bioRxiv 2016"
+url = "https://doi.org/10.1101/085050"
+
+[[tool]]
+name = "Genome in a Bottle reference samples (HG002, HG003, HG004)"
+group = "Truth sets and calibration"
+version_key = ""
+citation = "Zook et al., Sci Data 2016"
+url = "https://doi.org/10.1038/sdata.2016.25"
+
+[[tool]]
+name = "GIAB v4.2.1 small-variant benchmarks (HG003, HG004)"
+group = "Truth sets and calibration"
+version_key = ""
+citation = "Wagner et al., Cell Genom 2022"
+url = "https://doi.org/10.1016/j.xgen.2022.100128"
+
+[[tool]]
+name = "GIAB HG002 v5.0q benchmark (T2T Q100 v1.1 assembly)"
+group = "Truth sets and calibration"
+version_key = ""
+citation = "Hansen et al., bioRxiv 2025"
+url = "https://doi.org/10.1101/2025.09.21.677443"
+
+[[tool]]
+name = "GIAB genome stratifications v3.6"
+group = "Truth sets and calibration"
+version_key = ""
+citation = "Dwarshuis et al., Nat Commun 2024"
+url = "https://doi.org/10.1038/s41467-024-53260-y"
+
+[[tool]]
+name = "RTG Tools vcfeval"
+group = "Truth sets and calibration"
+version_key = ""
+citation = "Cleary et al., bioRxiv 2015"
+url = "https://doi.org/10.1101/023754"
+
+[[tool]]
+name = "DELLY"
+group = "Structural variants, copy number and repeats"
+version_key = "delly"
+citation = "Rausch et al., Bioinformatics 2012"
+url = "https://doi.org/10.1093/bioinformatics/bts378"
+
+[[tool]]
+name = "Dysgu"
+group = "Structural variants, copy number and repeats"
+version_key = "dysgu"
+citation = "Cleal and Baird, Nucleic Acids Res 2022"
+url = "https://doi.org/10.1093/nar/gkac039"
+
+[[tool]]
+name = "Truvari"
+group = "Structural variants, copy number and repeats"
+version_key = "truvari"
+citation = "English et al., Genome Biol 2022"
+url = "https://doi.org/10.1186/s13059-022-02840-6"
+
+[[tool]]
+name = "CNVpytor"
+group = "Structural variants, copy number and repeats"
+version_key = "cnvpytor"
+citation = "Suvakov et al., GigaScience 2021"
+url = "https://doi.org/10.1093/gigascience/giab074"
+
+[[tool]]
+name = "INSurVeyor"
+group = "Structural variants, copy number and repeats"
+version_key = "insurveyor"
+citation = "Rajaby et al., Nat Commun 2023"
+url = "https://doi.org/10.1038/s41467-023-38870-2"
+
+[[tool]]
+name = "SCRAMble"
+group = "Structural variants, copy number and repeats"
+version_key = "scramble"
+citation = "Torene et al., Genet Med 2020"
+url = "https://doi.org/10.1038/s41436-020-0749-x"
+
+[[tool]]
+name = "ExpansionHunter"
+group = "Structural variants, copy number and repeats"
+version_key = "expansionhunter"
+citation = "Dolzhenko et al., Bioinformatics 2019"
+url = "https://doi.org/10.1093/bioinformatics/btz431"
+
+[[tool]]
+name = "REViewer"
+group = "Structural variants, copy number and repeats"
+version_key = "reviewer"
+citation = "Dolzhenko et al., Genome Med 2022"
+url = "https://doi.org/10.1186/s13073-022-01085-z"
+
+[[tool]]
+name = "STRchive"
+group = "Structural variants, copy number and repeats"
+version_key = ""
+citation = "Hiatt et al., Genome Med 2025"
+url = "https://doi.org/10.1186/s13073-025-01454-4"
+
+[[tool]]
+name = "SMNCopyNumberCaller"
+group = "Structural variants, copy number and repeats"
+version_key = "smncaller"
+citation = "Chen et al., Genet Med 2020"
+url = "https://doi.org/10.1038/s41436-020-0754-0"
+
+[[tool]]
+name = "Parascopy"
+group = "Structural variants, copy number and repeats"
+version_key = "parascopy"
+citation = "Prodanov and Bansal, Nat Commun 2022"
+url = "https://doi.org/10.1038/s41467-022-30930-3"
+
+[[tool]]
+name = "Gauchian"
+group = "Structural variants, copy number and repeats"
+version_key = "gauchian"
+citation = "Toffoli et al., Commun Biol 2022"
+url = "https://doi.org/10.1038/s42003-022-03610-7"
+
+[[tool]]
+name = "KILDA"
+group = "Structural variants, copy number and repeats"
+version_key = "kilda"
+citation = "Molitor et al., NAR Genom Bioinform 2025"
+url = "https://doi.org/10.1093/nargab/lqaf070"
+
+[[tool]]
+name = "PharmCAT"
+group = "Pharmacogenomics"
+version_key = "pharmcat"
+citation = "Sangkuhl et al., Clin Pharmacol Ther 2020"
+url = "https://doi.org/10.1002/cpt.1568"
+
+[[tool]]
+name = "Aldy"
+group = "Pharmacogenomics"
+version_key = "aldy"
+citation = "Hari et al., Genome Res 2023"
+url = "https://doi.org/10.1101/gr.277075.122"
+
+[[tool]]
+name = "BCyrius"
+group = "Pharmacogenomics"
+version_key = "bcyrius"
+citation = "Halman and Conyers, Pharmacol Res Perspect 2025"
+url = "https://doi.org/10.1002/prp2.70065"
+
+[[tool]]
+name = "StellarPGx"
+group = "Pharmacogenomics"
+version_key = "stellarpgx"
+citation = "Twesigomwe et al., Clin Pharmacol Ther 2021"
+url = "https://doi.org/10.1002/cpt.2173"
+
+[[tool]]
+name = "CPIC"
+group = "Pharmacogenomics"
+version_key = "cpic"
+citation = "Relling and Klein, Clin Pharmacol Ther 2011"
+url = "https://doi.org/10.1038/clpt.2010.279"
+
+[[tool]]
+name = "PharmGKB / ClinPGx clinical annotations"
+group = "Pharmacogenomics"
+version_key = "pharmgkb_clinical_annotations"
+citation = "Whirl-Carrillo et al., Clin Pharmacol Ther 2021"
+url = "https://doi.org/10.1002/cpt.2350"
+
+[[tool]]
+name = "ClinVar"
+group = "Clinical and population evidence"
+version_key = "clinvar"
+citation = "Landrum et al., Nucleic Acids Res 2025"
+url = "https://doi.org/10.1093/nar/gkae1090"
+
+[[tool]]
+name = "ClinGen"
+group = "Clinical and population evidence"
+version_key = ""
+citation = "Rehm et al., N Engl J Med 2015"
+url = "https://doi.org/10.1056/NEJMsr1406261"
+
+[[tool]]
+name = "ClinGen gene-disease validity"
+group = "Clinical and population evidence"
+version_key = "clingen_gene_validity"
+citation = "Strande et al., Am J Hum Genet 2017"
+url = "https://doi.org/10.1016/j.ajhg.2017.04.015"
+
+[[tool]]
+name = "ClinGen dosage sensitivity"
+group = "Clinical and population evidence"
+version_key = "clingen_dosage"
+citation = "ClinGen Dosage Sensitivity Curation"
+url = "https://search.clinicalgenome.org/kb/gene-dosage"
+
+[[tool]]
+name = "ClinGen SVI BA1 exception list"
+group = "Clinical and population evidence"
+version_key = ""
+citation = "Ghosh et al., Hum Mutat 2018"
+url = "https://doi.org/10.1002/humu.23642"
+
+[[tool]]
+name = "GenCC"
+group = "Clinical and population evidence"
+version_key = ""
+citation = "DiStefano et al., Genet Med 2022"
+url = "https://doi.org/10.1016/j.gim.2022.04.017"
+
+[[tool]]
+name = "Clinical Genomic Database (CGD)"
+group = "Clinical and population evidence"
+version_key = ""
+citation = "Solomon et al., Proc Natl Acad Sci USA 2013"
+url = "https://doi.org/10.1073/pnas.1302575110"
+
+[[tool]]
+name = "ACMG SF v3.3 secondary findings list"
+group = "Clinical and population evidence"
+version_key = "acmg_sf"
+citation = "Lee et al., Genet Med 2025"
+url = "https://doi.org/10.1016/j.gim.2025.101454"
+
+[[tool]]
+name = "ACMG carrier screening tiers (2021)"
+group = "Clinical and population evidence"
+version_key = "carrier_tier3"
+citation = "Gregg et al., Genet Med 2021"
+url = "https://doi.org/10.1038/s41436-021-01203-z"
+
+[[tool]]
+name = "gnomAD v4.1 (allele frequencies and SV sites)"
+group = "Clinical and population evidence"
+version_key = "gnomad_faf"
+citation = "Chen et al., Nature 2024"
+url = "https://doi.org/10.1038/s41586-023-06045-0"
+
+[[tool]]
+name = "Filtering allele frequency (FAF)"
+group = "Clinical and population evidence"
+version_key = "gnomad_faf"
+citation = "Whiffin et al., Genet Med 2017"
+url = "https://doi.org/10.1038/gim.2017.26"
+
+[[tool]]
+name = "MANE transcripts"
+group = "Clinical and population evidence"
+version_key = ""
+citation = "Morales et al., Nature 2022"
+url = "https://doi.org/10.1038/s41586-022-04558-8"
+
+[[tool]]
+name = "MITOMAP"
+group = "Clinical and population evidence"
+version_key = ""
+citation = "Lott et al., Curr Protoc Bioinformatics 2013"
+url = "https://doi.org/10.1002/0471250953.bi0123s44"
+
+[[tool]]
+name = "Genomics England PanelApp"
+group = "Clinical and population evidence"
+version_key = ""
+citation = "Martin et al., Nat Genet 2019"
+url = "https://doi.org/10.1038/s41588-019-0528-2"
+
+[[tool]]
+name = "GWAS Catalog"
+group = "Clinical and population evidence"
+version_key = "gwas_catalog"
+citation = "Cerezo et al., Nucleic Acids Res 2025"
+url = "https://doi.org/10.1093/nar/gkae1070"
+
+[[tool]]
+name = "LitVar 2.0"
+group = "Clinical and population evidence"
+version_key = ""
+citation = "Allot et al., Nat Genet 2023"
+url = "https://doi.org/10.1038/s41588-023-01414-x"
+
+[[tool]]
+name = "MedlinePlus Genetics"
+group = "Clinical and population evidence"
+version_key = ""
+citation = "National Library of Medicine, MedlinePlus Genetics"
+url = "https://medlineplus.gov/genetics/"
+
+[[tool]]
+name = "Ensembl VEP"
+group = "Variant effect prediction"
+version_key = "vep"
+citation = "McLaren et al., Genome Biol 2016"
+url = "https://doi.org/10.1186/s13059-016-0974-4"
+
+[[tool]]
+name = "SpliceAI"
+group = "Variant effect prediction"
+version_key = ""
+citation = "Jaganathan et al., Cell 2019"
+url = "https://doi.org/10.1016/j.cell.2018.12.015"
+
+[[tool]]
+name = "REVEL"
+group = "Variant effect prediction"
+version_key = ""
+citation = "Ioannidis et al., Am J Hum Genet 2016"
+url = "https://doi.org/10.1016/j.ajhg.2016.08.016"
+
+[[tool]]
+name = "AlphaMissense"
+group = "Variant effect prediction"
+version_key = ""
+citation = "Cheng et al., Science 2023"
+url = "https://doi.org/10.1126/science.adg7492"
+
+[[tool]]
+name = "SpliceVault"
+group = "Variant effect prediction"
+version_key = ""
+citation = "Dawes et al., Nat Genet 2023"
+url = "https://doi.org/10.1038/s41588-022-01293-8"
+
+[[tool]]
+name = "pext (proportion expressed across transcripts)"
+group = "Variant effect prediction"
+version_key = ""
+citation = "Cummings et al., Nature 2020"
+url = "https://doi.org/10.1038/s41586-020-2329-2"
+
+[[tool]]
+name = "UCSC NMD Escape track (MANE)"
+group = "Variant effect prediction"
+version_key = ""
+citation = "UCSC Genome Browser, NMD Escape track"
+url = "https://genome.ucsc.edu/cgi-bin/hgTrackUi?db=hg38&g=nmd"
+
+[[tool]]
+name = "PGS Catalog"
+group = "Polygenic scores and ancestry"
+version_key = ""
+citation = "Lambert et al., Nat Genet 2021"
+url = "https://doi.org/10.1038/s41588-021-00783-5"
+
+[[tool]]
+name = "pgsc_calc"
+group = "Polygenic scores and ancestry"
+version_key = "pgsc_calc"
+citation = "Lambert et al., Nat Genet 2024"
+url = "https://doi.org/10.1038/s41588-024-01937-x"
+
+[[tool]]
+name = "Nextflow"
+group = "Polygenic scores and ancestry"
+version_key = "nextflow"
+citation = "Di Tommaso et al., Nat Biotechnol 2017"
+url = "https://doi.org/10.1038/nbt.3820"
+
+[[tool]]
+name = "PLINK 2"
+group = "Polygenic scores and ancestry"
+version_key = ""
+citation = "Chang et al., GigaScience 2015"
+url = "https://doi.org/10.1186/s13742-015-0047-8"
+
+[[tool]]
+name = "FRAPOSA"
+group = "Polygenic scores and ancestry"
+version_key = ""
+citation = "Zhang et al., Bioinformatics 2020"
+url = "https://doi.org/10.1093/bioinformatics/btaa152"
+
+[[tool]]
+name = "HGDP + 1000 Genomes reference panel (gnomAD v3.1)"
+group = "Polygenic scores and ancestry"
+version_key = ""
+citation = "Koenig et al., Genome Res 2024"
+url = "https://doi.org/10.1101/gr.278378.123"
+
+[[tool]]
+name = "fastmixture"
+group = "Polygenic scores and ancestry"
+version_key = ""
+citation = "Santander et al., Peer Community J 2024"
+url = "https://doi.org/10.24072/pcjournal.503"
+
+[[tool]]
+name = "hmmix"
+group = "Polygenic scores and ancestry"
+version_key = ""
+citation = "Skov et al., PLoS Genet 2018"
+url = "https://doi.org/10.1371/journal.pgen.1007641"
+
+[[tool]]
+name = "Haplogrep 3"
+group = "Haplogroups, HLA and other typing"
+version_key = "haplogrep3"
+citation = "Schönherr et al., Nucleic Acids Res 2023"
+url = "https://doi.org/10.1093/nar/gkad284"
+
+[[tool]]
+name = "PhyloTree Build 17"
+group = "Haplogroups, HLA and other typing"
+version_key = "haplogrep3"
+citation = "van Oven, Forensic Sci Int Genet Suppl Ser 2015"
+url = "https://doi.org/10.1016/j.fsigss.2015.09.155"
+
+[[tool]]
+name = "haplocheck"
+group = "Haplogroups, HLA and other typing"
+version_key = ""
+citation = "Weissensteiner et al., Genome Res 2021"
+url = "https://doi.org/10.1101/gr.256545.119"
+
+[[tool]]
+name = "Yleaf"
+group = "Haplogroups, HLA and other typing"
+version_key = "yleaf"
+citation = "Ralf et al., Mol Biol Evol 2018"
+url = "https://doi.org/10.1093/molbev/msy032"
+
+[[tool]]
+name = "OptiType"
+group = "Haplogroups, HLA and other typing"
+version_key = ""
+citation = "Szolek et al., Bioinformatics 2014"
+url = "https://doi.org/10.1093/bioinformatics/btu548"
+
+[[tool]]
+name = "T1K"
+group = "Haplogroups, HLA and other typing"
+version_key = ""
+citation = "Song et al., Genome Res 2023"
+url = "https://doi.org/10.1101/gr.277585.122"
+
+[[tool]]
+name = "IPD-IMGT/HLA"
+group = "Haplogroups, HLA and other typing"
+version_key = "ipd_imgt_hla"
+citation = "Barker et al., Nucleic Acids Res 2023"
+url = "https://doi.org/10.1093/nar/gkac1011"
+
+[[tool]]
+name = "RBCeq2"
+group = "Haplogroups, HLA and other typing"
+version_key = ""
+citation = "McIntyre et al., RBCeq2 v2.4.4 (software) 2026"
+url = "https://github.com/limcintyre/RBCeq2"
+
+[[tool]]
+name = "BCFtools/RoH"
+group = "Haplogroups, HLA and other typing"
+version_key = "bcftools"
+citation = "Narasimhan et al., Bioinformatics 2016"
+url = "https://doi.org/10.1093/bioinformatics/btw044"
