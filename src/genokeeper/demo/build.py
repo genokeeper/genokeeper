@@ -8,8 +8,10 @@ opens are the references every run uses. HG002 therefore runs through the same p
 owner's genome, but for the platform gate's read-name test (see `build`).
 """
 
+import os
 import re
 import shutil
+import stat
 import subprocess
 import urllib.request
 from datetime import UTC, datetime
@@ -26,7 +28,7 @@ BASE_CLINVAR = "20261011"
 CLINVAR_BASE_URL = (
     "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/archive_2.0/2026/"
 )
-NEED_BYTES = 130 * 10**9  # with `MARGIN_BYTES`, 150 GB
+NEED_BYTES = 130 * 10**9  # from an empty root; with `MARGIN_BYTES`, 150 GB
 
 
 class BuildRefused(Exception):
@@ -83,12 +85,24 @@ def _sources(lab: Path, clinvar: tuple[str, str]) -> tuple[SourceOutcome, ...]:
     return tuple(outcomes)
 
 
+def _held(root: Path) -> int:
+    """The allocated bytes of the regular files under `root`, each inode once, no symlink
+    followed; 0 when `root` does not exist."""
+    sizes: dict[tuple[int, int], int] = {}
+    for folder, _, names in os.walk(root):
+        for name in names:
+            st = os.lstat(os.path.join(folder, name))
+            if stat.S_ISREG(st.st_mode):
+                sizes[st.st_dev, st.st_ino] = st.st_blocks * 512
+    return sum(sizes.values())
+
+
 def build(lab: Path, *, threads: int | None) -> tuple[str, str]:
     """Run HG002's PCR-free pair twice into `demo_paths(lab)`, then log the second as a
     refresh of the first, each ClinVar release as its run records it. Returns the two run
     ids, oldest first. Refuses (`BuildRefused`) before any download or run when the demo
-    store exists, the pair is missing, the disk is short or the lab's newest ClinVar is not
-    newer than `BASE_CLINVAR`."""
+    store exists, the pair is missing, the disk is short of what the root does not hold yet
+    or the lab's newest ClinVar is not newer than `BASE_CLINVAR`."""
     paths = demo_paths(lab)
     root = paths.repo
     if (paths.reports / STORE_FILE).exists():
@@ -106,7 +120,7 @@ def build(lab: Path, *, threads: int | None) -> tuple[str, str]:
         )
     nearest = next(p for p in (root, *root.parents) if p.exists())
     try:
-        need_space(nearest, NEED_BYTES, "the HG002 demo build")
+        need_space(nearest, max(NEED_BYTES - _held(root), 0), "the HG002 demo build")
         faf = pipeline.open_faf_table(lab)
         newest = pipeline.newest_clinvar38(lab)
         after = pipeline._clinvar_release(newest)

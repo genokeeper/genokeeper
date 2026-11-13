@@ -2,6 +2,7 @@
 refusals before anything starts."""
 
 import hashlib
+import os
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -150,6 +151,29 @@ def test_build_refuses_low_disk(
     monkeypatch.setattr(demo_build, "need_space", short)
     _refused_before_anything(lab, calls, "150 GB")
     assert seen == [130 * 10**9]
+
+
+def test_resumed_build_asks_only_for_what_its_root_lacks(
+    lab: Path, calls: Calls, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seen: list[int] = []
+
+    def short(folder: Path, need: int, what: str) -> None:
+        seen.append(need)
+        raise RunRefused("short")
+
+    monkeypatch.setattr(demo_build, "need_space", short)
+    cache = demo_paths(lab).repo / "work" / "cache.bin"
+    cache.parent.mkdir(parents=True)
+    cache.write_bytes(b"x" * 10_000)
+    os.link(cache, cache.parent / "hard")  # one inode, counted once
+    (cache.parent / "soft").symlink_to(cache)  # not followed
+    held = cache.stat().st_blocks * 512
+    for need in (10**6, held - 1):
+        monkeypatch.setattr(demo_build, "NEED_BYTES", need)
+        with pytest.raises(BuildRefused, match="short"):
+            build(lab, threads=None)
+    assert seen == [10**6 - held, 0]
 
 
 def test_base_clinvar_md5_refused(lab: Path, calls: Calls, ncbi: Path) -> None:
