@@ -727,14 +727,15 @@ def test_apoe_e3e4(tmp_path: Path) -> None:
     assert pgsc.apoe_genotype(double, Phase.IN_CIS) == "ε1/ε3"
     assert pgsc.apoe_genotype(double, Phase.UNPHASED) is None
     assert pgsc.apoe_genotype(double) is None
-    # 3★ P is strong without a curation; a drug_response is limited whatever its stars.
+    # rs429358: a 3★ P (strong) and a drug response; rs7412: a drug response only.
+    # A drug-response record says nothing of the diplotype's disease: neither limits it.
     strong = replace(
         _apoe_claim(APOE_E4, 17864, "reviewed_by_expert_panel"), clnsig="Pathogenic"
     )
     apoe = (
         _graded(strong, "1", Level.HIGH),
-        _graded(_apoe_claim(APOE_E4, 17865, ""), "1", Level.HIGH),  # 0★: limited
-        _graded(_apoe_claim(APOE_E2, 17848, SINGLE), "0", Level.MEDIUM),  # limited
+        _graded(_apoe_claim(APOE_E4, 17865, ""), "1", Level.HIGH),
+        _graded(_apoe_claim(APOE_E2, 17848, SINGLE), "0", Level.MEDIUM),
     )
     con, _ = _store(tmp_path, PrsSource(scores=[], results={}, apoe=apoe))
     row = _statement(con, "apoe:APOE")
@@ -744,7 +745,7 @@ def test_apoe_e3e4(tmp_path: Path) -> None:
         None,
         "risks",
     )
-    assert row["validity"] == "limited"  # rs429358's strongest (strong), rs7412's
+    assert (row["validity"], row["source_id"]) == ("strong", "17864")
     assert json.loads(row["claim"])["diplotype"] == "ε3/ε4"
     gene_call = con.execute(
         "SELECT diplotype, level FROM gene_call WHERE gene = 'APOE'"
@@ -762,6 +763,16 @@ def test_apoe_e3e4(tmp_path: Path) -> None:
         "ε2/ε4 or ε1/ε3: phase unknown",
     )
     assert con.execute("SELECT count(*) FROM gene_call").fetchone() == (0,)
+    # Drug responses alone at both SNPs: no claim on the diplotype, dropped as without one.
+    con.close()
+    shutil.rmtree(tmp_path / "work", ignore_errors=True)
+    (tmp_path / "genomelab.duckdb").unlink()
+    con, _ = _store(tmp_path, PrsSource(scores=[], results={}, apoe=apoe[1:]))
+    assert con.execute("SELECT count(*) FROM statement").fetchone() == (0,)
+    (dropped,) = con.execute(
+        "SELECT dropped FROM accounting WHERE tool = 'pgsc_calc'"
+    ).fetchone()
+    assert json.loads(dropped) == {"apoe_no_clinvar_claim": 1}
 
 
 # --- slice 3f: the population similarity, and Z_norm2 ---------------------------------------

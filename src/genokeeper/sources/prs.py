@@ -22,9 +22,10 @@ failed.
 APOE is one gene-level statement (`apoe:APOE`, gene APOE, under risks) from our calls at
 the ClinVar claims of rs429358 C and rs7412 T, with a gene call (the diplotype, at the
 weaker call's level). Its validity is the weaker of the two SNPs' ClinVar grades, each
-SNP's strongest claim first (builder's call). An unknown call, or a double heterozygote no
-read phased, leaves it unassessed with its reason; a release without a claim at either SNP
-drops it, counted as `apoe_no_clinvar_claim`.
+SNP's strongest claim first (builder's call), drug-response claims left out: a SNP with
+only those does not limit it. An unknown call, or a double heterozygote no read phased,
+leaves it unassessed with its reason; a release without a claim at either SNP, or with
+drug-response claims only, drops it, counted as `apoe_no_clinvar_claim`.
 """
 
 import json
@@ -32,6 +33,7 @@ import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
+from genokeeper.evidence.clinvar import clnsig_class
 from genokeeper.genotype.gvcf import Allele, Called
 from genokeeper.genotype.reliability import Reliability
 from genokeeper.panel.build import Claim
@@ -356,6 +358,11 @@ class PrsSource:
         if not all(at.values()):
             return [], []
         faf = ctx.faf.lookup([claim.vid for claim, _, _ in self.apoe])
+        # A drug-response record says nothing of the diplotype's disease association.
+        disease = {
+            snp: [g for g in graded if clnsig_class(g[0].clnsig) != "drug_response"]
+            for snp, graded in at.items()
+        }
         strongest = {
             snp: max(
                 (
@@ -364,8 +371,11 @@ class PrsSource:
                 ),
                 key=lambda g: -1 if g[0].level is None else _STRENGTH[g[0].level],
             )
-            for snp, graded in at.items()
+            for snp, graded in disease.items()
+            if graded
         }
+        if not strongest:
+            return [], []
         validity = min(
             (g.level or Validity.LIMITED for g, _ in strongest.values()),
             key=_STRENGTH.__getitem__,
