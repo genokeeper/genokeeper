@@ -129,7 +129,7 @@ def test_items_hold_every_finding_once(con: duckdb.DuckDBPyConnection) -> None:
     )
     assert (data["run_id"], data["versions"]) == (RUN, TOOLS)
     assert [
-        {k: v for k, v in item.items() if k not in ("explanation", "search")}
+        {k: v for k, v in item.items() if k not in ("explanation", "search", "normal")}
         for item in data["items"].values()
     ] == loosest.findings
     assert {item["explanation"] for item in data["items"].values()} == {None}
@@ -1708,6 +1708,70 @@ def test_clinvar_strings_read_as_words(
     )
 
 
+def test_clinvar_subtitles_drop_placeholders_and_a_drug_row_names_its_drugs(
+    con: duckdb.DuckDBPyConnection, tmp_path: Path
+) -> None:
+    told = "not_provided|Breast_cancer|See_cases|Ovarian_cancer|not_specified|A_b|C_d"
+    drug = "not_specified|Thrombosis|warfarin_response_-_Dosage|Warfarin_response|x_response"
+    seed(con, [Row("clinvar:20", pos=1020, condition=told),
+               Row("clinvar:21", gene="VKORC1", pos=1021, topic="drugs",
+                   classification="drug_response", condition=drug)])  # fmt: skip
+    data = {**payload(con, None, NO_CACHE), "default": "low|conflicting|"}
+    lines = _rendered(data, tmp_path)["feed"]["text"].split("\n")
+    [told_line] = [line for line in lines if "Breast cancer" in line]
+    assert "Breast cancer, Ovarian cancer, A b" in told_line and "+1" in told_line
+    assert not re.search("(?i)not provided|not specified|see cases|C d", told_line)
+    [drug_line] = [line for line in lines if line.startswith("VKORC1")]
+    assert "warfarin, x" in drug_line and "strong" in drug_line
+    assert "Thrombosis" not in drug_line and "Dosage" not in drug_line
+
+
+def test_typical_results_fold_and_the_others_stand_out(
+    con: duckdb.DuckDBPyConnection, tmp_path: Path
+) -> None:
+    """A CPIC phenotype term for a typical gene and a repeat in its normal range fold into
+    one closed line per topic, opened by a search; every other result is named above the
+    feed, by topic, opening its row. Counts keep every row."""
+    typical = Row("pharmcat:CYP2C9", gene="CYP2C9", level=None, topic="drugs",
+                  gene_call={**GENE_CALL, "phenotype": "Normal Metabolizer"}, claim=PGX_CLAIM)  # fmt: skip
+    hla = replace(typical, id="pharmcat:HLA-B", gene="HLA-B",
+                  gene_call={**GENE_CALL, "phenotype": "*57:01 negative; *58:01 negative"})  # fmt: skip
+    seed(con, [typical, hla, RESULT_ROWS[-1]])
+    data = {**payload(con, None, NO_CACHE), "default": "low|conflicting|"}
+    normal = {"pharmcat:CYP2C9", "pharmcat:HLA-B", "repeats:HTT"}
+    assert {i for i, f in data["items"].items() if f["normal"]} == normal
+    shown = _rendered(data, tmp_path)
+    named = [b["text"] for b in shown["stands-out"]["buttons"]]
+    assert "CYP2D6" in named and not {"CYP2C9", "HLA-B", "HTT"} & set(named)
+    assert named.count("BRCA1") == 2  # once in each of its two topics
+    folds = [d for d in shown["feed"]["details"] if d["className"] == "fold"]
+    assert len(folds) == 2 and not any(d["open"] for d in folds)
+    n = len(data["views"]["low|conflicting|"]["findings"])
+    assert shown["count"]["text"].startswith(f"Showing {n} of")
+    found = _rendered(data, tmp_path, "#q=CYP2C9")["feed"]["details"]
+    assert [d["open"] for d in found if d["className"] == "fold"] == [True]
+    click = [(f"stands-out/{named.index('CYP2D6')}", "", "click")]
+    rows = _rendered(data, tmp_path, actions=click)["feed"]["details"]
+    assert [d["text"][:6] for d in rows if d["className"] == "row" and d["open"]] == ["CYP2D6"]
+
+
+def test_the_hidden_line_names_each_reason_once(
+    con: duckdb.DuckDBPyConnection, tmp_path: Path
+) -> None:
+    data = payload(con, None, NO_CACHE)
+    data["views"]["medium|moderate|"]["hidden"] = {
+        "research_association": 209569,
+        "unassessed:research_association": 596,
+        "reliability_below:medium": 105,
+        "validity_below:moderate": 1320,
+    }
+    lines = _rendered(data, tmp_path)["hidden"]["text"].split("\n")
+    research = dashboard.messages("en")["research_hidden"]
+    assert [line for line in lines if research in line] == [f"210,165 {research}"]
+    assert "211,590" in lines[0] and len(lines) == 4
+    assert any(line.startswith("1,320 ") for line in lines)
+
+
 def test_mc1r_two_strong_names_copies() -> None:
     """MC1R's "two strong" counts copies (one strong variant on both is two), so its label
     names copies, not variants, in each language."""
@@ -1765,10 +1829,10 @@ def test_english_page_names_each_view(
     assert (
         shown["excluded"]["text"] == "Excluded by screening\nno exclusions in this run"
     )
-    assert shown["count"]["text"].endswith(" findings · actionable first")
+    assert shown["count"]["text"].endswith(" results · actionable first")
     hidden = _rendered(data, tmp_path)["hidden"]["text"]
     assert "with a genotype below “medium”" in hidden
-    assert hidden.endswith("Pick a cell lower or further left to see them.")
+    assert "Pick a cell lower or further left to see them" in hidden
 
 
 def test_english_count_is_singular_for_one(
@@ -1776,7 +1840,7 @@ def test_english_count_is_singular_for_one(
 ) -> None:
     con.execute("DELETE FROM statement WHERE statement_id <> 'clinvar:1'")
     shown = _rendered(payload(con, None, NO_CACHE), tmp_path)
-    assert shown["count"]["text"] == "Showing 1 of 1 finding · actionable first"
+    assert shown["count"]["text"] == "Showing 1 of 1 result · actionable first"
 
 
 @pytest.mark.parametrize(

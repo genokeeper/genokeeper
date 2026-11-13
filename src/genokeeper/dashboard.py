@@ -74,6 +74,7 @@ from genokeeper.query import (
     searchable,
     text_fields,
 )
+from genokeeper.repeats.loci import RepeatClass
 from genokeeper.schedule import STALE_DAYS
 from genokeeper.sources.research import is_research_layer
 from genokeeper.store.db import Kind, Level, Topic, Validity
@@ -88,6 +89,13 @@ BASES = 12
 _PAIRS = [Filters(min_reliability=r, min_validity=v) for r in Level for v in Validity]
 # The claim's and gene call's result fields a row shows, which its search string holds too.
 _RESULTS = ("haplogroup", "class", "consequence", "hgvsc", "hgvsp")
+# A typical result, which the feed folds: each `; `-joined part of a PharmCAT phenotype is
+# CPIC's standard term for a typical gene (an HLA allele's "negative"), or a repeat's class
+# is `RepeatClass.NORMAL`.
+_TYPICAL = re.compile(
+    r"(\*\S+ )?(Normal( Metabolizer| Function)?|negative"
+    r"|normal risk of aminoglycoside-induced hearing loss)"
+)
 # The messages `page.html` holds, filled in by `render`.
 _PAGE = ("page_title", "tab_feed", "tab_changes", "search_label", "search_placeholder")
 
@@ -401,7 +409,19 @@ def payload(
         # page reads the typed text as `searchable` does.
         search = searchable("\n".join(fields))
         explanation = None if found is None else asdict(found)
-        return {**finding, "explanation": explanation, "search": search}
+        phenotype = call.get("phenotype") if claim.get("type") == "pharmcat_gene" else None
+        normal = claim.get("type") == "repeat_expansion" and claim.get("class") == (
+            RepeatClass.NORMAL
+        )
+        normal |= phenotype is not None and all(
+            _TYPICAL.fullmatch(part) for part in phenotype.split("; ")
+        )
+        return {
+            **finding,
+            "explanation": explanation,
+            "search": search,
+            "normal": normal,
+        }
 
     views: dict[str, Any] = {}
     for reliability, validity, topic in product(Level, Validity, (None, *Topic)):

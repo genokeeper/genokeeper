@@ -35,6 +35,11 @@ h1 { font-size: 18px; margin: 0; }
 .note:empty { display: none; }
 .note ul { margin: 4px 0 0; padding-left: 18px; }
 #hidden { border-top: 1px dashed var(--rule); padding-top: 10px; }
+#stands-out { color: var(--ink); display: flex; flex-direction: column; gap: 2px; }
+.link { font: inherit; padding: 0; border: 0; background: none; color: var(--rel);
+  cursor: pointer; text-decoration: underline; }
+.fold { border-top: 1px solid var(--rule); }
+.fold > summary { padding: 10px 0; cursor: pointer; color: var(--muted); }
 .row { border-top: 1px solid var(--rule); }
 .row > summary { display: grid; grid-template-columns: 1fr 170px; gap: 4px 16px;
   padding: 10px 0; cursor: pointer; list-style: none; }

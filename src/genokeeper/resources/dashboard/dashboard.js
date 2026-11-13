@@ -13,6 +13,8 @@ const bare = (value) => (value && typeof value === "object" && !Array.isArray(va
 const data = JSON.parse(document.getElementById("data").textContent, (key, value) => bare(value));
 const M = data.messages;
 const CARDINAL = new Intl.PluralRules(data.lang);
+const NUMBER = new Intl.NumberFormat(data.lang);
+const number = (n) => NUMBER.format(n);
 const ORDINAL = new Intl.PluralRules(data.lang, { type: "ordinal" });
 
 // The message `key` with its `{name}` placeholders filled from `params`, in one pass. A
@@ -87,6 +89,24 @@ function joined(...parts) {
   return parts.filter((part) => part !== null && part !== undefined && part !== "").join(", ");
 }
 
+// ClinVar's condition names that name no condition, as read (`readable`) and lower-cased.
+const PLACEHOLDERS = new Set(["not provided", "not specified", "see cases", "none provided", "not applicable"]);
+
+// A ClinVar claim's subtitle: a drug-response row's drugs (its conditions `<drug>_response…`)
+// and evidence level; else its classification and first three named conditions.
+function clinvarHeadline(f) {
+  const { classification, condition } = f.claim;
+  const parts = String(condition || "").split("|");
+  const drugs = [...new Set(parts.map((part) => /^(.+?)_response(?:_-_|$)/i.exec(part)?.[1]).filter(Boolean)
+    .map((drug) => readable(drug).toLowerCase()))];
+  if (classification === "drug_response" && drugs.length) {
+    return t("drug_response", { drugs: drugs.join(", "), level: LEVELS[f.validity.level][0] });
+  }
+  const named = parts.map((part) => readable(part)).filter((part) => part && !PLACEHOLDERS.has(part.toLowerCase()));
+  const more = named.length > 3 ? t("more", { n: named.length - 3 }) : "";
+  return joined(readable(classification), named.slice(0, 3).join(", ")) + more;
+}
+
 // A slice 3f claim's result (HLA, MITOMAP, HHV-6, ROH, blood groups, ancestry, traits), or
 // undefined for any other claim type.
 function typingHeadline(claim) {
@@ -137,7 +157,7 @@ function headline(f) {
   const call = f.gene_call;
   const typed = typingHeadline(claim);
   if (typed !== undefined) return typed;
-  if (claim.type === "clinvar_germline") return `${readable(claim.classification)}, ${readable(claim.condition)}`;
+  if (claim.type === "clinvar_germline") return clinvarHeadline(f);
   if (claim.type === "mito_haplogroup") return t("mito_haplogroup", { haplogroup: claim.haplogroup || t("unknown_f") });
   if (claim.type === "y_haplogroup") return t("y_haplogroup", { haplogroup: claim.haplogroup || t("unknown_f") });
   if (claim.type === "pgs") return `${claim.condition}: ${percentile(f.effect)}${claim.weak ? `, ${t("weak_power")}` : ""}`;
@@ -304,6 +324,17 @@ function reasonText(reason) {
   return unassessed ? t("unknown_genotype", { text }) : text;
 }
 
+// `ids` by their topic, in the catalog's order of topics, each topic once.
+function byTopic(ids) {
+  const groups = new Map(Object.keys(TOPICS).map((name) => [name, []]));
+  for (const id of ids) {
+    const name = data.items[id].topic;
+    if (!groups.has(name)) groups.set(name, []);
+    groups.get(name).push(id);
+  }
+  return [...groups].filter(([, list]) => list.length);
+}
+
 function chips() {
   const present = new Set(Object.values(data.items).map((f) => f.topic));
   const known = Object.keys(TOPICS).filter((name) => present.has(name));
@@ -378,21 +409,56 @@ function renderFeed() {
   chips();
 
   const shown = searched(view);
-  document.getElementById("count").textContent = t("count", { shown: shown.length, n: Object.keys(data.items).length });
-  document.getElementById("feed").replaceChildren(...shown.map((id) => row(data.items[id])));
+  const total = Object.keys(data.items).length;
+  document.getElementById("count").textContent = t("count", { shown: number(shown.length), n: total, total: number(total) });
+  // Typical results (`normal`) fold into one line per topic, open while a search runs; the
+  // others are named by topic above the feed, each opening its row.
+  const rows = new Map(shown.map((id) => [id, row(data.items[id])]));
+  const standing = shown.filter((id) => !data.items[id].normal);
+  const folds = byTopic(shown.filter((id) => data.items[id].normal)).map(([name, ids]) => {
+    const fold = el("details", "fold");
+    fold.open = Boolean(state.search);
+    fold.append(el("summary", "", t("typical", { n: ids.length, topic: TOPICS[name] || name })), ...ids.map((id) => rows.get(id)));
+    return fold;
+  });
+  document.getElementById("feed").replaceChildren(...standing.map((id) => rows.get(id)), ...folds);
+  const out = document.getElementById("stands-out");
+  out.replaceChildren(...(standing.length ? [el("b", "", t("stands_out"))] : []));
+  for (const [name, ids] of byTopic(standing)) {
+    const line = el("div", "", `${TOPICS[name] || name}: `);
+    const named = new Set();
+    for (const id of ids) {
+      const label = data.items[id].gene || headline(data.items[id]);
+      if (named.has(label)) continue;
+      const link = el("button", "link", label);
+      link.type = "button";
+      link.addEventListener("click", () => {
+        rows.get(id).open = true;
+        rows.get(id).scrollIntoView?.();
+      });
+      line.append(...(named.size ? [", "] : []), link);
+      named.add(label);
+    }
+    out.append(line);
+  }
   renderExcluded();
   renderScreened();
 
-  const hidden = Object.entries(view.hidden).map(([reason, n]) => [n, reasonText(reason)]);
+  // One clause per reason, the research layer's with or without a genotype as one.
+  const hidden = new Map();
+  for (const [reason, n] of Object.entries(view.hidden)) {
+    const text = reason.endsWith("research_association") ? reasonText("research_association") : reasonText(reason);
+    hidden.set(text, (hidden.get(text) || 0) + n);
+  }
   const unmatched = view.findings.length - shown.length;
-  if (unmatched) hidden.push([unmatched, t("unmatched")]);
+  if (unmatched) hidden.set(t("unmatched"), unmatched);
   const note = document.getElementById("hidden");
-  note.textContent = "";
-  if (hidden.length) {
-    const count = hidden.reduce((sum, [n]) => sum + n, 0);
-    const reasons = hidden.map(([n, text]) => `${n} ${text}`).join(", ");
-    const how = t(unmatched ? "pick_cell_or_search" : "pick_cell");
-    note.textContent = t("hidden", { count, reasons, how });
+  note.replaceChildren();
+  if (hidden.size) {
+    const count = number([...hidden.values()].reduce((sum, n) => sum + n, 0));
+    const list = el("ul");
+    for (const [text, n] of hidden) list.append(el("li", "", `${number(n)} ${text}`));
+    note.append(t("hidden", { count, how: t(unmatched ? "pick_cell_or_search" : "pick_cell") }), list);
   }
 
   const unassessed = document.getElementById("unassessed");

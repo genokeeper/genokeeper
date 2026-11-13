@@ -1,5 +1,5 @@
 {
-  "page_title": {"en": "Genome findings", "ru": "Находки генома"},
+  "page_title": {"en": "Genome results", "ru": "Результаты генома"},
   "tab_feed": {"en": "Feed", "ru": "Лента"},
   "tab_changes": {"en": "Changes", "ru": "Изменения"},
   "search_label": {"en": "Search", "ru": "Поиск"},
@@ -96,7 +96,7 @@
   "reliability_is": {"en": "reliability {level}", "ru": "надёжность {level}"},
   "callers": {"en": "calls: {callers}", "ru": "вызовы: {callers}"},
   "none": {"en": "none", "ru": "нет"},
-  "no_genotype": {"en": "none (a gene-level finding)", "ru": "нет (находка на уровне гена)"},
+  "no_genotype": {"en": "none (a gene-level result)", "ru": "нет (результат на уровне гена)"},
   "not_measured": {"en": "not measured", "ru": "не измерено"},
   "p_wrong_measured": {
     "en": "{p}{ci} (measured on GIAB reference samples, DNBSEQ-T7)",
@@ -147,13 +147,17 @@
   },
   "other_topics": {"en": "in other topics", "ru": "в других темах"},
   "research_hidden": {
-    "en": "— research associations (GWAS, PharmGKB level 3; ask genome-ask about them)",
-    "ru": "— исследовательские ассоциации (GWAS, PharmGKB уровня 3; о них спрашивайте genome-ask)"
+    "en": "research associations (GWAS, PharmGKB level 3; ask genome-ask about them)",
+    "ru": "исследовательских ассоциаций (GWAS, PharmGKB уровня 3; о них спрашивайте genome-ask)"
   },
-  "unknown_genotype": {
-    "en": "with an unknown genotype {text}",
-    "ru": "с неизвестным генотипом {text}"
+  "unknown_genotype": {"en": "{text}, genotype unknown", "ru": "{text}, генотип неизвестен"},
+  "stands_out": {"en": "What stands out", "ru": "Что выделяется"},
+  "typical": {
+    "en": {"one": "{n} result in {topic} reads as typical", "other": "{n} results in {topic} read as typical"},
+    "ru": {"one": "{n} результат в теме «{topic}» — типичный", "few": "{n} результата в теме «{topic}» — типичные", "other": "{n} результатов в теме «{topic}» — типичные"}
   },
+  "drug_response": {"en": "response to {drugs}, evidence {level}", "ru": "ответ на {drugs}, доказательства {level}"},
+  "more": {"en": " +{n} more", "ru": " и ещё {n}"},
   "all_topics": {"en": "All topics", "ru": "Все темы"},
   "excluded_item": {
     "en": "{gene}: {wording}; confirm by: {confirm}",
@@ -169,8 +173,8 @@
   "screened_item": {"en": "{label}: {wording}", "ru": "{label}: {wording}"},
   "none_in_run": {"en": "none in this run", "ru": "нет в этом запуске"},
   "count": {
-    "en": {"one": "Showing {shown} of {n} finding · actionable first", "other": "Showing {shown} of {n} findings · actionable first"},
-    "ru": {"one": "Показано {shown} из {n} находки · сначала то, что требует действий", "other": "Показано {shown} из {n} находок · сначала то, что требует действий"}
+    "en": {"one": "Showing {shown} of {total} result · actionable first", "other": "Showing {shown} of {total} results · actionable first"},
+    "ru": {"one": "Показано {shown} из {total} результата · сначала то, что требует действий", "other": "Показано {shown} из {total} результатов · сначала то, что требует действий"}
   },
   "unmatched": {"en": "do not match the search", "ru": "не подходят под поиск"},
   "pick_cell_or_search": {
@@ -179,8 +183,8 @@
   },
   "pick_cell": {"en": "Pick a cell lower or further left", "ru": "Выберите клетку ниже или левее"},
   "hidden": {
-    "en": "Hidden {count}: {reasons}. {how} to see them.",
-    "ru": "Скрыто {count}: {reasons}. {how}, чтобы увидеть их."
+    "en": "Hidden {count}. {how} to see them:",
+    "ru": "Скрыто {count}. {how}, чтобы увидеть их:"
   },
   "unassessed": {
     "en": "{n} more: not assessed (genotype unknown or condition not covered, see the reason) — this is not a result",
