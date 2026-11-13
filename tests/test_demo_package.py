@@ -393,25 +393,17 @@ def test_calibration_summary_covers_every_table(tmp_path: Path) -> None:
     assert CALIBRATION_PAGE not in page and "checked against a truth set.</p>" in page
     link = '<a href="calibration.html">the calibration page</a> says which table'
     assert link in index and CALIBRATION_PAGE in _read(out, "dashboard.html")
-
-
-def test_site_pages_have_a_main_and_wrap_the_versions(tmp_path: Path) -> None:
-    out = _package(tmp_path)
-    for name in ("index.html", "calibration.html"):
-        assert re.search(
-            r"</div>\n<main class=\"sheet\">.*</main>\n</body>",
-            _read(out, name),
-            re.DOTALL,
-        )
-    page = _read(out, "calibration.html")
     assert '<ul class="plain methods">\n    <li>Tools and versions' in page
-    assert ".methods { overflow-wrap: anywhere; }" in page
+    assert ".methods { overflow-wrap: anywhere; }" in page  # md5 lists wrap at 375 px
 
 
 def test_site_pages_load_nothing(tmp_path: Path) -> None:
     out = _package(tmp_path)
     for name in ("index.html", "calibration.html"):
         page = _read(out, name)
+        assert re.search(
+            r'</div>\n<main class="sheet">.*</main>\n</body>', page, re.DOTALL
+        )
         assert "<script" not in page and "<link" not in page and "@import" not in page
         assert re.findall(r"\bsrc\s*=|url\(", page) == []
         assert re.findall(r'content="(https?://[^"]*)"', page) == (
