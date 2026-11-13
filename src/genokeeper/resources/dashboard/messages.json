@@ -302,6 +302,18 @@
     "en": {"conflicting": "any evidence", "limited": "limited or more", "moderate": "moderate or more", "strong": "strong"},
     "ru": {"conflicting": "любые доказательства", "limited": "ограниченные и выше", "moderate": "умеренные и выше", "strong": "сильные"}
   },
+  "matrix_columns_short": {
+    "en": {"conflicting": "any", "limited": "limited+", "moderate": "moderate+", "strong": "strong"},
+    "ru": {"conflicting": "любые", "limited": "огр.+", "moderate": "умер.+", "strong": "сильные"}
+  },
+  "cell_label": {
+    "en": {"one": "{count} result: {row}, {column}", "other": "{count} results: {row}, {column}"},
+    "ru": {"one": "{count} результат: {row}, {column}", "few": "{count} результата: {row}, {column}", "other": "{count} результатов: {row}, {column}"}
+  },
+  "chip_empty": {
+    "en": "{topic}: 0 at these thresholds, {n} at {where}",
+    "ru": "{topic}: 0 при этих порогах, {n} — {where}"
+  },
   "default_cell": {"en": "default", "ru": "по умолчанию"},
   "footer": {"en": "Run {run} · {versions}", "ru": "Запуск {run} · {versions}"},
   "carrier_not_covered": {

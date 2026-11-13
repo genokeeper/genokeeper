@@ -2008,11 +2008,33 @@ def test_matrix_counts_each_pair_under_topic_and_search(
     cells = shown["matrix"]["buttons"]
     assert [i for i, b in enumerate(cells) if "default" in b["className"]] == [6]
     assert cells[6]["text"] == f"{counts('')[6]}\ndefault" and _cell(shown) == (1, 2)
+    # Each cell's name holds its count and both thresholds; a column head never breaks
+    # inside a word, its short form shown on a phone.
+    m = dashboard.messages("en")
+    for (r, v), cell, n in zip(_MATRIX, cells, counts(""), strict=True):
+        name = cell["attrs"]["aria-label"]
+        assert name.startswith(f"{n} ") and m["matrix_rows"][r] in name
+        assert m["matrix_columns"][v] in name
+    assert not re.search(r"\.matrix \{[^}]*anywhere", _resource("dashboard.css"))
+    assert all(s in shown["matrix"]["text"] for s in m["matrix_columns_short"].values())
     carrier = [b["text"] for b in shown["chips"]["buttons"]].index("Carrier status")
     chip = _rendered(data, tmp_path, actions=[(f"chips/{carrier}", "", "click")])
     assert shown_counts(chip) == counts("carrier") != counts("")
     typed = _rendered(data, tmp_path, actions=[("search", "DMD", "input")])
     assert shown_counts(typed) == counts("", "dmd") != counts("")
+
+
+def test_an_empty_chip_says_where_its_rows_are_and_moves_there(
+    con: duckdb.DuckDBPyConnection, tmp_path: Path
+) -> None:
+    """At high|strong no carrier finding shows; the nearest pair that shows one is
+    medium|moderate (two steps; high|any evidence is three)."""
+    data = payload(con, None, NO_CACHE)
+    texts = [b["text"] for b in _rendered(data, tmp_path, "#rel=2&ev=3")["chips"]["buttons"]]
+    [at] = [i for i, text in enumerate(texts) if text.startswith("Carrier status")]
+    assert texts[at] != "Carrier status" and "moderate or more" in texts[at]
+    moved = _rendered(data, tmp_path, "#rel=2&ev=3", [(f"chips/{at}", "", "click")])
+    assert moved["#history"]["urls"] == ["#tab=feed&rel=1&ev=2&topic=carrier"]
 
 
 def test_a_matrix_click_sets_the_view(

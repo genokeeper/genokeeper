@@ -20,7 +20,8 @@ h1 { font-size: 18px; margin: 0; }
 .chip.on { background: var(--ink); color: #fff; border-color: var(--ink); }
 /* The threshold matrix, after the demo landing's: reliability rows, evidence columns. */
 .matrix { grid-column: 1 / -1; display: grid; gap: 4px; font-size: 12.5px; color: var(--muted);
-  grid-template-columns: minmax(0, 8em) repeat(4, minmax(0, 1fr)); overflow-wrap: anywhere; }
+  grid-template-columns: minmax(0, 8em) repeat(4, minmax(0, 1fr)); hyphens: manual; }
+.matrix .short { display: none; }
 .matrix > span { padding: 4px 6px; align-self: end; }
 .matrix > .ev { color: var(--ev); border-bottom: 3px solid var(--ev); }
 .matrix > .rel { color: var(--rel); border-right: 3px solid var(--rel); align-self: stretch; }
@@ -95,4 +96,9 @@ table.changes td.date { white-space: nowrap; font-family: ui-monospace, Menlo, m
 select { font: inherit; }
 @media (max-width: 600px) {
   .filters, .row > summary { grid-template-columns: 1fr; }
+  /* Column heads short, so none breaks inside a word at 375 px. */
+  .matrix { grid-template-columns: minmax(0, 5em) repeat(4, minmax(0, 1fr)); font-size: 11px; }
+  .matrix > span { padding: 4px 2px; }
+  .matrix .long { display: none; }
+  .matrix .short { display: inline; }
 }

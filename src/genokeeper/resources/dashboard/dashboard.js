@@ -324,6 +324,18 @@ function reasonText(reason) {
   return unassessed ? t("unknown_genotype", { text }) : text;
 }
 
+// The pair fewest steps from the current one whose view of `topic` shows rows (the looser on
+// a tie): its thresholds, its count and the labels of the thresholds that differ; or null.
+function nearest(topic) {
+  const steps = (r, v) => Math.abs(SCALES.reliability.indexOf(r) - SCALES.reliability.indexOf(state.reliability)) +
+    Math.abs(SCALES.validity.indexOf(v) - SCALES.validity.indexOf(state.validity));
+  const pairs = SCALES.reliability.flatMap((r) => SCALES.validity.map((v) => ({ r, v, n: count(`${r}|${v}|${topic}`) })));
+  const best = pairs.filter((p) => p.n).sort((a, b) => steps(a.r, a.v) - steps(b.r, b.v))[0];
+  if (!best) return null;
+  const where = joined(best.r === state.reliability ? null : M.matrix_rows[best.r], best.v === state.validity ? null : M.matrix_columns[best.v]);
+  return { ...best, n: number(best.n), where };
+}
+
 // `ids` by their topic, in the catalog's order of topics, each topic once.
 function byTopic(ids) {
   const groups = new Map(Object.keys(TOPICS).map((name) => [name, []]));
@@ -341,10 +353,13 @@ function chips() {
   const box = document.getElementById("chips");
   box.replaceChildren();
   for (const name of ["", ...known, ...[...present].filter((name) => !(name in TOPICS))]) {
-    const chip = el("button", name === state.topic ? "chip on" : "chip", name ? TOPICS[name] || name : t("all_topics"));
+    const label = name ? TOPICS[name] || name : t("all_topics");
+    // A topic with no row at this cell says where its nearest rows are, and moves there.
+    const near = count(`${state.reliability}|${state.validity}|${name}`) ? null : nearest(name);
+    const chip = el("button", name === state.topic ? "chip on" : "chip", near ? t("chip_empty", { topic: label, ...near }) : label);
     chip.type = "button";
     chip.addEventListener("click", () => {
-      state.topic = name;
+      Object.assign(state, { topic: name }, near && { reliability: near.r, validity: near.v });
       render();
       writeHash();
     });
@@ -868,9 +883,10 @@ function render() {
   for (const [cell, r, v] of CELLS) {
     const n = count(`${r}|${v}|${state.topic}`);
     const marked = cell.className ? [el("small", "", t("default_cell"))] : [];
-    cell.replaceChildren(String(n), ...marked);
+    cell.replaceChildren(number(n), ...marked);
     cell.setAttribute("aria-pressed", String(r === state.reliability && v === state.validity));
-    cell.setAttribute("aria-label", [M.matrix_rows[r], M.matrix_columns[v], n, ...marked.map((m) => m.textContent)].join(", "));
+    const name = t("cell_label", { n, count: number(n), row: M.matrix_rows[r], column: M.matrix_columns[v] });
+    cell.setAttribute("aria-label", [name, ...marked.map((m) => m.textContent)].join(", "));
   }
   const onFeed = state.tab === "feed";
   for (const [name, on] of [["feed", onFeed], ["changes", !onFeed]]) {
@@ -938,7 +954,12 @@ search.addEventListener("input", () => {
 // side, "high only" on top, strength of evidence across; `render` counts each cell's view.
 const matrix = document.getElementById("matrix");
 matrix.setAttribute("aria-label", t("matrix_axis"));
-matrix.append(el("span", "", t("matrix_axis")), ...SCALES.validity.map((v) => el("span", "ev", M.matrix_columns[v])));
+// Each column head in full, and short for a phone's width (`dashboard.css`).
+matrix.append(el("span", "", t("matrix_axis")), ...SCALES.validity.map((v) => {
+  const head = el("span", "ev");
+  head.append(el("span", "long", M.matrix_columns[v]), el("span", "short", M.matrix_columns_short[v]));
+  return head;
+}));
 const CELLS = [...SCALES.reliability].reverse().flatMap((r) => {
   matrix.append(el("span", "rel", M.matrix_rows[r]));
   return SCALES.validity.map((v) => {
