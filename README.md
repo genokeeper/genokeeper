@@ -69,7 +69,9 @@ Other questions it answers the same way:
   `genokeeper changes`.
 
 **The dashboard.** `genokeeper dashboard` writes one static page of every finding. It has a
-slider for genotype reliability and one for strength of evidence, topic chips and a search box.
+3x4 matrix of thresholds, genotype reliability down the side and strength of evidence across,
+each cell counting the findings it keeps and choosing them on a click; topic chips; and a
+search box.
 Below the list, the page counts what the sliders hide and why.
 
 A whole genome yields thousands of candidate findings, and most rest on an uncertain genotype or
@@ -77,14 +79,14 @@ weak evidence. Each finding carries two measures:
 - how likely its genotype is wrong, measured on reference samples;
 - how strong the evidence behind its claim is.
 
-With both sliders at zero, the invented genome shows 2,405 findings. At the default
-thresholds, 18 remain.
+In the matrix's loosest cell, any genotype and any evidence, the invented genome shows 2,405
+findings. At the default thresholds, 18 remain.
 
 An open row shows its genotype, its evidence and sources, and, once `genokeeper explain` has run,
 a plain-language explanation. The page labels that explanation with the model that wrote it and
 the sources it was given.
 
-![The demo dashboard: both sliders rise from zero, the count falls from 2,405 findings to 18, then two rows open with explanations written by a language model](docs/demo/dashboard.gif)
+![The demo dashboard: the chosen cell moves from the matrix's loosest to the default, the count falls from 2,405 findings to 18, then two rows open with explanations written by a language model](docs/demo/dashboard.gif)
 
 To try the filters yourself, download the demo page
 [docs/demo/dashboard.html](docs/demo/dashboard.html) and open it in a browser. It loads nothing
