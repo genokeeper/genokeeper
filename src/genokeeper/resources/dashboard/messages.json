@@ -168,11 +168,11 @@
     "ru": {"one": "Показано {shown} из {n} находки · сначала то, что требует действий", "other": "Показано {shown} из {n} находок · сначала то, что требует действий"}
   },
   "unmatched": {"en": "do not match the search", "ru": "не подходят под поиск"},
-  "move_sliders_or_search": {
-    "en": "Move the sliders or change the search",
-    "ru": "Сдвиньте ползунки или измените поиск"
+  "pick_cell_or_search": {
+    "en": "Pick a cell lower or further left, or change the search",
+    "ru": "Выберите клетку ниже или левее либо измените поиск"
   },
-  "move_sliders": {"en": "Move the sliders", "ru": "Сдвиньте ползунки"},
+  "pick_cell": {"en": "Pick a cell lower or further left", "ru": "Выберите клетку ниже или левее"},
   "hidden": {
     "en": "Hidden {count}: {reasons}. {how} to see them.",
     "ru": "Скрыто {count}: {reasons}. {how}, чтобы увидеть их."
@@ -276,14 +276,19 @@
     "en": "Research associations are not listed here (ask genome-ask about them): {counts}.",
     "ru": "Исследовательские ассоциации здесь не перечисляются (о них спрашивайте genome-ask): {counts}."
   },
-  "reliability_label": {
-    "en": "Genotype reliability: at least “{level}”",
-    "ru": "Надёжность генотипа: не ниже «{level}»"
+  "matrix_axis": {
+    "en": "Genotype reliability ↓, strength of evidence →",
+    "ru": "Надёжность генотипа ↓, сила доказательств →"
   },
-  "validity_label": {
-    "en": "Strength of evidence: at least “{level}”",
-    "ru": "Сила доказательств: не ниже «{level}»"
+  "matrix_rows": {
+    "en": {"high": "high only", "medium": "medium or better", "low": "any genotype"},
+    "ru": {"high": "только высокая", "medium": "средняя и выше", "low": "любой генотип"}
   },
+  "matrix_columns": {
+    "en": {"conflicting": "any evidence", "limited": "limited or more", "moderate": "moderate or more", "strong": "strong"},
+    "ru": {"conflicting": "любые доказательства", "limited": "ограниченные и выше", "moderate": "умеренные и выше", "strong": "сильные"}
+  },
+  "default_cell": {"en": "default", "ru": "по умолчанию"},
   "footer": {"en": "Run {run} · {versions}", "ru": "Запуск {run} · {versions}"},
   "carrier_not_covered": {
     "en": null,

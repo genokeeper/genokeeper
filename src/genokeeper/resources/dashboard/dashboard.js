@@ -1,9 +1,9 @@
 "use strict";
 // The dashboard's script. It looks the chosen view up in the page's data and builds the
 // feed from it with createElement and textContent; it never filters by level or topic,
-// because `genokeeper.dashboard` embedded one query result per slider and topic combination.
+// because `genokeeper.dashboard` embedded one query result per threshold pair and topic.
 // The search box only narrows a view to the items whose embedded `search` string holds it.
-// The Changes tab looks each change's kind up the same way, per slider pair and base, and
+// The Changes tab looks each change's kind up the same way, per threshold pair and base, and
 // narrows the table by its chips. Every text it shows is a message of `data.messages`, the
 // catalog `resources/dashboard/messages.json` in the page's language.
 
@@ -21,7 +21,7 @@ function t(key, params = {}, rules = CARDINAL) {
   return text.replace(/\{(\w+)\}/g, (_, name) => String(params[name]));
 }
 
-const SLIDERS = {
+const SCALES = {
   reliability: ["low", "medium", "high"],
   validity: ["conflicting", "limited", "moderate", "strong"],
 };
@@ -272,8 +272,8 @@ function row(f) {
   if (["chrX", "chrY"].includes(contig(f))) main.append(el("div", "warn", t("haploid_note")));
   const pair = el("div", "pair");
   const level = f.reliability.level || (f.gene_call && f.gene_call.level);
-  if (level) pair.append(...bar(t("bar_genotype"), SLIDERS.reliability, level, "rel"));
-  pair.append(...bar(t("bar_evidence"), SLIDERS.validity, f.validity.level, "ev"));
+  if (level) pair.append(...bar(t("bar_genotype"), SCALES.reliability, level, "rel"));
+  pair.append(...bar(t("bar_evidence"), SCALES.validity, f.validity.level, "ev"));
   summary.append(main, pair);
   details.append(summary, opened(f));
   return details;
@@ -341,13 +341,18 @@ function renderScreened() {
   }
 }
 
+// A view's findings that hold the typed text. Each item's `search` is
+// `genokeeper.query.searchable`'s, and so is the typed text.
+function searched(view) {
+  const q = state.search.toLowerCase().replaceAll("_", " ").replaceAll("|", ", ");
+  return view.findings.filter((id) => data.items[id].search.includes(q));
+}
+
 function renderFeed() {
   const view = data.views[`${state.reliability}|${state.validity}|${state.topic}`];
   chips();
 
-  // Each item's `search` is `genokeeper.query.searchable`'s, and so is the typed text.
-  const q = state.search.toLowerCase().replaceAll("_", " ").replaceAll("|", ", ");
-  const shown = view.findings.filter((id) => data.items[id].search.includes(q));
+  const shown = searched(view);
   document.getElementById("count").textContent = t("count", { shown: shown.length, n: Object.keys(data.items).length });
   document.getElementById("feed").replaceChildren(...shown.map((id) => row(data.items[id])));
   renderExcluded();
@@ -361,7 +366,7 @@ function renderFeed() {
   if (hidden.length) {
     const count = hidden.reduce((sum, [n]) => sum + n, 0);
     const reasons = hidden.map(([n, text]) => `${n} ${text}`).join(", ");
-    const how = t(unmatched ? "move_sliders_or_search" : "move_sliders");
+    const how = t(unmatched ? "pick_cell_or_search" : "pick_cell");
     note.textContent = t("hidden", { count, reasons, how });
   }
 
@@ -749,8 +754,13 @@ function renderChanges() {
 }
 
 function render() {
-  document.getElementById("reliability-label").textContent = t("reliability_label", { level: LEVELS[state.reliability][0] });
-  document.getElementById("validity-label").textContent = t("validity_label", { level: LEVELS[state.validity][0] });
+  for (const [cell, r, v] of CELLS) {
+    const n = searched(data.views[`${r}|${v}|${state.topic}`]).length;
+    const marked = cell.className ? [el("small", "", t("default_cell"))] : [];
+    cell.replaceChildren(String(n), ...marked);
+    cell.setAttribute("aria-pressed", String(r === state.reliability && v === state.validity));
+    cell.setAttribute("aria-label", [M.matrix_rows[r], M.matrix_columns[v], n, ...marked.map((m) => m.textContent)].join(", "));
+  }
   const onFeed = state.tab === "feed";
   for (const [name, on] of [["feed", onFeed], ["changes", !onFeed]]) {
     document.getElementById(`tab-${name}`).className = on ? "tab on" : "tab";
@@ -763,7 +773,7 @@ function render() {
 
 // The view in the URL's hash, `#tab=feed|changes&rel=0..2&ev=0..3&topic=<topic>&q=<text>`, so
 // a link opens one exact view (from file:// too); an unknown key or value is ignored.
-const HASH_SLIDERS = { rel: "reliability", ev: "validity" };
+const HASH_SCALES = { rel: "reliability", ev: "validity" };
 function readHash() {
   for (const pair of location.hash.replace(/^#/, "").split("&")) {
     const at = pair.indexOf("=");
@@ -776,9 +786,9 @@ function readHash() {
       continue; // a cut %-escape
     }
     if (key === "tab" && (value === "feed" || value === "changes")) state.tab = value;
-    else if (key in HASH_SLIDERS && /^[0-9]$/.test(value)) {
-      const levels = SLIDERS[HASH_SLIDERS[key]];
-      if (Number(value) < levels.length) state[HASH_SLIDERS[key]] = levels[Number(value)];
+    else if (key in HASH_SCALES && /^[0-9]$/.test(value)) {
+      const levels = SCALES[HASH_SCALES[key]];
+      if (Number(value) < levels.length) state[HASH_SCALES[key]] = levels[Number(value)];
     } else if (key === "topic" && `${state.reliability}|${state.validity}|${value}` in data.views) state.topic = value;
     else if (key === "q") state.search = value;
   }
@@ -788,8 +798,8 @@ function readHash() {
 function writeHash() {
   const parts = [
     `tab=${state.tab}`,
-    `rel=${SLIDERS.reliability.indexOf(state.reliability)}`,
-    `ev=${SLIDERS.validity.indexOf(state.validity)}`,
+    `rel=${SCALES.reliability.indexOf(state.reliability)}`,
+    `ev=${SCALES.validity.indexOf(state.validity)}`,
   ];
   if (state.topic) parts.push(`topic=${encodeURIComponent(state.topic)}`);
   if (state.search) parts.push(`q=${encodeURIComponent(state.search)}`);
@@ -813,22 +823,31 @@ search.addEventListener("input", () => {
   render();
   writeHash();
 });
-for (const [name, levels] of Object.entries(SLIDERS)) {
-  const input = document.getElementById(name);
-  input.value = String(levels.indexOf(state[name]));
-  input.addEventListener("input", () => {
-    state[name] = levels[Number(input.value)];
-    render();
-    writeHash();
+// The matrix that sets both thresholds, as the demo's landing: genotype reliability down the
+// side, "high only" on top, strength of evidence across; `render` counts each cell's view.
+const matrix = document.getElementById("matrix");
+matrix.setAttribute("aria-label", t("matrix_axis"));
+matrix.append(el("span", "", t("matrix_axis")), ...SCALES.validity.map((v) => el("span", "ev", M.matrix_columns[v])));
+const CELLS = [...SCALES.reliability].reverse().flatMap((r) => {
+  matrix.append(el("span", "rel", M.matrix_rows[r]));
+  return SCALES.validity.map((v) => {
+    const cell = el("button", r === reliability && v === validity ? "default" : "");
+    cell.type = "button";
+    cell.addEventListener("click", () => {
+      Object.assign(state, { reliability: r, validity: v });
+      render();
+      writeHash();
+    });
+    matrix.append(cell);
+    return [cell, r, v];
   });
-}
+});
 // An edited hash is the view, read from the defaults as on load; `replaceState` fires no
 // `hashchange`, so writing the view back never loops.
 window.addEventListener("hashchange", () => {
   Object.assign(state, { reliability, validity, topic, search: "", tab: "feed" });
   readHash();
   search.value = state.search;
-  for (const [name, levels] of Object.entries(SLIDERS)) document.getElementById(name).value = String(levels.indexOf(state[name]));
   render();
 });
 const versions = Object.entries(data.versions).map(([tool, version]) => `${tool} ${version}`);

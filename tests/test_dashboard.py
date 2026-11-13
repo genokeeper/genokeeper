@@ -931,14 +931,15 @@ class Text {
 }
 class Node {
   constructor(tag) {
-    Object.assign(this, { tag, kids: [], style: {}, className: "", hidden: false, value: "", href: "", listeners: {} });
+    Object.assign(this, { tag, kids: [], style: {}, className: "", hidden: false, value: "", href: "", listeners: {}, attrs: {} });
   }
+  nodes() { return this.kids.filter((k) => k instanceof Node).flatMap((k) => [k, ...k.nodes()]); }
   append(...xs) { for (const x of xs) this.kids.push(typeof x === "string" ? new Text(x) : x); }
   replaceChildren(...xs) { this.kids = []; this.append(...xs); }
   set textContent(t) { this.kids = [new Text(t)]; }
   get textContent() { return this.kids.map((k) => k.textContent).join("\n"); }
   links() { return [...(this.tag === "a" ? [this.href] : []), ...this.kids.flatMap((k) => k.links())]; }
-  setAttribute() {}
+  setAttribute(name, value) { this.attrs[name] = String(value); }
   addEventListener(type, listener) { (this.listeners[type] ??= []).push(listener); }
 }
 const byId = {};
@@ -954,9 +955,11 @@ const history = { replaceState: (state, title, url) => urls.push(url) };
 const window = new Node("window");
 vm.runInNewContext(fs.readFileSync(process.argv[2], "utf8"), { document, location, history, window });
 // Then each action (argv, JSON [id, value, event]): the control (or, for "window", the URL's
-// hash) takes the value, its event fires.
-for (const [id, value, type] of JSON.parse(process.argv[5])) {
-  const node = id === "window" ? window : document.getElementById(id);
+// hash; for "<id>/<n>", the n-th button in it) takes the value, its event fires.
+for (const [spec, value, type] of JSON.parse(process.argv[5])) {
+  const [id, at] = spec.split("/");
+  const found = id === "window" ? window : document.getElementById(id);
+  const node = at ? found.nodes().filter((n) => n.tag === "button")[at] : found;
   if (node === window) location.hash = value;
   else node.value = value;
   for (const listener of node.listeners[type] ?? []) listener();
@@ -964,7 +967,9 @@ for (const [id, value, type] of JSON.parse(process.argv[5])) {
 const out = { "#history": { urls } };
 for (const [id, node] of Object.entries(byId)) {
   const { className, hidden, value } = node;
-  out[id] = { text: node.textContent, links: node.links(), className, hidden, value };
+  const buttons = node.nodes().filter((n) => n.tag === "button")
+    .map((n) => ({ text: n.textContent, className: n.className, attrs: n.attrs }));
+  out[id] = { text: node.textContent, links: node.links(), className, hidden, value, buttons };
 }
 console.log(JSON.stringify(out));
 """
@@ -1688,10 +1693,8 @@ def test_english_page_names_each_view(
     ):
         assert text in feed, text
     assert not re.search("[а-яё]", feed, re.IGNORECASE)
-    assert shown["reliability-label"]["text"] == "Genotype reliability: at least “low”"
-    assert shown["validity-label"]["text"] == (
-        "Strength of evidence: at least “conflicting”"
-    )
+    matrix = shown["matrix"]["text"]
+    assert all(name in matrix for name in ("high only", "any genotype", "any evidence"))
     chips = shown["chips"]["text"].split("\n")
     assert chips[:4] == ["All topics", "Risks", "Carrier status", "Drugs"]
     assert (
@@ -1700,7 +1703,7 @@ def test_english_page_names_each_view(
     assert shown["count"]["text"].endswith(" findings · actionable first")
     hidden = _rendered(data, tmp_path)["hidden"]["text"]
     assert "with a genotype below “medium”" in hidden
-    assert hidden.endswith("Move the sliders to see them.")
+    assert hidden.endswith("Pick a cell lower or further left to see them.")
 
 
 def test_english_count_is_singular_for_one(
@@ -1791,7 +1794,7 @@ def test_view_from_url_hash(con: duckdb.DuckDBPyConnection, tmp_path: Path) -> N
     a control that moves writes the view back with `history.replaceState`."""
     data = payload(con, None, NO_CACHE)
     shown = _rendered(data, tmp_path, "#tab=changes&rel=2&ev=3&q=CYP2D6")
-    assert (shown["reliability"]["value"], shown["validity"]["value"]) == ("2", "3")
+    assert _cell(shown) == (2, 3)
     assert shown["search"]["value"] == "CYP2D6"
     assert (shown["tab-changes"]["className"], shown["feed-view"]["hidden"]) == (
         "tab on",
@@ -1802,18 +1805,69 @@ def test_view_from_url_hash(con: duckdb.DuckDBPyConnection, tmp_path: Path) -> N
     assert "CYP2D6" in feed["text"] and "BRCA1" not in feed["text"]
     ignored = "#tab=nope&rel=3&ev=-1&ev=1.5&topic=nope&zz=1&q=%E0%A4%A"
     shown = _rendered(data, tmp_path, ignored)
-    assert (shown["reliability"]["value"], shown["validity"]["value"]) == ("1", "2")
+    assert _cell(shown) == (1, 2)
     assert (shown["tab-feed"]["className"], shown["search"]["value"]) == ("tab on", "")
-    moved = _rendered(
-        data, tmp_path, "#tab=changes&q=CYP2D6", [("reliability", "0", "input")]
-    )
+    # The bottom row's moderate cell: any genotype, the default evidence.
+    click = [("matrix/10", "", "click")]
+    moved = _rendered(data, tmp_path, "#tab=changes&q=CYP2D6", click)
     assert moved["#history"]["urls"] == ["#tab=changes&rel=0&ev=2&q=CYP2D6"]
+    assert _cell(moved) == (0, 2)
     # An edited hash on the open page is its view, from the defaults; nothing is written back.
     edit = [("search", "BRCA", "input"), ("window", "#rel=2&ev=3", "hashchange")]
     shown = _rendered(data, tmp_path, "#tab=changes&topic=risks", edit)
-    assert (shown["reliability"]["value"], shown["validity"]["value"]) == ("2", "3")
+    assert _cell(shown) == (2, 3)
     assert (shown["tab-feed"]["className"], shown["search"]["value"]) == ("tab on", "")
     assert "CYP2D6" in shown["feed"]["text"] and len(shown["#history"]["urls"]) == 1
+
+
+# The matrix's rows, top down, and its columns, left to right.
+_MATRIX = list(product(Level, reversed(Validity)))
+
+
+def _cell(shown: dict[str, dict[str, Any]]) -> tuple[int, int]:
+    """The matrix's pressed cell as the hash's `rel` and `ev`."""
+    buttons = shown["matrix"]["buttons"]
+    [at] = [i for i, b in enumerate(buttons) if b["attrs"]["aria-pressed"] == "true"]
+    return 2 - at // 4, at % 4
+
+
+def test_matrix_counts_each_pair_under_topic_and_search(
+    con: duckdb.DuckDBPyConnection, tmp_path: Path
+) -> None:
+    """No slider remains: 12 cells count the findings each pair keeps under the topic and
+    the search, following both; the default pair is marked and pressed."""
+    data = payload(con, None, NO_CACHE)
+    assert 'type="range"' not in render(data)
+
+    def counts(topic: str, typed: str = "") -> list[str]:
+        views = [data["views"][f"{r}|{v}|{topic}"]["findings"] for r, v in _MATRIX]
+        return [str(sum(typed in data["items"][i]["search"] for i in v)) for v in views]
+
+    def shown_counts(shown: dict[str, dict[str, Any]]) -> list[str]:
+        return [b["text"].split("\n")[0] for b in shown["matrix"]["buttons"]]
+
+    shown = _rendered(data, tmp_path)
+    assert shown_counts(shown) == counts("") and len(set(counts(""))) > 2
+    cells = shown["matrix"]["buttons"]
+    assert [i for i, b in enumerate(cells) if "default" in b["className"]] == [6]
+    assert cells[6]["text"] == f"{counts('')[6]}\ndefault" and _cell(shown) == (1, 2)
+    carrier = [b["text"] for b in shown["chips"]["buttons"]].index("Carrier status")
+    chip = _rendered(data, tmp_path, actions=[(f"chips/{carrier}", "", "click")])
+    assert shown_counts(chip) == counts("carrier") != counts("")
+    typed = _rendered(data, tmp_path, actions=[("search", "DMD", "input")])
+    assert shown_counts(typed) == counts("", "dmd") != counts("")
+
+
+def test_a_matrix_click_sets_the_view(
+    con: duckdb.DuckDBPyConnection, tmp_path: Path
+) -> None:
+    data = payload(con, None, NO_CACHE)
+    shown = _rendered(data, tmp_path, actions=[("matrix/3", "", "click")])
+    assert shown["#history"]["urls"] == ["#tab=feed&rel=2&ev=3"]
+    assert _cell(shown) == (2, 3)
+    n = len(data["views"]["high|strong|"]["findings"])
+    assert n != len(data["views"]["medium|moderate|"]["findings"])
+    assert shown["count"]["text"].startswith(f"Showing {n} of ")
 
 
 def test_demo_lab_has_no_check_block(tmp_path: Path) -> None:

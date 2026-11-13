@@ -17,8 +17,19 @@ h1 { font-size: 18px; margin: 0; }
 .chip { font: inherit; font-size: 12.5px; padding: 4px 10px; border-radius: 999px;
   border: 1px solid var(--rule); color: var(--muted); cursor: pointer; background: none; }
 .chip.on { background: var(--ink); color: #fff; border-color: var(--ink); }
-label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); }
-input[type=range] { width: 100%; }
+/* The threshold matrix, after the demo landing's: reliability rows, evidence columns. */
+.matrix { grid-column: 1 / -1; display: grid; gap: 4px; font-size: 12.5px; color: var(--muted);
+  grid-template-columns: minmax(0, 8em) repeat(4, minmax(0, 1fr)); overflow-wrap: anywhere; }
+.matrix > span { padding: 4px 6px; align-self: end; }
+.matrix > .ev { color: var(--ev); border-bottom: 3px solid var(--ev); }
+.matrix > .rel { color: var(--rel); border-right: 3px solid var(--rel); align-self: stretch; }
+.matrix button { font: inherit; font-size: 17px; font-weight: 600; padding: 8px 2px;
+  border: 1px solid var(--rule); border-radius: 6px; background: var(--sunk); color: var(--ink);
+  cursor: pointer; font-variant-numeric: tabular-nums; }
+.matrix button[aria-pressed="true"] { background: var(--ink); color: #fff;
+  outline: 2px solid var(--ink); outline-offset: 2px; }
+.matrix button:focus-visible { outline: 2px solid var(--rel); outline-offset: 2px; }
+.matrix small { display: block; font-size: 11px; font-weight: 500; }
 .count, .note { margin: 0; font-size: 12.5px; color: var(--muted); }
 .note:empty { display: none; }
 .note ul { margin: 4px 0 0; padding-left: 18px; }
