@@ -525,6 +525,35 @@ def _hidden_order(reason: str) -> tuple[bool, int]:
     return unassessed, _REASONS.index(base)
 
 
+@dataclass(frozen=True)
+class Loaded:
+    """A run's findings and unassessed claims in `query`'s shape, read once (`load`)."""
+
+    run_id: str
+    versions: dict[str, str]
+    rows: dict[Kind, list[dict[str, Any]]]
+
+
+def load(
+    con: duckdb.DuckDBPyConnection,
+    run_id: str | None,
+    dates: Mapping[str, Dates] | None = None,
+) -> Loaded:
+    """`run_id`'s (None: the latest run's) findings and unassessed claims, each with its
+    `dates` entry, for `query` to filter as often as it is asked."""
+    run, versions = _run(con, run_id)
+    rows = {
+        kind: [
+            _finding(r, dates)
+            for r in con.execute(
+                f"{_select([kind])} WHERE f.run_id = ?", [run]
+            ).fetchall()
+        ]
+        for kind in (Kind.FINDING, Kind.UNASSESSED)
+    }
+    return Loaded(run, versions, rows)
+
+
 def query(
     con: duckdb.DuckDBPyConnection,
     run_id: str | None,
@@ -532,17 +561,19 @@ def query(
     *,
     list_unassessed: bool = False,
     dates: Mapping[str, Dates] | None = None,
+    loaded: Loaded | None = None,
 ) -> QueryResult:
     """The findings of `run_id` (None: the latest run) that `f` keeps, what it hid, and the
     unassessed claims it keeps (reliability aside) counted per gene; `list_unassessed`
     also lists those claims. Each carries its `dates` entry (`history.dates`). With
-    `f.gene`, the gene's coverage too."""
-    run, versions = _run(con, run_id)
+    `f.gene`, the gene's coverage too. `loaded` (`load`'s) stands for `run_id` and
+    `dates`, so that many filters read the run once."""
+    loaded = loaded or load(con, run_id, dates)
+    run, versions = loaded.run_id, loaded.versions
     hidden: dict[str, int] = {}
     kept: dict[Kind, list[dict[str, Any]]] = {Kind.FINDING: [], Kind.UNASSESSED: []}
     for kind, prefix in ((Kind.FINDING, ""), (Kind.UNASSESSED, UNASSESSED_PREFIX)):
-        rows = con.execute(f"{_select([kind])} WHERE f.run_id = ?", [run]).fetchall()
-        for row in (_finding(r, dates) for r in rows):
+        for row in loaded.rows[kind]:
             reason = _hidden_by(row, f, reliability=kind is Kind.FINDING)
             if reason is None:
                 kept[kind].append(row)

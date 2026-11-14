@@ -69,6 +69,7 @@ from genokeeper.query import (
     Filters,
     RunNotFound,
     _hidden_by,
+    load,
     open_store,
     query,
     searchable,
@@ -386,7 +387,9 @@ def payload(
     `lab` (without `reports`, no comparison); `excluded`, the run's exclusions; `screened`,
     its other stage-3 watch items, each with its explanation or null, and non-findings."""
     dates = history.dates(reports / "snapshots", run_id) if reports is not None else {}
-    loosest = query(con, run_id, LOOSEST, dates=dates if reports is not None else None)
+    # The run read once; every view filters it.
+    loaded = load(con, run_id, dates if reports is not None else None)
+    loosest = query(con, run_id, LOOSEST, loaded=loaded)
 
     def _item(finding: dict[str, Any]) -> dict[str, Any]:
         found = lookup(finding, medlineplus, cache_dir, lang=lang)
@@ -427,7 +430,7 @@ def payload(
     views: dict[str, Any] = {}
     for reliability, validity, topic in product(Level, Validity, (None, *Topic)):
         f = Filters(topic=topic, min_reliability=reliability, min_validity=validity)
-        result = query(con, loosest.run_id, f)
+        result = query(con, loosest.run_id, f, loaded=loaded)
         views[_key(f)] = {
             "findings": [finding["id"] for finding in result.findings],
             "hidden": result.hidden,
