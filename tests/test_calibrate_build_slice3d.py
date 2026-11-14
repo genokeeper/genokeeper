@@ -9,7 +9,7 @@ import json
 import platform
 import sys
 from collections.abc import Sequence
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any
 
@@ -433,6 +433,16 @@ def test_pcr_library_read_as_cram_only(lab: Lab) -> None:
         builder(lab.lab, 2)
     assert _built(lab.lab) == set(SLICE3D_TABLES)
     grading, sha = load_grading(), lab.fasta_sha()
+    # A rule applied to a shown call (`SHOWN_ONLY`, which `[insertions]` inherits) leaves
+    # both tables current.
+    rules = {"likely_below": 0.4, "depth_decides_from": 2000}
+    shown = replace(
+        grading,
+        deletions=replace(grading.deletions, **rules),
+        insertions=replace(grading.insertions, **rules),
+    )
+    for versions in (cnv_versions, insertion_versions):
+        assert versions(lab.lab, sha, shown) == versions(lab.lab, sha, grading)
     cnv, why = open_class_table(lab.lab, "cnv", cnv_versions(lab.lab, sha, grading))
     assert why is None and cnv is not None and set(cnv.measured) == {"pcrfree", "pcr"}
     # Losses judged against the truth's deletions (the fake confirms each), the one gain

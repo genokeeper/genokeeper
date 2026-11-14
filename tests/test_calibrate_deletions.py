@@ -47,6 +47,7 @@ from genokeeper.calibrate.table import jeffreys
 from genokeeper.calibrate.tables import NOT_CALIBRATED
 from genokeeper.checksum import sha256_file
 from genokeeper.config import (
+    SHOWN_ONLY,
     DeletionThresholds,
     InsertionThresholds,
     Paths,
@@ -821,15 +822,18 @@ def test_calibrate_deletions_writes_a_table_the_run_accepts(
 def test_versions_leave_out_the_wording_rule(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """`likely_below` words a shown deletion and is never read by the table, so changing it
-    leaves the versions alone; a threshold the table reads changes them."""
+    """`likely_below` words a shown deletion and `depth_decides_from` withholds one; the
+    table reads neither, so changing them leaves the versions alone; a threshold the table
+    reads changes them."""
     lab = _hg002_lab(tmp_path, monkeypatch, (2000,)).lab
     grading, fasta = load_grading(), "f" * 64
     d = grading.deletions
     versions = deletion_versions(lab, fasta, grading)
-    wording = replace(grading, deletions=replace(d, likely_below=0.4))
+    wording = replace(
+        grading, deletions=replace(d, likely_below=0.4, depth_decides_from=2000)
+    )
     assert deletion_versions(lab, fasta, wording) == versions
-    assert "likely_below" not in versions["deletions"]
+    assert not any(name in versions["deletions"] for name in SHOWN_ONLY)
     # A table measured before `cautions` read `extra` is stale, not read as all inside.
     assert versions["extra"] == OUTSIDE_VERSION
     assert (versions["delly_filter"], versions["dysgu_filter"]) == (

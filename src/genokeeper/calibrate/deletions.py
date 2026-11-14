@@ -39,7 +39,7 @@ from genokeeper.calibrate.classes import (
 )
 from genokeeper.calibrate.tables import folder
 from genokeeper.checksum import sha256_file
-from genokeeper.config import DeletionThresholds, Grading
+from genokeeper.config import SHOWN_ONLY, DeletionThresholds, Grading
 from genokeeper.containers import IMAGES
 from genokeeper.deletions.callers import caller_filter
 from genokeeper.deletions.exons import RESOURCE
@@ -224,7 +224,7 @@ def _exons_sha256() -> str:
 def deletion_versions(lab: Path, fasta_sha: str, grading: Grading) -> dict[str, str]:
     """The versions a deletion table is measured under: the three images, the sha256 of the
     exon resource, of the mask's two BEDs, the repeats' BED and gnomAD-SV, `[deletions]` as
-    JSON without `likely_below` (a wording rule the table never reads), both Truvari option
+    JSON without `config.SHOWN_ONLY` (rules the table never reads), both Truvari option
     sets, `deletions_only`'s per-caller filters (`caller_filter`, as the run's step keys
     hold them), the three step versions, the FASTA's sha256, the class table's format
     (`classes.FORMAT_KEY`: a table of another format is stale) and the form of the `extra`
@@ -239,7 +239,7 @@ def deletion_versions(lab: Path, fasta_sha: str, grading: Grading) -> dict[str, 
         "repeats": sha256_file(giab / grading.strata["low_complexity"]),
         "gnomad_sv": sha256_file(sv_files(lab).gnomad),
         "deletions": json.dumps(
-            {k: v for k, v in asdict(t).items() if k != "likely_below"}, sort_keys=True
+            {k: v for k, v in asdict(t).items() if k not in SHOWN_ONLY}, sort_keys=True
         ),
         "between_callers": " ".join(BETWEEN_CALLERS),
         "against_truth": " ".join(AGAINST_TRUTH),

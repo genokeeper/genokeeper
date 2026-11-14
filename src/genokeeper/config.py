@@ -224,6 +224,11 @@ class DeletionThresholds:
     likely_below: float = 0.1
 
 
+# Rules applied to a call the run shows, which no calibration table reads: a table's versions
+# leave them out, so changing one leaves a measured table current.
+SHOWN_ONLY = frozenset({"likely_below", "depth_decides_from"})
+
+
 @dataclass(frozen=True, kw_only=True)
 class IdentityThresholds:
     """Slice 3c's sample identity ([identity]): the run's genotypes against the delivered

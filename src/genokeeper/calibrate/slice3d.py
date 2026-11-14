@@ -41,7 +41,7 @@ from genokeeper.cnv.screen import (
     LargeEvent,
     cnv_band,
 )
-from genokeeper.config import CnvThresholds, Grading, LpaThresholds
+from genokeeper.config import SHOWN_ONLY, CnvThresholds, Grading, LpaThresholds
 from genokeeper.containers import IMAGES
 from genokeeper.deletions.exons import RESOURCE, SPANS
 from genokeeper.deletions.files import sv_files
@@ -117,8 +117,8 @@ def _resource_sha256(*parts: str) -> str:
 
 
 def _thresholds(section: Any) -> str:
-    """A grading section as JSON, without `likely_below` (a wording rule no table reads)."""
-    found = {k: v for k, v in asdict(section).items() if k != "likely_below"}
+    """A grading section as JSON, without `config.SHOWN_ONLY` (rules no table reads)."""
+    found = {k: v for k, v in asdict(section).items() if k not in SHOWN_ONLY}
     return json.dumps(found, sort_keys=True)
 
 
