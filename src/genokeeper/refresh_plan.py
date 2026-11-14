@@ -20,7 +20,7 @@ from genokeeper.calibrate.tables import TABLES, stale_tables
 from genokeeper.check import read_state, summary
 from genokeeper.config import Paths
 from genokeeper.identity import analyser_identity
-from genokeeper.refresh import FOLDERS, REFRESHED, _dated, _latest, run_needed
+from genokeeper.refresh import FOLDERS, REFRESHED, _latest, dated_folders, run_needed
 
 # Steps a run reuses unless the reads, the reference or a tool change: what a code update
 # may rebuild, longest first in the output.
@@ -51,7 +51,7 @@ def plan(paths: Paths) -> list[str]:
     lines.append(f"  1. a run on the releases already on disk: {pre_run}")
     lines.append(f"  2. fetch the newest release of {len(REFRESHED)} sources:")
     for name in REFRESHED:
-        dated = _dated(lab / FOLDERS[name])
+        dated = dated_folders(lab / FOLDERS[name])
         here = dated[-1].name if dated else "none"
         upstream = f", newer upstream: {newer[name]}" if name in newer else ""
         lines.append(f"     {name}: on disk {here}{upstream}")

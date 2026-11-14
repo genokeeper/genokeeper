@@ -76,7 +76,7 @@ def lab(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, ncbi: Path) -> Path:
     # The release as the run reads it: `##fileDate`, not the folder's name.
     monkeypatch.setattr(
         demo_build.pipeline,
-        "_clinvar_release",
+        "clinvar_release",
         lambda vcf: vcf.read_text().split("=")[1][:10].replace("-", ""),
     )
     return lab

@@ -21,7 +21,7 @@ from genokeeper import pipeline, refresh_log
 from genokeeper.calibrate import hg002
 from genokeeper.calibrate.records import need_space
 from genokeeper.demo import STORE_FILE, demo_paths
-from genokeeper.refresh import FOLDERS, REFRESHED, _dated
+from genokeeper.refresh import FOLDERS, REFRESHED, dated_folders
 from genokeeper.refresh_log import RefreshRecord, SourceOutcome, SourceStatus
 
 BASE_CLINVAR = "20260503"
@@ -77,7 +77,7 @@ def _sources(lab: Path, clinvar: tuple[str, str]) -> tuple[SourceOutcome, ...]:
         if name == "clinvar":
             outcomes.append(SourceOutcome(name, *clinvar, SourceStatus.NEW))
         else:
-            dated = _dated(lab / FOLDERS[name])
+            dated = dated_folders(lab / FOLDERS[name])
             release = dated[-1].name if dated else None
             outcomes.append(
                 SourceOutcome(name, release, release, SourceStatus.UNCHANGED)
@@ -123,7 +123,7 @@ def build(lab: Path, *, threads: int | None) -> tuple[str, str]:
         need_space(nearest, max(NEED_BYTES - _held(root), 0), "the HG002 demo build")
         faf = pipeline.open_faf_table(lab)
         newest = pipeline.newest_clinvar38(lab)
-        after = pipeline._clinvar_release(newest)
+        after = pipeline.clinvar_release(newest)
         if after <= BASE_CLINVAR:
             raise BuildRefused(
                 f"the lab's newest ClinVar ({after}) is not newer than {BASE_CLINVAR}:"
@@ -132,7 +132,7 @@ def build(lab: Path, *, threads: int | None) -> tuple[str, str]:
         root.mkdir(parents=True, exist_ok=True)
         started = datetime.now(UTC)
         base = fetch_base_clinvar(root)
-        before = pipeline._clinvar_release(base)
+        before = pipeline.clinvar_release(base)
     except pipeline.RunRefused as e:
         raise BuildRefused(str(e)) from e
     first, second = (

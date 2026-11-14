@@ -946,7 +946,7 @@ def _header_value(vcf: Path, key: str) -> str | None:
     return None
 
 
-def _clinvar_release(clinvar: Path) -> str:
+def clinvar_release(clinvar: Path) -> str:
     """The ClinVar release, `##fileDate` as YYYYMMDD (the statements' source version)."""
     date = (_header_value(clinvar, "fileDate") or "").replace("-", "")
     if not _CLINVAR_DATE.fullmatch(date):
@@ -4217,7 +4217,7 @@ def run_genome(
         dosage = load_dosage(dosage_list)
     except (ValueError, UnicodeDecodeError) as e:
         raise RunRefused(f"unreadable ClinGen dosage list: {_one_line(e)}") from e
-    release = _clinvar_release(clinvar38)
+    release = clinvar_release(clinvar38)
     lists = load_gene_lists()
     work = paths.reports / "work"
     identities = work / IDENTITIES

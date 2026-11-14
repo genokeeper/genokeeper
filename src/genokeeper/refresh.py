@@ -163,7 +163,7 @@ def refresh_lock(work: Path) -> Iterator[None]:
 # --- the sources ----------------------------------------------------------------------------
 
 
-def _dated(folder: Path) -> list[Path]:
+def dated_folders(folder: Path) -> list[Path]:
     """The `<YYYYMMDD>/` folders under `folder`, oldest first."""
     if not folder.is_dir():
         return []
@@ -215,7 +215,7 @@ def fetch_sources(
     outcomes: list[SourceOutcome] = []
     for name in REFRESHED:
         folder = lab / FOLDERS[name]
-        dated = _dated(folder)
+        dated = dated_folders(folder)
         before = dated[-1].name if dated else None
         rows = _manifest_rows(lab, name)
         after: str | None = None
@@ -331,7 +331,9 @@ def run_needed(lab: Path, latest: Snapshot | None, identity: str) -> bool:
 
 
 def _newest_file(lab: Path, source: str, name: str) -> Path | None:
-    found = [d / name for d in _dated(lab / FOLDERS[source]) if (d / name).is_file()]
+    found = [
+        d / name for d in dated_folders(lab / FOLDERS[source]) if (d / name).is_file()
+    ]
     return found[-1] if found else None
 
 
@@ -414,7 +416,7 @@ def retain(lab: Path, records: Sequence[RefreshRecord], root: Path) -> list[Path
     read = [p for rid in kept if rid in by_id for p in _paths(by_id[rid].inputs)]
     deleted: list[Path] = []
     for name in REFRESHED:
-        for folder in _dated(lab / FOLDERS[name])[:-1]:
+        for folder in dated_folders(lab / FOLDERS[name])[:-1]:
             if any(p.is_relative_to(folder) for p in read):
                 continue
             shutil.rmtree(folder)

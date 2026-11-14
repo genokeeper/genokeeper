@@ -419,6 +419,17 @@ def _release(snapshot: Snapshot, path: str) -> str:
     return _digest(node)[:12]
 
 
+def changed_inputs(a: Snapshot, b: Snapshot) -> list[dict[str, str]]:
+    """Each input a source is graded on (`SOURCE_INPUTS`) whose file differs from `a` to
+    `b`, with its release in both: what the dashboard's Changes tab names."""
+    names = sorted({name for names in SOURCE_INPUTS.values() for name in names})
+    return [
+        {"name": n, "before": _release(a, n), "after": _release(b, n)}
+        for n in names
+        if _digest(_node(a.inputs, n)) != _digest(_node(b.inputs, n))
+    ]
+
+
 def _source_causes(a: Snapshot, b: Snapshot, source: str | None) -> tuple[str, ...]:
     """`source:<input>@<release>` for each input `source` reads that differs from `a` to
     `b`; for a source `SOURCE_INPUTS` does not list, every input that differs."""

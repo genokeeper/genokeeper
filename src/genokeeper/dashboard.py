@@ -144,18 +144,6 @@ def _day(snapshot: Snapshot) -> str:
     return history.local_day(snapshot).isoformat()
 
 
-def _sources(a: Snapshot, b: Snapshot) -> list[dict[str, str]]:
-    """Each input a source is graded on (`history.SOURCE_INPUTS`) whose file differs from
-    `a` to `b`, with its release in both: what the Changes tab's head names."""
-    names = sorted({name for names in history.SOURCE_INPUTS.values() for name in names})
-    return [
-        {"name": n, "before": history._release(a, n), "after": history._release(b, n)}
-        for n in names
-        if history._digest(history._node(a.inputs, n))
-        != history._digest(history._node(b.inputs, n))
-    ]
-
-
 def _trusted(root: Path, run_id: str) -> dict[str, frozenset[str]]:
     """The snapshot's trusted ids at each threshold pair, from one query at the loosest
     filters: a finding is trusted at a pair when the pair's filters keep it."""
@@ -284,7 +272,7 @@ def _changes(
         block["bases"][base.run_id] = {
             "date": _day(base),
             "refresh": base.run_id in refreshed,
-            "sources": _sources(base, snaps[order[run_id]]),
+            "sources": history.changed_inputs(base, snaps[order[run_id]]),
             "rows": {r["id"]: r for r in rows},
             "views": views,
             "research": [
