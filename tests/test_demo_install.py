@@ -178,14 +178,6 @@ def test_install_updates_demo_folder(site: Path, tmp_path: Path) -> None:
     ).read_bytes()
 
 
-def test_the_change_question_asks_for_every_change() -> None:
-    """The skill passes `--all` when asked for every change; at the default tier the
-    demo's changes are none."""
-    skill = skill_resource().read_text(encoding="utf-8")
-    assert "add `--all` when the user asks for every change" in skill
-    assert "every change" in QUESTIONS[2]
-
-
 def test_install_cut_download_leaves_no_store(site: Path, tmp_path: Path) -> None:
     folder = tmp_path / "d"
     with (

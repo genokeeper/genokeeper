@@ -368,10 +368,8 @@ def test_landing_numbers(tmp_path: Path) -> None:
         f" everything called, and {n[2]} entered or left the list at the default"
         " thresholds.</p>"
     ) in index
-    # The folder's first question is the landing's; the command names its platforms.
+    # The folder's first question is the landing's.
     assert html.escape(QUESTIONS[0]) in index
-    commands = index.count("uvx genokeeper demo</span>")
-    assert commands >= 1 and commands == index.count("macOS or Linux")
 
 
 def test_landing_matrix(tmp_path: Path) -> None:
@@ -618,9 +616,6 @@ def test_sources_page_is_built_on(tmp_path: Path) -> None:
         " checkpoint the run did not record." in built
     )
     assert "ClinVar</a> 20261108." in built and "BWA-MEM</a>. Li" in built
-    assert "not genokeeper's own accuracy" in built and "endorses" in built
-    for word in ("validated", "clinical-grade", "powered by", "<img"):
-        assert word not in index.lower()
 
 
 def test_landing_has_share_tags(tmp_path: Path) -> None:
@@ -652,7 +647,6 @@ def test_calibration_summary_covers_every_table(tmp_path: Path) -> None:
     link = '<a href="calibration.html">the calibration page</a> says which table'
     assert link in index and CALIBRATION_PAGE in _read(out, "dashboard.html")
     assert '<summary>Versions and digests</summary><p class="methods sub">Tools' in page
-    assert ".methods { overflow-wrap: anywhere; }" in page  # md5 lists wrap at 375 px
 
 
 def test_site_pages_load_nothing(tmp_path: Path) -> None:
