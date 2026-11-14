@@ -9,11 +9,19 @@
 > own genome; nothing it reports is a diagnosis or a basis for a medical decision.
 
 A local analyser for your own whole-genome sequencing data. It takes the raw paired reads of a
-30x WGS run, aligns them to GRCh38 and calls them on your own machine. It grades every finding
-with an error rate measured on public reference samples (GIAB's HG002, HG003 and HG004). When
+30x WGS run, aligns them to GRCh38 and calls them on your own machine. It grades every genotype
+call with an error rate measured on public reference samples (GIAB's HG002, HG003 and HG004). When
 you run `genokeeper refresh`, it fetches the newest releases of ClinVar, ClinGen, GenCC, CPIC,
 ClinPGx and the GWAS Catalog and grades your calls on them again. An optional daily check tells you
 when a newer release is out. It never runs the refresh for you.
+
+**As far as we know, a first.** As of November 2026 we found no other open-source personal-genome
+tool that shows, on each genotype call, the chance it is wrong as measured on Genome in a Bottle
+samples in its own calibration runs, next to an evidence level that quotes the curator. Nor one
+that combines this with calling the raw reads on your own machine, grading the same calls again
+on new releases with a diff per result, plain-language explanations labelled with the model and
+the sources they were written from, a command an AI agent can query, and a public demo built from
+a reference sample's own reads.
 
 **Nothing leaves your machine unless you ask.** Genokeeper has no telemetry, no analytics and
 no crash reporting. The pipeline never uploads your reads, genotypes or findings. The
