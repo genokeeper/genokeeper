@@ -950,17 +950,18 @@ def test_a_failed_explain_call_fails_the_explain_step(
         return {"cached": 0, "written": 0, "failed": 2}
 
     monkeypatch.setattr(refresh, "explain", explain)
+    # The language, model and tone are `genokeeper explain`'s: the environment's, else
+    # the defaults; the model and tone as the command started, checked before the run.
+    monkeypatch.setenv("GENOKEEPER_TONE", "engaging")
     cli.main(["refresh", "--explain"])
     monkeypatch.delenv("GENOKEEPER_LANG", raising=False)
     with pytest.raises(ExplainError, match="2 explain calls failed"):
         seen["explain"]("run-1")
-    # The language, model and tone are `genokeeper explain`'s: the environment's, else
-    # the defaults.
     monkeypatch.setenv("GENOKEEPER_LANG", "ru")
-    monkeypatch.setenv("GENOKEEPER_TONE", "engaging")
+    monkeypatch.delenv("GENOKEEPER_TONE")
     with pytest.raises(ExplainError):
         seen["explain"]("run-1")
-    assert langs == [("en", MODEL, "plain"), ("ru", MODEL, "engaging")]
+    assert langs == [("en", MODEL, "engaging"), ("ru", MODEL, "engaging")]
     assert runs == ["run-1", "run-1"]
 
 
