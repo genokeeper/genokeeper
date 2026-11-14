@@ -268,7 +268,7 @@ def install(folder: Path, *, base: str = DEMO_BASE) -> Path:
     snapshots = paths.reports / "snapshots"
     shutil.rmtree(snapshots, ignore_errors=True)
     print(f"{_SAY}: writing the store's snapshots", file=sys.stderr)
-    with open_store(store) as con:
+    with open_store(store, files=True) as con:
         export_snapshots(con, snapshots)
     print(f"{_SAY}: writing the dashboard, a few minutes", file=sys.stderr)
     write_dashboard(

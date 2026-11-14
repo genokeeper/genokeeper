@@ -6,7 +6,7 @@ import duckdb
 import pytest
 
 from genokeeper import history
-from genokeeper.query import Filters
+from genokeeper.query import Filters, open_store
 from genokeeper.store import db
 from genokeeper.store.db import (
     SCHEMA_VERSION,
@@ -548,3 +548,14 @@ def test_statement_exclusion_defaults_false(tmp_path: Path) -> None:
     (snapshot / "coverage.parquet").unlink()
     found = history.findings(tmp_path / "snapshots", run_id, Filters())
     assert [f["id"] for f in found] == ["clinvar:1"]
+
+
+def test_a_store_opened_to_read_cannot_read_the_users_files(tmp_path: Path) -> None:
+    """A store from someone else's folder whose view reads a local file: `open_store`'s
+    connection refuses the read, external access off."""
+    store, secret = tmp_path / "findings.duckdb", tmp_path / "secret.txt"
+    secret.write_text("the user's file")
+    with connect(store) as con:
+        con.execute(f"CREATE VIEW leak AS SELECT content FROM read_text('{secret}')")
+    with open_store(store) as con, pytest.raises(duckdb.PermissionException):
+        con.execute("SELECT * FROM leak").fetchall()

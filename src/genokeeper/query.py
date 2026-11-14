@@ -658,13 +658,16 @@ def _text_block(finding: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def open_store(path: Path) -> duckdb.DuckDBPyConnection:
+def open_store(path: Path, *, files: bool = False) -> duckdb.DuckDBPyConnection:
     """Open an existing store read-only; never create one. Refuse (`RunNotFound`) a store
-    another schema version wrote."""
+    another schema version wrote. DuckDB's external access is off unless `files` (writing
+    snapshots needs it): a view in a store from someone else's folder, or a replaced demo
+    asset, cannot read the user's files, whatever the store's bytes say."""
     if not path.is_file():
         raise RunNotFound(f"no findings store at {path}")
     try:
-        con = duckdb.connect(str(path), read_only=True)
+        config = {"enable_external_access": files}
+        con = duckdb.connect(str(path), read_only=True, config=config)
     except duckdb.Error as e:
         raise RunNotFound(f"cannot open the findings store at {path}: {e}") from e
     try:

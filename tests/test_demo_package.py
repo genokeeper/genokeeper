@@ -149,7 +149,7 @@ def _report(
     """`changes.report` at `f` (the default filters) over the shipped store, as the demo
     folder will have it: its snapshots exported, a lab holding the shipped refresh log."""
     reports, lab = tmp_path / "check" / "reports", tmp_path / "check" / "lab"
-    with open_store(out / STORE_FILE) as con:
+    with open_store(out / STORE_FILE, files=True) as con:
         export_snapshots(con, reports / "snapshots")
     (lab / "refresh").mkdir(parents=True)
     shutil.copyfile(out / REFRESH_LOG_FILE, lab / "refresh" / refresh_log.LOG)
