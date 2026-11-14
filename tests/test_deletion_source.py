@@ -268,6 +268,16 @@ def test_a_megabase_the_depth_does_not_see_is_withheld(
     if withheld:
         (entry,) = json.loads(str(statement["claim"]))[WITHHELD]
         assert entry["value"]["depth_ratio"] == ratio
+    # In a gene the gate stops (PCSK9) the call stays a non-finding: an unassessed row
+    # needs the topic a non-finding has none of.
+    pcsk9 = _shown("PCSK9", chrom="chr1", pos=55039000, end=55039000 + (end - 43044000))
+    pcsk9 = replace(
+        pcsk9,
+        call_class=shown.call_class,
+        deletion=replace(pcsk9.deletion, depth_ratio=ratio),
+    )
+    (statement,) = _gene_rows(_collect(tmp_path, [pcsk9]))
+    assert (statement["kind"], statement["topic"]) == (str(Kind.NON_FINDING), None)
 
 
 def test_class_sets_rate_and_warnings(tmp_path: Path) -> None:

@@ -712,6 +712,35 @@ def test_a_deletion_of_a_band_not_measured_keeps_its_grade(tmp_path: Path) -> No
     assert entry["confirm"]
 
 
+def test_a_megabase_call_the_depth_does_not_see_is_stored_as_the_run_writes_it(
+    tmp_path: Path,
+) -> None:
+    """The depth rule withholds the call where it would be a finding (CFTR, carrier) and
+    leaves it a non-finding where the gene gate stops it (PCSK9): the store's checks hold
+    both, as the run writes them."""
+    d = Deletion("chr7", 117_000_000, 119_000_000, "N", "0/1", {"delly": "D1"}, 1.0)
+    shown = Shown(
+        d,
+        CLASS,
+        {"CFTR": (5, 6), "PCSK9": (1,)},
+        None,
+        kinds={"CFTR": "loss", "PCSK9": "loss"},
+    )
+    source = DeletionSource(
+        shown=[shown],
+        called=1,
+        dropped={},
+        not_run=None,
+        p_wrong=lambda _: (0.99, 0.98, 1.0),
+        haploinsufficient=frozenset(),
+        recall={},
+        screen_row=False,
+    )
+    con = _stored(tmp_path / "store", source, revealed=True)
+    kinds = con.sql("SELECT gene, kind, topic FROM statement ORDER BY gene").fetchall()
+    assert kinds == [("CFTR", "unassessed", "carrier"), ("PCSK9", "non_finding", None)]
+
+
 def _cnv(**kw: Any) -> CnvSource:
     fields: dict[str, Any] = {
         "shown": [],

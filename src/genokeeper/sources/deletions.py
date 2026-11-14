@@ -354,22 +354,24 @@ class DeletionSource:
                 "false_call_rate": None if rate is None else list(rate),
             }
             locus = f"{d.chrom}:{d.pos}-{d.end}"
-            if why is not None:
+            # A placement with no topic (a non-finding) has no answer to withhold.
+            withheld = None if topic is None else why
+            if withheld is not None:
                 claim[WITHHELD] = [
                     withheld_entry(
-                        why,
+                        withheld,
                         {key: claim[key] for key in _EVENT},
                         would_be=kind,
                         significance=reason,
                         confirm=w.confirm_by,
                     )
                 ]
-                kind, reason = Kind.UNASSESSED, why
+                kind, reason = Kind.UNASSESSED, withheld
             statement = self._statement(
                 ctx,
                 f"{self.tool}:{gene}:{locus}",
                 kind=str(kind),
-                vid=None if why is not None else vid,
+                vid=None if withheld is not None else vid,
                 gene=gene,
                 claim=json.dumps(claim),
                 validity=str(Validity.LIMITED),
@@ -377,7 +379,7 @@ class DeletionSource:
                 topic=None if topic is None else str(topic),
                 source_id=locus,
             )
-            first = why is None and vid not in seen
+            first = withheld is None and vid not in seen
             seen.add(vid)
             variant: Fields = {"run_id": ctx.run_id, "vid": vid, "rsid": None}
             rows.append(
