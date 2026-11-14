@@ -1,11 +1,12 @@
 """`genokeeper demo [--dir PATH]`: download the packaged HG002 store from the demo's release
-(`DEMO_BASE`) and write a folder Claude Code can work in.
+(`PIN`) and write a folder Claude Code can work in.
 
-`MANIFEST` comes first and is checked before any store byte: its schema version must be this
-genokeeper's `SCHEMA_VERSION`. Each file is streamed into `<name>.part` with its sha256
-computed on the way and renamed to its final name only when that matches the manifest's. The
-sha256 catches a cut or corrupted download; the anchor for what is downloaded is HTTPS to
-GitHub's release, which a manifest from the same origin cannot add to.
+`MANIFEST` comes first and is checked before any store byte: its sha256 must be the one `PIN`
+names and its schema version this genokeeper's `SCHEMA_VERSION`. The adversary is whoever can
+replace the release's assets; the anchor is `PIN`, inside the installed package, which those
+assets cannot move (each repackaged demo gets a release of its own, CONTRIBUTING). Each file is
+streamed into `<name>.part` with its sha256 computed on the way and renamed to its final name
+only when that matches the manifest's.
 
 The folder (`install`'s docstring lists it) is marked by `DEMO_MARKER`, so `load_paths` reads
 its own `lab/` whatever `$GENOKEEPER_HOME` says. An existing folder whose marker is not a demo
@@ -22,6 +23,8 @@ import shutil
 import sys
 import urllib.request
 from collections.abc import Callable
+from importlib.resources import files
+from importlib.resources.abc import Traversable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -38,7 +41,8 @@ from genokeeper.store.db import SCHEMA_VERSION, connect, export_snapshots
 if TYPE_CHECKING:
     from genokeeper.cli import Subparsers
 
-DEMO_BASE = "https://github.com/genokeeper/hg002-demo/releases/download/hg002/"
+# `<release URL> <its manifest's sha256>`, set at each release (outside the analyser identity).
+PIN: Traversable = files("genokeeper").joinpath("resources", "demo", "release.pin")
 TIMEOUT = 60  # seconds for any one network read
 _CHUNK = 1 << 20
 _MANIFEST_MAX = 1 << 20
@@ -79,15 +83,27 @@ def _open(url: str) -> http.client.HTTPResponse:
     return urllib.request.urlopen(request, timeout=TIMEOUT)
 
 
-def _manifest(base: str) -> tuple[bytes, dict[str, str]]:
+def pinned() -> tuple[str, str]:
+    """The demo release this genokeeper installs, and its manifest's sha256 (`PIN`)."""
+    base, sha256 = PIN.read_text(encoding="ascii").split()
+    return base, sha256
+
+
+def _manifest(base: str, sha256: str | None) -> tuple[bytes, dict[str, str]]:
     """The manifest's bytes and the sha256 it names for the store and the refresh log;
-    refuse one whose schema version is not this genokeeper's."""
+    refuse one whose own sha256 is not `sha256` (None: no pin) or whose schema version is
+    not this genokeeper's."""
     url = base + MANIFEST
     try:
         with _open(url) as response:
             body = response.read(_MANIFEST_MAX)
     except (OSError, http.client.HTTPException) as e:
         raise DemoRefused(f"could not download {url}: {e}") from e
+    if sha256 is not None and hashlib.sha256(body).hexdigest() != sha256:
+        raise DemoRefused(
+            f"{url} is not the manifest genokeeper {__version__} pins (its sha256 differs);"
+            " nothing was installed"
+        )
     try:
         manifest: dict[str, Any] = json.loads(body)
         schema = manifest["schema_version"]
@@ -241,7 +257,7 @@ def _foreign(folder: Path) -> bool:
     )
 
 
-def install(folder: Path, *, base: str = DEMO_BASE) -> Path:
+def install(folder: Path, *, base: str, manifest_sha256: str | None = None) -> Path:
     """Write the demo folder at `folder` from the release at `base`; return `folder`:
     `DEMO_MARKER` (the manifest), `reports/` (the store and its snapshots), `lab/` (the
     refresh-log record), `dashboard.html` with the frame, `pyproject.toml`
@@ -254,7 +270,7 @@ def install(folder: Path, *, base: str = DEMO_BASE) -> Path:
             f"{folder} holds something else and is not a demo folder (no {DEMO_MARKER});"
             " choose another with --dir"
         )
-    manifest, sums = _manifest(base)
+    manifest, sums = _manifest(base, manifest_sha256)
     folder.mkdir(parents=True, exist_ok=True)
     store = folder / "reports" / STORE_FILE
     _download(base + STORE_FILE, sums[STORE_FILE], store, size_line=True, check=_inert)
@@ -287,7 +303,8 @@ def install(folder: Path, *, base: str = DEMO_BASE) -> Path:
 def _command(args: argparse.Namespace) -> int:
     folder = Path(args.dir).expanduser().absolute()
     try:
-        install(folder, base=DEMO_BASE)
+        base, sha256 = pinned()
+        install(folder, base=base, manifest_sha256=sha256)
     except (DemoRefused, RunNotFound, OSError) as e:
         print(f"{_SAY}: {e}", file=sys.stderr)
         return 2

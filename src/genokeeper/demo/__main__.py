@@ -6,22 +6,26 @@ import shlex
 import sys
 from pathlib import Path
 
+from genokeeper import __version__
+from genokeeper.checksum import sha256_file
 from genokeeper.config import load_paths
 from genokeeper.demo import MANIFEST, SHIPPED
 from genokeeper.demo.build import BuildRefused, build
 from genokeeper.demo.package import Leak, package, private_id_file
 from genokeeper.pipeline import RunRefused
 
-# Where the files go once written, each named (never OUT/*): the demo repository's moving
-# release, created once, then the Pages workflow that checks them and deploys them.
+# Where the files go once written, each named (never OUT/*): a release of their own, never
+# replaced (an installed genokeeper pins it), its pin, then the Pages workflow that checks them
+# against it and deploys them.
 _PUBLISH = (
     (
-        "first publish",
-        'gh release create hg002 --repo genokeeper/hg002-demo --title "HG002 demo" {files}',
+        "publish",
+        "gh release create {tag} --repo genokeeper/hg002-demo --title {tag} {files}",
     ),
-    ("later", "gh release upload hg002 --repo genokeeper/hg002-demo {files} --clobber"),
-    ("then", "gh workflow run pages.yml --repo genokeeper/genokeeper"),
+    ("pin, committed before the wheel is built", "echo {pin} > {pin_file}"),
+    ("then, from main", "gh workflow run pages.yml --repo genokeeper/genokeeper"),
 )
+_RELEASES = "https://github.com/genokeeper/hg002-demo/releases/download/"
 
 
 def _package(args: argparse.Namespace) -> int:
@@ -38,8 +42,12 @@ def _package(args: argparse.Namespace) -> int:
         return 2
     print(f"genokeeper demo package: wrote {out}; to publish:")
     files = " ".join(shlex.quote(str(out / name)) for name in (MANIFEST, *SHIPPED))
+    tag = f"hg002-{__version__}"
+    pin = shlex.quote(f"{_RELEASES}{tag}/ {sha256_file(out / MANIFEST)}")
+    pin_file = "src/genokeeper/resources/demo/release.pin"
     for when, command in _PUBLISH:
-        print(f"  {when}: {command.format(files=files)}")
+        said = command.format(files=files, tag=tag, pin=pin, pin_file=pin_file)
+        print(f"  {when}: {said}")
     return 0
 
 

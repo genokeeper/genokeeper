@@ -56,8 +56,8 @@ bash scripts/check_no_genome_data.sh --tracked
 - A new download is pinned by checksum: a sha256 written in the script, or the md5 its
   publisher lists when that is the only digest it gives (NCBI's, ClinVar's, Zenodo's and the
   cloud buckets' listings), never an md5 computed here; the one exception is `genokeeper demo`'s
-  download, whose sha256 comes from the release's manifest (`demo/install.py` says why). HTTPS
-  carries every download. A new tool runs in a container started with
+  download, whose files' sha256 come from the release's manifest, itself pinned in the package
+  (`demo/install.py`). HTTPS carries every download. A new tool runs in a container started with
   `--network none` (`run_container` in `src/genokeeper/containers.py`). Anything that sends data off
   the machine needs a row in README, "Privacy and network", and a reason it cannot run locally.
 - A new data source or tool states its licence in `docs/reference.md`; terms a user must
@@ -86,17 +86,15 @@ file is attached to a release of this repository (Zenodo would archive it):
    empty root (105 GB and a 20 GB margin), less what a resumed build's root already holds.
 2. `python -m genokeeper.demo package OUT` writes the store, the three pages, the refresh log
    and `manifest.json` into an empty OUT, and refuses when a path of the maintainer's machine
-   is in any of them. It prints the next two commands with the six files named and quoted.
-3. Publish those six files by name, never `OUT/*`, which would upload whatever else OUT holds.
-   The first time, the repository needs a first commit (`gh release create` refuses an empty
-   one); then `gh release create hg002 --repo genokeeper/hg002-demo --title "HG002 demo"`
-   followed by the files creates the moving release `hg002`; after that,
-   `gh release upload hg002 --repo genokeeper/hg002-demo` followed by the files and
-   `--clobber` replaces its assets. The files are `"OUT/manifest.json"`,
-   `"OUT/genomelab.duckdb"`, `"OUT/index.html"`, `"OUT/dashboard.html"`,
-   `"OUT/calibration.html"` and `"OUT/refresh-log.jsonl"`.
-4. `gh workflow run pages.yml --repo genokeeper/genokeeper` checks the pages against the
-   manifest and deploys them to GitHub Pages. The share image `docs/demo/site/social.png`, when
+   is in any of them. It prints the next three commands with the files named and quoted.
+3. Publish those files by name, never `OUT/*`, which would upload whatever else OUT holds, to
+   a release of their own, `hg002-<version>`, which is never replaced: an installed
+   genokeeper keeps the pin it was built with. Then write the pin
+   (`src/genokeeper/resources/demo/release.pin`: the release's URL and the manifest's sha256)
+   and commit it before the wheel is built; `genokeeper demo` refuses any other manifest.
+4. `gh workflow run pages.yml --repo genokeeper/genokeeper`, once the pin is on main, checks
+   the manifest against the pin and the pages against the manifest, and deploys them to
+   GitHub Pages. The share image `docs/demo/site/social.png`, when
    committed, is added to the site.
 
 ## Licence

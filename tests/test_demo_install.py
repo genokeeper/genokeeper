@@ -4,6 +4,7 @@ manifest, and written into a folder Claude Code can work in."""
 import hashlib
 import html
 import json
+import re
 import shlex
 import shutil
 import tomllib
@@ -35,6 +36,31 @@ def _copy(site: Path, tmp_path: Path) -> Path:
 
 def _files(folder: Path) -> list[str]:
     return sorted(str(p.relative_to(folder)) for p in folder.rglob("*"))
+
+
+def _pin(monkeypatch: pytest.MonkeyPatch, site: Path, base: str) -> None:
+    """`genokeeper demo` pinned to `site`'s manifest at `base`."""
+    sha256 = hashlib.sha256((site / MANIFEST).read_bytes()).hexdigest()
+    monkeypatch.setattr(inst, "pinned", lambda: (base, sha256))
+
+
+def test_the_package_pins_a_release_and_its_manifest() -> None:
+    base, sha256 = inst.pinned()
+    assert base.startswith(
+        "https://github.com/genokeeper/hg002-demo/releases/download/"
+    )
+    assert base.endswith("/") and re.fullmatch(r"[0-9a-f]{64}", sha256)
+
+
+def test_a_manifest_the_package_does_not_pin_is_refused(
+    site: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A release whose assets were replaced: the manifest's own sha256 is not the pin."""
+    folder = tmp_path / "d"
+    with serve(site) as base:
+        monkeypatch.setattr(inst, "pinned", lambda: (base, "0" * 64))
+        assert cli.main(["demo", "--dir", str(folder)]) == 2
+    assert not folder.exists()
 
 
 def test_install_writes_folder(site: Path, tmp_path: Path) -> None:
@@ -155,7 +181,7 @@ def test_install_refuses_foreign_folder(
     with serve(site) as base:
         with pytest.raises(DemoRefused, match=r"not a demo folder \(no demo\.json\)"):
             install(folder, base=base)
-        monkeypatch.setattr(inst, "DEMO_BASE", base)
+        _pin(monkeypatch, site, base)
         assert cli.main(["demo", "--dir", str(folder)]) == 2
     assert _files(folder) == sorted(["notes.txt", *([DEMO_MARKER] if marker else [])])
     assert (folder / "notes.txt").read_text() == "mine"
@@ -204,7 +230,7 @@ def test_install_prints_next_steps(
     the size line on stderr, no progress line without a terminal, no bootstrap to run."""
     folder = tmp_path / "d"
     with serve(site) as base:
-        monkeypatch.setattr(inst, "DEMO_BASE", base)
+        _pin(monkeypatch, site, base)
         assert cli.main(["demo", "--dir", str(folder)]) == 0
     out, err = capsys.readouterr()
     lines = out.splitlines()

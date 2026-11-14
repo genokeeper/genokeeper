@@ -1,7 +1,8 @@
 name: Pages
 
 # The HG002 demo site: the pages `python -m genokeeper.demo package` wrote, uploaded to the
-# release `hg002` of genokeeper/hg002-demo, checked against the manifest and deployed as they are.
+# genokeeper/hg002-demo release that `release.pin` names, checked against the manifest whose
+# sha256 it pins and deployed as they are.
 on:
   workflow_dispatch:
 
@@ -21,26 +22,31 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      # Only the share image is wanted from the repository.
+      # Only the share image and the pin are wanted from the repository.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          sparse-checkout: docs/demo/site
+          sparse-checkout: |
+            docs/demo/site
+            src/genokeeper/resources/demo
       - name: Download the pages and check them against the manifest
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir site
-          gh release download hg002 --repo genokeeper/hg002-demo --dir site \
+          read -r url pinned < src/genokeeper/resources/demo/release.pin
+          export TAG="$(basename "$url")"
+          gh release download "$TAG" --repo genokeeper/hg002-demo --dir site \
             --pattern manifest.json
+          echo "$pinned  site/manifest.json" | sha256sum --check --strict
           python3 -c '
-          import hashlib, json, subprocess, sys
+          import hashlib, json, os, subprocess, sys
           files = json.load(open("site/manifest.json"))["files"]
           pages = [name for name in files if name.endswith(".html")]
           if not pages:
               sys.exit("manifest.json names no .html page: nothing to deploy")
           subprocess.run(
-              ["gh", "release", "download", "hg002", "--repo", "genokeeper/hg002-demo"]
+              ["gh", "release", "download", os.environ["TAG"], "--repo", "genokeeper/hg002-demo"]
               + ["--dir", "site"] + [a for name in pages for a in ("--pattern", name)],
               check=True,
           )
