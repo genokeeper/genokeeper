@@ -25,7 +25,7 @@ it is a finding under drugs; at dosage 0 a non-finding.
 and the gene's report rule in `acmg_sf_v3.3.tsv`.
 """
 
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 
 from genokeeper.config import Grading
@@ -39,7 +39,6 @@ from genokeeper.genelists import (
     carrier_genes,
     gene_mode,
 )
-from genokeeper.pgx.pharmcat import PHARMCAT_GENES
 from genokeeper.store.db import Kind, Topic, Validity
 
 BASE_CLASSES = frozenset(
@@ -391,14 +390,18 @@ def sf_actionable(
 
 
 def drug_response_reason(
-    gene: str, vid: str | None, clinpgx: Mapping[str, tuple[str, str]]
+    gene: str,
+    vid: str | None,
+    clinpgx: Mapping[str, tuple[str, str]],
+    gene_calls: Collection[str],
 ) -> str:
     """What grades a drug_response claim in `gene` at allele `vid` (A3s): the ClinPGx
-    annotation `clinpgx` holds there (`evidence.pharmgkb.by_vid`), else a PharmCAT gene's call."""
+    annotation `clinpgx` holds there (`evidence.pharmgkb.by_vid`), else the run's PharmCAT
+    call of the gene, when `gene_calls` holds it."""
     found = clinpgx.get(vid) if vid else None
     if found is not None:
         return f"graded on ClinPGx's annotation {found[0]} (level {found[1]})"
-    if gene in PHARMCAT_GENES:
+    if gene in gene_calls:
         return f"graded on the {gene} gene call"
     return NO_CLINPGX_REASON
 
@@ -421,6 +424,7 @@ def grade_clinvar(
     validity_matched: bool = False,
     validity_source: str | None = None,
     clinpgx: Mapping[str, tuple[str, str]] | None = None,
+    gene_calls: Collection[str] = frozenset(),
 ) -> ValidityGrade:
     """Grade one ClinVar claim at a site where the user has `dosage` copies of the allele.
 
@@ -433,7 +437,8 @@ def grade_clinvar(
     `gene_validity` is the ClinGen classification `match_curation` gives the claim, and
     `validity_matched` whether a curation of the claim's own disease gave it;
     `validity_source` who gave it, named in the reasons when given (GenCC's, slice 3f).
-    A drug_response claim's reason is `drug_response_reason` of its `vid` and `clinpgx`.
+    A drug_response claim's reason is `drug_response_reason` of its `vid`, `clinpgx` and
+    `gene_calls`.
     """
     if dosage not in _DOSAGES:
         raise ValueError(f"dosage {dosage!r}: expected one of {sorted(_DOSAGES)}")
@@ -445,7 +450,7 @@ def grade_clinvar(
     elif cls in _UNGRADED:
         level, level_reasons = None, []
     elif cls == "drug_response":
-        reason = drug_response_reason(gene, vid, clinpgx or {})
+        reason = drug_response_reason(gene, vid, clinpgx or {}, gene_calls)
         level, level_reasons = Validity.LIMITED, [reason]
     elif parsed.risk_part:
         # CLNREVSTAT reviews the germline part, not the risk term: grade with no stars.

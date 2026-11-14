@@ -1187,7 +1187,8 @@ def test_validity_source_named_in_every_validity_reason() -> None:
 
 
 # Owner's ruling A3s: one authority per claim, never the stars. A ClinPGx annotation kept
-# at the claim's allele first, then a gene PharmCAT calls, else limited with rule 3's reason.
+# at the claim's allele first, then a gene this run's PharmCAT calls (VKORC1 here, not
+# CYP2C19), else limited with rule 3's reason.
 DRUG_RULES = [
     ("KIF6", "GRCh38:chr1:1:G:A", {}, NO_CLINPGX_REASON),
     (
@@ -1197,6 +1198,7 @@ DRUG_RULES = [
         "graded on ClinPGx's annotation 1000000002 (level 2A)",
     ),
     ("VKORC1", "GRCh38:chr1:3:G:A", {}, "graded on the VKORC1 gene call"),
+    ("CYP2C19", "GRCh38:chr1:5:G:A", {}, NO_CLINPGX_REASON),
     (
         "F5",
         "GRCh38:chr1:4:G:A",
@@ -1227,6 +1229,7 @@ def test_drug_response_one_authority(
             faf_grpmax=0.4,
             vid=vid,
             clinpgx=clinpgx,
+            gene_calls={"VKORC1"},
         )
         assert (grade.kind, grade.level, grade.topic, grade.reason) == (
             Kind.FINDING,
@@ -1245,7 +1248,9 @@ def test_drug_response_dosage_zero_non_finding() -> None:
         Validity.LIMITED,
         None,
     )
-    unknown = _grade(clnsig="drug_response", gene="CYP2C19", dosage="unknown")
+    unknown = _grade(
+        clnsig="drug_response", gene="CYP2C19", dosage="unknown", gene_calls={"CYP2C19"}
+    )
     assert (unknown.kind, unknown.level, unknown.topic, unknown.reason) == (
         Kind.UNASSESSED,
         Validity.LIMITED,

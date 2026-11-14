@@ -79,6 +79,9 @@ class RunContext:
     # vid -> the ClinPGx annotation the run stores at that allele, its id and level
     # (`evidence.pharmgkb.by_vid`), which grades a ClinVar drug_response claim at it.
     clinpgx: Mapping[str, tuple[str, str]] = field(default_factory=dict)
+    # The genes this run's PharmCAT report calls, unresolved ones left out
+    # (`evidence.pgx.unresolved`): a drug_response claim there is graded on the gene's call.
+    gene_calls: frozenset[str] = frozenset()
     # Gene -> who gave its validity when it is not ClinGen (`evidence.gencc.merge`).
     validity_source: Mapping[str, str] = field(default_factory=dict)
 

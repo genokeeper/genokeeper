@@ -310,7 +310,12 @@ from genokeeper.evidence.gwas import (
     panel_alleles,
 )
 from genokeeper.evidence.gwas import locate as locate_gwas
-from genokeeper.evidence.pgx import CPIC_FILES, load_cpic_alleles, load_cpic_levels
+from genokeeper.evidence.pgx import (
+    CPIC_FILES,
+    load_cpic_alleles,
+    load_cpic_levels,
+    unresolved,
+)
 from genokeeper.evidence.pharmgkb import DOWNLOADS as PHARMGKB_DOWNLOADS
 from genokeeper.evidence.pharmgkb import (
     PHARMGKB_DROP_REASONS,
@@ -5488,6 +5493,11 @@ def run_genome(
                 source_version=release,
                 cpic_levels=pgx.cpic_levels,
                 clinpgx=by_vid(located),
+                gene_calls=frozenset(
+                    r.gene
+                    for r in results
+                    if unresolved(r, pgx_source.outside.get(r.gene)) is None
+                ),
                 validity_source=validity_source,
             )
             store_sources(
