@@ -617,7 +617,8 @@ def _transcript() -> str:
 
 
 def _withheld(con: duckdb.DuckDBPyConnection, run_id: str) -> int:
-    """The values a calibration table withheld in the run: each a claim's `WITHHELD` entry."""
+    """The values the run withheld (a calibration table's, a band no table measured, a
+    megabase deletion the depth contradicts): each a claim's `WITHHELD` entry."""
     found = con.execute(
         "SELECT sum(json_array_length(claim, '$.withheld')) FROM statement"
         " WHERE run_id = ? AND json_exists(claim, '$.withheld')",
@@ -760,8 +761,9 @@ def _landing(
             ),
             "withheld": html.escape(
                 f"This run holds {_count(_withheld(con, run['run_id']), 'withheld value')}:"
-                " a calibration table could not measure the item, so it is not graded and"
-                " keeps the table's reason."
+                " each is not graded and keeps its reason (a calibration table could not"
+                " measure the item, or a deletion of a megabase or more leaves the read depth"
+                " as it is)."
             ),
             "cite": (
                 f"Genokeeper {html.escape(version)}. "
