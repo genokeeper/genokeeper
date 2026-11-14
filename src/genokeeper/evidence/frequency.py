@@ -66,6 +66,7 @@ import duckdb
 
 from genokeeper.checksum import sha256_file
 from genokeeper.config import Grading, load_grading, load_paths, unmasked_fasta
+from genokeeper.store.db import sql_string
 from genokeeper.tools import ToolFailed, ToolMissing, gated
 from genokeeper.variants.key import make_vid
 
@@ -584,10 +585,6 @@ def _check_resume(url: str, response: Any, start: int, total: int) -> None:
         )
 
 
-def _sql_path(path: Path) -> str:
-    return "'" + str(path).replace("'", "''") + "'"
-
-
 def _write_parquet(rows_tsv: Path, out: Path, tiers: TwoTier | None) -> int:
     """The query's rows as the table's columns, written to `out`; the rows written."""
     keep = "TRUE"
@@ -606,14 +603,14 @@ def _write_parquet(rows_tsv: Path, out: Path, tiers: TwoTier | None) -> int:
         con.execute(
             "COPY (SELECT 'GRCh38:' || r.chrom || ':' || r.pos || ':' || upper(r.ref)"
             " || ':' || upper(r.alt) AS vid, r.faf AS faf95_max, r.gen_anc"
-            f" FROM read_csv({_sql_path(rows_tsv)}, delim = '\t', header = false,"
+            f" FROM read_csv({sql_string(rows_tsv)}, delim = '\t', header = false,"
             " quote = '', escape = '', nullstr = '.', auto_detect = false, columns ="
             " {'chrom': 'VARCHAR', 'pos': 'BIGINT', 'ref': 'VARCHAR', 'alt': 'VARCHAR',"
             " 'faf': 'DOUBLE', 'gen_anc': 'VARCHAR'}) r"
-            f" WHERE {keep}) TO {_sql_path(out)} (FORMAT parquet)"
+            f" WHERE {keep}) TO {sql_string(out)} (FORMAT parquet)"
         )
         found = con.execute(
-            f"SELECT count(*) FROM read_parquet({_sql_path(out)})"
+            f"SELECT count(*) FROM read_parquet({sql_string(out)})"
         ).fetchone()
     return int(found[0]) if found is not None else 0
 

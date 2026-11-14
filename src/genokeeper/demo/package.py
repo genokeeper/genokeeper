@@ -48,7 +48,7 @@ from genokeeper.calibrate.table import CalibrationTable
 from genokeeper.calibrate.tables import REPORT, TABLES, folder
 from genokeeper.checksum import sha256_file
 from genokeeper.config import _REPO, DEMO_MARKER, Paths, load_grading
-from genokeeper.dashboard import _banner, _sha256, messages, write_dashboard
+from genokeeper.dashboard import _sha256, messages, write_dashboard
 from genokeeper.demo import (
     MANIFEST,
     REFRESH_LOG_FILE,
@@ -80,6 +80,7 @@ from genokeeper.store.db import (
     Validity,
     connect,
     export_snapshots,
+    sql_string,
 )
 
 DOI = "10.5281/zenodo.24134245"
@@ -190,10 +191,6 @@ def _quote(name: str) -> str:
     return '"' + name.replace('"', '""') + '"'
 
 
-def _string(text: str) -> str:
-    return "'" + text.replace("'", "''") + "'"
-
-
 def _columns(con: duckdb.DuckDBPyConnection) -> list[tuple[str, str, str, str]]:
     """Each column of each table of the database, in any schema: (table as named in a
     query, its name, the column, its type)."""
@@ -222,7 +219,7 @@ def scrub(con: duckdb.DuckDBPyConnection, replacements: Mapping[str, str]) -> No
 
     def rewritten(expr: str) -> str:
         for old, new in order:
-            expr = f"replace({expr}, {_string(old)}, {_string(new)})"
+            expr = f"replace({expr}, {sql_string(old)}, {sql_string(new)})"
         return expr
 
     for table, _, column, kind in _columns(con):
@@ -235,7 +232,7 @@ def scrub(con: duckdb.DuckDBPyConnection, replacements: Mapping[str, str]) -> No
         if value is None:
             continue
         held = " OR ".join(
-            f"contains(CAST({c} AS VARCHAR), {_string(old)})" for old, _ in order
+            f"contains(CAST({c} AS VARCHAR), {sql_string(old)})" for old, _ in order
         )
         con.execute(f"UPDATE {table} SET {c} = {value} WHERE {held}")
 
@@ -323,12 +320,12 @@ def _fill(template: str, parts: Mapping[str, str]) -> str:
     one pass: a filled-in part is never searched for placeholders."""
     folder_ = files("genokeeper").joinpath("resources", "demo")
     css = folder_.joinpath("site.css").read_text(encoding="utf-8")
-    frame = _banner((FRAME_SUMMARY, FRAME))
-    frame = frame.replace("</details>", f"<p>{_note(template)}</p></details>")
+    summary, frame = html.escape(FRAME_SUMMARY), html.escape(FRAME)
     every = {
         "css": css,
         "csp": f"default-src 'none'; style-src 'sha256-{_sha256(css)}'",
-        "frame": f'<div class="frame">{frame}</div>',
+        "frame": f'<div class="frame"><details class="frame-note"><summary>{summary}'
+        f"</summary><p>{frame}</p><p>{_note(template)}</p></details></div>",
         "header": header(),
         **parts,
     }
@@ -819,7 +816,7 @@ def _write_fresh(source: Path, target: Path) -> None:
     try:
         name = con.execute("SELECT current_database()").fetchone()
         assert name is not None
-        con.execute(f"ATTACH {_string(str(source))} AS scratch (READ_ONLY)")
+        con.execute(f"ATTACH {sql_string(source)} AS scratch (READ_ONLY)")
         con.execute(f"COPY FROM DATABASE scratch TO {_quote(str(name[0]))}")
         con.execute("DETACH scratch")
         con.execute("CHECKPOINT")

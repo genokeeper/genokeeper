@@ -134,6 +134,11 @@ def check_schema_version(con: duckdb.DuckDBPyConnection, path: Path) -> int | No
     return found
 
 
+def sql_string(text: object) -> str:
+    """`text` (a path's `str`) as a SQL string literal."""
+    return "'" + str(text).replace("'", "''") + "'"
+
+
 def connect(path: Path) -> duckdb.DuckDBPyConnection:
     """Open (or create) the store at `path`, create its schema if missing and record
     `SCHEMA_VERSION` in a new one; refuse, untouched, a store another schema version

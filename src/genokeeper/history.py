@@ -37,7 +37,7 @@ import duckdb
 
 from genokeeper.query import OWNS_GENE_CALL, Filters, query
 from genokeeper.sources.research import is_research_layer
-from genokeeper.store.db import TABLES, Kind
+from genokeeper.store.db import TABLES, Kind, sql_string
 
 COMPARED: tuple[str, ...] = (
     "kind",
@@ -277,14 +277,10 @@ def _canonical(effect: str | None) -> str | None:
     return None if effect is None else json.dumps(json.loads(effect), sort_keys=True)
 
 
-def _literal(path: str) -> str:
-    return "'" + path.replace("'", "''") + "'"
-
-
 def _select(root: Path, run_id: str, *, owner_only: bool) -> str:
     """A query for `run_id`'s statements in `State`'s columns; `owner_only` leaves out the
     non-findings."""
-    path = {t: _literal(_parquet(root, run_id, t)) for t in _REQUIRED if t != "run"}
+    path = {t: sql_string(_parquet(root, run_id, t)) for t in _REQUIRED if t != "run"}
     where = f" WHERE s.kind <> '{Kind.NON_FINDING}'" if owner_only else ""
     return (
         "SELECT s.statement_id, s.gene, s.vid, v.rsid, s.kind, s.validity,"
@@ -543,7 +539,7 @@ def findings(root: Path, run_id: str, f: Filters) -> list[dict[str, Any]]:
         for table in TABLES:
             path = root / run_id / f"{table}.parquet"
             rows = (
-                f" UNION ALL BY NAME SELECT * FROM read_parquet({_literal(str(path))})"
+                f" UNION ALL BY NAME SELECT * FROM read_parquet({sql_string(path)})"
                 if path.is_file()
                 else ""
             )
