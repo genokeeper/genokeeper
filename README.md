@@ -104,15 +104,14 @@ a short gist and a plain-language explanation. The page labels both with the mod
 them and the sources it was given.
 
 The invented genome below, made to touch every topic, shows 2,405 findings in the loosest cell
-and 18 at the default thresholds. Its page, recording and screenshot are of an earlier version,
-with two sliders where the matrix now is.
+and 18 at the default thresholds.
 
 ![The demo dashboard: the chosen cell moves from the matrix's loosest to the default, the count falls from 2,405 findings to 18, then two rows open with explanations written by a language model](docs/demo/dashboard.gif)
 
 To try the page yourself, download [docs/demo/dashboard.html](docs/demo/dashboard.html) and open
 it in a browser. It loads nothing from the network.
 
-![The demo dashboard at its default thresholds: findings with genotype-reliability and evidence bars, the topic chips and the two sliders of an earlier version](docs/demo/dashboard.png)
+![The demo dashboard at its default thresholds: the topic chips, the threshold matrix, what stands out and the first findings with genotype-reliability and evidence bars](docs/demo/dashboard.png)
 
 **Language.** Text is in English by default. `GENOKEEPER_LANG=ru`, or `--lang ru` on
 `dashboard` and `explain`, switches the dashboard, the explanations and the update notices to
