@@ -391,8 +391,8 @@ def payload(
 ) -> dict[str, Any]:
     """The page's data in `lang` for `run_id` (None: the latest run): its messages
     (`messages` less the carrier lists), every finding once, by id (`items`), each with its
-    explanation from `cache_dir` (by `style`'s model in its tone) or null, its search string and its dates, and one view per
-    reliability, validity and topic (or none) combination;
+    explanation from `cache_dir` (by `style`'s model in its tone) or null, its search
+    string and its dates, and one view per reliability, validity and topic (or none);
     and `changes`, the Changes tab's, from `reports/snapshots` and the refresh log in
     `lab` (without `reports`, no comparison); `excluded`, the run's exclusions; `screened`,
     its other stage-3 watch items, each with its explanation or null, and non-findings."""
