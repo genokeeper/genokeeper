@@ -41,7 +41,7 @@ from genokeeper.demo.frame import (
     TABLE_SAMPLES,
 )
 from genokeeper.demo.install import QUESTIONS
-from genokeeper.demo.package import Leak, package, scan_bytes
+from genokeeper.demo.package import Leak, package, scan_bytes, scan_paths
 from genokeeper.evidence.medlineplus import MEDLINEPLUS_FILE
 from genokeeper.explain import LOOSEST, explain, newest_medlineplus
 from genokeeper.query import Filters, open_store, query
@@ -194,6 +194,25 @@ def test_scan_refuses_any_absolute_path_left(tmp_path: Path, planted: str) -> No
     with pytest.raises(Leak, match=r"^refusing to package: run\.inputs: a path$"):
         package(lab, tmp_path / "out", home=home, private_ids=None, no_private_ids=True)
     assert os.listdir(tmp_path / "out") == []
+
+
+@pytest.mark.parametrize(
+    ("text", "leaks"),
+    [
+        ("<td>/Users/me/x</td>", True),
+        ("file:///Users/me/x", True),
+        ('{"vep": "cache:/opt/vep/x"}', True),
+        ("/Users/Михаил/x", True),
+        ("&lt;lab&gt;/a/b, <lab>/vep/c, \\u003cdemo>/raw/r1.fq.gz", False),
+        ("https://pubmed.ncbi.nlm.nih.gov/1/, ~/genokeeper-demo, 1/2/3 *1/*2", False),
+    ],
+)
+def test_scan_paths_after_any_character(tmp_path: Path, text: str, leaks: bool) -> None:
+    """A path after a tag, a scheme, a key or in any script is one; a placeholder's own
+    path, a web URL and the demo folder's default are not."""
+    page = tmp_path / "page.html"
+    page.write_text(text, encoding="utf-8")
+    assert bool(scan_paths(page)) == leaks
 
 
 def test_scrub_covers_list_columns(tmp_path: Path) -> None:

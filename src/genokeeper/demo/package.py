@@ -264,16 +264,21 @@ def scan_bytes(path: Path, needles: Mapping[str, str]) -> list[str]:
     ]
 
 
-# A path from a root of two characters or more, or from `~/`: never after a character that
-# makes it part of a word, a URL (`https://…`), a placeholder (`<lab>/…`, `&gt;/…`) or a
-# fraction; the demo folder's own default (`FOLDER`), which the landing tells users to open,
-# is not one.
-PATH = re.compile(rb"(?<![\w.:;/~<>%-])/[\w.@+-]{2,}/[\w.@+-]+|(?<![\w/])~/")
+# What may stay, taken out before `PATH` looks: a placeholder with its path (`<lab>/…`, and
+# as HTML or the dashboard's data escape it), a web URL, and the demo folder's own default
+# (`FOLDER`), which the landing tells users to open.
+_ALLOWED = re.compile(
+    r"(?:<|&lt;|\\u003c)(?:lab|demo|genokeeper)(?:>|&gt;)/[^\s\"'<>\\]*"
+    rf"|https?://[^\s\"'<>\\]+|{re.escape(FOLDER)}"
+)
+# Any other path from a root of two characters or more (in any script), or from `~/`: only
+# inside a word or a fraction is it not one.
+PATH = re.compile(r"(?<![\w.-])/[\w.@+-]{2,}/[\w.@+-]+|(?<![\w/])~/")
 
 
 def scan_paths(path: Path) -> list[str]:
-    """`<file name>: a path` when the text file holds one (`PATH`)."""
-    text = path.read_bytes().replace(FOLDER.encode(), b"")
+    """`<file name>: a path` when the text file holds one (`PATH`) outside `_ALLOWED`."""
+    text = _ALLOWED.sub(" ", path.read_text(encoding="utf-8", errors="replace"))
     return [f"{path.name}: a path"] if PATH.search(text) else []
 
 
