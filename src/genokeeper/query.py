@@ -666,8 +666,9 @@ def open_store(path: Path, *, files: bool = False) -> duckdb.DuckDBPyConnection:
     if not path.is_file():
         raise RunNotFound(f"no findings store at {path}")
     try:
-        config = {"enable_external_access": files}
-        con = duckdb.connect(str(path), read_only=True, config=config)
+        con = duckdb.connect(
+            str(path), read_only=True, config={"enable_external_access": files}
+        )
     except duckdb.Error as e:
         raise RunNotFound(f"cannot open the findings store at {path}: {e}") from e
     try:
