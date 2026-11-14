@@ -31,7 +31,9 @@ DEMO_MARKER = "demo.json"
 
 def demo_lab(lab: Path | None) -> bool:
     """Whether `lab` is a demo folder's own `lab/` (`load_paths`), which has no update check."""
-    return lab is not None and (lab.parent / DEMO_MARKER).is_file()
+    return (
+        lab is not None and lab.name == "lab" and (lab.parent / DEMO_MARKER).is_file()
+    )
 
 
 def skill_resource() -> Traversable:

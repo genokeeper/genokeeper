@@ -24,7 +24,7 @@ from genokeeper.calibrate.classes import BandTerms, ClassTable, Share, write_cla
 from genokeeper.calibrate.table import VERSION_KEYS, CalibrationTable
 from genokeeper.calibrate.tables import REPORT, TABLES, folder
 from genokeeper.config import GRADING_FILE, load_grading
-from genokeeper.dashboard import _sha256, messages
+from genokeeper.dashboard import csp_sha256, messages
 from genokeeper.demo import (
     MANIFEST,
     REFRESH_LOG_FILE,
@@ -681,7 +681,7 @@ def test_site_pages_load_nothing(tmp_path: Path) -> None:
             [SITE] if name == "index.html" else []
         )
         [style] = re.findall(r"<style>(.*?)</style>", page, re.DOTALL)
-        csp = f"default-src 'none'; style-src 'sha256-{_sha256(style)}'"
+        csp = f"default-src 'none'; style-src 'sha256-{csp_sha256(style)}'"
         assert f'<meta http-equiv="Content-Security-Policy" content="{csp}">' in page
 
 

@@ -991,3 +991,16 @@ def test_command_announces_each_fetch_and_a_refused_run(
     err = capsys.readouterr().err
     assert "grading the calls" in err
     assert f"the run was refused: {type(refused.value).__name__}" in err
+
+
+def test_an_unknown_tone_refuses_the_refresh_before_it_runs(
+    lab: Lab, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    def never(*_: Any, **__: Any) -> RefreshRecord:
+        raise AssertionError("the refresh ran")
+
+    monkeypatch.setattr(refresh, "refresh", never)
+    monkeypatch.setattr(refresh, "load_paths", lambda: lab.paths)
+    monkeypatch.setenv("GENOKEEPER_TONE", "lively")
+    assert cli.main(["refresh"]) == 2
+    assert "unknown tone 'lively'" in capsys.readouterr().err

@@ -367,7 +367,7 @@ def _text_matches(finding: dict[str, Any], text: str) -> bool:
     return any(wanted in searchable(field) for field in text_fields(finding))
 
 
-def _hidden_by(
+def hidden_by(
     finding: dict[str, Any], f: Filters, *, reliability: bool = True
 ) -> str | None:
     """The first filter `finding` fails, as its hidden-count reason, or None if it is kept;
@@ -574,7 +574,7 @@ def query(
     kept: dict[Kind, list[dict[str, Any]]] = {Kind.FINDING: [], Kind.UNASSESSED: []}
     for kind, prefix in ((Kind.FINDING, ""), (Kind.UNASSESSED, UNASSESSED_PREFIX)):
         for row in loaded.rows[kind]:
-            reason = _hidden_by(row, f, reliability=kind is Kind.FINDING)
+            reason = hidden_by(row, f, reliability=kind is Kind.FINDING)
             if reason is None:
                 kept[kind].append(row)
             else:

@@ -622,6 +622,11 @@ def _command(args: argparse.Namespace) -> int:
 
         print("\n".join(plan(paths)))
         return 0
+    try:
+        model, tone = style()  # refused before the run, not at its explain step
+    except ValueError as e:
+        print(f"genokeeper refresh: {e}", file=sys.stderr)
+        return 2
     script = paths.repo / "scripts" / "bootstrap.sh"
 
     def fetch(name: str) -> subprocess.CompletedProcess[str]:
@@ -662,7 +667,6 @@ def _command(args: argparse.Namespace) -> int:
     def explain_run(run_id: str) -> None:
         # As `genokeeper explain` does: only findings and stage-3 watch items without a
         # cached answer are asked, in the language, model and tone the environment chooses.
-        model, tone = style()
         with open_store(paths.reports / STORE_NAME) as con:
             findings = to_explain(con, run_id)
         medlineplus = newest_medlineplus(paths.lab)

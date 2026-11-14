@@ -625,6 +625,11 @@ def _explain_command(args: argparse.Namespace) -> int:
         for name, count in counts.items():
             print(f"{name}: {count}")
         print("\n".join(cost(results, counts)))
+        if (model, tone) != style():
+            print(
+                "the dashboard and refresh --explain use these only with"
+                f" GENOKEEPER_MODEL={model} GENOKEEPER_TONE={tone} set"
+            )
         return 1 if counts["failed"] else 0
     calls = 0
     for finding in findings:

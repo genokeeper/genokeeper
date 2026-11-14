@@ -48,7 +48,7 @@ from genokeeper.calibrate.table import CalibrationTable
 from genokeeper.calibrate.tables import REPORT, TABLES, folder
 from genokeeper.checksum import sha256_file
 from genokeeper.config import _REPO, DEMO_MARKER, Paths, load_grading
-from genokeeper.dashboard import _sha256, messages, write_dashboard
+from genokeeper.dashboard import csp_sha256, messages, write_dashboard
 from genokeeper.demo import (
     MANIFEST,
     REFRESH_LOG_FILE,
@@ -70,7 +70,7 @@ from genokeeper.pipeline import _newest_dated
 from genokeeper.query import (
     RESEARCH_ASSOCIATION,
     Filters,
-    _hidden_by,
+    hidden_by,
     open_store,
     query,
 )
@@ -330,7 +330,7 @@ def _fill(template: str, parts: Mapping[str, str]) -> str:
     summary, frame = html.escape(FRAME_SUMMARY), html.escape(FRAME)
     every = {
         "css": css,
-        "csp": f"default-src 'none'; style-src 'sha256-{_sha256(css)}'",
+        "csp": f"default-src 'none'; style-src 'sha256-{csp_sha256(css)}'",
         "frame": f'<div class="frame"><details class="frame-note"><summary>{summary}'
         f"</summary><p>{frame}</p><p>{_note(template)}</p></details></div>",
         "header": header(),
@@ -681,7 +681,7 @@ def _landing(
     # One query at the loosest filters; each cell keeps what its pair's filters keep.
     every = query(con, run["run_id"], LOOSEST)
     grid = [f for row in _grid() for f in row]
-    kept = {f: [x for x in every.findings if _hidden_by(x, f) is None] for f in grid}
+    kept = {f: [x for x in every.findings if hidden_by(x, f) is None] for f in grid}
     counts = {f: len(found) for f, found in kept.items()}
     research = every.hidden.get(RESEARCH_ASSOCIATION, 0)
     hero = _hero(kept[LOOSEST], explained)

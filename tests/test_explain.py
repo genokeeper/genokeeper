@@ -1205,10 +1205,15 @@ def test_the_model_reaches_the_call_the_key_and_the_entry_and_the_cost_is_summed
     command = ["explain", "--db", str(store), "--cache", str(cache), "--model", SONNET]
     assert main(command) == 0
     assert len(argvs) == 3 and all(a[a.index("--model") + 1] == SONNET for a in argvs)
-    assert capsys.readouterr().out.splitlines()[-3:] == [
+    assert capsys.readouterr().out.splitlines()[-4:] == [
         "calls: 3 made, 0 from the cache",
         "cost: $0.0300",  # RESULT's 0.01 each
         "tokens: 3 input, 6 output, 9 cache read, 12 cache creation",
+        # A style the environment does not set: the run says what shows its texts.
+        (
+            "the dashboard and refresh --explain use these only with"
+            f" GENOKEEPER_MODEL={SONNET} GENOKEEPER_TONE=plain set"
+        ),
     ]
     f, summaries = _findings(store)["clinvar:1"], newest_medlineplus(lab)
     text = prompt(f, grounding(f, summaries))

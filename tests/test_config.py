@@ -18,6 +18,7 @@ from genokeeper.config import (
     QcThresholds,
     RohThresholds,
     SexThresholds,
+    demo_lab,
     load_grading,
     load_paths,
 )
@@ -547,6 +548,11 @@ def test_demo_folder_lab_wins_over_home(
     (tmp_path / DEMO_MARKER).write_text("{}")
     monkeypatch.setenv("GENOKEEPER_HOME", "/elsewhere")
     assert load_paths(tmp_path).lab == tmp_path / "lab"
+    # Only the folder's own `lab/` is a demo lab, not a real lab beside a stray marker.
+    assert (demo_lab(tmp_path / "lab"), demo_lab(tmp_path / "genome-lab")) == (
+        True,
+        False,
+    )
 
 
 def test_home_moves_lab_outside_demo_folder(

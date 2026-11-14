@@ -77,7 +77,7 @@ from genokeeper.query import (
     OWNS_GENE_CALL,
     Filters,
     RunNotFound,
-    _hidden_by,
+    hidden_by,
     load,
     open_store,
     query,
@@ -160,7 +160,7 @@ def _trusted(root: Path, run_id: str) -> dict[str, frozenset[str]]:
     filters: a finding is trusted at a pair when the pair's filters keep it."""
     found = history.findings(root, run_id, LOOSEST)
     return {
-        _pair(f): frozenset(x["id"] for x in found if _hidden_by(x, f) is None)
+        _pair(f): frozenset(x["id"] for x in found if hidden_by(x, f) is None)
         for f in _PAIRS
     }
 
@@ -475,7 +475,7 @@ def payload(
     }
 
 
-def _sha256(text: str) -> str:
+def csp_sha256(text: str) -> str:
     return base64.b64encode(hashlib.sha256(text.encode()).digest()).decode()
 
 
@@ -497,8 +497,8 @@ def render(payload: dict[str, Any], banner: Sequence[str] | None = None) -> str:
     js = folder.joinpath("dashboard.js").read_text(encoding="utf-8")
     parts = {
         "csp": (
-            f"default-src 'none'; script-src 'sha256-{_sha256(js)}';"
-            f" style-src 'sha256-{_sha256(css)}'"
+            f"default-src 'none'; script-src 'sha256-{csp_sha256(js)}';"
+            f" style-src 'sha256-{csp_sha256(css)}'"
         ),
         "css": css,
         "js": js,

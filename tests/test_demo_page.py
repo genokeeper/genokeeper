@@ -5,7 +5,7 @@ browser block the script, and the page shows no findings."""
 import re
 from pathlib import Path
 
-from genokeeper.dashboard import _sha256  # pyright: ignore[reportPrivateUsage]
+from genokeeper.dashboard import csp_sha256
 
 PAGE = Path(__file__).resolve().parents[1] / "docs" / "demo" / "dashboard.html"
 
@@ -23,5 +23,5 @@ def test_the_demo_page_matches_its_csp() -> None:
     script = _one(html, "script")
     style = _one(html, "style")
     assert csp
-    assert f"script-src 'sha256-{_sha256(script)}'" in csp[1]
-    assert f"style-src 'sha256-{_sha256(style)}'" in csp[1]
+    assert f"script-src 'sha256-{csp_sha256(script)}'" in csp[1]
+    assert f"style-src 'sha256-{csp_sha256(style)}'" in csp[1]
