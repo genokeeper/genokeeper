@@ -526,9 +526,9 @@ def test_checkout_keeps_repo_root(
 ) -> None:
     checkout = _fake_checkout(tmp_path / "checkout")
     monkeypatch.setattr(config, "_REPO", checkout)
-    cwd = tmp_path / "elsewhere"
-    cwd.mkdir()
-    assert load_paths(cwd=cwd).repo == checkout
+    (tmp_path / "elsewhere").mkdir()
+    monkeypatch.chdir(tmp_path / "elsewhere")
+    assert load_paths().repo == checkout
 
 
 def test_outside_checkout_uses_cwd(
@@ -537,8 +537,8 @@ def test_outside_checkout_uses_cwd(
     empty = tmp_path / "site-packages"
     empty.mkdir()
     monkeypatch.setattr(config, "_REPO", empty)
-    paths = load_paths(cwd=tmp_path)
-    assert paths.reports == tmp_path / "reports"
+    monkeypatch.chdir(tmp_path)
+    assert load_paths().reports == tmp_path / "reports"
 
 
 def test_demo_folder_lab_wins_over_home(

@@ -45,9 +45,9 @@ def skill_resource() -> Traversable:
     )
 
 
-def load_paths(root: Path | None = None, *, cwd: Path | None = None) -> Paths:
-    """Paths under `root`; by default this repository when it is a checkout, else `cwd`
-    (the installed tool's working folder). `$GENOKEEPER_HOME` (`$GENOMELAB_HOME` before
+def load_paths(root: Path | None = None) -> Paths:
+    """Paths under `root`; by default this repository when it is a checkout, else the
+    working folder (the installed tool's). `$GENOKEEPER_HOME` (`$GENOMELAB_HOME` before
     the rename) moves the lab, except in a demo folder (it holds `DEMO_MARKER`), whose
     lab is its own `lab/`."""
     if root is not None:
@@ -57,7 +57,7 @@ def load_paths(root: Path | None = None, *, cwd: Path | None = None) -> Paths:
     ).is_dir():
         repo = _REPO
     else:
-        repo = cwd if cwd is not None else Path.cwd()
+        repo = Path.cwd()
     home = getenv("HOME")
     if (repo / DEMO_MARKER).is_file():
         lab = repo / "lab"

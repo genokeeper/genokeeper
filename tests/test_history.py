@@ -129,7 +129,7 @@ def _feed_rows() -> tuple[
     return statements, calls, [gene_call("CYP2D6", level="low")]
 
 
-def test_trusted_ids_match_query_for_every_slider_pair(tmp_path: Path) -> None:
+def test_trusted_ids_match_query_for_every_threshold_pair(tmp_path: Path) -> None:
     statements, calls, gene_calls = _feed_rows()
     con = sm.store(tmp_path / "genomelab.duckdb")
     sm.fill(con, D1, started(D1), TOOLS, INPUTS, statements, calls, gene_calls)

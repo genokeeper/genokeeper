@@ -519,7 +519,7 @@ def _changes(reports: Path, lab: Path) -> dict[str, Any]:
     return data["changes"]
 
 
-def test_changes_views_match_history_for_every_slider_pair(tmp_path: Path) -> None:
+def test_changes_views_match_history_for_every_threshold_pair(tmp_path: Path) -> None:
     reports, lab = tmp_path / "reports", tmp_path / "lab"
     _history(reports)
     sm.refreshed(reports, lab, D2, {"clinvar:1": {"litvar": ["1"], "clinvar": []}})
@@ -586,7 +586,7 @@ def test_changes_views_match_history_for_every_slider_pair(tmp_path: Path) -> No
         ]
         assert [c.split("@")[0] for c in gwas.causes] == ["source:gwas"]
     views = changes["bases"][D2]["views"]
-    # The oracle discriminates: the sliders move a statement across the line.
+    # The oracle discriminates: the thresholds move a statement across the line.
     assert views["medium|moderate"]["clinvar:6"] == "new"
     assert views["low|conflicting"]["clinvar:6"] == "entered"
     assert views["medium|moderate"]["clinvar:2"] == "left"

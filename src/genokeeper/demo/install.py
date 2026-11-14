@@ -53,13 +53,11 @@ QUESTIONS = (
 )
 # What Finder writes into a folder it opens: such a folder is not "something else".
 _FINDER = (".DS_Store", ".localized")
-# What a question cannot get here, each with its reason; CLAUDE.md lists them.
+# What a question cannot get here, and why; CLAUDE.md says it.
 CANNOT = (
-    (
-        "Plain-language explanations are not generated here: `genokeeper explain` writes"
-        " them with Claude from MedlinePlus files this folder does not have, so the"
-        " dashboard shows none."
-    ),
+    "Plain-language explanations are not generated here: `genokeeper explain` writes"
+    " them with Claude from MedlinePlus files this folder does not have, so the"
+    " dashboard shows none."
 )
 
 _PYPROJECT = """\
@@ -194,7 +192,6 @@ def _download(
 
 
 def _claude_md() -> str:
-    cannot = "\n".join(f"- {line}" for line in CANNOT)
     questions = "\n".join(f"{n}. {q}" for n, q in enumerate(QUESTIONS, 1))
     return f"""\
 # HG002 demo
@@ -216,7 +213,7 @@ own lab (`lab/`), with the genokeeper version `pyproject.toml` pins.
 
 ## What cannot be answered here
 
-{cannot}
+- {CANNOT}
 
 ## Questions to try
 
