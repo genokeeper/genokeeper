@@ -89,7 +89,7 @@ weak evidence. Each finding carries two measures:
 
 **The HG002 demo.** The same pipeline run on GIAB's HG002, a public reference genome, is at
 [genokeeper.github.io/genokeeper](https://genokeeper.github.io/genokeeper/). In the matrix's
-loosest cell, any genotype and any evidence, HG002 has 481 results; at the default thresholds,
+loosest cell, any genotype and any evidence, HG002 has 401 results; at the default thresholds,
 54 remain, and 5 at high reliability and strong evidence. The site shows what a newer ClinVar
 release changed and how often each kind of call is wrong, with the samples it was measured on.
 `uvx genokeeper demo` (macOS or Linux) puts the same store in a folder you can ask questions
