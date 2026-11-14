@@ -3,7 +3,7 @@
 All notable changes to Genokeeper are listed here. Versions follow [Semantic
 Versioning](https://semver.org); until 1.0, a minor version may change commands and outputs.
 
-## [Unreleased]
+## [0.2.1] — 2026-11-14
 
 - A deletion of 1 Mb or more whose read depth does not drop is withheld (not graded, its value
   kept): such a call is not a deletion. On HG002 this removes about 80 per-gene results made by
