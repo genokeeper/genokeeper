@@ -208,7 +208,8 @@ class DeletionThresholds:
     """Slice 3b's deletion screen ([deletions]): the size floor and the long band's start,
     the exon margin, what is common in gnomAD-SV (AF above `max_gnomad_af` among at least
     `min_gnomad_an` alleles, at `min_reciprocal_overlap`), DELLY's depth ratio below which
-    depth supports a deletion, and the chance of being false below which it is "likely"."""
+    depth supports a deletion, the length from which the depth decides, and the chance of
+    being false below which it is "likely"."""
 
     min_length: int = 50
     long_from: int = 1000
@@ -217,6 +218,7 @@ class DeletionThresholds:
     min_gnomad_an: int = 2000
     min_reciprocal_overlap: float = 0.5
     max_depth_ratio: float = 0.7
+    depth_decides_from: int = 1_000_000
     likely_below: float = 0.1
 
 
@@ -441,6 +443,7 @@ _DELETIONS = {
     "min_gnomad_an": _integer,
     "min_reciprocal_overlap": _number,
     "max_depth_ratio": _number,
+    "depth_decides_from": _integer,
     "likely_below": _number,
 }
 _IDENTITY = {"min_concordance": _number, "min_compared": _integer}
@@ -655,9 +658,13 @@ def load_grading(path: Path | None = None) -> Grading:
         d.max_depth_ratio,
         d.likely_below,
     )
-    if not 0 < d.min_length < d.long_from or min(d.exon_margin, d.min_gnomad_an) < 0:
+    if (
+        not 0 < d.min_length < d.long_from <= d.depth_decides_from
+        or min(d.exon_margin, d.min_gnomad_an) < 0
+    ):
         raise ValueError(
-            f"{path}: [deletions] need 0 < min_length < long_from, exon_margin >= 0"
+            f"{path}: [deletions] need 0 < min_length < long_from <= depth_decides_from,"
+            " exon_margin >= 0"
             " and min_gnomad_an >= 0"
         )
     # Exons at most twice the margin apart merge into one target: a kept deletion must not

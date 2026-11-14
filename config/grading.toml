@@ -347,6 +347,11 @@ min_reciprocal_overlap = 0.5
 # below this: duphold's DHFFC test (design decision 5) without duphold, unmaintained since
 # 2020 and without an arm64 build.
 max_depth_ratio = 0.7
+# From this length the depth decides (owner, 2026-11-14): a heterozygous deletion of a megabase
+# or more halves the read depth along it, so a call whose depth ratio does not drop below
+# max_depth_ratio is withheld, its value kept. On HG002's demo run 24 of the 25 shown calls of
+# 1 Mb or more (up to 223 Mb, all DELLY's alone) had ratios of 0.88-8.3.
+depth_decides_from = 1000000
 # A shown deletion is "likely present" when its class's chance of being false is below
 # this, so its chance of being true above 0.9, else "possible" (design decision, 2026-10-27;
 # the plan's wording constraint; 0.1 since the final PR review, 2026-10-29). A wording rule:

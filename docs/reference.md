@@ -197,6 +197,12 @@ junction, by both callers with an end masked and by DELLY alone with none; and t
 1 kb or more with an end masked by both callers with depth support, and by Dysgu alone, masked
 or not.
 
+From `[deletions] depth_decides_from` (1 Mb) the depth decides: a heterozygous deletion that
+long halves the read depth along it, so a call whose DELLY depth ratio does not drop below
+`max_depth_ratio` is withheld (unassessed, its value under `claim.withheld`) whatever its
+class's rate. On HG002's demo run it withheld 24 of the 25 shown calls of 1 Mb or more (up to
+223 Mb, DELLY's alone, ratios 0.88 to 8.3), which made about 80 per-gene results.
+
 Slice 3e's repeat loci run from the one `expansionhunter` image, now built from source:
 `uv run python -m genokeeper.containers build expansionhunter` (or the bootstrap), then `uv
 run genokeeper calibrate` (or `--only stage3`) re-measures the stage-3 table with the 24

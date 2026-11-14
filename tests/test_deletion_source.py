@@ -28,6 +28,7 @@ from genokeeper.sources.deletions import (
     CONSEQUENCE_WARNING,
     DELETION_WORDING,
     DELETIONS_TOOL,
+    DEPTH_DISAGREES,
     FLANK_ONLY,
     LIKELY_REASON,
     POSSIBLE_REASON,
@@ -36,6 +37,7 @@ from genokeeper.sources.deletions import (
     DeletionSource,
     Wording,
 )
+from genokeeper.sources.panel import WITHHELD
 from genokeeper.store.db import Kind, Topic
 
 LONG_BOTH = CallClass("long", "both+depth", False, False)
@@ -242,6 +244,30 @@ def test_unmeasured_band_withheld(tmp_path: Path) -> None:
     assert (statement["kind"], statement["vid"]) == (str(Kind.UNASSESSED), None)
     assert statement["reason"] == "not calibrated: no long calls measured"
     assert [(r.variant, r.call) for r in collected.rows] == [(None, None)] * 2
+
+
+@pytest.mark.parametrize(
+    ("end", "ratio", "withheld"),
+    [
+        (43044000 + 10**6, 1.0, True),  # a megabase the depth does not see
+        (43044000 + 10**6, 0.5, False),  # one whose depth halves
+        (43044000 + 10**6 - 1, 1.0, False),  # under a megabase depth does not decide
+        (43044000 + 10**6, None, False),  # no depth ratio (Dysgu's alone)
+    ],
+)
+def test_a_megabase_the_depth_does_not_see_is_withheld(
+    tmp_path: Path, end: int, ratio: float | None, withheld: bool
+) -> None:
+    """A deletion of a megabase or more halves the read depth along it: one whose DELLY
+    depth ratio does not drop is withheld, its value kept, whatever its class's rate."""
+    shown = _shown(end=end, call_class=CallClass("long", "delly", False, False))
+    shown = replace(shown, deletion=replace(shown.deletion, depth_ratio=ratio))
+    (statement,) = _gene_rows(_collect(tmp_path, [shown]))
+    assert (statement["kind"] == str(Kind.UNASSESSED)) == withheld
+    assert (statement["reason"] == DEPTH_DISAGREES) == withheld
+    if withheld:
+        (entry,) = json.loads(str(statement["claim"]))[WITHHELD]
+        assert entry["value"]["depth_ratio"] == ratio
 
 
 def test_class_sets_rate_and_warnings(tmp_path: Path) -> None:

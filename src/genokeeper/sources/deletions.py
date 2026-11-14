@@ -11,7 +11,8 @@ copies of a recessive gene outside the carrier lists (Tier 3 and 4, `carrier_gen
 the haploinsufficient genes it is under
 research; elsewhere a non-finding, its reason saying why. Each is worded by its class's
 chance of being false: "likely present" below `likely_below`, else "possible", always "needs confirmation by MLPA, a microarray, qPCR or
-long reads"; a class whose band the table did not measure is withheld (unassessed, no vid,
+long reads"; a class whose band the table did not measure, and a call of `depth_decides_from`
+or more whose depth ratio does not drop (`DEPTH_DISAGREES`), is withheld (unassessed, no vid,
 `NOT_MEASURED`, its claim's `withheld` keeping the grade it would have). Each deletion's `variant` and `call` rows go on its first statement only.
 
 Slice 3d's copy-number and insertion screens are the same source in their own words
@@ -62,6 +63,11 @@ FLANK_ONLY = "touches only the bases beside an exon, not the exon itself"
 type Rate = tuple[float, float, float]
 # Why a class whose band the table did not measure (`p_wrong` None) is withheld.
 NOT_MEASURED = "not calibrated: no {} calls measured"
+# Why a call of `depth_decides_from` or more whose depth ratio does not drop is withheld.
+DEPTH_DISAGREES = (
+    "not graded: a deletion this long would halve the read depth along it, and DELLY's"
+    " depth ratio does not drop"
+)
 
 
 type Placed = tuple[Kind, Topic | None, str | None]
@@ -297,7 +303,15 @@ class DeletionSource:
         d, c, w = shown.deletion, shown.call_class, self.wording
         vid = w.vid(d)
         rate = self.p_wrong(c)
-        likely = rate is not None and rate[0] < ctx.grading.deletions.likely_below
+        t = ctx.grading.deletions
+        likely = rate is not None and rate[0] < t.likely_below
+        ratio = d.depth_ratio
+        if rate is None:
+            why = NOT_MEASURED.format(c.band)
+        elif d.length >= t.depth_decides_from and ratio is not None:
+            why = DEPTH_DISAGREES if ratio >= t.max_depth_ratio else None
+        else:
+            why = None
         depth = self.depth_support.get((d.chrom, d.pos, d.end))
         place = self.place or self._place
         rows: list[Row] = []
@@ -340,8 +354,7 @@ class DeletionSource:
                 "false_call_rate": None if rate is None else list(rate),
             }
             locus = f"{d.chrom}:{d.pos}-{d.end}"
-            if rate is None:
-                why = NOT_MEASURED.format(c.band)
+            if why is not None:
                 claim[WITHHELD] = [
                     withheld_entry(
                         why,
@@ -356,7 +369,7 @@ class DeletionSource:
                 ctx,
                 f"{self.tool}:{gene}:{locus}",
                 kind=str(kind),
-                vid=None if rate is None else vid,
+                vid=None if why is not None else vid,
                 gene=gene,
                 claim=json.dumps(claim),
                 validity=str(Validity.LIMITED),
@@ -364,7 +377,7 @@ class DeletionSource:
                 topic=None if topic is None else str(topic),
                 source_id=locus,
             )
-            first = rate is not None and vid not in seen
+            first = why is None and vid not in seen
             seen.add(vid)
             variant: Fields = {"run_id": ctx.run_id, "vid": vid, "rsid": None}
             rows.append(
