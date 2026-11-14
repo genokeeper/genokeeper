@@ -62,6 +62,7 @@ from genokeeper.explain import (
     claude_ask,
     explain,
     newest_medlineplus,
+    style,
     to_explain,
 )
 from genokeeper.history import Snapshot
@@ -660,7 +661,8 @@ def _command(args: argparse.Namespace) -> int:
 
     def explain_run(run_id: str) -> None:
         # As `genokeeper explain` does: only findings and stage-3 watch items without a
-        # cached answer are asked, in the language `$GENOKEEPER_LANG` chooses.
+        # cached answer are asked, in the language, model and tone the environment chooses.
+        model, tone = style()
         with open_store(paths.reports / STORE_NAME) as con:
             findings = to_explain(con, run_id)
         medlineplus = newest_medlineplus(paths.lab)
@@ -672,8 +674,10 @@ def _command(args: argparse.Namespace) -> int:
             findings,
             medlineplus,
             paths.reports / "explanations",
-            claude_ask,
+            lambda text: claude_ask(text, model=model),
             lang=language(),
+            model=model,
+            tone=tone,
         )
         if counts["failed"]:
             # As `genokeeper explain` exits 1: the step fails and the refresh records it.

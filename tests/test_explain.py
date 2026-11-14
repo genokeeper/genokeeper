@@ -40,6 +40,7 @@ from genokeeper.explain import (
     newest_medlineplus,
     parse,
     prompt,
+    style,
 )
 from genokeeper.lang import LANGUAGES, Language
 from genokeeper.query import HAPLOID_DOSAGE_NOTE, Filters, query
@@ -367,8 +368,7 @@ def test_key_changes_with_model_and_prompt_version(
     text = prompt(finding, grounding(finding, medlineplus))
     key = cache_key(text)
     assert key == cache_key(prompt(finding, grounding(finding, medlineplus)))
-    monkeypatch.setattr(explainer, "MODEL", "claude-other-1")
-    assert cache_key(text) != key
+    assert cache_key(text, "claude-other-1") != key
     monkeypatch.undo()
     monkeypatch.setattr(explainer, "PROMPT_VERSION", explainer.PROMPT_VERSION + 1)
     assert cache_key(text) != key
@@ -1136,7 +1136,7 @@ def test_the_engaging_tone_asks_for_a_gist_and_caches_it(
     f, cache = findings["clinvar:1"], tmp_path / "e"
     assert explain([f], medlineplus, cache, gisted, tone="engaging")["written"] == 1
     assert '"gist"' in gisted.prompts[0]
-    found = lookup(f, medlineplus, cache)
+    found = lookup(f, medlineplus, cache, tone="engaging")
     assert found is not None and found.gist == "You likely X."
 
 
@@ -1216,11 +1216,27 @@ def test_the_model_reaches_the_call_the_key_and_the_entry_and_the_cost_is_summed
     assert json.loads((cache / f"{cache_key(text, SONNET)}.json").read_text()) == {
         "title": "T.", "text": "X.", "cites": ["clinvar:1"], "model": SONNET
     }  # fmt: skip
-    # The dashboard's lookup, which names no model, finds the entry and names its model.
-    found = lookup(f, summaries, cache)
-    assert found is not None and found.model == SONNET
-    assert main(command) == 0
+    found = lookup(f, summaries, cache, model=SONNET)
+    assert found is not None and lookup(f, summaries, cache) is None
+    # The model set once in the environment: a later, filtered run (as `refresh --explain`
+    # runs, with no option) pays for nothing it already has.
+    monkeypatch.setenv("GENOKEEPER_MODEL", SONNET)
+    assert main([*command[:-2], "--min-reliability", "low"]) == 0
     assert capsys.readouterr().out.splitlines()[-3:-1] == [
         "calls: 0 made, 3 from the cache",
         "cost: $0.0000",
     ]
+    assert len(argvs) == 3
+
+
+def test_the_style_is_an_option_else_the_environment_else_the_default(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    assert style() == (MODEL, "plain")
+    monkeypatch.setenv("GENOKEEPER_MODEL", "claude-sonnet-5-5")
+    monkeypatch.setenv("GENOKEEPER_TONE", "engaging")
+    assert style() == ("claude-sonnet-5-5", "engaging")
+    assert style("claude-haiku-5-5", "plain") == ("claude-haiku-5-5", "plain")
+    monkeypatch.setenv("GENOKEEPER_TONE", "lively")
+    with pytest.raises(ValueError, match="unknown tone 'lively'"):
+        style()

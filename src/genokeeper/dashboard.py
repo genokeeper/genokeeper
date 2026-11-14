@@ -60,7 +60,16 @@ from genokeeper.carrier import (
 )
 from genokeeper.config import Paths, demo_lab, load_paths
 from genokeeper.evidence.medlineplus import MEDLINEPLUS_FILE, MedlinePlus
-from genokeeper.explain import LOOSEST, lookup, newest_medlineplus, watch_items
+from genokeeper.explain import (
+    LOOSEST,
+    MODEL,
+    Explanation,
+    Tone,
+    lookup,
+    newest_medlineplus,
+    watch_items,
+)
+from genokeeper.explain import style as explain_style
 from genokeeper.history import Change, ChangeKind, Dates, Snapshot
 from genokeeper.lang import LANGUAGES, Language, language
 from genokeeper.query import (
@@ -378,10 +387,11 @@ def payload(
     reports: Path | None = None,
     lab: Path | None = None,
     lang: Language = "en",
+    style: tuple[str, Tone] = (MODEL, "plain"),
 ) -> dict[str, Any]:
     """The page's data in `lang` for `run_id` (None: the latest run): its messages
     (`messages` less the carrier lists), every finding once, by id (`items`), each with its
-    explanation from `cache_dir` or null, its search string and its dates, and one view per
+    explanation from `cache_dir` (by `style`'s model in its tone) or null, its search string and its dates, and one view per
     reliability, validity and topic (or none) combination;
     and `changes`, the Changes tab's, from `reports/snapshots` and the refresh log in
     `lab` (without `reports`, no comparison); `excluded`, the run's exclusions; `screened`,
@@ -391,8 +401,13 @@ def payload(
     loaded = load(con, run_id, dates if reports is not None else None)
     loosest = query(con, run_id, LOOSEST, loaded=loaded)
 
+    def explained(finding: dict[str, Any]) -> Explanation | None:
+        return lookup(
+            finding, medlineplus, cache_dir, lang=lang, model=style[0], tone=style[1]
+        )
+
     def _item(finding: dict[str, Any]) -> dict[str, Any]:
-        found = lookup(finding, medlineplus, cache_dir, lang=lang)
+        found = explained(finding)
         claim, call = finding["claim"] or {}, finding["gene_call"] or {}
         results = [claim.get(k) for k in _RESULTS] + [
             call.get("diplotype"),
@@ -442,7 +457,7 @@ def payload(
     screened = _screened(con, loosest.run_id)
     watch = {w["id"]: w for w in watch_items(con, loosest.run_id)}
     for item in screened["watch"]:
-        found = lookup(watch[item["id"]], medlineplus, cache_dir, lang=lang)
+        found = explained(watch[item["id"]])
         item["explanation"] = None if found is None else asdict(found)
     return {
         "lang": lang,
@@ -506,6 +521,7 @@ def _write(
     lab: Path,
     lang: Language,
     banner: Sequence[str] | None = None,
+    style: tuple[str, Tone] = (MODEL, "plain"),
 ) -> Path:
     """Write the page in `lang` for `run_id` of the store `db` to `out`, its history from
     `reports/snapshots`, with `banner` (`render`'s); a missing MedlinePlus file is one
@@ -518,7 +534,14 @@ def _write(
         medlineplus, warning = None, str(e)
     with open_store(db) as con:
         data = payload(
-            con, run_id, cache, medlineplus, reports=reports, lab=lab, lang=lang
+            con,
+            run_id,
+            cache,
+            medlineplus,
+            reports=reports,
+            lab=lab,
+            lang=lang,
+            style=style,
         )
     page = render(data, banner)
     # After the store, so that a refusal stays one line; a demo lab has no bootstrap to run.
@@ -542,10 +565,12 @@ def write_dashboard(
     out: Path | None = None,
     lang: Language | None = None,
     banner: Sequence[str] | None = None,
+    style: tuple[str, Tone] | None = None,
 ) -> Path:
     """Write the page for `run_id` (None: the latest run) of `reports/genomelab.duckdb`,
     with both tabs and `banner` (`render`'s), to `out` (default `reports/dashboard.html`)
-    in `lang` (default `language()`'s); return its path. Raises `RunNotFound`."""
+    in `lang` (default `language()`'s), its explanations by `style`'s model in its tone
+    (default `explain.style()`'s); return its path. Raises `RunNotFound`."""
     reports = paths.reports
     return _write(
         reports / "genomelab.duckdb",
@@ -556,19 +581,22 @@ def write_dashboard(
         paths.lab,
         lang if lang is not None else language(),
         banner,
+        style if style is not None else explain_style(),
     )
 
 
 def _dashboard_command(args: argparse.Namespace) -> int:
     try:
-        lang = language(args.lang)
-    except ValueError as e:  # an unknown $GENOKEEPER_LANG
+        lang, style = language(args.lang), explain_style()
+    except ValueError as e:  # an unknown $GENOKEEPER_LANG or $GENOKEEPER_TONE
         print(f"genokeeper dashboard: {e}", file=sys.stderr)
         return 2
     try:
         # The snapshots and refresh files sit beside the store, as `query` reads them.
         reports, lab = args.db.parent, load_paths().lab
-        out = _write(args.db, args.run, args.cache, args.out, reports, lab, lang)
+        out = _write(
+            args.db, args.run, args.cache, args.out, reports, lab, lang, style=style
+        )
     except RunNotFound as e:
         print(f"genokeeper dashboard: {e}", file=sys.stderr)
         return 2

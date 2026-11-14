@@ -43,6 +43,7 @@ import duckdb
 
 from genokeeper.carrier import STAGE3_SOURCES
 from genokeeper.config import load_paths
+from genokeeper.env import getenv
 from genokeeper.evidence.medlineplus import (
     MEDLINEPLUS_FILE,
     MedlinePlus,
@@ -161,6 +162,7 @@ addressing them as "{you}", for a curious reader who is not a specialist.
 The finding and its sources:
 """
 type Tone = Literal["plain", "engaging"]
+TONES: tuple[Tone, ...] = ("plain", "engaging")
 _ENGAGING_WORDS: dict[Language, tuple[str, str, str, str]] = {
     "en": (
         "English",
@@ -182,9 +184,6 @@ _INSTRUCTIONS: dict[Tone, dict[Language, str]] = {
         for k, (lang, you, eg, gist) in _ENGAGING_WORDS.items()
     },
 }
-# The model and tone a cache was last written in, when not the defaults (`lookup`).
-STYLE_FILE = "style.json"
-_DEFAULT_STYLE: tuple[str, Tone] = (MODEL, "plain")
 # The `<name>_tokens` counts of a call's JSON result's `usage`, summed by `cost`.
 _TOKENS = ("input", "output", "cache_read_input", "cache_creation_input")
 # Both languages' instructions end with this line; a watch item's add `WATCH_NOTE` before it.
@@ -336,21 +335,32 @@ def to_explain(
     return result.findings + ([] if f else watch_items(con, result.run_id))
 
 
-def cache_key(prompt: str, model: str | None = None) -> str:
-    """sha256 of the model (default `MODEL`), the prompt version and the prompt, which
-    carries the variant, the user's genotype and each source's id and text."""
-    text = f"{model or MODEL}\n{PROMPT_VERSION}\n{prompt}"
+def style(model: str | None = None, tone: str | None = None) -> tuple[str, Tone]:
+    """`model` and `tone` (a command's options), else `$GENOKEEPER_MODEL` and
+    `$GENOKEEPER_TONE`, else `MODEL` and plain: one setting for `explain`, `refresh
+    --explain` and the dashboard, as `genokeeper.lang` is for the language. Raises
+    `ValueError` for an unknown tone, naming the ones there are."""
+    chosen = tone or getenv("TONE") or "plain"
+    if chosen != "plain" and chosen != "engaging":
+        raise ValueError(f"unknown tone {chosen!r}: choose one of {', '.join(TONES)}")
+    return model or getenv("MODEL") or MODEL, chosen
+
+
+def cache_key(prompt: str, model: str = MODEL) -> str:
+    """sha256 of the model, the prompt version and the prompt, which carries the variant,
+    the user's genotype and each source's id and text."""
+    text = f"{model}\n{PROMPT_VERSION}\n{prompt}"
     return hashlib.sha256(text.encode()).hexdigest()
 
 
-def claude_command(model: str | None = None) -> list[str]:
-    """Headless Claude Code with `model` (default `MODEL`), no tools, no MCP servers, no
+def claude_command(model: str = MODEL) -> list[str]:
+    """Headless Claude Code with `model`, no tools, no MCP servers, no
     settings, no slash commands and no saved session, answering in its JSON result."""
     return [
         "claude",
         "-p",
         "--model",
-        model or MODEL,
+        model,
         "--tools",
         "",
         "--strict-mcp-config",
@@ -382,7 +392,7 @@ def _error_reason(result: object) -> str | None:
 def claude_ask(
     prompt: str,
     *,
-    model: str | None = None,
+    model: str = MODEL,
     results: list[dict[str, Any]] | None = None,
 ) -> str:
     """`model`'s answer to `prompt`, sent on stdin from a fresh empty directory, its JSON
@@ -426,7 +436,7 @@ def claude_ask(
 
 
 def parse(
-    answer: str, allowed: set[str], model: str | None = None, tone: Tone = "plain"
+    answer: str, allowed: set[str], model: str = MODEL, tone: Tone = "plain"
 ) -> Explanation | Rejected:
     """The answer when it is exactly one JSON object with a non-empty `text`, a non-empty
     `cites` list of ids, each in `allowed`, and a non-empty `title`; else why not. An
@@ -455,7 +465,7 @@ def parse(
         return Rejected("no_title")
     gist = document.get("gist") if tone == "engaging" else None
     gist = gist if isinstance(gist, str) and gist.strip() else None
-    return Explanation(title, text, cites, model or MODEL, gist)
+    return Explanation(title, text, cites, model, gist)
 
 
 def _planned(
@@ -463,8 +473,8 @@ def _planned(
     medlineplus: MedlinePlus | None,
     cache_dir: Path,
     lang: Language,
-    model: str | None = None,
-    tone: Tone = "plain",
+    model: str,
+    tone: Tone,
 ) -> tuple[list[Source], str, Path]:
     """The finding's sources, its prompt in `lang` and `tone` and the cache file `model`'s
     answer lives in."""
@@ -473,29 +483,21 @@ def _planned(
     return sources, text, cache_dir / f"{cache_key(text, model)}.json"
 
 
-def _style(cache_dir: Path) -> tuple[str, Tone]:
-    """The model and tone `cache_dir` was last written in (`STYLE_FILE`), else the defaults."""
-    path = cache_dir / STYLE_FILE
-    if not path.is_file():
-        return _DEFAULT_STYLE
-    model, tone = json.loads(path.read_text(encoding="utf-8"))
-    return model, tone
-
-
 def lookup(
     finding: dict[str, Any],
     medlineplus: MedlinePlus | None,
     cache_dir: Path,
     *,
     lang: Language = "en",
+    model: str = MODEL,
+    tone: Tone = "plain",
 ) -> Explanation | None:
-    """The cached explanation of the finding as it is now, in `lang`, or None: in the model
-    and tone the cache was last written in, else in the defaults."""
-    for model, tone in dict.fromkeys([_style(cache_dir), _DEFAULT_STYLE]):
-        _, _, path = _planned(finding, medlineplus, cache_dir, lang, model, tone)
-        if path.is_file():
-            return Explanation(**json.loads(path.read_text(encoding="utf-8")))
-    return None
+    """The cached explanation of the finding as it is now, in `lang`, by `model` in
+    `tone`, or None."""
+    _, _, path = _planned(finding, medlineplus, cache_dir, lang, model, tone)
+    if not path.is_file():
+        return None
+    return Explanation(**json.loads(path.read_text(encoding="utf-8")))
 
 
 def explain(
@@ -506,12 +508,11 @@ def explain(
     *,
     jobs: int = JOBS,
     lang: Language = "en",
-    model: str | None = None,
+    model: str = MODEL,
     tone: Tone = "plain",
 ) -> dict[str, int]:
     """Ask `model` for each finding not cached yet in `lang` and `tone`, `jobs` at a time,
-    and cache each accepted answer as it arrives (and a style not the default in
-    `STYLE_FILE`); a rejected or failed one is counted and the run goes on. Each finding
+    and cache each accepted answer as it arrives; a rejected or failed one is counted and the run goes on. Each finding
     asked gets one stderr line, in the order the answers arrive, numbered by that order and
     tagged with the finding's id: its outcome, a failure's reason or a rejected answer's
     text repr'd onto it. Returns the counts: `cached`, `written`, `failed` and
@@ -522,10 +523,6 @@ def explain(
         for f in findings
     ]
     asked = [plan for plan in planned if not plan[3].is_file()]
-    (cache_dir / STYLE_FILE).unlink(missing_ok=True)
-    if (model or MODEL, tone) != _DEFAULT_STYLE:
-        cache_dir.mkdir(parents=True, exist_ok=True)
-        (cache_dir / STYLE_FILE).write_text(json.dumps([model or MODEL, tone]))
     counts = {"cached": len(planned) - len(asked), "written": 0, "failed": 0}
     lock = threading.Lock()  # guards `counts` and keeps each stderr line whole
 
@@ -609,7 +606,10 @@ def _explain_command(args: argparse.Namespace) -> int:
             f"no MedlinePlus Genetics summaries in {lab}/medlineplus/<YYYYMMDD>/"
             f"{MEDLINEPLUS_FILE}; run scripts/bootstrap.sh"
         )
-    lang, model, tone = language(args.lang), args.model, args.tone
+    try:
+        lang, (model, tone) = language(args.lang), style(args.model, args.tone)
+    except ValueError as e:  # an unknown $GENOKEEPER_LANG or $GENOKEEPER_TONE
+        return _refuse(str(e))
     if not args.dry_run:
         results: list[dict[str, Any]] = []
         counts = explain(
@@ -688,6 +688,12 @@ def register(subparsers: Subparsers) -> None:
         help="with --min-reliability, `query`'s filters (default: every finding and"
         " stage-3 watch item; a filter leaves the watch items out)",
     )
-    e.add_argument("--model", default=MODEL, help=f"the model (default: {MODEL})")
-    e.add_argument("--tone", choices=list(_INSTRUCTIONS), default="plain")
+    e.add_argument(
+        "--model", help=f"the model (default: $GENOKEEPER_MODEL, else {MODEL})"
+    )
+    e.add_argument(
+        "--tone",
+        choices=TONES,
+        help="the writing (default: $GENOKEEPER_TONE, else plain)",
+    )
     e.set_defaults(handler=_explain_command)

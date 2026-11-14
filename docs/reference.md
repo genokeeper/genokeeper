@@ -660,14 +660,17 @@ still matches, and otherwise "No explanation generated yet" (in Russian, "Объ
 `explain` takes `--min-reliability` and `--min-validity`, the filters of `query`: it then
 explains only the findings that pass them (the default is every finding and stage-3 watch
 item, and a filter leaves the watch items out). `--model` names the model (default
-`claude-opus-5-5`). `--tone {plain,engaging}` chooses the writing: `plain`, the default, is the
+`$GENOKEEPER_MODEL`, else `claude-opus-5-5`). `--tone {plain,engaging}` chooses the writing
+(default `$GENOKEEPER_TONE`, else `plain`): `plain` is the
 text above, and its prompts and cache keys are unchanged; `engaging` writes for a curious reader
 who is no specialist, adds a one-or-two-sentence gist (what you most likely are or will notice,
 hedged as the sources allow, from the same sources and under the same limits: no diagnosis,
 dose, drug choice or advice), which the dashboard shows above the paragraph. A run with another
 model or tone writes new cache entries beside the existing ones (the model, tone and prompt
-are in the key) and leaves them; the page reads first the model and tone the cache was last
-written in, then the defaults. Each run ends with a summary of its calls (made, served from the
+are in the key) and leaves them. `refresh --explain` and the dashboard read the same two
+variables, so set them in the shell profile, as `GENOKEEPER_LANG`, to keep a model and tone:
+an option given to one `explain` run alone is not remembered, and a later run without it
+explains in the defaults. Each run ends with a summary of its calls (made, served from the
 cache, failed), their cost in US dollars and their tokens. The command refuses without
 the bootstrap's MedlinePlus file.
 

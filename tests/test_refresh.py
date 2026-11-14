@@ -38,7 +38,7 @@ from genokeeper.evidence.gwas import DOWNLOAD as GWAS_FILE
 from genokeeper.evidence.medlineplus import MEDLINEPLUS_FILE
 from genokeeper.evidence.pgx import CPIC_FILES
 from genokeeper.evidence.publications import CITATIONS_FILE, LITVAR_FILE
-from genokeeper.explain import ExplainError
+from genokeeper.explain import MODEL, ExplainError
 from genokeeper.history import read_publications, snapshots
 from genokeeper.pipeline import RunRefused
 from genokeeper.query import Filters
@@ -943,10 +943,10 @@ def test_a_failed_explain_call_fails_the_explain_step(
     runs: list[str] = []
     monkeypatch.setattr(refresh, "to_explain", lambda _con, run: runs.append(run) or [])
     monkeypatch.setattr(refresh, "newest_medlineplus", lambda _: object())
-    langs: list[str] = []
+    langs: list[tuple[str, str, str]] = []
 
-    def explain(*_: Any, lang: str) -> dict[str, int]:
-        langs.append(lang)
+    def explain(*_: Any, lang: str, model: str, tone: str) -> dict[str, int]:
+        langs.append((lang, model, tone))
         return {"cached": 0, "written": 0, "failed": 2}
 
     monkeypatch.setattr(refresh, "explain", explain)
@@ -954,11 +954,13 @@ def test_a_failed_explain_call_fails_the_explain_step(
     monkeypatch.delenv("GENOKEEPER_LANG", raising=False)
     with pytest.raises(ExplainError, match="2 explain calls failed"):
         seen["explain"]("run-1")
-    # The language is `genokeeper explain`'s: `$GENOKEEPER_LANG`, else English.
+    # The language, model and tone are `genokeeper explain`'s: the environment's, else
+    # the defaults.
     monkeypatch.setenv("GENOKEEPER_LANG", "ru")
+    monkeypatch.setenv("GENOKEEPER_TONE", "engaging")
     with pytest.raises(ExplainError):
         seen["explain"]("run-1")
-    assert langs == ["en", "ru"]
+    assert langs == [("en", MODEL, "plain"), ("ru", MODEL, "engaging")]
     assert runs == ["run-1", "run-1"]
 
 

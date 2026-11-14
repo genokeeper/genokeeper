@@ -65,7 +65,7 @@ from genokeeper.demo.frame import (
 )
 from genokeeper.demo.install import FOLDER, QUESTIONS
 from genokeeper.evidence.medlineplus import MEDLINEPLUS_FILE
-from genokeeper.explain import LOOSEST, Explanation, lookup, newest_medlineplus
+from genokeeper.explain import LOOSEST, Explanation, Tone, lookup, newest_medlineplus
 from genokeeper.pipeline import _newest_dated
 from genokeeper.query import (
     RESEARCH_ASSOCIATION,
@@ -87,6 +87,8 @@ DOI = "10.5281/zenodo.24134245"
 REPOSITORY = "https://github.com/genokeeper/genokeeper"
 SOCIAL_IMAGE = "https://genokeeper.github.io/genokeeper/social.png"
 PRIVATE_IDS = "genome-private-ids"
+# The model and tone the demo's explanations are written in (`genokeeper explain`).
+DEMO_STYLE: tuple[str, Tone] = ("claude-sonnet-5-5", "engaging")
 # The header every page shows; the dashboard's links are views in its URL hash.
 SITE_NAV = (
     ("Overview", "index.html"),
@@ -904,6 +906,7 @@ def package(
             out=work / "dashboard.html",
             lang="en",
             banner=(FRAME_SUMMARY, FRAME, CALIBRATION_NOTE),
+            style=DEMO_STYLE,
         )
         # The site's header in the dashboard's banner slot, which escapes what it is given.
         page = (work / "dashboard.html").read_text(encoding="utf-8")
@@ -928,7 +931,10 @@ def package(
         medlineplus = newest_medlineplus(scratch.lab)
 
         def explained(finding: dict[str, Any]) -> Explanation | None:
-            return lookup(finding, medlineplus, scratch.reports / "explanations")
+            cache = scratch.reports / "explanations"
+            return lookup(
+                finding, medlineplus, cache, model=DEMO_STYLE[0], tone=DEMO_STYLE[1]
+            )
 
         with open_store(work / STORE_FILE) as shipped:
             runs = _runs(shipped)
