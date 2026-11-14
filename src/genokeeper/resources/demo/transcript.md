@@ -1,15 +1,14 @@
 ---
-recorded: 2026-11-13
-version: 0.2.0
+recorded: 2026-11-14
+version: 0.2.1
 ---
 > Is HG002 a carrier of anything their children could inherit?
 
-**The store shows no confirmed carrier status for HG002.** That is not the same as "not a carrier", and the run's gaps are large (run `20261113T224709Z-695b5d`, ClinVar 20261108).
+**Short answer:** the store has no confirmed carrier finding for HG002. It does have three low-confidence screening or prediction results, none of them confirmed. All of this is from run `20261114T101533Z-bd04e4` (ClinVar 20261108). Under the default view, which is validity moderate or better and reliability medium or better, there are no carrier findings. An empty list is not a "not a carrier" result.
 
-**Default view:** `--topic carrier` returns no findings.
+I lowered the filters (`--min-validity limited --min-reliability low`) to look further. Three results appear. None is a confirmed carrier status, and none is actionable.
 
-**Lowered filters** (I set validity to `limited` and reliability to `low` myself): 48 carrier-topic statements appear. All are screening results that need confirmation, none is actionable, and none is a carrier call.
-
-[An excerpt. The answer goes on to the 48 statements one by one (deletions and an insertion
-that are almost certainly false, a depth loss and one predicted NEB variant), the genes it
-could not assess (SMN1, STRC, HBA2, most of NEB), and what to ask a genetic counsellor.]
+[An excerpt. The answer goes on to the three one by one (a predicted NEB splice change with a
+reliable genotype, and an NEB copy-number loss and an MLC1 insertion that are very likely
+false), the genes it could not assess (SMN1, STRC, HBA2, most of NEB, FMR1 and AFF2 withheld),
+and what to raise with a geneticist.]
