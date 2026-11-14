@@ -3,6 +3,23 @@
 All notable changes to Genokeeper are listed here. Versions follow [Semantic
 Versioning](https://semver.org); until 1.0, a minor version may change commands and outputs.
 
+## [Unreleased]
+
+- A deletion of 1 Mb or more whose read depth does not drop is withheld (not graded, its value
+  kept): such a call is not a deletion. On HG002 this removes about 80 per-gene results made by
+  24 DELLY calls of up to 223 Mb, and every one of them from the carrier answer.
+- `genokeeper explain`, `refresh --explain` and the dashboard read the model and tone from
+  `GENOKEEPER_MODEL` and `GENOKEEPER_TONE` (as `GENOKEEPER_LANG`); `--model` and `--tone` set
+  them for one run. A refresh no longer explains everything again in the plain tone after an
+  engaging run.
+- The dashboard is written about six times faster (215 s to 35 s on HG002's store), and with
+  it the first `genokeeper demo`.
+- `genokeeper demo` and the site's deploy refuse a manifest whose sha256 is not the one the
+  package pins; every store opened to read has DuckDB's external access off.
+- A drug-response reason names ClinPGx's annotation only at the claim's own allele, and a gene
+  call only when the run has one. A reference VKORC1 (any gene CPIC gives no phenotype) no
+  longer stands out; a copied Changes link reopens the tier it showed.
+
 ## [0.2.0] — 2026-11-13
 
 - A public demo on GIAB's HG002: four pages (an overview, the dashboard, the calibration
