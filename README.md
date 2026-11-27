@@ -16,6 +16,11 @@ you run `genokeeper refresh`, it fetches the newest releases of ClinVar, ClinGen
 ClinPGx and the GWAS Catalog and grades your calls on them again. An optional daily check tells you
 when a newer release is out. It never runs the refresh for you.
 
+**Status:** alpha (0.2.x), one maintainer, tested only on Apple-silicon Macs; until 1.0 a minor
+version may change commands and outputs ([CHANGELOG](CHANGELOG.md)). **Use:** the code is
+AGPL-3.0-or-later, but six components the bootstrap fetches are non-commercial only, so the
+pipeline as a whole is for non-commercial use ([Licence](#licence)).
+
 **As far as we know, a first.** In a search for prior art on 2026-11-14 we found no other
 open-source personal-genome tool that shows, on each genotype call, the chance it is wrong as
 measured on Genome in a Bottle samples in its own calibration runs, next to an evidence level

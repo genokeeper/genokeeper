@@ -10,6 +10,11 @@ ClinGen, GenCC, CPIC, ClinPGx and the GWAS Catalog and shows what changed.
 > prognosis or treatment; not a medical device, not CE-marked. Confirm any result in a clinical
 > laboratory.
 
+**Status:** alpha (0.2.x), one maintainer, tested only on Apple-silicon Macs; until 1.0 a minor
+version may change commands and outputs. **Use:** the code is AGPL-3.0-or-later, but six
+components the bootstrap fetches are non-commercial only, so the pipeline as a whole is for
+non-commercial use ([Licence](https://github.com/genokeeper/genokeeper#licence)).
+
 **Install from the repository, not from this package alone.** `pip install genokeeper` gives
 you the command-line tool, but building the lab it runs on (the pinned containers, reference
 data and calibration samples) needs `scripts/bootstrap.sh` and the `docker/` folder of the
