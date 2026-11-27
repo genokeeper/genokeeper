@@ -25,9 +25,10 @@ a reference sample's own reads.
 
 **Nothing leaves your machine unless you ask.** Genokeeper has no telemetry, no analytics and
 no crash reporting. The pipeline never uploads your reads, genotypes or findings. The
-aligner and its helpers (bwa, samtools, bcftools, mosdepth) run on your machine and open no
-connection of their own; every other tool that reads your data runs in a container with no
-network; and a run opens no connection at all.
+aligner and its helpers (bwa, samtools, bcftools, mosdepth) run on your machine and, as far as
+we know, open no connection of their own; no test checks this. Every other tool that reads your
+data runs in a container with no network, and a test checks that a run's own Python process
+opens no connection.
 Two optional features send finding data to Anthropic, and only when you use them: the
 `genome-ask` skill in your own Claude Code session, and `genokeeper explain`.
 [Privacy and network](#privacy-and-network) lists every connection the tool makes and how to
@@ -486,7 +487,8 @@ every connection it makes, followed by the evidence that the rest of it makes no
 **Offline by construction.** Once the bootstrap has built the lab, these commands work with the
 network off: `genokeeper run`, `query`, `show`, `genotype`, `changes` and `dashboard`.
 - bwa, samtools, bcftools and mosdepth read your reads and calls on the host, as installed by
-  Homebrew; none of them makes a network call of its own.
+  Homebrew; as far as we know, none of them makes a network call of its own. No test checks
+  this.
 - Every other tool that reads them runs in a pinned container started with
   `--network none --pull never`. Genokeeper starts each such container in one place:
   `run_container` in `src/genokeeper/containers.py`, tested in `tests/test_containers.py`.
@@ -496,8 +498,11 @@ network off: `genokeeper run`, `query`, `show`, `genotype`, `changes` and `dashb
   container lacked the flag (`src/genokeeper/prs/pgsc.py`, `src/genokeeper/pgx/stellarpgx.py`).
 - VEP runs with `--offline` on its local cache.
 - `test_a_run_opens_no_network_connection` (in `tests/test_pipeline_invariants.py`) runs the
-  whole pipeline on a mini genome with every name lookup and socket connection refused. The
-  run completes and attempts none.
+  pipeline of `genokeeper run` on a mini genome, with its containers and several tool calls
+  faked, and refuses every name lookup and socket connection of the Python process. The run
+  completes and attempts none. The test does not see a subprocess's sockets: not those of the
+  host tools above, and not those of the containers, which it replaces. The containers rely on
+  `--network none`, which `tests/test_containers.py` checks on the `docker run` command line.
 - The dashboard is one static page whose Content-Security-Policy is `default-src 'none'`, so it
   can load nothing. A PubMed link opens only when you click it.
 
