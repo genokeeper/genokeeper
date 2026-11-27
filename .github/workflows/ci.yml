@@ -64,7 +64,7 @@ jobs:
           if command -v uv >/dev/null; then echo "uv=present"; else echo "uv=missing"; fi >> "$GITHUB_OUTPUT"
       - name: Install uv
         if: steps.probe.outputs.uv == 'missing'
-        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
         with:
           version: "0.13.1"
       # Ubuntu's bcftools and samtools are 1.19, older than the options the code uses
