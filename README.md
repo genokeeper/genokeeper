@@ -11,7 +11,8 @@
 
 A local analyser for your own whole-genome sequencing data. It takes the raw paired reads of a
 30x WGS run, aligns them to GRCh38 and calls them on your own machine. It grades every genotype
-call with an error rate measured on public reference samples (GIAB's HG002, HG003 and HG004). When
+call with an error rate measured on public reference samples
+([Genome in a Bottle](https://doi.org/10.1038/sdata.2016.25)'s HG002, HG003 and HG004). When
 you run `genokeeper refresh`, it fetches the newest releases of ClinVar, ClinGen, GenCC, CPIC,
 ClinPGx and the GWAS Catalog and grades your calls on them again. An optional daily check tells you
 when a newer release is out. It never runs the refresh for you.
