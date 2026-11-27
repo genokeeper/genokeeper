@@ -492,6 +492,49 @@ The tools, truth sets and knowledge sources Genokeeper runs, each with its paper
 [docs/built-on.md](docs/built-on.md). The papers describe the tools, not Genokeeper's own
 accuracy, and no group listed there endorses its output.
 
+## FAQ
+
+**Is this medical advice?** No. It is for research and educational use only, not a medical
+device, and any result should be confirmed in a clinical laboratory.
+
+**How accurate is it?** Genotypes carry an error rate measured on GIAB's HG002, HG003 and HG004,
+by kind of call; a kind that could not be measured is withheld, not graded. Polygenic scores,
+GWAS associations and VEP predictions carry none of their own. The demo's
+[calibration page](https://genokeeper.github.io/genokeeper/calibration.html) shows every table
+and the samples behind it. The demo is HG002, itself a calibration sample: its rows marked "same
+sample" are shown on the data they were measured on, and HG002 may be in DeepVariant's training
+data.
+
+**What leaves my machine?** Requests for public files, version requests, and finding data only
+when you use `genokeeper explain` or the `genome-ask` skill. Your reads, genotypes and findings
+are never uploaded otherwise. [Privacy and network](#privacy-and-network) lists every connection.
+
+**What hardware, time and disk does it need?** An Apple-silicon Mac with 48 GB of memory or more,
+about 1.5 TB of downloads, 1 TB of free disk at the peak, and several days before the first
+graded result. Other platforms are
+[#48](https://github.com/genokeeper/genokeeper/issues/48); a lower memory need is
+[#50](https://github.com/genokeeper/genokeeper/issues/50).
+
+**Can it read a genotyping-array file (23andMe format)?** Not as input: it needs the paired FASTQ
+of a whole-genome run from a DNBSEQ-T7. A 23andMe-format file beside the FASTQ is used only to
+check the sample's identity.
+
+**Was it written with AI, and how is it checked?** Coding agents work in this repository under
+[AGENTS.md](AGENTS.md). A change passes the same checks whoever wrote it: on a pull request that
+changes code, CI runs basedpyright, ruff and the test suite; the genome-data guard runs on every
+push and pull request; and [CODEOWNERS](.github/CODEOWNERS) names the maintainer as the reviewer
+of every file. The error rates are measured, not assumed.
+
+**Why AGPL, and is it free to use?** The code is AGPL-3.0-or-later: anyone may use, change and
+share it, and whoever shares a changed version or offers it over a network must publish its
+source. Six components the bootstrap fetches are non-commercial only, so the pipeline as a whole
+is for non-commercial use ([Licence](#licence)).
+
+**Who maintains it, and how often is it updated?** One maintainer.
+[CHANGELOG](CHANGELOG.md) lists each release. The knowledge bases do not wait for a release:
+`genokeeper refresh` fetches their newest files whenever you run it, and the optional daily
+check tells you when one is out.
+
 ## Licence
 
 Genokeeper's own code is licensed under the GNU Affero General Public License, version 3 or any
