@@ -39,15 +39,21 @@ uvx genokeeper demo
 It downloads the published HG002 demo, the findings store of a GIAB reference sample (about
 680 MB), into `~/genokeeper-demo`. The manifest is checked against the sha256 the package pins
 and each file against the manifest. It then writes the dashboard there, which takes a few
-minutes, and ends with:
+minutes, and ends with where the dashboard is, how to ask Claude Code about it, and questions to
+try:
 
 ```text
 genokeeper demo: wrote /Users/you/genokeeper-demo
 The dashboard, to open in a browser: /Users/you/genokeeper-demo/dashboard.html
+To ask Claude Code about HG002:
+  cd /Users/you/genokeeper-demo && claude
+Questions to try:
+  1. Is HG002 a carrier of anything their children could inherit?
+  2. How would HG002 respond to clopidogrel, which CYP2C19 activates?
+  3. List every change the last ClinVar update brought, below the default thresholds too.
 ```
 
-Open that page, or run `claude` in the folder to ask Claude Code about HG002's results. The
-same results are online at
+The same results are online at
 [genokeeper.github.io/genokeeper](https://genokeeper.github.io/genokeeper/).
 
 **Nothing leaves your machine unless you ask.** Genokeeper has no telemetry, no analytics and
