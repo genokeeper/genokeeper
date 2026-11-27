@@ -64,6 +64,15 @@ bash scripts/check_no_genome_data.sh --tracked
   accept (non-commercial ones among them) also go in the README's "Terms you accept" and
   "Licence"; and if the repository carries any of its data, in NOTICE.
 
+## Coding assistants
+
+You may use coding assistants. Say in the pull request which parts a tool wrote. Run the checks
+above (`uv run basedpyright`, `uv run ruff check`, `uv run ruff format --check`,
+`uv run pytest -q -n auto` and `bash scripts/check_no_genome_data.sh --tracked`), read every
+changed line, and be able to explain it: a pull request whose author cannot answer a reviewer's
+question about its own code is closed. Issues and comments are written, or checked word by word,
+by their author.
+
 ## Reviewing
 
 Maintainers review a pull request from outside in a checkout with no genome data and no lab: the

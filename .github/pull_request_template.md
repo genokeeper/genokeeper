@@ -10,3 +10,7 @@ uv run ruff format --check, uv run pytest -q -n auto, bash scripts/check_no_geno
 - [ ] No genotypes, findings, counts from a person's run or other personal genome data in the diff, the commit messages or this description.
 - [ ] Test data comes from a public sample (GIAB HG002/HG003/HG004, 1000 Genomes) or is invented, and says which.
 - [ ] Nothing new sends data off the machine; if it fetches anything, README "Privacy and network" lists it.
+
+## Coding assistants
+
+- [ ] If a coding assistant wrote part of this change, the description says which parts, and I have read every changed line and can explain it.

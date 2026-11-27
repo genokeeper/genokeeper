@@ -535,6 +535,16 @@ is for non-commercial use ([Licence](#licence)).
 `genokeeper refresh` fetches their newest files whenever you run it, and the optional daily
 check tells you when one is out.
 
+## Contributing
+
+Issues labelled
+[help wanted](https://github.com/genokeeper/genokeeper/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)
+are open to contributors; each says what done means, how to verify it and where to start.
+[CONTRIBUTING.md](CONTRIBUTING.md) gives the setup, the checks to run, and the rule before all
+others: no genome data in any contribution. You may use coding assistants: say in the pull request
+which parts a tool wrote, and be ready to explain every changed line
+([Coding assistants](CONTRIBUTING.md#coding-assistants)).
+
 ## Licence
 
 Genokeeper's own code is licensed under the GNU Affero General Public License, version 3 or any
