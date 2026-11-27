@@ -685,9 +685,10 @@ def test_site_pages_load_nothing(tmp_path: Path) -> None:
         assert f'<meta http-equiv="Content-Security-Policy" content="{csp}">' in page
 
 
-def test_readme_built_on_names_every_citation() -> None:
-    readme = (Path(__file__).parents[1] / "README.md").read_text(encoding="utf-8")
-    listed = readme.split("## Built on")[-1].split("\n## ")[0]
+def test_built_on_page_names_every_citation() -> None:
+    """docs/built-on.md, which the README's "Built on" points to, lists every citation."""
+    docs = Path(__file__).parents[1] / "docs"
+    listed = (docs / "built-on.md").read_text(encoding="utf-8")
     missing = [
         t["name"] for t in pkg.citations() if f"[{t['name']}]({t['url']})" not in listed
     ]

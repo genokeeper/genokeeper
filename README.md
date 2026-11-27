@@ -44,8 +44,8 @@ and every calibration sample are T7's. BAM, CRAM and VCF input are not supported
   needs the rest. It is the only platform tested so far; Linux, Intel Macs and WSL2 are
   tracked in [#48](https://github.com/genokeeper/genokeeper/issues/48);
 - about 1.5 TB of downloads, and 1 TB of free disk at the peak; about 0.85 TB stays after
-  calibration, and about 0.5 TB once you free what may go ([Freeing disk](#freeing-disk) adds
-  it up);
+  calibration, and about 0.5 TB once you free what may go
+  ([Freeing disk](docs/operations.md#freeing-disk) adds it up);
 - several days of mostly unattended downloading and computing before the first graded result;
 - optional: [Claude Code](https://claude.com/claude-code), for the `genome-ask` skill and
   `genokeeper explain`. Both use your own Claude Code login, so they count against your Claude
@@ -183,7 +183,7 @@ uv run genokeeper run
 
 On a DNBSEQ-T7 it goes on to say the gnomAD table of step 5 is missing, which is expected now.
 Reads from another platform are refused with what they are instead (see
-[Troubleshooting](#troubleshooting)), so you find out before any download.
+[Troubleshooting](docs/operations.md#troubleshooting)), so you find out before any download.
 
 If the delivery has a 23andMe-format genotype file (`*.txt`, not `*.vc.txt`), put it beside
 the FASTQ: the run checks the sample's identity against it, and records "not checked" without
@@ -380,105 +380,18 @@ HG004, run `accept hg004` after it. Then run `genokeeper calibrate` again.
 
 ## Freeing disk
 
-Where the space goes. The numbers are approximate; each names its source.
-
-| What | Where | About | Source |
-|---|---|---|---|
-| tools, references, knowledge bases (step 5) | the lab | 100 GB | a rough estimate, not measured by the code |
-| the 37 container images | Docker's virtual disk | 50 GB | their sizes as `docker image inspect` reports them on a built lab |
-| your FASTQ pair | `data/raw/` | its own size, F below | |
-| your run: alignment, cached steps, store | `reports/` | 100 GB, 45 GB of it the alignment | a rough estimate, not measured by the code |
-| HG003's download (steps 7 to 8) | the lab | 147 GB | the bootstrap |
-| HG004's download (step 7, while it is cut down) | the lab | 144 GB | the bootstrap |
-| HG002's cut-down reads | the lab | 170 GB | the bootstrap |
-| HG003's and HG004's cut-down reads | the lab | F each | they hold your run's bases |
-| four aligned reference libraries | the lab | 45 GB each | a rough estimate, not measured by the code |
-
-HG002's 170 GB for two cut-down pairs suggests F is about 85 GB for a 30x run.
-
-- **Peak:** in step 8, just before `calibrate` deletes HG003's download. On disk then: the lab,
-  the images, your FASTQ and run, HG003's download and its cut-down reads, HG002's and HG004's
-  cut-down reads, and three aligned libraries. That is about 700 GB plus 3F, so about 950 GB.
-  Keep 1 TB free.
-- **After calibration:** about 600 GB plus 3F, so about 850 GB.
-- **After freeing what is listed below:** about 430 GB plus F, so about 0.5 TB.
-
-May be deleted once `genokeeper calibrate` says every table is current:
-- HG004's cut-down reads: `uv run python -m genokeeper.calibrate.hg002 clean hg004`.
-- HG002's and HG003's cut-down reads, by hand: the lab's
-  `calibration/hg002/pcrfree/downsampled/`, `calibration/hg002/pcr/downsampled/` and
-  `calibration/hg003/downsampled/`. While a library keeps its alignment record nothing reads
-  them: the bootstrap fetches nothing for such a library, and a re-alignment writes the reads
-  back from its alignment.
-- After a re-alignment, `clean <library>` deletes the old alignment and the reads the new one
-  was made from.
-- Docker's build cache: `docker builder prune`. Keep the images: a run never pulls one.
-
-Keep:
-- `reports/work/`, above all your alignment. `refresh` and every later `run` reuse it; without
-  it a run aligns again (about 5 to 6 hours, a rough estimate, not measured by the code).
-- `reports/genomelab.duckdb`, the store: it holds every run's snapshot that `changes` compares.
-- your FASTQ pair in `data/raw/`: every run checks it.
-- the aligned reference libraries and their `aligned.json` records under the lab's
-  `calibration/`: `calibrate` rebuilds a stale table from them.
-- the rest of the lab.
+Where the space goes, the peak, and what may be deleted once calibration is done:
+[docs/operations.md](docs/operations.md#freeing-disk).
 
 ## Uninstall
 
-```bash
-uv run genokeeper schedule uninstall          # removes the daily check, if you installed it
-uv run python -c 'from genokeeper.containers import IMAGES; print("\n".join(IMAGES.values()))' \
-  | xargs docker image rm                     # removes the pinned images
-rm -rf "${GENOKEEPER_HOME:-$HOME/genome-lab}" # removes the lab
-```
-
-Then delete the checkout. It holds your FASTQ in `data/raw/` and your results in `reports/`, so
-move out what you want to keep first. Remove the `GENOKEEPER_HOME` line from your shell profile
-if you added one. The Homebrew formulas the bootstrap installed (bcftools, samtools, htslib,
-bwa, mosdepth, openjdk, openjdk@21) and the ones you installed (uv, seqtk, terminal-notifier)
-can go with `brew uninstall` if nothing else needs them.
+The commands that remove the daily check, the images and the lab, and what to delete by hand:
+[docs/operations.md](docs/operations.md#uninstall).
 
 ## Troubleshooting
 
-**Docker memory.** A run warns when Docker gives its containers less than 36 GiB: the
-polygenic scores' matching steps (pgsc_calc's FORMAT_SCOREFILES and MATCH_COMBINE) peaked at
-34.6 GB on a 30x genome and can fail out of memory below it. Raise it in Docker Desktop,
-Settings, Resources. DeepVariant sizes its work to Docker's memory, so less memory only makes
-it slower. Docker with 36 GB needs a Mac with 48 GB or more; running the scores in smaller
-batches to lower this is tracked in [#50](https://github.com/genokeeper/genokeeper/issues/50).
-
-**Rosetta.** Eight images (DeepVariant, VerifyBamID2, mutserve, WhatsHap, OptiType, T1K,
-bigBedToBed and StellarPGx) are Intel-only. They need Rosetta installed
-(`softwareupdate --install-rosetta`) and Docker Desktop's "Use Rosetta for x86_64/amd64
-emulation on Apple Silicon" on.
-
-**Reads from another platform.** The run reads the flowcell id in the read names and the base
-qualities. A DNBSEQ-G400 run (flowcell `V…`), a DNBSEQ-T7+ run (flowcell `ML…`, or qualities
-binned to four levels), Illumina and other platforms are refused, naming what was found. This
-version has no path for them: the variant caller's model and every calibration sample are the
-original T7's.
-
-**A QC refusal.** The QC gate judges a sample twice. After alignment, before calling, it reads
-mean depth, the share of bases at 20x, mapped reads, duplicates, insert size and contamination;
-a refusal there comes in step 6. After DeepVariant has called, it reads Ti/Tv and the het/hom
-ratio as well; a refusal on those comes only in step 9, because the first run stops before
-calling. The message names the metric. The bounds and their sources are in
-`config/grading.toml` under `[qc]`. A sample that fails is a question for your sequencing
-provider. Changing a bound is your own decision, and it changes what the next refresh re-runs.
-
-**Disk running out.** Three steps check the free space first and refuse with "… needs N GB free
-in …, M GB is", keeping 20 GB to spare: downloading HG002's and HG004's libraries, cutting
-HG002's down, and re-aligning a reference library from its alignment. The others do not check:
-HG003's 147 GB download, cutting HG003 and HG004 down, and every other step fail with their
-tool's own error when the disk fills. Free space as
-[Freeing disk](#freeing-disk) says, then run the same command again: downloads resume where they
-stopped, and finished steps are not redone.
-
-**`bootstrap --check` still lists the reference samples after step 5.** That is expected. It
-lists the inputs of every step whatever `--with-…` flags you give it (only LitVar2's file and
-ClinVar's citations wait for `--with-publications`), and the reference samples (HG002,
-HG003, HG004 and their truth sets) come in step 7. Their lines go once step 7 has fetched them.
-HG002's and HG004's cut-down reads stay listed until a first run has recorded your bases.
+Docker memory, Rosetta, reads from another platform, a QC refusal, disk running out, and
+`bootstrap --check` after step 5: [docs/operations.md](docs/operations.md#troubleshooting).
 
 ## Privacy and network
 
@@ -545,102 +458,9 @@ Snitch).
 
 ## Built on
 
-Genokeeper runs these tools and reads these truth sets and knowledge sources, in pipeline
-order. The papers describe the tools, not Genokeeper's own accuracy, and no group listed
-here endorses its output. What Genokeeper measured itself, and on which samples, is in
-[docs/reference.md](docs/reference.md) and on the HG002 demo's
-[calibration page](https://genokeeper.github.io/genokeeper/calibration.html).
-
-**Reads to calls.**
-- [GRCh38 reference assembly](https://doi.org/10.1101/gr.213611.116): Schneider et al., Genome Res 2017.
-- [GIAB GRCh38 with GRC false duplications masked](https://doi.org/10.1038/s41587-021-01158-1): Wagner et al., Nat Biotechnol 2022.
-- [BWA-MEM](https://doi.org/10.48550/arXiv.1303.3997): Li, arXiv 2013.
-- [SAMtools](https://doi.org/10.1093/gigascience/giab008): Danecek et al., GigaScience 2021.
-- [BCFtools](https://doi.org/10.1093/gigascience/giab008): Danecek et al., GigaScience 2021.
-- [mosdepth](https://doi.org/10.1093/bioinformatics/btx699): Pedersen and Quinlan, Bioinformatics 2018.
-- [VerifyBamID2](https://doi.org/10.1101/gr.246934.118): Zhang et al., Genome Res 2020.
-- [DeepVariant](https://doi.org/10.1038/nbt.4235): Poplin et al., Nat Biotechnol 2018.
-- [mutserve (mtDNA-Server)](https://doi.org/10.1093/nar/gkw247): Weissensteiner et al., Nucleic Acids Res 2016.
-- [WhatsHap](https://doi.org/10.1101/085050): Martin et al., bioRxiv 2016.
-
-**Truth sets and calibration.**
-- [Genome in a Bottle reference samples (HG002, HG003, HG004)](https://doi.org/10.1038/sdata.2016.25): Zook et al., Sci Data 2016.
-- [GIAB v4.2.1 small-variant benchmarks (HG003, HG004)](https://doi.org/10.1016/j.xgen.2022.100128): Wagner et al., Cell Genom 2022.
-- [GIAB HG002 v5.0q benchmark (T2T Q100 v1.1 assembly)](https://doi.org/10.1101/2025.09.21.677443): Hansen et al., bioRxiv 2025.
-- [GIAB genome stratifications v3.6](https://doi.org/10.1038/s41467-024-53260-y): Dwarshuis et al., Nat Commun 2024.
-- [RTG Tools vcfeval](https://doi.org/10.1101/023754): Cleary et al., bioRxiv 2015.
-
-**Structural variants, copy number and repeats.**
-- [DELLY](https://doi.org/10.1093/bioinformatics/bts378): Rausch et al., Bioinformatics 2012.
-- [Dysgu](https://doi.org/10.1093/nar/gkac039): Cleal and Baird, Nucleic Acids Res 2022.
-- [Truvari](https://doi.org/10.1186/s13059-022-02840-6): English et al., Genome Biol 2022.
-- [CNVpytor](https://doi.org/10.1093/gigascience/giab074): Suvakov et al., GigaScience 2021.
-- [INSurVeyor](https://doi.org/10.1038/s41467-023-38870-2): Rajaby et al., Nat Commun 2023.
-- [SCRAMble](https://doi.org/10.1038/s41436-020-0749-x): Torene et al., Genet Med 2020.
-- [ExpansionHunter](https://doi.org/10.1093/bioinformatics/btz431): Dolzhenko et al., Bioinformatics 2019.
-- [REViewer](https://doi.org/10.1186/s13073-022-01085-z): Dolzhenko et al., Genome Med 2022.
-- [STRchive](https://doi.org/10.1186/s13073-025-01454-4): Hiatt et al., Genome Med 2025.
-- [SMNCopyNumberCaller](https://doi.org/10.1038/s41436-020-0754-0): Chen et al., Genet Med 2020.
-- [Parascopy](https://doi.org/10.1038/s41467-022-30930-3): Prodanov and Bansal, Nat Commun 2022.
-- [Gauchian](https://doi.org/10.1038/s42003-022-03610-7): Toffoli et al., Commun Biol 2022.
-- [KILDA](https://doi.org/10.1093/nargab/lqaf070): Molitor et al., NAR Genom Bioinform 2025.
-
-**Pharmacogenomics.**
-- [PharmCAT](https://doi.org/10.1002/cpt.1568): Sangkuhl et al., Clin Pharmacol Ther 2020.
-- [Aldy](https://doi.org/10.1101/gr.277075.122): Hari et al., Genome Res 2023.
-- [BCyrius](https://doi.org/10.1002/prp2.70065): Halman and Conyers, Pharmacol Res Perspect 2025.
-- [StellarPGx](https://doi.org/10.1002/cpt.2173): Twesigomwe et al., Clin Pharmacol Ther 2021.
-- [CPIC](https://doi.org/10.1038/clpt.2010.279): Relling and Klein, Clin Pharmacol Ther 2011.
-- [PharmGKB / ClinPGx clinical annotations](https://doi.org/10.1002/cpt.2350): Whirl-Carrillo et al., Clin Pharmacol Ther 2021.
-
-**Clinical and population evidence.**
-- [ClinVar](https://doi.org/10.1093/nar/gkae1090): Landrum et al., Nucleic Acids Res 2025.
-- [ClinGen](https://doi.org/10.1056/NEJMsr1406261): Rehm et al., N Engl J Med 2015.
-- [ClinGen gene-disease validity](https://doi.org/10.1016/j.ajhg.2017.04.015): Strande et al., Am J Hum Genet 2017.
-- [ClinGen dosage sensitivity](https://search.clinicalgenome.org/kb/gene-dosage): ClinGen Dosage Sensitivity Curation.
-- [ClinGen SVI BA1 exception list](https://doi.org/10.1002/humu.23642): Ghosh et al., Hum Mutat 2018.
-- [GenCC](https://doi.org/10.1016/j.gim.2022.04.017): DiStefano et al., Genet Med 2022.
-- [Clinical Genomic Database (CGD)](https://doi.org/10.1073/pnas.1302575110): Solomon et al., Proc Natl Acad Sci USA 2013.
-- [ACMG SF v3.3 secondary findings list](https://doi.org/10.1016/j.gim.2025.101454): Lee et al., Genet Med 2025.
-- [ACMG carrier screening tiers (2021)](https://doi.org/10.1038/s41436-021-01203-z): Gregg et al., Genet Med 2021.
-- [gnomAD v4.1 (allele frequencies and SV sites)](https://doi.org/10.1038/s41586-023-06045-0): Chen et al., Nature 2024.
-- [Filtering allele frequency (FAF)](https://doi.org/10.1038/gim.2017.26): Whiffin et al., Genet Med 2017.
-- [MANE transcripts](https://doi.org/10.1038/s41586-022-04558-8): Morales et al., Nature 2022.
-- [MITOMAP](https://doi.org/10.1002/0471250953.bi0123s44): Lott et al., Curr Protoc Bioinformatics 2013.
-- [Genomics England PanelApp](https://doi.org/10.1038/s41588-019-0528-2): Martin et al., Nat Genet 2019.
-- [GWAS Catalog](https://doi.org/10.1093/nar/gkae1070): Cerezo et al., Nucleic Acids Res 2025.
-- [LitVar 2.0](https://doi.org/10.1038/s41588-023-01414-x): Allot et al., Nat Genet 2023.
-- [MedlinePlus Genetics](https://medlineplus.gov/genetics/): National Library of Medicine, MedlinePlus Genetics.
-
-**Variant effect prediction.**
-- [Ensembl VEP](https://doi.org/10.1186/s13059-016-0974-4): McLaren et al., Genome Biol 2016.
-- [SpliceAI](https://doi.org/10.1016/j.cell.2018.12.015): Jaganathan et al., Cell 2019.
-- [REVEL](https://doi.org/10.1016/j.ajhg.2016.08.016): Ioannidis et al., Am J Hum Genet 2016.
-- [AlphaMissense](https://doi.org/10.1126/science.adg7492): Cheng et al., Science 2023.
-- [SpliceVault](https://doi.org/10.1038/s41588-022-01293-8): Dawes et al., Nat Genet 2023.
-- [pext (proportion expressed across transcripts)](https://doi.org/10.1038/s41586-020-2329-2): Cummings et al., Nature 2020.
-- [UCSC NMD Escape track (MANE)](https://genome.ucsc.edu/cgi-bin/hgTrackUi?db=hg38&g=nmd): UCSC Genome Browser, NMD Escape track.
-
-**Polygenic scores and ancestry.**
-- [PGS Catalog](https://doi.org/10.1038/s41588-021-00783-5): Lambert et al., Nat Genet 2021.
-- [pgsc_calc](https://doi.org/10.1038/s41588-024-01937-x): Lambert et al., Nat Genet 2024.
-- [Nextflow](https://doi.org/10.1038/nbt.3820): Di Tommaso et al., Nat Biotechnol 2017.
-- [PLINK 2](https://doi.org/10.1186/s13742-015-0047-8): Chang et al., GigaScience 2015.
-- [FRAPOSA](https://doi.org/10.1093/bioinformatics/btaa152): Zhang et al., Bioinformatics 2020.
-- [HGDP + 1000 Genomes reference panel (gnomAD v3.1)](https://doi.org/10.1101/gr.278378.123): Koenig et al., Genome Res 2024.
-- [fastmixture](https://doi.org/10.24072/pcjournal.503): Santander et al., Peer Community J 2024.
-- [hmmix](https://doi.org/10.1371/journal.pgen.1007641): Skov et al., PLoS Genet 2018.
-
-**Haplogroups, HLA and other typing.**
-- [Haplogrep 3](https://doi.org/10.1093/nar/gkad284): Schönherr et al., Nucleic Acids Res 2023.
-- [PhyloTree Build 17](https://doi.org/10.1016/j.fsigss.2015.09.155): van Oven, Forensic Sci Int Genet Suppl Ser 2015.
-- [haplocheck](https://doi.org/10.1101/gr.256545.119): Weissensteiner et al., Genome Res 2021.
-- [Yleaf](https://doi.org/10.1093/molbev/msy032): Ralf et al., Mol Biol Evol 2018.
-- [OptiType](https://doi.org/10.1093/bioinformatics/btu548): Szolek et al., Bioinformatics 2014.
-- [T1K](https://doi.org/10.1101/gr.277585.122): Song et al., Genome Res 2023.
-- [IPD-IMGT/HLA](https://doi.org/10.1093/nar/gkac1011): Barker et al., Nucleic Acids Res 2023.
-- [RBCeq2](https://github.com/limcintyre/RBCeq2): McIntyre et al., RBCeq2 v2.4.4 (software) 2026.
-- [BCFtools/RoH](https://doi.org/10.1093/bioinformatics/btw044): Narasimhan et al., Bioinformatics 2016.
+The tools, truth sets and knowledge sources Genokeeper runs, each with its paper, are listed in
+[docs/built-on.md](docs/built-on.md). The papers describe the tools, not Genokeeper's own
+accuracy, and no group listed there endorses its output.
 
 ## Licence
 

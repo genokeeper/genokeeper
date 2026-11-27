@@ -1,5 +1,5 @@
 # The tools, truth sets and knowledge sources genokeeper's pipeline uses, in pipeline order,
-# for the demo page's "Built on" section and the README's (`demo.package.citations`). Each DOI
+# for the demo page's "Built on" section and docs/built-on.md (`demo.package.citations`). Each DOI
 # was checked on 2026-11-13 against Crossref or DataCite; an entry with no paper keeps its
 # project URL. `version_key` names the run's recorded tool version shown beside it, if any.
 
