@@ -212,9 +212,10 @@ bases, so before step 6 they only wait for that run (the bootstrap says so and g
 
 **6. First run: alignment and QC.** Step 5 must be complete: `run` refuses without the gnomAD
 table that `--with-gnomad` builds, and names the flag. The run checks that the reads come from
-a T7, aligns them with bwa to GRCh38 (about 5 to 6 hours), refuses a sample whose alignment
-fails the QC gate (depth, mapping, duplicates, insert size, contamination), and records your
-run's bases. With no calibration table yet it then stops with exit code
+a T7, aligns them with bwa to GRCh38 (about 5 to 6 hours, a rough estimate, not measured by
+the code), refuses a sample whose alignment fails the QC gate (depth, mapping, duplicates,
+insert size, contamination), and records your run's bases. With no calibration table yet it
+then stops with exit code
 2. That is expected: "this run has recorded its … bases, which `genokeeper calibrate`
 downsamples HG003 to; the calibration table at … is not calibrated". The alignment is cached,
 and step 9 does not repeat it.
@@ -415,7 +416,7 @@ May be deleted once `genokeeper calibrate` says every table is current:
 
 Keep:
 - `reports/work/`, above all your alignment. `refresh` and every later `run` reuse it; without
-  it a run aligns again (about 5 to 6 hours).
+  it a run aligns again (about 5 to 6 hours, a rough estimate, not measured by the code).
 - `reports/genomelab.duckdb`, the store: it holds every run's snapshot that `changes` compares.
 - your FASTQ pair in `data/raw/`: every run checks it.
 - the aligned reference libraries and their `aligned.json` records under the lab's
