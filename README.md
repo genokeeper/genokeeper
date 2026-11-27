@@ -30,6 +30,26 @@ machine, grading the same calls again on new releases with a diff per result, pl
 explanations labelled with the model and the sources they were written from, a command an AI
 agent can query, and a public demo built from a reference sample's own reads.
 
+**Try it without your genome.** With uv installed, on macOS or Linux:
+
+```bash
+uvx genokeeper demo
+```
+
+It downloads the published HG002 demo, the findings store of a GIAB reference sample (about
+680 MB), into `~/genokeeper-demo`. The manifest is checked against the sha256 the package pins
+and each file against the manifest. It then writes the dashboard there, which takes a few
+minutes, and ends with:
+
+```text
+genokeeper demo: wrote /Users/you/genokeeper-demo
+The dashboard, to open in a browser: /Users/you/genokeeper-demo/dashboard.html
+```
+
+Open that page, or run `claude` in the folder to ask Claude Code about HG002's results. The
+same results are online at
+[genokeeper.github.io/genokeeper](https://genokeeper.github.io/genokeeper/).
+
 **Nothing leaves your machine unless you ask.** Genokeeper has no telemetry, no analytics and
 no crash reporting. The pipeline never uploads your reads, genotypes or findings. The
 aligner and its helpers (bwa, samtools, bcftools, mosdepth) run on your machine and, as far as
@@ -102,8 +122,8 @@ weak evidence. Each finding carries two measures:
 loosest cell, any genotype and any evidence, HG002 has 401 results; at the default thresholds,
 54 remain, and 5 at high reliability and strong evidence. The site shows what a newer ClinVar
 release changed and how often each kind of call is wrong, with the samples it was measured on.
-`uvx genokeeper demo` (macOS or Linux) puts the same store in a folder you can ask questions
-about.
+`uvx genokeeper demo`, at the top of this page, puts the same store in a folder you can ask
+questions about.
 
 ![The HG002 demo's landing page: one opened result beside the headline counts](docs/demo/hg002-landing.png)
 

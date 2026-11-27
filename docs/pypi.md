@@ -28,8 +28,10 @@ uv sync --locked
 ```
 
 To look at what it reports before you sequence anything, `uvx genokeeper demo` (macOS or
-Linux) downloads a public demo on GIAB's HG002 into `~/genokeeper-demo`, a folder Claude Code
-can answer questions about.
+Linux) downloads a public demo on GIAB's HG002 (a store of about 680 MB) into
+`~/genokeeper-demo`, a folder Claude Code can answer questions about, and writes its dashboard
+there. The same results are at
+[genokeeper.github.io/genokeeper](https://genokeeper.github.io/genokeeper/).
 
 Requirements, supported input (DNBSEQ-T7 FASTQ in this version), privacy and every network
 connection the tool makes are in the
