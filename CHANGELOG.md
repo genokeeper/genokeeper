@@ -3,6 +3,12 @@
 All notable changes to Genokeeper are listed here. Versions follow [Semantic
 Versioning](https://semver.org); until 1.0, a minor version may change commands and outputs.
 
+## [Unreleased]
+
+- Every dashboard page states its intended use above its heading, in its language: research and
+  educational use only, not for diagnosis, prevention, prediction, prognosis or treatment, not
+  a medical device, not CE-marked, and any result to be confirmed in a clinical laboratory.
+
 ## [0.2.1] — 2026-11-14
 
 - A deletion of 1 Mb or more whose read depth does not drop is withheld (not graded, its value
