@@ -113,7 +113,8 @@ each result is:
   `genokeeper changes`.
 
 **The dashboard.** `genokeeper dashboard` writes one static page of every finding, with the
-research-only intended use stated above its heading. It has a 3x4 matrix of thresholds,
+research-only intended use stated above its heading (from the next release; 0.2.1 on PyPI and
+the live demo predate it). It has a 3x4 matrix of thresholds,
 genotype reliability down the side and strength of evidence across, each cell counting the
 findings it keeps and choosing them on a click; topic chips; and a search box.
 Below the list, the page counts what the chosen cell hides and why.
