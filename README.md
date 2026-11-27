@@ -5,8 +5,9 @@
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/16523/badge)](https://www.bestpractices.dev/projects/16523)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24134245.svg)](https://doi.org/10.5281/zenodo.24134245)
 
-> **Not medical advice, not a medical device.** This is a research tool a person runs on their
-> own genome; nothing it reports is a diagnosis or a basis for a medical decision.
+> **Research and educational use only.** Not intended for diagnosis, prevention, prediction,
+> prognosis or treatment; not a medical device, not CE-marked. Confirm any result in a clinical
+> laboratory.
 
 A local analyser for your own whole-genome sequencing data. It takes the raw paired reads of a
 30x WGS run, aligns them to GRCh38 and calls them on your own machine. It grades every genotype
@@ -67,20 +68,22 @@ real, unedited session on the invented genome:
 
 ![A Claude Code session: the genome-ask skill answers which painkillers the invented genome's CYP2D6 and CYP2C9 results affect, with each result's reliability and evidence](docs/demo/genome-ask.gif)
 
-Other questions it answers the same way:
-- "Am I a carrier of anything my children could inherit?" It lists the carrier findings, how
-  sure each genotype is, and the genes this run could not assess.
-- "What do my results say about heart disease?" It gives the ClinVar findings and the
-  polygenic scores, each score as a percentile with its population and its predictive power.
-- "Do I have the factor V Leiden variant?" It reports the genotype at the site, from
-  `genokeeper genotype`.
+Other research questions it answers the same way, about what the store holds and how reliable
+each result is:
+- "Which carrier findings does the store hold, and how reliable is each?" It lists the carrier
+  findings, how sure each genotype is, and the genes this run could not assess.
+- "What does the store hold on heart disease, and how strong is the evidence?" It gives the
+  ClinVar findings and the polygenic scores, each score as a percentile with its population and
+  its predictive power.
+- "Which genotype does the store hold at the factor V Leiden site, and how reliable is that
+  call?" It reports the genotype at the site, from `genokeeper genotype`.
 - "What changed since the last update?" It reports what the last refresh graded again, from
   `genokeeper changes`.
 
-**The dashboard.** `genokeeper dashboard` writes one static page of every finding. It has a
-3x4 matrix of thresholds, genotype reliability down the side and strength of evidence across,
-each cell counting the findings it keeps and choosing them on a click; topic chips; and a
-search box.
+**The dashboard.** `genokeeper dashboard` writes one static page of every finding, with the
+research-only intended use stated above its heading. It has a 3x4 matrix of thresholds,
+genotype reliability down the side and strength of evidence across, each cell counting the
+findings it keeps and choosing them on a click; topic chips; and a search box.
 Below the list, the page counts what the chosen cell hides and why.
 
 A whole genome yields thousands of candidate findings, and most rest on an uncertain genotype or
@@ -276,10 +279,11 @@ uv run genokeeper dashboard   # writes reports/dashboard.html; open it in a brow
 uv run genokeeper query       # the findings at the default thresholds
 ```
 
-For the agent skill, start Claude Code in the checkout (`claude`) and ask in plain words: "am
-I a carrier of anything?" The skill sends the `genokeeper query` answers it reads to Anthropic
-through your Claude Code session. The optional `genokeeper explain` sends findings to
-Anthropic as well. No other step sends your data off the machine.
+For the agent skill, start Claude Code in the checkout (`claude`) and ask in plain words, for
+example: "Which carrier findings does the store hold, and how reliable is each?" The skill
+sends the `genokeeper query` answers it reads to Anthropic through your Claude Code session.
+The optional `genokeeper explain` sends findings to Anthropic as well. No other step sends your
+data off the machine.
 
 **11. The daily update check (optional).** It notifies you when a source has a newer release.
 It never fetches or grades anything: you run `uv run genokeeper refresh` when you choose.
@@ -489,4 +493,4 @@ So the pipeline as a whole is for non-commercial use, whatever the AGPL allows f
 container images built from `docker/` must not be published, because Aldy's licence forbids
 distributing it.
 
-Not medical advice and not a medical device.
+Research and educational use only; not a medical device.

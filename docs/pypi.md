@@ -6,8 +6,9 @@ grades every finding with an error rate measured on public reference samples (GI
 HG003 and HG004). `genokeeper refresh` grades your calls again on the newest releases of ClinVar,
 ClinGen, GenCC, CPIC, ClinPGx and the GWAS Catalog and shows what changed.
 
-> **Not medical advice, not a medical device.** This is a research tool a person runs on their
-> own genome; nothing it reports is a diagnosis or a basis for a medical decision.
+> **Research and educational use only.** Not intended for diagnosis, prevention, prediction,
+> prognosis or treatment; not a medical device, not CE-marked. Confirm any result in a clinical
+> laboratory.
 
 **Install from the repository, not from this package alone.** `pip install genokeeper` gives
 you the command-line tool, but building the lab it runs on (the pinned containers, reference
