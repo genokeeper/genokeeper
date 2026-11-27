@@ -79,6 +79,9 @@ h1 { font-size: 18px; margin: 0; }
 .frame-note summary { cursor: pointer; }
 .frame-note summary:focus-visible { outline: 2px solid var(--rel); outline-offset: 2px; }
 .frame-note p { margin: 8px 0 0; max-width: 72ch; color: var(--muted); }
+/* The intended-use line every page shows above its heading, never folded away. */
+.intended-use { margin: 0; padding: 8px 12px; border-left: 4px solid var(--warn);
+  background: var(--sunk); border-radius: 4px; font-size: 13px; }
 .groups { display: flex; flex-direction: column; gap: 6px; }
 .group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .group > span { font-size: 12.5px; color: var(--muted); min-width: 80px; }

@@ -1,5 +1,9 @@
 {
   "page_title": {"en": "Genome results", "ru": "Результаты генома"},
+  "intended_use": {
+    "en": "Research and educational use only. Not intended for diagnosis, prevention, prediction, prognosis or treatment; not a medical device, not CE-marked. Confirm any result in a clinical laboratory.",
+    "ru": "Только для исследований и обучения. Не предназначено для диагностики, профилактики, предсказания, прогноза или лечения; не медицинское изделие, без маркировки CE. Любой результат подтвердите в клинической лаборатории."
+  },
   "tab_feed": {"en": "Feed", "ru": "Лента"},
   "tab_changes": {"en": "Changes", "ru": "Изменения"},
   "search_label": {"en": "Search", "ru": "Поиск"},

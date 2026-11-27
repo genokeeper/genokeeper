@@ -16,8 +16,10 @@ but the inlined script and style, by the sha256 of their exact bytes, and the da
 source text can close it or add markup; the script builds nodes with `textContent` only.
 Its one URL is PubMed's prefix, an anchor's `href` before a PMID of digits only; a
 REViewer image is linked as the local file it is. A caller's banner (the demo's frame) is
-escaped text in a neutral strip above the tabs; the script takes its view from the URL's hash
-(`#tab=…&rel=…&ev=…&topic=…&q=…`) and writes it back when a control moves.
+escaped text in a neutral strip above the tabs, and below it every page states its intended
+use (the `intended_use` message: research and education only, not a medical device). The
+script takes its view from the URL's hash (`#tab=…&rel=…&ev=…&topic=…&q=…`) and writes it
+back when a control moves.
 
 The page is in one language, `genokeeper.lang.language()`'s: every text it shows is a message
 of `resources/dashboard/messages.json` (`messages`), embedded in the data in that language
@@ -113,7 +115,14 @@ _TYPICAL_AT_REFERENCE = re.compile(
 )
 _REFERENCE_ALLELE = re.compile(r"Reference|\*1|rs\d+ reference \(\w+\)")
 # The messages `page.html` holds, filled in by `render`.
-_PAGE = ("page_title", "tab_feed", "tab_changes", "search_label", "search_placeholder")
+_PAGE = (
+    "page_title",
+    "intended_use",
+    "tab_feed",
+    "tab_changes",
+    "search_label",
+    "search_placeholder",
+)
 
 
 def _folder() -> Traversable:

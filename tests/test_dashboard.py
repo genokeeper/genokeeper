@@ -3,6 +3,7 @@ Its page keeps every source text as data, under a CSP pinned to the inlined scri
 
 import base64
 import hashlib
+import html
 import json
 import re
 import shutil
@@ -29,7 +30,7 @@ from genokeeper.dashboard import payload, render
 from genokeeper.evidence.medlineplus import MEDLINEPLUS_FILE, load_medlineplus
 from genokeeper.explain import MODEL, explain, lookup, watch_items
 from genokeeper.history import Change, diff, kind_of, states, trusted_ids
-from genokeeper.lang import LANGUAGES
+from genokeeper.lang import LANGUAGES, Language
 from genokeeper.query import Filters, open_store, query
 from genokeeper.refresh_log import RefreshRecord, SourceOutcome, SourceStatus
 from genokeeper.sources.gwas import GWAS_TOOL
@@ -207,6 +208,52 @@ def test_no_banner_page_unchanged(con: duckdb.DuckDBPyConnection) -> None:
     assert with_banner.count(strip) == 1
     assert with_banner.replace(strip, "", 1) == page
     assert "<details" not in _outside_data(page)
+
+
+INTENDED_USE = {
+    "en": (
+        "Research and educational use only. Not intended for diagnosis, prevention,"
+        " prediction, prognosis or treatment; not a medical device, not CE-marked."
+        " Confirm any result in a clinical laboratory."
+    ),
+    "ru": (
+        "Только для исследований и обучения. Не предназначено для диагностики,"
+        " профилактики, предсказания, прогноза или лечения; не медицинское изделие,"
+        " без маркировки CE. Любой результат подтвердите в клинической лаборатории."
+    ),
+}
+
+
+@pytest.mark.parametrize("lang", LANGUAGES)
+def test_page_states_its_intended_use(
+    con: duckdb.DuckDBPyConnection, lang: Language
+) -> None:
+    """Every page, with a banner or none, says above its heading, as fixed text and not in
+    the folded banner, that it is for research and education only."""
+    line = f'<p class="intended-use">{html.escape(INTENDED_USE[lang])}</p>'
+    data = payload(con, None, NO_CACHE, lang=lang)
+    for page in (render(data), render(data, ["S", "P"])):
+        shown = _outside_data(page)
+        assert shown.count(line) == 1
+        assert (
+            shown.index("</details>" if "<details" in shown else "<main")
+            < shown.index(line)
+            < shown.index("<h1>")
+        )
+
+
+def test_written_dashboard_states_its_intended_use(
+    con: duckdb.DuckDBPyConnection, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    con.close()
+    monkeypatch.setenv("GENOKEEPER_HOME", str(tmp_path / "lab"))
+    out = tmp_path / "reports" / "dashboard.html"
+    db = str(tmp_path / "genomelab.duckdb")
+    assert (
+        main(["dashboard", "--db", db, "--cache", str(NO_CACHE), "--out", str(out)])
+        == 0
+    )
+    assert INTENDED_USE["en"] in _outside_data(out.read_text(encoding="utf-8"))
 
 
 def test_hostile_text_stays_data(con: duckdb.DuckDBPyConnection) -> None:
